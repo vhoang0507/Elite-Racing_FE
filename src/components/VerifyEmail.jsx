@@ -129,12 +129,6 @@ const VerifyEmail = () => {
                             </div>
                         )}
 
-                        {otpDemo && (
-                            <div className="mb-4 rounded-[10px] border border-[#e8caca] bg-[#fff8f8] px-4 py-3 text-sm font-semibold text-[#8B0000]">
-                                Development OTP: {otpDemo}
-                            </div>
-                        )}
-
                         {error && (
                             <div className="mb-4 rounded-[10px] border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-sm font-semibold text-[#8B0000]">
                                 {error}
