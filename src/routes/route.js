@@ -7,6 +7,7 @@ import {
 
 import Login from '../components/Login';
 import Register from '../components/Register';
+import VerifyEmail from '../components/VerifyEmail';
 import AdminDashboard from '../components/admin/AdminDashboard';
 import CreateTournament from '../components/admin/CreateTournament';
 import HorseManagement from '../components/admin/HorseManagement';
@@ -29,6 +30,10 @@ const appRoutes = [
     {
         path: '/register',
         element: createElement(Register),
+    },
+    {
+        path: '/verify-email',
+        element: createElement(VerifyEmail),
     },
     {
         path: '/admin',

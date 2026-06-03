@@ -1,8 +1,14 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import {
+    Link,
+    useLocation,
+    useNavigate,
+} from 'react-router-dom';
 
+import { login } from '../api/authApi';
 import horseRacing from '../assets/horse-racing.jpg';
 import icon from '../assets/icon.png';
+import { saveAuthSession } from '../utils/tokenStorage';
 
 import {
     FaEnvelope,
@@ -16,6 +22,58 @@ const formGroupClass = 'mb-[22px]';
 const labelClass = 'mb-2.5 block w-full text-left text-[0.95rem] font-bold text-[#1f3b57]';
 
 const Login = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [role, setRole] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [remember, setRemember] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState(location.state?.message || '');
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        setError('');
+        setSuccess('');
+        setIsSubmitting(true);
+
+        try {
+            const response = await login({
+                Email: email,
+                Password: password,
+            });
+
+            const token = response?.token || response?.Token;
+            const user = response?.user || response?.User;
+            const userRole = user?.role || user?.Role;
+
+            if (!token || !user) {
+                throw new Error('Login succeeded but the response did not include a token.');
+            }
+
+            if (role && userRole && role !== userRole) {
+                throw new Error('The selected role does not match this account.');
+            }
+
+            saveAuthSession({
+                token,
+                user,
+            }, remember);
+
+            if (userRole === 'Admin') {
+                navigate('/admin/dashboard');
+                return;
+            }
+
+            setSuccess('Login successful. This role dashboard is not built in the frontend yet.');
+        } catch (err) {
+            setError(err.message || 'Login failed. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
     return (
         <div className="flex h-screen w-full overflow-hidden bg-[#f4f4f4] font-['Segoe_UI',sans-serif] max-[1024px]:h-auto max-[1024px]:min-h-screen max-[1024px]:flex-col max-[1024px]:overflow-auto">
             <div className="relative h-screen flex-1 overflow-hidden max-[1024px]:hidden">
@@ -58,17 +116,23 @@ const Login = () => {
                         </p>
                     </div>
 
-                    <form>
+                    <form onSubmit={handleSubmit}>
                         <div className={formGroupClass}>
                             <div className="relative">
-                                <select className={`${controlClass} appearance-none`} defaultValue="">
+                                <select
+                                    className={`${controlClass} appearance-none`}
+                                    value={role}
+                                    onChange={(event) => setRole(event.target.value)}
+                                    required
+                                >
                                     <option value="" disabled>
                                         Select Role
                                     </option>
-                                    <option value="referee">Referee</option>
-                                    <option value="jockey">Jockey</option>
-                                    <option value="spectator">Spectator</option>
-                                    <option value="horse-owner">Horse Owner</option>
+                                    <option value="Admin">Admin</option>
+                                    <option value="RaceReferee">Referee</option>
+                                    <option value="Jockey">Jockey</option>
+                                    <option value="Spectator">Spectator</option>
+                                    <option value="HorseOwner">Horse Owner</option>
                                 </select>
 
                                 <FaChevronDown className={iconClass} />
@@ -83,6 +147,9 @@ const Login = () => {
                                     className={controlClass}
                                     type="email"
                                     placeholder="Enter your email"
+                                    value={email}
+                                    onChange={(event) => setEmail(event.target.value)}
+                                    required
                                 />
 
                                 <FaEnvelope className={iconClass} />
@@ -105,6 +172,9 @@ const Login = () => {
                                     className={controlClass}
                                     type="password"
                                     placeholder="Enter your password"
+                                    value={password}
+                                    onChange={(event) => setPassword(event.target.value)}
+                                    required
                                 />
 
                                 <FaEyeSlash className={iconClass} />
@@ -112,18 +182,37 @@ const Login = () => {
                         </div>
 
                         <div className="mb-[26px] flex items-center gap-2.5 text-[0.95rem] text-[#444]">
-                            <input className="h-4 w-4" type="checkbox" id="remember" />
+                            <input
+                                className="h-4 w-4"
+                                type="checkbox"
+                                id="remember"
+                                checked={remember}
+                                onChange={(event) => setRemember(event.target.checked)}
+                            />
 
                             <label htmlFor="remember">
                                 Remember me
                             </label>
                         </div>
 
+                        {error && (
+                            <div className="mb-4 rounded-[10px] border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-sm font-semibold text-[#8B0000]">
+                                {error}
+                            </div>
+                        )}
+
+                        {success && (
+                            <div className="mb-4 rounded-[10px] border border-[#b9e5c5] bg-[#f1fff5] px-4 py-3 text-sm font-semibold text-[#1d6b35]">
+                                {success}
+                            </div>
+                        )}
+
                         <button
                             type="submit"
+                            disabled={isSubmitting}
                             className="mb-6 h-[54px] w-full cursor-pointer rounded-[10px] bg-[#8B0000] text-base font-bold text-white transition-colors duration-200 hover:bg-[#700000]"
                         >
-                            Login
+                            {isSubmitting ? 'Logging in...' : 'Login'}
                         </button>
 
                         <div className="text-center text-[0.98rem] text-[#666]">
