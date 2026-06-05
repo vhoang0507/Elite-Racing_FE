@@ -1,4 +1,10 @@
 import {
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
+
+import {
     Link,
 } from 'react-router-dom';
 
@@ -11,50 +17,9 @@ import {
     FaTrophy,
 } from 'react-icons/fa';
 
-import AdminLayout from './AdminLayout';
+import { adminMockApi } from '../../api/adminMockApi';
 
-const submissions = [
-    {
-        slug: 'dubai-sprint-cup',
-        race: 'Dubai Sprint Cup',
-        detail: 'G1 Thoroughbred Sprint - Meydan',
-        status: 'Referee Confirmed',
-        tone: 'blue',
-        icon: FaFlagCheckered,
-    },
-    {
-        slug: 'royal-turf-championship',
-        race: 'Royal Turf Championship',
-        detail: 'Elite Oaks - Ascot Grounds',
-        status: 'Draft',
-        tone: 'gray',
-        icon: FaHorseHead,
-    },
-    {
-        slug: 'golden-derby-finals',
-        race: 'Golden Derby Finals',
-        detail: 'Triple Crown Leg 3 - Churchill',
-        status: 'Admin Approved',
-        tone: 'green',
-        icon: FaTrophy,
-    },
-    {
-        slug: 'night-thunder-race',
-        race: 'Night Thunder Race',
-        detail: 'Invitational Steeplechase - Hong Kong',
-        status: 'Published',
-        tone: 'red',
-        icon: FaBolt,
-    },
-    {
-        slug: 'mountain-horse-cup',
-        race: 'Mountain Horse Cup',
-        detail: 'Endurance Series - Alpine Trail',
-        status: 'Returned',
-        tone: 'orange',
-        icon: FaHorseHead,
-    },
-];
+import AdminLayout from './AdminLayout';
 
 const formatClass = (value) => value.toLowerCase().replace(/\s+/g, '-');
 
@@ -82,11 +47,69 @@ const statusClass = {
     returned: 'border-[#ffc68f] bg-[#fff0e2] text-[#c4671e]',
 };
 
+const iconByTone = {
+    blue: FaFlagCheckered,
+    gray: FaHorseHead,
+    green: FaTrophy,
+    red: FaBolt,
+    orange: FaHorseHead,
+};
+
 const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[0.78rem] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
+const pageSize = 5;
+
+const matchesQuery = (submission, query) => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+        return true;
+    }
+
+    return [
+        submission.race,
+        submission.detail,
+        submission.status,
+    ].some((value) => String(value).toLowerCase().includes(normalizedQuery));
+};
 
 function ValidateResults() {
+    const [submissions, setSubmissions] = useState([]);
+    const [query, setQuery] = useState('');
+    const [page, setPage] = useState(1);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        adminMockApi.getResultSubmissions().then((payload) => {
+            if (isMounted) {
+                setSubmissions(payload);
+            }
+        });
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    const filteredSubmissions = useMemo(() => submissions.filter((submission) => matchesQuery(submission, query)), [query, submissions]);
+    const totalPages = Math.max(1, Math.ceil(filteredSubmissions.length / pageSize));
+    const visibleSubmissions = filteredSubmissions.slice((page - 1) * pageSize, page * pageSize);
+    const firstShown = filteredSubmissions.length === 0 ? 0 : (page - 1) * pageSize + 1;
+    const lastShown = Math.min(page * pageSize, filteredSubmissions.length);
+
+    const handleQueryChange = (value) => {
+        setQuery(value);
+        setPage(1);
+    };
+
     return (
-        <AdminLayout activeKey="results" mainClassName="validate-results-main">
+        <AdminLayout
+            activeKey="results"
+            mainClassName="validate-results-main"
+            onSearchChange={handleQueryChange}
+            searchPlaceholder="Search result submissions..."
+            searchValue={query}
+        >
                 <section className={pageShellClass}>
                     <div className="max-w-[760px]">
                         <h1 className="m-0 text-[2rem] leading-[1.12] text-[var(--admin-primary-dark)] max-[820px]:text-[1.6rem]">
@@ -123,8 +146,8 @@ function ValidateResults() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {submissions.map((submission) => {
-                                        const Icon = submission.icon;
+                                    {visibleSubmissions.map((submission) => {
+                                        const Icon = iconByTone[submission.tone] || FaFlagCheckered;
 
                                         return (
                                             <tr key={submission.race}>
@@ -165,16 +188,23 @@ function ValidateResults() {
                         </div>
 
                         <div className="flex min-h-16 items-center justify-between gap-[18px] px-6 py-3.5 text-[0.78rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch">
-                            <span>Showing 1 to 5 of 24 results</span>
+                            <span>Showing {firstShown} to {lastShown} of {filteredSubmissions.length} results</span>
 
                             <div className="flex items-center gap-2 max-[820px]:flex-wrap">
-                                <button aria-label="Previous page" className={pageButtonClass} type="button">
+                                <button aria-label="Previous page" className={pageButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">
                                     <FaChevronLeft aria-hidden="true" className="h-2.5 w-2.5" />
                                 </button>
-                                <button className={`${pageButtonClass} border-[var(--admin-primary)] bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]`} type="button">1</button>
-                                <button className={pageButtonClass} type="button">2</button>
-                                <button className={pageButtonClass} type="button">3</button>
-                                <button aria-label="Next page" className={pageButtonClass} type="button">
+                                {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+                                    <button
+                                        className={`${pageButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]' : ''}`}
+                                        key={pageNumber}
+                                        onClick={() => setPage(pageNumber)}
+                                        type="button"
+                                    >
+                                        {pageNumber}
+                                    </button>
+                                ))}
+                                <button aria-label="Next page" className={pageButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">
                                     <FaChevronRight aria-hidden="true" className="h-2.5 w-2.5" />
                                 </button>
                             </div>

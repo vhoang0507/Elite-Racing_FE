@@ -1,4 +1,10 @@
 import {
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
+
+import {
     Link,
     useParams,
 } from 'react-router-dom';
@@ -12,312 +18,10 @@ import {
     FaStepForward,
 } from 'react-icons/fa';
 
+import { adminMockApi } from '../../api/adminMockApi';
 import horseRacing from '../../assets/horse-racing.jpg';
 
 import AdminLayout from './AdminLayout';
-
-const raceResultDetails = {
-    'dubai-sprint-cup': {
-        raceName: 'Dubai Sprint Cup',
-        trackCondition: 'Fast & Dry',
-        wind: 'Wind: 12km/h NW',
-        winningTime: '01:42.35',
-        recordTime: 'Record: 01:41.02',
-        entrySummary: 'Showing 10 of 12 Entries',
-        topPerformer: {
-            horse: 'Desert Thunder',
-            jockey: 'James Carter',
-            owner: 'Al Maktoum Stables',
-        },
-        results: [
-            {
-                position: '1',
-                horse: 'Desert Thunder',
-                jockey: 'James Carter',
-                finishTime: '01:42.35',
-                score: '98',
-                scoreTone: 'green',
-                status: 'Referee Confirmed',
-            },
-            {
-                position: '2',
-                horse: 'Shadow Flame',
-                jockey: 'Lucas Reed',
-                finishTime: '01:44.12',
-                score: '94',
-                scoreTone: 'green',
-                status: 'Referee Confirmed',
-            },
-            {
-                position: '3',
-                horse: 'Silver Arrow',
-                jockey: 'Daniel Smith',
-                finishTime: '01:45.77',
-                score: '90',
-                scoreTone: 'green',
-                status: 'Referee Confirmed',
-            },
-            {
-                position: '4',
-                horse: 'Thunder Spirit',
-                jockey: 'Ryan Cooper',
-                finishTime: '01:47.21',
-                score: '87',
-                scoreTone: 'gold',
-                status: 'Draft',
-            },
-            {
-                position: '5',
-                horse: 'Golden Blaze',
-                jockey: 'Chris Walker',
-                finishTime: '01:49.02',
-                score: '82',
-                scoreTone: 'gold',
-                status: 'Referee Confirmed',
-            },
-        ],
-    },
-    'royal-turf-championship': {
-        raceName: 'Royal Turf Championship',
-        trackCondition: 'Soft Turf',
-        wind: 'Wind: 8km/h W',
-        winningTime: '02:08.74',
-        recordTime: 'Record: 02:06.58',
-        entrySummary: 'Showing 10 of 14 Entries',
-        topPerformer: {
-            horse: 'Emerald Crown',
-            jockey: 'Amelia Brooks',
-            owner: 'Ascot Regent Stable',
-        },
-        results: [
-            {
-                position: '1',
-                horse: 'Emerald Crown',
-                jockey: 'Amelia Brooks',
-                finishTime: '02:08.74',
-                score: '96',
-                scoreTone: 'green',
-                status: 'Referee Confirmed',
-            },
-            {
-                position: '2',
-                horse: 'Velvet March',
-                jockey: 'Noah Hughes',
-                finishTime: '02:10.03',
-                score: '93',
-                scoreTone: 'green',
-                status: 'Draft',
-            },
-            {
-                position: '3',
-                horse: 'Royal Echo',
-                jockey: 'Sophie Grant',
-                finishTime: '02:11.45',
-                score: '89',
-                scoreTone: 'gold',
-                status: 'Referee Confirmed',
-            },
-            {
-                position: '4',
-                horse: 'Turf Monarch',
-                jockey: 'Henry Miles',
-                finishTime: '02:12.18',
-                score: '86',
-                scoreTone: 'gold',
-                status: 'Draft',
-            },
-            {
-                position: '5',
-                horse: 'Pearl Meadow',
-                jockey: 'Clara Evans',
-                finishTime: '02:13.22',
-                score: '83',
-                scoreTone: 'gold',
-                status: 'Referee Confirmed',
-            },
-        ],
-    },
-    'golden-derby-finals': {
-        raceName: 'Golden Derby Finals',
-        trackCondition: 'Firm & Clear',
-        wind: 'Wind: 5km/h SE',
-        winningTime: '01:58.20',
-        recordTime: 'Record: 01:57.44',
-        entrySummary: 'Showing 10 of 16 Entries',
-        topPerformer: {
-            horse: 'Crown Ledger',
-            jockey: 'Mateo Rivera',
-            owner: 'Churchill Gold Syndicate',
-        },
-        results: [
-            {
-                position: '1',
-                horse: 'Crown Ledger',
-                jockey: 'Mateo Rivera',
-                finishTime: '01:58.20',
-                score: '97',
-                scoreTone: 'green',
-                status: 'Referee Confirmed',
-            },
-            {
-                position: '2',
-                horse: 'Derby Lantern',
-                jockey: 'Ethan Shaw',
-                finishTime: '01:59.01',
-                score: '95',
-                scoreTone: 'green',
-                status: 'Referee Confirmed',
-            },
-            {
-                position: '3',
-                horse: 'Triple Verse',
-                jockey: 'Mina Cole',
-                finishTime: '02:00.38',
-                score: '91',
-                scoreTone: 'green',
-                status: 'Referee Confirmed',
-            },
-            {
-                position: '4',
-                horse: 'Golden Rail',
-                jockey: 'Oliver King',
-                finishTime: '02:01.64',
-                score: '88',
-                scoreTone: 'gold',
-                status: 'Draft',
-            },
-            {
-                position: '5',
-                horse: 'Blue Bourbon',
-                jockey: 'Tara Blake',
-                finishTime: '02:02.49',
-                score: '84',
-                scoreTone: 'gold',
-                status: 'Referee Confirmed',
-            },
-        ],
-    },
-    'night-thunder-race': {
-        raceName: 'Night Thunder Race',
-        trackCondition: 'Wet Surface',
-        wind: 'Wind: 15km/h E',
-        winningTime: '02:18.66',
-        recordTime: 'Record: 02:15.90',
-        entrySummary: 'Showing 10 of 12 Entries',
-        topPerformer: {
-            horse: 'Storm Cipher',
-            jockey: 'Kai Morgan',
-            owner: 'Harbor Peak Racing',
-        },
-        results: [
-            {
-                position: '1',
-                horse: 'Storm Cipher',
-                jockey: 'Kai Morgan',
-                finishTime: '02:18.66',
-                score: '94',
-                scoreTone: 'green',
-                status: 'Referee Confirmed',
-            },
-            {
-                position: '2',
-                horse: 'Midnight Lance',
-                jockey: 'Nora Wells',
-                finishTime: '02:20.14',
-                score: '92',
-                scoreTone: 'green',
-                status: 'Referee Confirmed',
-            },
-            {
-                position: '3',
-                horse: 'Rain Signal',
-                jockey: 'Peter Sloan',
-                finishTime: '02:21.06',
-                score: '88',
-                scoreTone: 'gold',
-                status: 'Draft',
-            },
-            {
-                position: '4',
-                horse: 'Black Current',
-                jockey: 'Ivy Chen',
-                finishTime: '02:22.52',
-                score: '85',
-                scoreTone: 'gold',
-                status: 'Referee Confirmed',
-            },
-            {
-                position: '5',
-                horse: 'Night Flare',
-                jockey: 'Samir Patel',
-                finishTime: '02:23.80',
-                score: '81',
-                scoreTone: 'gold',
-                status: 'Draft',
-            },
-        ],
-    },
-    'mountain-horse-cup': {
-        raceName: 'Mountain Horse Cup',
-        trackCondition: 'Rocky Trail',
-        wind: 'Wind: 18km/h N',
-        winningTime: '03:12.94',
-        recordTime: 'Record: 03:09.31',
-        entrySummary: 'Showing 10 of 15 Entries',
-        topPerformer: {
-            horse: 'Alpine Valor',
-            jockey: 'Greta Holm',
-            owner: 'Summit Ridge Stables',
-        },
-        results: [
-            {
-                position: '1',
-                horse: 'Alpine Valor',
-                jockey: 'Greta Holm',
-                finishTime: '03:12.94',
-                score: '95',
-                scoreTone: 'green',
-                status: 'Referee Confirmed',
-            },
-            {
-                position: '2',
-                horse: 'Granite Path',
-                jockey: 'Marco Bell',
-                finishTime: '03:14.07',
-                score: '91',
-                scoreTone: 'green',
-                status: 'Referee Confirmed',
-            },
-            {
-                position: '3',
-                horse: 'Snowline Echo',
-                jockey: 'June Foster',
-                finishTime: '03:15.62',
-                score: '89',
-                scoreTone: 'gold',
-                status: 'Draft',
-            },
-            {
-                position: '4',
-                horse: 'Cedar Ridge',
-                jockey: 'Liam Stone',
-                finishTime: '03:17.33',
-                score: '84',
-                scoreTone: 'gold',
-                status: 'Referee Confirmed',
-            },
-            {
-                position: '5',
-                horse: 'Highland Dust',
-                jockey: 'Maya Lane',
-                finishTime: '03:19.48',
-                score: '80',
-                scoreTone: 'gold',
-                status: 'Draft',
-            },
-        ],
-    },
-};
 
 const formatClass = (value) => value.toLowerCase().replace(/\s+/g, '-');
 
@@ -344,13 +48,61 @@ const scoreClass = {
 const statusClass = {
     'referee-confirmed': 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
     draft: 'border-[#ddd6d3] bg-[#f5f4f3] text-[#6f6360]',
+    'admin-approved': 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
 };
 
 const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[0.78rem] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
 
 function ValidateResultDetail() {
     const { resultId } = useParams();
-    const detail = raceResultDetails[resultId] || raceResultDetails['dubai-sprint-cup'];
+    const [detail, setDetail] = useState(null);
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [isPublishing, setIsPublishing] = useState(false);
+
+    const loadDetail = async () => {
+        setDetail(await adminMockApi.getResultDetail(resultId));
+    };
+
+    useEffect(() => {
+        let isMounted = true;
+
+        adminMockApi.getResultDetail(resultId).then((payload) => {
+            if (isMounted) {
+                setDetail(payload);
+            }
+        });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [resultId]);
+
+    const filteredResults = useMemo(() => {
+        if (!detail) {
+            return [];
+        }
+
+        return detail.results.filter((result) => (
+            statusFilter === 'all' || formatClass(result.status) === statusFilter
+        ));
+    }, [detail, statusFilter]);
+
+    const handlePublish = async () => {
+        setIsPublishing(true);
+        await adminMockApi.publishResult(resultId);
+        await loadDetail();
+        setIsPublishing(false);
+    };
+
+    if (!detail) {
+        return (
+            <AdminLayout activeKey="results" mainClassName="validate-detail-main">
+                <section className={pageShellClass}>
+                    <p className="m-0 font-bold text-[var(--admin-muted)]">Loading result details...</p>
+                </section>
+            </AdminLayout>
+        );
+    }
 
     return (
         <AdminLayout activeKey="results" mainClassName="validate-detail-main">
@@ -394,23 +146,25 @@ function ValidateResultDetail() {
                         <div className="flex min-h-[70px] items-center gap-3 border-b border-[var(--admin-border)] bg-[var(--validate-soft-panel)] px-6 py-3.5 max-[820px]:flex-col max-[820px]:items-stretch">
                             <label className="inline-flex h-[38px] w-[285px] items-center gap-2.5 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[#765d58] max-[820px]:w-full">
                                 <FaFilter aria-hidden="true" />
-                                <select className="h-full w-full min-w-0 cursor-pointer border-0 bg-transparent p-0 pr-6 text-[0.78rem] font-bold text-[var(--admin-ink)] outline-0" defaultValue="all">
+                                <select className="h-full w-full min-w-0 cursor-pointer border-0 bg-transparent p-0 pr-6 text-[0.78rem] font-bold text-[var(--admin-ink)] outline-0" onChange={(event) => setStatusFilter(event.target.value)} value={statusFilter}>
                                     <option value="all">All Statuses</option>
-                                    <option value="confirmed">Referee Confirmed</option>
+                                    <option value="referee-confirmed">Referee Confirmed</option>
                                     <option value="draft">Draft</option>
+                                    <option value="admin-approved">Admin Approved</option>
                                 </select>
                             </label>
 
                             <button
                                 aria-label="Refresh results"
                                 className="grid h-[38px] w-[38px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[#765d58] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]"
+                                onClick={loadDetail}
                                 type="button"
                             >
                                 <FaRedoAlt aria-hidden="true" />
                             </button>
 
                             <span className="ml-auto text-[0.72rem] font-extrabold text-[#5f4b47] max-[820px]:ml-0">
-                                {detail.entrySummary}
+                                Showing {filteredResults.length} of {detail.results.length} Entries
                             </span>
                         </div>
 
@@ -427,7 +181,7 @@ function ValidateResultDetail() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {detail.results.map((result) => (
+                                    {filteredResults.map((result) => (
                                         <tr key={result.horse}>
                                             <td className="w-[150px] whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-5 pl-[62px] align-middle text-[0.78rem] font-bold text-[#6d5752] max-[820px]:pl-6">
                                                 <span className={`inline-grid h-7 w-7 place-items-center rounded-full text-[0.72rem] font-black ${positionClass[result.position]}`}>
@@ -442,7 +196,7 @@ function ValidateResultDetail() {
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-5 align-middle text-[0.78rem] font-bold text-[#6d5752]">{result.jockey}</td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-5 align-middle font-[Consolas,'Courier_New',monospace] text-[0.78rem] font-bold text-[#6d5752]">{result.finishTime}</td>
                                             <td className="w-[150px] whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-5 text-center align-middle text-[0.78rem] font-bold text-[#6d5752]">
-                                                <span className={`inline-grid min-h-5 min-w-7 place-items-center rounded text-[0.66rem] font-black ${scoreClass[result.scoreTone]}`}>
+                                                <span className={`inline-grid min-h-5 min-w-7 place-items-center rounded text-[0.66rem] font-black ${scoreClass[result.scoreTone] || scoreClass.gold}`}>
                                                     {result.score}
                                                 </span>
                                             </td>
@@ -495,9 +249,11 @@ function ValidateResultDetail() {
                         </Link>
                         <button
                             className="inline-flex min-h-12 min-w-[108px] cursor-pointer items-center justify-center rounded-lg border-2 border-[var(--admin-primary)] bg-[var(--admin-primary)] text-[0.82rem] font-black text-white hover:border-[var(--admin-primary-dark)] hover:bg-[var(--admin-primary-dark)]"
+                            disabled={isPublishing}
+                            onClick={handlePublish}
                             type="button"
                         >
-                            Publish
+                            {isPublishing ? 'Publishing...' : 'Publish'}
                         </button>
                     </div>
 

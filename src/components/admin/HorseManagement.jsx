@@ -1,4 +1,10 @@
 import {
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
+
+import {
     FaCalendarCheck,
     FaEllipsisV,
     FaExclamationTriangle,
@@ -7,76 +13,13 @@ import {
     FaTrashAlt,
 } from 'react-icons/fa';
 
+import {
+    adminMockApi,
+    adminMockTotals,
+} from '../../api/adminMockApi';
 import horseRacing from '../../assets/horse-racing.jpg';
 
 import AdminLayout from './AdminLayout';
-
-const horseStats = [
-    {
-        label: 'Total Horses',
-        value: '248',
-        icon: FaHorseHead,
-        tone: 'total',
-    },
-    {
-        label: 'Pending Approval',
-        value: '18',
-        icon: FaCalendarCheck,
-        tone: 'pending',
-    },
-    {
-        label: 'Reported Horses',
-        value: '07',
-        icon: FaExclamationTriangle,
-        tone: 'reported',
-    },
-];
-
-const horses = [
-    {
-        name: 'Midnight Star',
-        breed: 'Thoroughbred',
-        ageWeight: '5 yrs / 520 kg',
-        owner: 'Michael Carter',
-        approval: 'Approved',
-    },
-    {
-        name: 'Gold Rush',
-        breed: 'Arabian',
-        ageWeight: '3 yrs / 500 kg',
-        owner: 'Emma Wilson',
-        approval: 'Pending',
-    },
-    {
-        name: 'Silver Ghost',
-        breed: 'Thoroughbred',
-        ageWeight: '4 yrs / 530 kg',
-        owner: 'Emma Wilson',
-        approval: 'Rejected',
-    },
-    {
-        name: 'Prairie Rose',
-        breed: 'Quarter Horse',
-        ageWeight: '5 yrs / 540 kg',
-        owner: 'Emma Wilson',
-        approval: 'Approved',
-    },
-];
-
-const reports = [
-    {
-        horse: 'Desert Thunder (H-102)',
-        reporter: 'Referee Johnathan Vance',
-        severity: 'High Severity',
-        reason: 'Potential health discrepancy in pre-race logs. Significant weight variation detected since registration. Requires immediate veterinary verification.',
-    },
-    {
-        horse: 'Silver Comet (H-115)',
-        reporter: 'Steward Sarah Jenkins',
-        severity: 'Medium Severity',
-        reason: "Inconsistent microchip scan during morning exercise. Identification needs re-authentication before tomorrow's qualification round.",
-    },
-];
 
 const formatClass = (value) => value.toLowerCase().replace(/\s+/g, '-');
 
@@ -110,10 +53,171 @@ const severityClass = {
 
 const selectClass = 'h-[38px] min-w-[142px] cursor-pointer rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.78rem] font-bold text-[#5f4b47] outline-0';
 const pageButtonClass = 'min-h-[34px] cursor-pointer rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
+const pageSize = 4;
+
+const matchesQuery = (horse, query) => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+        return true;
+    }
+
+    return [
+        horse.id,
+        horse.name,
+        horse.breed,
+        horse.owner,
+        horse.approval,
+        horse.healthStatus,
+        horse.reportStatus,
+    ].some((value) => String(value).toLowerCase().includes(normalizedQuery));
+};
 
 function HorseManagement() {
+    const [horses, setHorses] = useState([]);
+    const [reports, setReports] = useState([]);
+    const [query, setQuery] = useState('');
+    const [breedFilter, setBreedFilter] = useState('all-breeds');
+    const [healthFilter, setHealthFilter] = useState('health');
+    const [approvalFilter, setApprovalFilter] = useState('registration');
+    const [reportFilter, setReportFilter] = useState('report');
+    const [sortBy, setSortBy] = useState('newest');
+    const [page, setPage] = useState(1);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        adminMockApi.getHorses().then((payload) => {
+            if (isMounted) {
+                setHorses(payload.horses);
+                setReports(payload.reports);
+            }
+        });
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    const horseStats = useMemo(() => [
+        {
+            label: 'Total Horses',
+            value: (adminMockTotals.horses + horses.length).toLocaleString('en-US'),
+            icon: FaHorseHead,
+            tone: 'total',
+        },
+        {
+            label: 'Pending Approval',
+            value: String(horses.filter((horse) => horse.approval === 'Pending').length).padStart(2, '0'),
+            icon: FaCalendarCheck,
+            tone: 'pending',
+        },
+        {
+            label: 'Reported Horses',
+            value: String(reports.filter((report) => report.status === 'Open').length).padStart(2, '0'),
+            icon: FaExclamationTriangle,
+            tone: 'reported',
+        },
+    ], [horses, reports]);
+
+    const filteredHorses = useMemo(() => {
+        const filtered = horses.filter((horse) => (
+            matchesQuery(horse, query)
+            && (breedFilter === 'all-breeds' || formatClass(horse.breed) === breedFilter)
+            && (healthFilter === 'health' || formatClass(horse.healthStatus) === healthFilter)
+            && (approvalFilter === 'registration' || formatClass(horse.approval) === approvalFilter)
+            && (reportFilter === 'report' || formatClass(horse.reportStatus) === reportFilter)
+        ));
+
+        return [...filtered].sort((current, next) => {
+            if (sortBy === 'oldest') {
+                return new Date(current.createdAt) - new Date(next.createdAt);
+            }
+
+            return new Date(next.createdAt) - new Date(current.createdAt);
+        });
+    }, [approvalFilter, breedFilter, healthFilter, horses, query, reportFilter, sortBy]);
+
+    const openReports = reports.filter((report) => report.status === 'Open');
+    const totalPages = Math.max(1, Math.ceil(filteredHorses.length / pageSize));
+    const visibleHorses = filteredHorses.slice((page - 1) * pageSize, page * pageSize);
+    const firstShown = filteredHorses.length === 0 ? 0 : (page - 1) * pageSize + 1;
+    const lastShown = Math.min(page * pageSize, filteredHorses.length);
+
+    const handleQueryChange = (value) => {
+        setQuery(value);
+        setPage(1);
+    };
+
+    const handleFilterChange = (setter) => (event) => {
+        setter(event.target.value);
+        setPage(1);
+    };
+
+    const handleReviewReport = async (report) => {
+        await adminMockApi.closeHorseReport(report.id);
+        setReports((current) => current.map((item) => (
+            item.id === report.id
+                ? {
+                    ...item,
+                    status: 'Closed',
+                }
+                : item
+        )));
+        setHorses((current) => current.map((horse) => (
+            horse.id === report.horseId
+                ? {
+                    ...horse,
+                    healthStatus: 'Cleared',
+                    reportStatus: 'Closed',
+                }
+                : horse
+        )));
+    };
+
+    const handleSuspendHorse = async (report) => {
+        await adminMockApi.updateHorseApproval(report.horseId, 'Rejected');
+        setHorses((current) => current.map((horse) => (
+            horse.id === report.horseId
+                ? {
+                    ...horse,
+                    approval: 'Rejected',
+                }
+                : horse
+        )));
+    };
+
+    const handleToggleHorseApproval = async (horse) => {
+        const approval = horse.approval === 'Pending'
+            ? 'Approved'
+            : horse.approval === 'Approved'
+                ? 'Rejected'
+                : 'Pending';
+
+        await adminMockApi.updateHorseApproval(horse.id, approval);
+        setHorses((current) => current.map((item) => (
+            item.id === horse.id
+                ? {
+                    ...item,
+                    approval,
+                }
+                : item
+        )));
+    };
+
+    const handleDeleteReport = async (id) => {
+        await adminMockApi.deleteHorseReport(id);
+        setReports((current) => current.filter((report) => report.id !== id));
+    };
+
     return (
-        <AdminLayout activeKey="horses" mainClassName="horse-management-main">
+        <AdminLayout
+            activeKey="horses"
+            mainClassName="horse-management-main"
+            onSearchChange={handleQueryChange}
+            searchPlaceholder="Search horses, owners, reports..."
+            searchValue={query}
+        >
                 <section className={pageShellClass}>
                     <div>
                         <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)] max-[860px]:text-[1.6rem]">
@@ -147,36 +251,36 @@ function HorseManagement() {
                         <div className="flex flex-wrap items-center gap-3 border-b border-[var(--admin-border)] bg-[#fff4f1] px-5 py-4">
                             <label className="flex h-[38px] min-w-[220px] flex-1 items-center gap-2 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[#826661]">
                                 <FaSearch aria-hidden="true" />
-                                <input className="h-full w-full min-w-0 border-0 bg-transparent p-0 text-[0.78rem] text-[var(--admin-ink)] outline-0" placeholder="Search horses..." type="search" />
+                                <input className="h-full w-full min-w-0 border-0 bg-transparent p-0 text-[0.78rem] text-[var(--admin-ink)] outline-0" onChange={(event) => handleQueryChange(event.target.value)} placeholder="Search horses..." type="search" value={query} />
                             </label>
 
-                            <select className={selectClass} defaultValue="all-breeds">
+                            <select className={selectClass} onChange={handleFilterChange(setBreedFilter)} value={breedFilter}>
                                 <option value="all-breeds">All Breeds</option>
                                 <option value="thoroughbred">Thoroughbred</option>
                                 <option value="arabian">Arabian</option>
                                 <option value="quarter-horse">Quarter Horse</option>
                             </select>
 
-                            <select className={selectClass} defaultValue="health">
+                            <select className={selectClass} onChange={handleFilterChange(setHealthFilter)} value={healthFilter}>
                                 <option value="health">Health Status</option>
                                 <option value="cleared">Cleared</option>
-                                <option value="review">Needs Review</option>
+                                <option value="needs-review">Needs Review</option>
                             </select>
 
-                            <select className={selectClass} defaultValue="registration">
+                            <select className={selectClass} onChange={handleFilterChange(setApprovalFilter)} value={approvalFilter}>
                                 <option value="registration">Reg Status</option>
                                 <option value="approved">Approved</option>
                                 <option value="pending">Pending</option>
                                 <option value="rejected">Rejected</option>
                             </select>
 
-                            <select className={selectClass} defaultValue="report">
+                            <select className={selectClass} onChange={handleFilterChange(setReportFilter)} value={reportFilter}>
                                 <option value="report">Report Status</option>
                                 <option value="open">Open</option>
                                 <option value="closed">Closed</option>
                             </select>
 
-                            <select className={selectClass} defaultValue="newest">
+                            <select className={selectClass} onChange={handleFilterChange(setSortBy)} value={sortBy}>
                                 <option value="newest">Sort by: Newest</option>
                                 <option value="oldest">Sort by: Oldest</option>
                             </select>
@@ -194,8 +298,8 @@ function HorseManagement() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {horses.map((horse, index) => (
-                                        <tr key={horse.name}>
+                                    {visibleHorses.map((horse, index) => (
+                                        <tr key={horse.id}>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
                                                 <div className="flex min-w-[220px] items-center gap-3">
                                                     <img
@@ -210,7 +314,7 @@ function HorseManagement() {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">{horse.ageWeight}</td>
+                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">{horse.age} yrs / {horse.weight} kg</td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">{horse.owner}</td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
                                                 <span className={`inline-flex min-h-6 items-center rounded border px-2.5 text-[0.68rem] font-black uppercase ${approvalClass[formatClass(horse.approval)]}`}>
@@ -218,7 +322,7 @@ function HorseManagement() {
                                                 </span>
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
-                                                <button aria-label={`Open details for ${horse.name}`} className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md bg-transparent text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" type="button">
+                                                <button aria-label={`Cycle approval for ${horse.name}`} className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md bg-transparent text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => handleToggleHorseApproval(horse)} type="button">
                                                     <FaEllipsisV aria-hidden="true" />
                                                 </button>
                                             </td>
@@ -229,12 +333,20 @@ function HorseManagement() {
                         </div>
 
                         <div className="flex min-h-[62px] items-center justify-between gap-[18px] px-5 py-3.5 text-[0.82rem] font-bold text-[var(--admin-muted)] max-[860px]:flex-col max-[860px]:items-stretch">
-                            <span>Showing 2 of 248 horses</span>
+                            <span>Showing {firstShown} - {lastShown} of {filteredHorses.length} horses</span>
                             <div className="flex items-center gap-2">
-                                <button className={pageButtonClass} type="button">Previous</button>
-                                <button className={`${pageButtonClass} bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]`} type="button">1</button>
-                                <button className={pageButtonClass} type="button">2</button>
-                                <button className={pageButtonClass} type="button">Next</button>
+                                <button className={pageButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">Previous</button>
+                                {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+                                    <button
+                                        className={`${pageButtonClass} ${pageNumber === page ? 'bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]' : ''}`}
+                                        key={pageNumber}
+                                        onClick={() => setPage(pageNumber)}
+                                        type="button"
+                                    >
+                                        {pageNumber}
+                                    </button>
+                                ))}
+                                <button className={pageButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">Next</button>
                             </div>
                         </div>
                     </section>
@@ -249,8 +361,8 @@ function HorseManagement() {
                         </div>
 
                         <div className="grid grid-cols-2 gap-5 max-[1180px]:grid-cols-1">
-                            {reports.map((report) => (
-                                <article className="grid gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5 shadow-[0_14px_30px_rgba(91,26,19,0.05)]" key={report.horse}>
+                            {openReports.map((report) => (
+                                <article className="grid gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5 shadow-[0_14px_30px_rgba(91,26,19,0.05)]" key={report.id}>
                                     <div className="flex items-start justify-between gap-4">
                                         <div>
                                             <h3 className="m-0 text-base text-[var(--admin-ink)]">{report.horse}</h3>
@@ -267,9 +379,9 @@ function HorseManagement() {
                                     </div>
 
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <button className="min-h-[36px] cursor-pointer rounded-md bg-[var(--admin-primary)] px-3 font-black text-white hover:bg-[var(--admin-primary-dark)]" type="button">Review Report</button>
-                                        <button className="min-h-[36px] cursor-pointer rounded-md border border-[#d89288] bg-white px-3 font-black text-[var(--admin-primary)] hover:bg-[#fff0ed]" type="button">Suspend Temporarily</button>
-                                        <button aria-label={`Delete report for ${report.horse}`} className="grid h-9 w-9 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" type="button">
+                                        <button className="min-h-[36px] cursor-pointer rounded-md bg-[var(--admin-primary)] px-3 font-black text-white hover:bg-[var(--admin-primary-dark)]" onClick={() => handleReviewReport(report)} type="button">Review Report</button>
+                                        <button className="min-h-[36px] cursor-pointer rounded-md border border-[#d89288] bg-white px-3 font-black text-[var(--admin-primary)] hover:bg-[#fff0ed]" onClick={() => handleSuspendHorse(report)} type="button">Suspend Temporarily</button>
+                                        <button aria-label={`Delete report for ${report.horse}`} className="grid h-9 w-9 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" onClick={() => handleDeleteReport(report.id)} type="button">
                                             <FaTrashAlt aria-hidden="true" />
                                         </button>
                                     </div>

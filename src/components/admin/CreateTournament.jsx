@@ -1,5 +1,10 @@
 import {
+    useState,
+} from 'react';
+
+import {
     Link,
+    useNavigate,
 } from 'react-router-dom';
 
 import {
@@ -12,6 +17,8 @@ import {
     FaTrophy,
     FaUserTie,
 } from 'react-icons/fa';
+
+import { adminMockApi } from '../../api/adminMockApi';
 
 import AdminLayout from './AdminLayout';
 
@@ -32,8 +39,36 @@ const iconClass = 'pointer-events-none absolute top-1/2 h-[15px] w-[15px] -trans
 const actionButtonClass = 'inline-flex min-h-[38px] cursor-pointer items-center justify-center gap-2 rounded-md px-[18px] text-[0.78rem] font-[850] no-underline max-[760px]:w-full';
 
 function CreateTournament() {
+    const navigate = useNavigate();
+    const [isSaving, setIsSaving] = useState(false);
+
+    const persistTournament = async (form, status) => {
+        const formData = new FormData(form);
+
+        setIsSaving(true);
+        await adminMockApi.createTournament({
+            name: formData.get('name'),
+            className: formData.get('breed'),
+            location: formData.get('location'),
+            city: formData.get('location'),
+            startDate: formData.get('startDate'),
+            endDate: formData.get('endDate'),
+            maxHorses: formData.get('maxHorses'),
+            goldPrize: formData.get('goldPrize'),
+            silverPrize: formData.get('silverPrize'),
+            bronzePrize: formData.get('bronzePrize'),
+        }, status);
+        setIsSaving(false);
+        navigate('/admin/races');
+    };
+
     const handleSubmit = (event) => {
         event.preventDefault();
+        persistTournament(event.currentTarget, 'Active');
+    };
+
+    const handleSaveDraft = (event) => {
+        persistTournament(event.currentTarget.form, 'Draft');
     };
 
     return (
@@ -58,7 +93,7 @@ function CreateTournament() {
 
                                 <label className={fieldClass}>
                                     <span className={labelClass}>Tournament Name</span>
-                                    <input className={inputClass} placeholder="e.g. The Prestige Cup 2024" type="text" />
+                                    <input className={inputClass} name="name" placeholder="e.g. The Prestige Cup 2024" required type="text" />
                                 </label>
 
                                 <div className={twoColumnClass}>
@@ -66,13 +101,13 @@ function CreateTournament() {
                                         <span className={labelClass}>Location</span>
                                         <div className="relative flex min-h-10 items-center">
                                             <FaMapMarkerAlt aria-hidden="true" className={`${iconClass} left-3`} />
-                                            <input className={`${controlBaseClass} h-10 py-0 pl-9 pr-3`} placeholder="Race Track Name, City" type="text" />
+                                            <input className={`${controlBaseClass} h-10 py-0 pl-9 pr-3`} name="location" placeholder="Race Track Name, City" type="text" />
                                         </div>
                                     </label>
 
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Description</span>
-                                        <textarea className={textareaClass} placeholder="Provide a detailed overview of the race history and significance..." rows="4" />
+                                        <textarea className={textareaClass} name="description" placeholder="Provide a detailed overview of the race history and significance..." rows="4" />
                                     </label>
                                 </div>
 
@@ -80,7 +115,7 @@ function CreateTournament() {
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Start Date</span>
                                         <div className="relative flex min-h-10 items-center">
-                                            <input className={`${controlBaseClass} h-10 py-0 pl-3 pr-9`} type="date" />
+                                            <input className={`${controlBaseClass} h-10 py-0 pl-3 pr-9`} name="startDate" type="date" />
                                             <FaCalendarAlt aria-hidden="true" className={`${iconClass} right-3`} />
                                         </div>
                                     </label>
@@ -88,7 +123,7 @@ function CreateTournament() {
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Final Registration Date</span>
                                         <div className="relative flex min-h-10 items-center">
-                                            <input className={`${controlBaseClass} h-10 py-0 pl-3 pr-9`} type="date" />
+                                            <input className={`${controlBaseClass} h-10 py-0 pl-3 pr-9`} name="endDate" type="date" />
                                             <FaCalendarAlt aria-hidden="true" className={`${iconClass} right-3`} />
                                         </div>
                                     </label>
@@ -97,12 +132,12 @@ function CreateTournament() {
                                 <div className={twoColumnClass}>
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Distance</span>
-                                        <input className={inputClass} type="text" />
+                                        <input className={inputClass} name="distance" type="text" />
                                     </label>
 
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Max Horses</span>
-                                        <input className={inputClass} defaultValue="20" type="number" />
+                                        <input className={inputClass} defaultValue="20" name="maxHorses" type="number" />
                                     </label>
                                 </div>
                             </section>
@@ -115,28 +150,28 @@ function CreateTournament() {
 
                                 <label className={`${fieldClass} w-[min(310px,100%)] max-[760px]:w-full`}>
                                     <span className={labelClass}>Horse Breed</span>
-                                    <input className={inputClass} type="text" />
+                                    <input className={inputClass} name="breed" type="text" />
                                 </label>
 
                                 <div className={fourColumnClass}>
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Max Weight (kg)</span>
-                                        <input className={inputClass} defaultValue="650" type="number" />
+                                        <input className={inputClass} defaultValue="650" name="maxWeight" type="number" />
                                     </label>
 
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Min Weight (kg)</span>
-                                        <input className={inputClass} defaultValue="450" type="number" />
+                                        <input className={inputClass} defaultValue="450" name="minWeight" type="number" />
                                     </label>
 
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Max Horse Age (yrs)</span>
-                                        <input className={inputClass} defaultValue="8" type="number" />
+                                        <input className={inputClass} defaultValue="8" name="maxAge" type="number" />
                                     </label>
 
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Min Horse Age (yrs)</span>
-                                        <input className={inputClass} defaultValue="3" type="number" />
+                                        <input className={inputClass} defaultValue="3" name="minAge" type="number" />
                                     </label>
                                 </div>
                             </section>
@@ -153,26 +188,26 @@ function CreateTournament() {
 
                                         <label className="grid min-h-9 grid-cols-[minmax(110px,auto)_minmax(0,1fr)_28px] items-center overflow-hidden rounded-md border border-[var(--admin-border)] bg-[#fffdfc]">
                                             <span className="pl-3 text-[0.72rem] font-[850] text-[#5b403c]">GOLD PRIZE:</span>
-                                            <input aria-label="Gold prize" className="h-[34px] w-full min-w-0 border-0 bg-transparent px-2 text-[var(--admin-ink)] outline-0 focus:shadow-none" type="number" />
+                                            <input aria-label="Gold prize" className="h-[34px] w-full min-w-0 border-0 bg-transparent px-2 text-[var(--admin-ink)] outline-0 focus:shadow-none" name="goldPrize" type="number" />
                                             <FaDollarSign aria-hidden="true" className="justify-self-center text-[#5b403c]" />
                                         </label>
 
                                         <label className="grid min-h-9 grid-cols-[minmax(110px,auto)_minmax(0,1fr)_28px] items-center overflow-hidden rounded-md border border-[var(--admin-border)] bg-[#fffdfc]">
                                             <span className="pl-3 text-[0.72rem] font-[850] text-[#5b403c]">SILVER PRIZE:</span>
-                                            <input aria-label="Silver prize" className="h-[34px] w-full min-w-0 border-0 bg-transparent px-2 text-[var(--admin-ink)] outline-0 focus:shadow-none" type="number" />
+                                            <input aria-label="Silver prize" className="h-[34px] w-full min-w-0 border-0 bg-transparent px-2 text-[var(--admin-ink)] outline-0 focus:shadow-none" name="silverPrize" type="number" />
                                             <FaDollarSign aria-hidden="true" className="justify-self-center text-[#5b403c]" />
                                         </label>
 
                                         <label className="grid min-h-9 grid-cols-[minmax(110px,auto)_minmax(0,1fr)_28px] items-center overflow-hidden rounded-md border border-[var(--admin-border)] bg-[#fffdfc]">
                                             <span className="pl-3 text-[0.72rem] font-[850] text-[#5b403c]">BRONZE PRIZE:</span>
-                                            <input aria-label="Bronze prize" className="h-[34px] w-full min-w-0 border-0 bg-transparent px-2 text-[var(--admin-ink)] outline-0 focus:shadow-none" type="number" />
+                                            <input aria-label="Bronze prize" className="h-[34px] w-full min-w-0 border-0 bg-transparent px-2 text-[var(--admin-ink)] outline-0 focus:shadow-none" name="bronzePrize" type="number" />
                                             <FaDollarSign aria-hidden="true" className="justify-self-center text-[#5b403c]" />
                                         </label>
                                     </div>
 
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Point Prediction (pts)</span>
-                                        <select className={selectClass} defaultValue="">
+                                        <select className={selectClass} defaultValue="" name="predictionPoints">
                                             <option value="" disabled>Select Point</option>
                                             <option value="10">10 pts</option>
                                             <option value="25">25 pts</option>
@@ -183,7 +218,7 @@ function CreateTournament() {
 
                                 <label className={fieldClass}>
                                     <span className={labelClass}>Rules</span>
-                                    <textarea className={textareaClass} placeholder="Detail all eligibility, track rules, and disciplinary procedures..." rows="6" />
+                                    <textarea className={textareaClass} name="rules" placeholder="Detail all eligibility, track rules, and disciplinary procedures..." rows="6" />
                                 </label>
                             </section>
 
@@ -195,7 +230,7 @@ function CreateTournament() {
 
                                 <label className={fieldClass}>
                                     <span className={labelClass}>Select Referee</span>
-                                    <select className={selectClass} defaultValue="">
+                                    <select className={selectClass} defaultValue="" name="referee">
                                         <option value="" disabled></option>
                                         <option value="marcus-crawford">Marcus Crawford</option>
                                         <option value="sarah-jenkins">Sarah Jenkins</option>
@@ -210,12 +245,12 @@ function CreateTournament() {
                                 </Link>
 
                                 <div className="flex items-center justify-end gap-3.5 max-[760px]:flex-col max-[760px]:items-stretch">
-                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]`} type="button">
+                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]`} disabled={isSaving} onClick={handleSaveDraft} type="button">
                                         <FaGavel aria-hidden="true" />
-                                        <span>Save Draft</span>
+                                        <span>{isSaving ? 'Saving...' : 'Save Draft'}</span>
                                     </button>
-                                    <button className={`${actionButtonClass} bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary-dark)]`} type="submit">
-                                        Publish Tournament
+                                    <button className={`${actionButtonClass} bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary-dark)]`} disabled={isSaving} type="submit">
+                                        {isSaving ? 'Saving...' : 'Publish Tournament'}
                                     </button>
                                 </div>
                             </div>

@@ -1,5 +1,12 @@
 import {
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
+
+import {
     FaCalendarAlt,
+    FaChartLine,
     FaCheck,
     FaClipboardCheck,
     FaEllipsisV,
@@ -10,121 +17,7 @@ import {
 } from 'react-icons/fa';
 
 import AdminLayout from './AdminLayout';
-
-const stats = [
-    {
-        label: 'Total Users',
-        value: '12,450',
-        trend: '+8.4%',
-        icon: FaUsers,
-    },
-    {
-        label: 'Active Tournaments',
-        value: '8',
-        trend: '3 today',
-        icon: FaTrophy,
-    },
-    {
-        label: 'Pending Registrations',
-        value: '142',
-        trend: '24 urgent',
-        icon: FaClipboardCheck,
-    },
-    {
-        label: 'Pending Results',
-        value: '36',
-        trend: '6 disputed',
-        icon: FaFlagCheckered,
-    },
-];
-
-const tournaments = [
-    {
-        name: 'Royal Ascot Derby',
-        class: 'Class 1 Flat',
-        date: 'Jun 18, 2026',
-        entries: '24/30',
-        status: 'Published',
-    },
-    {
-        name: 'Dubai World Cup',
-        class: 'Group 1 Flat',
-        date: 'Mar 30, 2026',
-        entries: '12/20',
-        status: 'Open',
-    },
-    {
-        name: 'Kentucky Derby Prep',
-        class: 'Grade II Stakes',
-        date: 'Apr 15, 2026',
-        entries: '0/40',
-        status: 'Draft',
-    },
-    {
-        name: 'Melbourne Cup Qualifier',
-        class: 'Handicap',
-        date: 'Nov 05, 2026',
-        entries: '18/24',
-        status: 'Published',
-    },
-];
-
-const approvals = [
-    {
-        name: 'Julian Mercer',
-        role: 'Horse Owner',
-        request: 'New horse registration',
-        progress: 85,
-        avatar: 'JM',
-    },
-    {
-        name: 'Clara Schmidt',
-        role: 'Jockey',
-        request: 'License renewal',
-        progress: 40,
-        avatar: 'CS',
-    },
-    {
-        name: 'Minh Tran',
-        role: 'Referee',
-        request: 'Race assignment access',
-        progress: 68,
-        avatar: 'MT',
-    },
-];
-
-const users = [
-    {
-        name: 'Mark Vance',
-        role: 'Jockey',
-        avatar: 'MV',
-        className: 'jockey',
-    },
-    {
-        name: 'Elena Rossi',
-        role: 'Horse Owner',
-        avatar: 'ER',
-        className: 'owner',
-    },
-    {
-        name: 'James Thorne',
-        role: 'Admin',
-        avatar: 'JT',
-        className: 'admin',
-    },
-    {
-        name: 'Sarah Chen',
-        role: 'Referee',
-        avatar: 'SC',
-        className: 'referee',
-    },
-    {
-        name: 'Robert King',
-        role: 'Spectator',
-        avatar: 'RK',
-        className: 'spectator',
-    },
-];
+import { adminMockApi } from '../../api/adminMockApi';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 const headingClass = 'flex items-center justify-between gap-[18px] max-[720px]:flex-col max-[720px]:items-stretch';
@@ -142,6 +35,9 @@ const statusClass = {
     published: 'border-[#e8b6ad] bg-[#fbe5e1] text-[var(--admin-primary-dark)]',
     open: 'border-[#e2cd79] bg-[#f7efcf] text-[#6a520d]',
     draft: 'border-[#e0beb2] bg-[#f2ded7] text-[#7b4c42]',
+    active: 'border-[#afe2c4] bg-[#dff7e9] text-[#118548]',
+    completed: 'border-[#dbaaa5] bg-[#f5e1df] text-[var(--admin-primary-dark)]',
+    cancelled: 'border-[#f5b8bf] bg-[#ffe5e7] text-[#c3222c]',
 };
 const avatarBaseClass = 'grid h-[42px] w-[42px] flex-none place-items-center overflow-hidden rounded-full text-[0.8rem] font-extrabold text-white';
 const avatarClass = {
@@ -153,9 +49,107 @@ const avatarClass = {
     admin: 'bg-[linear-gradient(145deg,#650404,#c04733)]',
 };
 
+const statIconByTone = {
+    users: FaUsers,
+    tournaments: FaTrophy,
+    registrations: FaClipboardCheck,
+    results: FaFlagCheckered,
+};
+
+const roleAvatarClass = (role = '') => {
+    const key = role.toLowerCase().replace(/\s+/g, '-');
+
+    if (key === 'horse-owner') {
+        return avatarClass.owner;
+    }
+
+    return avatarClass[key] || avatarClass.default;
+};
+
+const statusKey = (value) => value.toLowerCase().replace(/\s+/g, '-');
+
+const matchesQuery = (values, query) => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+        return true;
+    }
+
+    return values.some((value) => String(value).toLowerCase().includes(normalizedQuery));
+};
+
 function AdminDashboard() {
+    const [dashboard, setDashboard] = useState({
+        stats: [],
+        tournaments: [],
+        approvals: [],
+        users: [],
+    });
+    const [isLoading, setIsLoading] = useState(true);
+    const [query, setQuery] = useState('');
+    const [selectedUser, setSelectedUser] = useState(null);
+
+    const todayLabel = useMemo(() => new Intl.DateTimeFormat('en-US', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    }).format(new Date()), []);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        adminMockApi.getDashboard().then((payload) => {
+            if (isMounted) {
+                setDashboard(payload);
+                setIsLoading(false);
+            }
+        });
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    const visibleTournaments = useMemo(() => dashboard.tournaments.filter((tournament) => matchesQuery([
+        tournament.name,
+        tournament.className,
+        tournament.city,
+        tournament.status,
+    ], query)), [dashboard.tournaments, query]);
+
+    const visibleApprovals = useMemo(() => dashboard.approvals.filter((approval) => matchesQuery([
+        approval.name,
+        approval.role,
+        approval.request,
+    ], query)), [dashboard.approvals, query]);
+
+    const visibleUsers = useMemo(() => dashboard.users.filter((user) => matchesQuery([
+        user.name,
+        user.role,
+        user.email,
+    ], query)), [dashboard.users, query]);
+
+    const refreshDashboard = async () => {
+        setDashboard(await adminMockApi.getDashboard());
+    };
+
+    const handleApproval = async (approval, nextStatus) => {
+        if (approval.source === 'user') {
+            await adminMockApi.updateUserStatus(approval.id, nextStatus === 'Approved' ? 'Active' : 'Suspended');
+        } else {
+            await adminMockApi.updateHorseApproval(approval.id, nextStatus);
+        }
+
+        await refreshDashboard();
+    };
+
     return (
-        <AdminLayout activeKey="dashboard" searchPlaceholder="Search users, horses, races...">
+        <AdminLayout
+            activeKey="dashboard"
+            onSearchChange={setQuery}
+            searchPlaceholder="Search users, horses, races..."
+            searchValue={query}
+        >
                 <section className={pageShellClass}>
                     <div className={headingClass}>
                         <div>
@@ -163,7 +157,7 @@ function AdminDashboard() {
                                 Dashboard Overview
                             </h1>
                             <p className="mb-0 mt-1.5 font-[650] text-[var(--admin-muted)]">
-                                Today: June 2, 2026
+                                Today: {todayLabel}
                             </p>
                         </div>
                         <button className={quietButtonClass} type="button">
@@ -172,9 +166,13 @@ function AdminDashboard() {
                         </button>
                     </div>
 
+                    {isLoading ? (
+                        <p className="m-0 font-bold text-[var(--admin-muted)]">Loading mock data...</p>
+                    ) : null}
+
                     <section aria-label="Summary statistics" className="grid grid-cols-4 gap-5 max-[1280px]:grid-cols-2 max-[720px]:grid-cols-1">
-                        {stats.map((stat) => {
-                            const Icon = stat.icon;
+                        {dashboard.stats.map((stat) => {
+                            const Icon = statIconByTone[stat.tone] || FaChartLine;
 
                             return (
                                 <article className="grid min-h-[140px] content-start gap-2 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-[22px]" key={stat.label}>
@@ -208,19 +206,20 @@ function AdminDashboard() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {tournaments.map((tournament, index) => {
-                                            const isLast = index === tournaments.length - 1;
+                                        {visibleTournaments.map((tournament, index) => {
+                                            const isLast = index === visibleTournaments.length - 1;
+                                            const status = statusKey(tournament.status);
 
                                             return (
                                             <tr key={tournament.name}>
                                                 <td className={tableCellClass(isLast)}>
                                                     <strong className="block">{tournament.name}</strong>
-                                                    <span className="mt-1 block text-[var(--admin-muted)]">{tournament.class}</span>
+                                                    <span className="mt-1 block text-[var(--admin-muted)]">{tournament.className}</span>
                                                 </td>
-                                                <td className={tableCellClass(isLast)}>{tournament.date}</td>
-                                                <td className={tableCellClass(isLast)}>{tournament.entries}</td>
+                                                <td className={tableCellClass(isLast)}>{adminMockApi.formatters.toDateLabel(tournament.startDate)}</td>
+                                                <td className={tableCellClass(isLast)}>{tournament.registeredHorses}/{tournament.maxHorses}</td>
                                                 <td className={tableCellClass(isLast)}>
-                                                    <span className={`inline-flex min-h-6 items-center rounded-[5px] border px-2 text-[0.74rem] font-extrabold ${statusClass[tournament.status.toLowerCase()]}`}>
+                                                    <span className={`inline-flex min-h-6 items-center rounded-[5px] border px-2 text-[0.74rem] font-extrabold ${statusClass[status]}`}>
                                                         {tournament.status}
                                                     </span>
                                                 </td>
@@ -240,11 +239,11 @@ function AdminDashboard() {
                         <aside className={`${panelClass} self-stretch`}>
                             <div className={sectionHeadClass}>
                                 <h2 className="m-0 text-[1.05rem] text-[var(--admin-ink)]">Approval Queue</h2>
-                                <span className={sectionActionClass}>8 New</span>
+                                <span className={sectionActionClass}>{visibleApprovals.length} New</span>
                             </div>
 
                             <div className="grid gap-3.5 p-[18px]">
-                                {approvals.map((approval) => (
+                                {visibleApprovals.map((approval) => (
                                     <article className="grid gap-3 rounded-lg border border-[var(--admin-border)] bg-[#fffdfc] p-3.5" key={approval.name}>
                                         <div className="flex items-center gap-3">
                                             <div className={`${avatarBaseClass} ${avatarClass.default}`}>{approval.avatar}</div>
@@ -267,11 +266,11 @@ function AdminDashboard() {
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-2">
-                                            <button className="inline-flex min-h-[34px] cursor-pointer items-center justify-center gap-[7px] rounded-md bg-[var(--admin-primary)] text-[0.78rem] font-[850] text-white" type="button">
+                                            <button className="inline-flex min-h-[34px] cursor-pointer items-center justify-center gap-[7px] rounded-md bg-[var(--admin-primary)] text-[0.78rem] font-[850] text-white" onClick={() => handleApproval(approval, 'Approved')} type="button">
                                                 <FaCheck aria-hidden="true" />
                                                 <span>Approve</span>
                                             </button>
-                                            <button className="inline-flex min-h-[34px] cursor-pointer items-center justify-center gap-[7px] rounded-md border border-[#d89288] bg-white text-[0.78rem] font-[850] text-[var(--admin-primary)]" type="button">
+                                            <button className="inline-flex min-h-[34px] cursor-pointer items-center justify-center gap-[7px] rounded-md border border-[#d89288] bg-white text-[0.78rem] font-[850] text-[var(--admin-primary)]" onClick={() => handleApproval(approval, 'Rejected')} type="button">
                                                 <FaTimes aria-hidden="true" />
                                                 <span>Reject</span>
                                             </button>
@@ -290,19 +289,70 @@ function AdminDashboard() {
                             </div>
 
                             <div className="grid grid-cols-5 gap-3.5 overflow-x-auto p-[18px] [grid-template-columns:repeat(5,minmax(118px,1fr))]">
-                                {users.map((user) => (
+                                {visibleUsers.map((user) => (
                                     <article className="grid min-w-[118px] justify-items-center gap-[7px] rounded-lg border border-[var(--admin-border)] bg-[#fffdfc] px-2.5 py-4 text-center" key={user.name}>
-                                        <div className={`${avatarBaseClass} ${avatarClass[user.className]}`}>
+                                        <div className={`${avatarBaseClass} ${roleAvatarClass(user.role)}`}>
                                             {user.avatar}
                                         </div>
                                         <strong className="block text-[0.9rem] text-[var(--admin-ink)]">{user.name}</strong>
                                         <span className="text-[0.78rem] font-bold text-[var(--admin-muted)]">{user.role}</span>
-                                        <button className="min-h-6 cursor-pointer rounded-full bg-[#ffe8e4] px-[9px] text-[0.68rem] font-[850] text-[var(--admin-primary)]" type="button">Details</button>
+                                        <button className="min-h-6 cursor-pointer rounded-full bg-[#ffe8e4] px-[9px] text-[0.68rem] font-[850] text-[var(--admin-primary)]" onClick={() => setSelectedUser(user)} type="button">Details</button>
                                     </article>
                                 ))}
                             </div>
                         </div>
                     </section>
+
+                    {selectedUser && (
+                        <div className="fixed inset-0 z-20 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={() => setSelectedUser(null)} role="presentation">
+                            <section
+                                aria-label={`Details for ${selectedUser.name}`}
+                                className="grid w-[min(520px,100%)] gap-5 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 shadow-[0_20px_48px_rgba(45,32,32,0.22)]"
+                                onClick={(event) => event.stopPropagation()}
+                                role="dialog"
+                            >
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className={`${avatarBaseClass} h-14 w-14 ${roleAvatarClass(selectedUser.role)}`}>
+                                            {selectedUser.avatar}
+                                        </div>
+                                        <div>
+                                            <h2 className="m-0 text-[1.35rem] leading-[1.15] text-[var(--admin-primary-dark)]">{selectedUser.name}</h2>
+                                            <span className="mt-2 inline-flex text-[0.8rem] font-black text-[var(--admin-muted)]">{selectedUser.id}</span>
+                                        </div>
+                                    </div>
+                                    <button aria-label="Close user details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => setSelectedUser(null)} type="button">
+                                        <FaTimes aria-hidden="true" />
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3 text-[0.9rem] max-[560px]:grid-cols-1">
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Email</span>
+                                        <strong className="break-words text-[var(--admin-ink)]">{selectedUser.email}</strong>
+                                    </div>
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Role</span>
+                                        <strong>{selectedUser.role}</strong>
+                                    </div>
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Status</span>
+                                        <strong className={selectedUser.status === 'Active' ? 'text-[#0aa15f]' : 'text-[var(--admin-primary)]'}>{selectedUser.status}</strong>
+                                    </div>
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Verified</span>
+                                        <strong className={selectedUser.verified ? 'text-[#0aa15f]' : 'text-[#d71920]'}>
+                                            {selectedUser.verified ? 'Verified' : 'Not verified'}
+                                        </strong>
+                                    </div>
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Created At</span>
+                                        <strong>{adminMockApi.formatters.toDateLabel(selectedUser.createdAt)}</strong>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    )}
 
                 </section>
         </AdminLayout>
