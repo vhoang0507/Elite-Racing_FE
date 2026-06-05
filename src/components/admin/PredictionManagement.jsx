@@ -1,8 +1,13 @@
 import {
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
+
+import {
     FaBan,
     FaCalendarAlt,
     FaChevronDown,
-    FaEdit,
     FaRegChartBar,
     FaSearch,
     FaSortAmountDown,
@@ -10,75 +15,13 @@ import {
     FaTrophy,
 } from 'react-icons/fa';
 
+import {
+    adminMockApi,
+    adminMockTotals,
+} from '../../api/adminMockApi';
 import horseRacing from '../../assets/horse-racing.jpg';
 
 import AdminLayout from './AdminLayout';
-
-const summaryCards = [
-    {
-        label: 'Total Predictions',
-        value: '12,580',
-        icon: FaRegChartBar,
-    },
-    {
-        label: 'Active Events',
-        value: '14',
-        icon: FaCalendarAlt,
-    },
-    {
-        label: 'Most Predicted',
-        value: 'Desert Thunder',
-        icon: FaSquare,
-    },
-];
-
-const predictions = [
-    {
-        tournament: 'Royal Ascot Classic',
-        spectator: 'Royal Ascot Classic',
-        horse: 'Desert Thunder',
-        status: 'Publish',
-        imagePosition: '26% center',
-    },
-    {
-        tournament: 'Dubai World Cup',
-        spectator: 'Dubai World Cup',
-        horse: 'Silver Streak',
-        status: 'Draft',
-        imagePosition: '50% center',
-    },
-    {
-        tournament: 'Kentucky Derby',
-        spectator: 'Kentucky Derby',
-        horse: 'Midnight Star',
-        status: 'Draft',
-        imagePosition: '76% center',
-    },
-];
-
-const topPredicted = [
-    {
-        horse: 'Night Fury',
-        count: '1,500 predictions',
-        rank: '2',
-        tone: 'silver',
-        imagePosition: '18% center',
-    },
-    {
-        horse: 'Desert Thunder',
-        count: '2,500 predictions',
-        rank: '1',
-        tone: 'gold',
-        imagePosition: '42% center',
-    },
-    {
-        horse: 'Storm Chaser',
-        count: '1,200 predictions',
-        rank: '3',
-        tone: 'bronze',
-        imagePosition: '68% center',
-    },
-];
 
 const formatClass = (value) => value.toLowerCase();
 
@@ -90,16 +33,131 @@ const selectClass = 'h-full w-full min-w-0 cursor-pointer appearance-none border
 const statusClass = {
     publish: 'bg-[#e8f7ee] text-[#16864f] before:bg-[#16864f]',
     draft: 'bg-[#fff7db] text-[#a17809] before:bg-[#a17809]',
+    disabled: 'bg-[#ffe8e4] text-[var(--admin-primary)] before:bg-[var(--admin-primary)]',
 };
 const rankClass = {
     gold: 'bg-[#ffd85a] text-[#7b5a05]',
     silver: 'bg-[#e7e9ee] text-[#5f697a]',
     bronze: 'bg-[#f3c29a] text-[#79430c]',
 };
+const rankTone = ['gold', 'silver', 'bronze'];
+
+const matchesQuery = (prediction, query) => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+        return true;
+    }
+
+    return [
+        prediction.tournament,
+        prediction.spectator,
+        prediction.horse,
+        prediction.status,
+        prediction.accuracy,
+    ].some((value) => String(value).toLowerCase().includes(normalizedQuery));
+};
 
 function PredictionManagement() {
+    const [predictions, setPredictions] = useState([]);
+    const [query, setQuery] = useState('');
+    const [tournamentFilter, setTournamentFilter] = useState('all-tournaments');
+    const [statusFilter, setStatusFilter] = useState('all-status');
+    const [accuracyFilter, setAccuracyFilter] = useState('all-accuracy');
+    const [sortBy, setSortBy] = useState('count');
+
+    useEffect(() => {
+        let isMounted = true;
+
+        adminMockApi.getPredictions().then((payload) => {
+            if (isMounted) {
+                setPredictions(payload);
+            }
+        });
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    const tournaments = useMemo(() => Array.from(new Set(predictions.map((prediction) => prediction.tournament))), [predictions]);
+
+    const summaryCards = useMemo(() => {
+        const topPrediction = [...predictions].sort((current, next) => next.count - current.count)[0];
+
+        return [
+            {
+                label: 'Total Predictions',
+                value: (adminMockTotals.predictions + predictions.reduce((total, prediction) => total + prediction.count, 0)).toLocaleString('en-US'),
+                icon: FaRegChartBar,
+            },
+            {
+                label: 'Active Events',
+                value: String(tournaments.length),
+                icon: FaCalendarAlt,
+            },
+            {
+                label: 'Most Predicted',
+                value: topPrediction?.horse || 'No data',
+                icon: FaSquare,
+            },
+        ];
+    }, [predictions, tournaments.length]);
+
+    const filteredPredictions = useMemo(() => {
+        const filtered = predictions.filter((prediction) => (
+            matchesQuery(prediction, query)
+            && (tournamentFilter === 'all-tournaments' || prediction.tournament === tournamentFilter)
+            && (statusFilter === 'all-status' || formatClass(prediction.status) === statusFilter)
+            && (accuracyFilter === 'all-accuracy' || prediction.accuracy.toLowerCase().startsWith(accuracyFilter))
+        ));
+
+        return [...filtered].sort((current, next) => {
+            if (sortBy === 'horse') {
+                return current.horse.localeCompare(next.horse);
+            }
+
+            if (sortBy === 'tournament') {
+                return current.tournament.localeCompare(next.tournament);
+            }
+
+            return next.count - current.count;
+        });
+    }, [accuracyFilter, predictions, query, sortBy, statusFilter, tournamentFilter]);
+
+    const topPredicted = useMemo(() => [...predictions]
+        .sort((current, next) => next.count - current.count)
+        .slice(0, 3)
+        .map((prediction, index) => ({
+            ...prediction,
+            rank: String(index + 1),
+            tone: rankTone[index],
+        })), [predictions]);
+
+    const handleQueryChange = (value) => {
+        setQuery(value);
+    };
+
+    const handleDisable = async (prediction) => {
+        await adminMockApi.updatePredictionStatus(prediction.id, 'Disabled');
+        setPredictions((current) => current.map((item) => (
+            item.id === prediction.id
+                ? {
+                    ...item,
+                    status: 'Disabled',
+                }
+                : item
+        )));
+    };
+
     return (
-        <AdminLayout activeKey="predictions" mainClassName="prediction-management-main">
+        <AdminLayout
+            activeKey="predictions"
+            mainClassName="prediction-management-main"
+            onSearchChange={handleQueryChange}
+            searchPlaceholder="Search predictions, horses, tournaments..."
+            searchValue={query}
+        >
                 <section className={pageShellClass}>
                     <div>
                         <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)] max-[820px]:text-[1.6rem]">
@@ -126,30 +184,31 @@ function PredictionManagement() {
                     <section className="grid grid-cols-[minmax(220px,1fr)_190px_170px_170px_96px] gap-3 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[#fff4f1] p-4 max-[1180px]:grid-cols-2 max-[820px]:grid-cols-1">
                         <label className="flex h-[42px] items-center gap-2 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[#80625d]">
                             <FaSearch aria-hidden="true" />
-                            <input className="h-full w-full min-w-0 border-0 bg-transparent p-0 text-[0.8rem] text-[var(--admin-ink)] outline-0" placeholder="Search horse or tournament..." type="search" />
+                            <input className="h-full w-full min-w-0 border-0 bg-transparent p-0 text-[0.8rem] text-[var(--admin-ink)] outline-0" onChange={(event) => handleQueryChange(event.target.value)} placeholder="Search horse or tournament..." type="search" value={query} />
                         </label>
 
                         <label className={selectFieldClass}>
-                            <select className={selectClass} defaultValue="all-tournaments">
+                            <select className={selectClass} onChange={(event) => setTournamentFilter(event.target.value)} value={tournamentFilter}>
                                 <option value="all-tournaments">All Tournaments</option>
-                                <option value="ascot">Royal Ascot Classic</option>
-                                <option value="dubai">Dubai World Cup</option>
-                                <option value="kentucky">Kentucky Derby</option>
+                                {tournaments.map((tournament) => (
+                                    <option key={tournament} value={tournament}>{tournament}</option>
+                                ))}
                             </select>
                             <FaChevronDown aria-hidden="true" />
                         </label>
 
                         <label className={selectFieldClass}>
-                            <select className={selectClass} defaultValue="all-status">
+                            <select className={selectClass} onChange={(event) => setStatusFilter(event.target.value)} value={statusFilter}>
                                 <option value="all-status">Status: All</option>
                                 <option value="publish">Publish</option>
                                 <option value="draft">Draft</option>
+                                <option value="disabled">Disabled</option>
                             </select>
                             <FaChevronDown aria-hidden="true" />
                         </label>
 
                         <label className={selectFieldClass}>
-                            <select className={selectClass} defaultValue="all-accuracy">
+                            <select className={selectClass} onChange={(event) => setAccuracyFilter(event.target.value)} value={accuracyFilter}>
                                 <option value="all-accuracy">Accuracy: Any</option>
                                 <option value="high">High Accuracy</option>
                                 <option value="medium">Medium Accuracy</option>
@@ -157,7 +216,7 @@ function PredictionManagement() {
                             <FaChevronDown aria-hidden="true" />
                         </label>
 
-                        <button className="inline-flex h-[42px] cursor-pointer items-center justify-center gap-2 rounded-md bg-[var(--admin-primary)] px-3 font-black text-white hover:bg-[var(--admin-primary-dark)]" type="button">
+                        <button className="inline-flex h-[42px] cursor-pointer items-center justify-center gap-2 rounded-md bg-[var(--admin-primary)] px-3 font-black text-white hover:bg-[var(--admin-primary-dark)]" onClick={() => setSortBy((current) => (current === 'count' ? 'horse' : current === 'horse' ? 'tournament' : 'count'))} type="button">
                             <FaSortAmountDown aria-hidden="true" />
                             <span>Sort</span>
                         </button>
@@ -180,8 +239,8 @@ function PredictionManagement() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {predictions.map((prediction) => (
-                                        <tr key={`${prediction.tournament}-${prediction.horse}`}>
+                                    {filteredPredictions.map((prediction) => (
+                                        <tr key={prediction.id}>
                                             <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">{prediction.tournament}</td>
                                             <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">{prediction.spectator}</td>
                                             <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">
@@ -205,10 +264,7 @@ function PredictionManagement() {
                                                     <button aria-label={`View analytics for ${prediction.horse}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" type="button">
                                                         <FaRegChartBar aria-hidden="true" />
                                                     </button>
-                                                    <button aria-label={`Edit prediction for ${prediction.horse}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" type="button">
-                                                        <FaEdit aria-hidden="true" />
-                                                    </button>
-                                                    <button aria-label={`Disable prediction for ${prediction.horse}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" type="button">
+                                                    <button aria-label={`Disable prediction for ${prediction.horse}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" onClick={() => handleDisable(prediction)} type="button">
                                                         <FaBan aria-hidden="true" />
                                                     </button>
                                                 </div>
@@ -220,7 +276,7 @@ function PredictionManagement() {
                         </div>
 
                         <div className="flex min-h-[62px] items-center justify-between gap-4 px-[22px] py-4 text-[0.82rem] font-bold text-[var(--admin-muted)]">
-                            <span>Showing 1-10 of 124 predictions</span>
+                            <span>Showing {filteredPredictions.length} of {predictions.length} predictions</span>
 
                             <div className="flex items-center gap-2">
                                 <button aria-label="Previous page" className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" type="button">&lt;</button>
@@ -236,7 +292,7 @@ function PredictionManagement() {
 
                         <div className="grid grid-cols-3 gap-5 p-5 max-[820px]:grid-cols-1">
                             {topPredicted.map((item) => (
-                                <article className="relative grid justify-items-center gap-2 rounded-lg border border-[var(--admin-border)] bg-[#fffdfc] p-5 text-center" key={item.horse}>
+                                <article className="relative grid justify-items-center gap-2 rounded-lg border border-[var(--admin-border)] bg-[#fffdfc] p-5 text-center" key={item.id}>
                                     <img
                                         alt=""
                                         className="h-20 w-20 rounded-full object-cover"
@@ -244,7 +300,7 @@ function PredictionManagement() {
                                         style={{ objectPosition: item.imagePosition }}
                                     />
                                     <strong className="text-[var(--admin-ink)]">{item.horse}</strong>
-                                    <span className="text-[0.78rem] font-bold text-[var(--admin-muted)]">{item.count}</span>
+                                    <span className="text-[0.78rem] font-bold text-[var(--admin-muted)]">{item.count.toLocaleString('en-US')} predictions</span>
                                     <small className={`absolute right-4 top-4 grid h-7 w-7 place-items-center rounded-full text-[0.72rem] font-black ${rankClass[item.tone]}`}>{item.rank}</small>
                                 </article>
                             ))}

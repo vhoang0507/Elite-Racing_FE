@@ -1,5 +1,10 @@
 import {
+    useState,
+} from 'react';
+
+import {
     Link,
+    useNavigate,
 } from 'react-router-dom';
 
 import {
@@ -13,9 +18,20 @@ import {
     FaQuestionCircle,
     FaSearch,
     FaSignOutAlt,
-    FaUserCircle,
     FaUsers,
 } from 'react-icons/fa';
+
+import { clearAuthSession } from '../../utils/tokenStorage';
+
+const adminAccount = {
+    initials: 'EC',
+    name: 'Ethan Crawford',
+    role: 'ADMIN',
+    email: 'ethan.crawford@eliteracing.com',
+    id: 'AD-0001',
+    department: 'League Operations',
+    status: 'Online',
+};
 
 const navigation = [
     {
@@ -89,8 +105,19 @@ function AdminLayout({
     activeKey,
     children,
     mainClassName = '',
+    onSearchChange,
+    searchValue,
     searchPlaceholder = 'Search records, horses, races...',
 }) {
+    const navigate = useNavigate();
+    const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+    const handleLogout = () => {
+        clearAuthSession();
+        navigate('/login', { replace: true });
+        window.location.replace('/login');
+    };
+
     return (
         <div className={shellClasses}>
             <aside
@@ -158,6 +185,7 @@ function AdminLayout({
                     </button>
                     <button
                         className="inline-flex min-h-[38px] cursor-pointer items-center justify-start gap-[9px] rounded-md border-0 bg-transparent px-0 font-bold text-[#5c4642] transition-colors duration-200 hover:bg-[#f8dfda] hover:text-[var(--admin-primary)]"
+                        onClick={handleLogout}
                         type="button"
                     >
                         <FaSignOutAlt aria-hidden="true" className="h-4 w-4" />
@@ -175,8 +203,10 @@ function AdminLayout({
                         <FaSearch aria-hidden="true" />
                         <input
                             className="h-full w-full min-w-0 border-0 bg-transparent p-0 text-[var(--admin-ink)] outline-0"
+                            onChange={(event) => onSearchChange?.(event.target.value)}
                             placeholder={searchPlaceholder}
                             type="search"
+                            {...(searchValue !== undefined ? { value: searchValue } : {})}
                         />
                     </label>
 
@@ -185,9 +215,65 @@ function AdminLayout({
                             <FaBell aria-hidden="true" />
                             <span className="absolute right-2.5 top-[9px] h-2 w-2 rounded-full border-2 border-[var(--admin-surface)] bg-[var(--admin-primary)]" />
                         </button>
-                        <button aria-label="Account settings" className={iconButtonClasses} type="button">
-                            <FaUserCircle aria-hidden="true" />
-                        </button>
+                        <div className="relative">
+                            <button
+                                aria-expanded={isProfileOpen}
+                                aria-label="Open account profile"
+                                className={`${iconButtonClasses} overflow-hidden rounded-full bg-[linear-gradient(145deg,#650404,#c04733)] text-[0.72rem] font-black text-white hover:bg-[linear-gradient(145deg,#650404,#c04733)]`}
+                                onClick={() => setIsProfileOpen((current) => !current)}
+                                type="button"
+                            >
+                                {adminAccount.initials}
+                            </button>
+
+                            {isProfileOpen && (
+                                <section
+                                    aria-label="Account profile"
+                                    className="absolute right-0 top-12 z-30 grid w-[min(340px,calc(100vw-40px))] gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5 shadow-[0_18px_42px_rgba(45,32,32,0.18)]"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="grid h-14 w-14 flex-none place-items-center rounded-full bg-[linear-gradient(145deg,#650404,#c04733)] text-[0.95rem] font-black text-white">
+                                            {adminAccount.initials}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <strong className="block truncate text-[1.05rem] text-[var(--admin-ink)]">{adminAccount.name}</strong>
+                                            <span className="mt-1 inline-flex rounded-full bg-[#ffe8e4] px-2.5 py-1 text-[0.66rem] font-black text-[var(--admin-primary)]">
+                                                {adminAccount.role}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid gap-2 text-[0.84rem]">
+                                        <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                            <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Email</span>
+                                            <strong className="break-words text-[var(--admin-ink)]">{adminAccount.email}</strong>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                                <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Account ID</span>
+                                                <strong>{adminAccount.id}</strong>
+                                            </div>
+                                            <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                                <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Status</span>
+                                                <strong className="text-[#0aa15f]">{adminAccount.status}</strong>
+                                            </div>
+                                        </div>
+                                        <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                            <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Department</span>
+                                            <strong>{adminAccount.department}</strong>
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        className="inline-flex min-h-9 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]"
+                                        onClick={() => setIsProfileOpen(false)}
+                                        type="button"
+                                    >
+                                        Close
+                                    </button>
+                                </section>
+                            )}
+                        </div>
                     </div>
                 </header>
 

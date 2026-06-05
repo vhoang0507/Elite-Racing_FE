@@ -1,4 +1,10 @@
 import {
+    useEffect,
+    useMemo,
+    useState,
+} from 'react';
+
+import {
     FaBell,
     FaCalendarCheck,
     FaChevronLeft,
@@ -11,111 +17,14 @@ import {
     FaTrophy,
 } from 'react-icons/fa';
 
+import {
+    adminMockApi,
+    adminMockTotals,
+} from '../../api/adminMockApi';
+
 import AdminLayout from './AdminLayout';
 
-const summaryCards = [
-    {
-        marker: 'System Total',
-        value: '248',
-        label: 'Total Notifications',
-        tone: 'total',
-        icon: FaBell,
-    },
-    {
-        marker: 'Action Required',
-        value: '18',
-        label: 'Unread Notifications',
-        tone: 'action',
-        icon: FaCalendarCheck,
-    },
-];
-
-const notifications = [
-    {
-        title: 'New Tournament Registration Pending',
-        time: '5 minutes ago',
-        tone: 'registration',
-        icon: FaTh,
-        tags: [
-            {
-                label: 'Registration',
-                tone: 'gold',
-            },
-            {
-                label: 'High Priority',
-                tone: 'gold-dark',
-            },
-        ],
-        message: (
-            <>
-                3 horse registrations are waiting for admin approval for the <strong>Golden Oaks Derby</strong>.
-            </>
-        ),
-    },
-    {
-        title: 'Race Result Submitted',
-        time: '20 minutes ago',
-        tone: 'race',
-        icon: FaFlagCheckered,
-        tags: [
-            {
-                label: 'Race Result',
-                tone: 'blue',
-            },
-            {
-                label: 'Medium Priority',
-                tone: 'blue-dark',
-            },
-        ],
-        message: (
-            <>
-                Referee <strong>Alex Morgan</strong> submitted final results for Dubai Sprint Cup for verification.
-            </>
-        ),
-    },
-    {
-        title: 'Horse Report Submitted',
-        time: '1 hour ago',
-        tone: 'urgent',
-        icon: FaExclamationTriangle,
-        tags: [
-            {
-                label: 'Referee Report',
-                tone: 'red',
-            },
-            {
-                label: 'Critical',
-                tone: 'red-dark',
-            },
-        ],
-        message: (
-            <>
-                A referee reported a health issue for <strong>Shadow Flame</strong>. Urgent veterinary review required.
-            </>
-        ),
-    },
-    {
-        title: 'Prediction Event Completed',
-        time: 'Today, 09:24 AM',
-        tone: 'prediction',
-        icon: FaTrophy,
-        tags: [
-            {
-                label: 'Prediction',
-                tone: 'rose',
-            },
-            {
-                label: 'Low Priority',
-                tone: 'rose-dark',
-            },
-        ],
-        message: (
-            <>
-                The predictions for the Autumn Cup are finalized. Rewards are ready for global distribution.
-            </>
-        ),
-    },
-];
+const formatClass = (value) => value.toLowerCase().replace(/\s+/g, '-');
 
 const pageShellClass = [
     '[--notifications-soft:#fff4f1]',
@@ -138,22 +47,147 @@ const notificationIconClass = {
 };
 
 const tagClass = {
-    gold: 'bg-[#ffe2a0] text-[#7a5604]',
-    'gold-dark': 'bg-[#e1bd55] text-[#3f320a]',
-    blue: 'bg-[#dedfff] text-[#3732a1]',
-    'blue-dark': 'bg-[#bfc2ff] text-[#27236f]',
-    red: 'bg-[#ffd3cd] text-[#9a1111]',
-    'red-dark': 'bg-[#b40d0d] text-white',
-    rose: 'bg-[#f2dcd7] text-[#805349]',
-    'rose-dark': 'bg-[#ead0cb] text-[#7a5d58]',
+    registration: 'bg-[#ffe2a0] text-[#7a5604]',
+    'race-result': 'bg-[#dedfff] text-[#3732a1]',
+    report: 'bg-[#ffd3cd] text-[#9a1111]',
+    prediction: 'bg-[#f2dcd7] text-[#805349]',
+    critical: 'bg-[#b40d0d] text-white',
+    'high-priority': 'bg-[#e1bd55] text-[#3f320a]',
+    'medium-priority': 'bg-[#bfc2ff] text-[#27236f]',
+    'low-priority': 'bg-[#ead0cb] text-[#7a5d58]',
+};
+
+const iconByTone = {
+    registration: FaTh,
+    race: FaFlagCheckered,
+    urgent: FaExclamationTriangle,
+    prediction: FaTrophy,
 };
 
 const selectClass = 'h-full w-full min-w-0 cursor-pointer border-0 bg-transparent px-0 pr-6 text-[0.78rem] font-bold text-[#5f4b47] outline-0';
 const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--notifications-line)] bg-[#fffdfc] text-[0.78rem] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
+const pageSize = 4;
+
+const matchesQuery = (notification, query) => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+        return true;
+    }
+
+    return [
+        notification.title,
+        notification.type,
+        notification.status,
+        notification.priority,
+        notification.message,
+    ].some((value) => String(value).toLowerCase().includes(normalizedQuery));
+};
+
+const highlightMessage = (message, highlight) => {
+    if (!highlight || !message.includes(highlight)) {
+        return message;
+    }
+
+    const [before, after] = message.split(highlight);
+
+    return (
+        <>
+            {before}
+            <strong>{highlight}</strong>
+            {after}
+        </>
+    );
+};
 
 function Notifications() {
+    const [notifications, setNotifications] = useState([]);
+    const [query, setQuery] = useState('');
+    const [typeFilter, setTypeFilter] = useState('all-types');
+    const [statusFilter, setStatusFilter] = useState('all-status');
+    const [priorityFilter, setPriorityFilter] = useState('all-priority');
+    const [page, setPage] = useState(1);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        adminMockApi.getNotifications().then((payload) => {
+            if (isMounted) {
+                setNotifications(payload);
+            }
+        });
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    const summaryCards = useMemo(() => [
+        {
+            marker: 'System Total',
+            value: (adminMockTotals.notifications + notifications.length).toLocaleString('en-US'),
+            label: 'Total Notifications',
+            tone: 'total',
+            icon: FaBell,
+        },
+        {
+            marker: 'Action Required',
+            value: String(notifications.filter((notification) => notification.status === 'Unread').length).padStart(2, '0'),
+            label: 'Unread Notifications',
+            tone: 'action',
+            icon: FaCalendarCheck,
+        },
+    ], [notifications]);
+
+    const filteredNotifications = useMemo(() => notifications.filter((notification) => (
+        matchesQuery(notification, query)
+        && (typeFilter === 'all-types' || formatClass(notification.type) === typeFilter)
+        && (statusFilter === 'all-status' || formatClass(notification.status) === statusFilter)
+        && (priorityFilter === 'all-priority' || formatClass(notification.priority) === priorityFilter)
+    )), [notifications, priorityFilter, query, statusFilter, typeFilter]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredNotifications.length / pageSize));
+    const visibleNotifications = filteredNotifications.slice((page - 1) * pageSize, page * pageSize);
+    const firstShown = filteredNotifications.length === 0 ? 0 : (page - 1) * pageSize + 1;
+    const lastShown = Math.min(page * pageSize, filteredNotifications.length);
+
+    const handleQueryChange = (value) => {
+        setQuery(value);
+        setPage(1);
+    };
+
+    const handleFilterChange = (setter) => (event) => {
+        setter(event.target.value);
+        setPage(1);
+    };
+
+    const handleMarkRead = async (id) => {
+        await adminMockApi.markNotificationRead(id);
+        setNotifications((current) => current.map((notification) => (
+            notification.id === id
+                ? {
+                    ...notification,
+                    status: 'Read',
+                }
+                : notification
+        )));
+    };
+
+    const handleKeyDown = (event, id) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            handleMarkRead(id);
+        }
+    };
+
     return (
-        <AdminLayout activeKey="notifications" mainClassName="notifications-main">
+        <AdminLayout
+            activeKey="notifications"
+            mainClassName="notifications-main"
+            onSearchChange={handleQueryChange}
+            searchPlaceholder="Search notifications..."
+            searchValue={query}
+        >
                 <section className={pageShellClass}>
                     <div>
                         <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)] max-[820px]:text-[1.6rem]">
@@ -201,13 +235,15 @@ function Notifications() {
                             <FaSearch aria-hidden="true" />
                             <input
                                 className="h-full w-full min-w-0 border-0 bg-transparent p-0 text-[0.78rem] text-[var(--admin-ink)] outline-0"
+                                onChange={(event) => handleQueryChange(event.target.value)}
                                 placeholder="Search notifications..."
                                 type="search"
+                                value={query}
                             />
                         </label>
 
                         <label className="flex h-[38px] items-center rounded-md border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661]">
-                            <select className={selectClass} defaultValue="all-types">
+                            <select className={selectClass} onChange={handleFilterChange(setTypeFilter)} value={typeFilter}>
                                 <option value="all-types">All Types</option>
                                 <option value="registration">Registration</option>
                                 <option value="race-result">Race Result</option>
@@ -217,7 +253,7 @@ function Notifications() {
                         </label>
 
                         <label className="flex h-[38px] items-center rounded-md border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661]">
-                            <select className={selectClass} defaultValue="all-status">
+                            <select className={selectClass} onChange={handleFilterChange(setStatusFilter)} value={statusFilter}>
                                 <option value="all-status">All Status</option>
                                 <option value="unread">Unread</option>
                                 <option value="read">Read</option>
@@ -225,27 +261,32 @@ function Notifications() {
                         </label>
 
                         <label className="flex h-[38px] items-center rounded-md border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661]">
-                            <select className={selectClass} defaultValue="all-priority">
+                            <select className={selectClass} onChange={handleFilterChange(setPriorityFilter)} value={priorityFilter}>
                                 <option value="all-priority">All Priority</option>
                                 <option value="critical">Critical</option>
-                                <option value="high">High Priority</option>
-                                <option value="medium">Medium Priority</option>
-                                <option value="low">Low Priority</option>
+                                <option value="high-priority">High Priority</option>
+                                <option value="medium-priority">Medium Priority</option>
+                                <option value="low-priority">Low Priority</option>
                             </select>
                         </label>
                     </section>
 
                     <section aria-label="Notification list" className={`${panelWidthClass} grid gap-[18px]`}>
-                        {notifications.map((notification) => {
-                            const Icon = notification.icon;
+                        {visibleNotifications.map((notification) => {
+                            const Icon = iconByTone[notification.tone] || FaBell;
 
                             return (
                                 <article
                                     className={[
-                                        'relative grid min-h-[146px] grid-cols-[auto_minmax(0,1fr)] gap-[18px] rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-[22px] py-[22px] shadow-[0_14px_28px_rgba(91,26,19,0.04)] max-[820px]:grid-cols-1',
-                                        notification.tone === 'urgent' ? 'before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:rounded-full before:bg-[#e42121] before:content-[""]' : '',
+                                        'relative grid min-h-[146px] cursor-pointer grid-cols-[auto_minmax(0,1fr)] gap-[18px] rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-[22px] py-[22px] shadow-[0_14px_28px_rgba(91,26,19,0.04)] max-[820px]:grid-cols-1',
+                                        notification.tone === 'urgent' && notification.status === 'Unread' ? 'before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:rounded-full before:bg-[#e42121] before:content-[""]' : '',
+                                        notification.status === 'Read' ? 'opacity-75' : '',
                                     ].join(' ')}
-                                    key={notification.title}
+                                    key={notification.id}
+                                    onClick={() => handleMarkRead(notification.id)}
+                                    onKeyDown={(event) => handleKeyDown(event, notification.id)}
+                                    role="button"
+                                    tabIndex="0"
                                 >
                                     <span className={`grid h-[42px] w-[42px] place-items-center rounded-full ${notificationIconClass[notification.tone]}`}>
                                         <Icon aria-hidden="true" className="h-4 w-4" />
@@ -263,16 +304,16 @@ function Notifications() {
                                         </div>
 
                                         <p className="mt-1.5 max-w-[680px] text-[0.82rem] font-semibold leading-[1.45] text-[#5f4b47] [&_strong]:text-[var(--admin-primary)]">
-                                            {notification.message}
+                                            {highlightMessage(notification.message, notification.highlight)}
                                         </p>
 
                                         <div className="mt-5 flex flex-wrap gap-2">
-                                            {notification.tags.map((tag) => (
+                                            {[notification.type, notification.priority, notification.status].map((tag) => (
                                                 <span
-                                                    className={`inline-flex min-h-5 items-center rounded px-2 text-[0.58rem] font-black uppercase ${tagClass[tag.tone]}`}
-                                                    key={tag.label}
+                                                    className={`inline-flex min-h-5 items-center rounded px-2 text-[0.58rem] font-black uppercase ${tagClass[formatClass(tag)] || tagClass.prediction}`}
+                                                    key={tag}
                                                 >
-                                                    {tag.label}
+                                                    {tag}
                                                 </span>
                                             ))}
                                         </div>
@@ -283,18 +324,23 @@ function Notifications() {
                     </section>
 
                     <div className={`${panelWidthClass} flex min-h-[58px] items-center justify-between gap-[18px] border-t border-[var(--notifications-line)] pt-2.5 text-[0.78rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch`}>
-                        <span>Showing 1 to 4 of 248 entries</span>
+                        <span>Showing {firstShown} to {lastShown} of {filteredNotifications.length} entries</span>
 
                         <div className="flex items-center gap-2 max-[820px]:flex-wrap">
-                            <button aria-label="Previous page" className={paginationButtonClass} type="button">
+                            <button aria-label="Previous page" className={paginationButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">
                                 <FaChevronLeft aria-hidden="true" className="h-2.5 w-2.5" />
                             </button>
-                            <button className={`${paginationButtonClass} border-[var(--admin-primary)] bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]`} type="button">1</button>
-                            <button className={paginationButtonClass} type="button">2</button>
-                            <button className={paginationButtonClass} type="button">3</button>
-                            <span className="font-black text-[#705f5b]">...</span>
-                            <button className={paginationButtonClass} type="button">62</button>
-                            <button aria-label="Next page" className={paginationButtonClass} type="button">
+                            {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+                                <button
+                                    className={`${paginationButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]' : ''}`}
+                                    key={pageNumber}
+                                    onClick={() => setPage(pageNumber)}
+                                    type="button"
+                                >
+                                    {pageNumber}
+                                </button>
+                            ))}
+                            <button aria-label="Next page" className={paginationButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">
                                 <FaChevronRight aria-hidden="true" className="h-2.5 w-2.5" />
                             </button>
                         </div>
