@@ -160,12 +160,26 @@ async function getTournamentById(id) {
     return apiRequest(`/admin/tournaments/${id}`);
 }
 
-async function createTournament(payload) {
-    // The BE doesn't have a create endpoint in the controllers we read,
-    // but we'll structure the call for when it's added
+async function createTournament(payload, status = 'Pending') {
+    const mappedPayload = {
+        tournamentName: payload.name,
+        description: payload.className,
+        location: payload.location,
+        startDate: payload.startDate,
+        endDate: payload.endDate,
+        maxHorses: Number(payload.maxHorses || 0),
+        prizePool: Number(payload.goldPrize || 0) + Number(payload.silverPrize || 0) + Number(payload.bronzePrize || 0),
+        status: status,
+        minHorseAge: Number(payload.minAge || 0),
+        maxHorseAge: Number(payload.maxAge || 0),
+        minHorseWeightKg: Number(payload.minWeight || 0),
+        maxHorseWeightKg: Number(payload.maxWeight || 0),
+        rules: payload.rules,
+    };
+
     return apiRequest('/admin/tournaments', {
         method: 'POST',
-        body: JSON.stringify(payload),
+        body: JSON.stringify(mappedPayload),
     });
 }
 

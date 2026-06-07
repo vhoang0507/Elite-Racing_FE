@@ -57,6 +57,11 @@ function CreateTournament() {
             goldPrize: formData.get('goldPrize'),
             silverPrize: formData.get('silverPrize'),
             bronzePrize: formData.get('bronzePrize'),
+            minWeight: formData.get('minWeight'),
+            maxWeight: formData.get('maxWeight'),
+            minAge: formData.get('minAge'),
+            maxAge: formData.get('maxAge'),
+            rules: formData.get('rules'),
         }, status);
         setIsSaving(false);
         navigate('/admin/races');
