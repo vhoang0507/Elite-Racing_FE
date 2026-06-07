@@ -1,0 +1,413 @@
+import { apiRequest } from './httpClient';
+
+// ─── Formatters (kept for FE display) ────────────────────────────────────────
+
+const toMoney = (value) => `$${Number(value || 0).toLocaleString('en-US')}`;
+
+const toDateLabel = (dateValue) => {
+    if (!dateValue) return '';
+    const d = dateValue.includes('T') ? dateValue : `${dateValue}T00:00:00`;
+    return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+    }).format(new Date(d));
+};
+
+const toShortDateParts = (startDate, endDate) => {
+    const start = new Date(`${startDate}T00:00:00`);
+    const end = new Date(`${endDate}T00:00:00`);
+    const startLabel = new Intl.DateTimeFormat('en-US', {
+        day: '2-digit',
+        month: 'short',
+    }).format(start);
+    const endDay = new Intl.DateTimeFormat('en-US', { day: '2-digit' }).format(end);
+    const endMonth = new Intl.DateTimeFormat('en-US', { month: 'short' }).format(end);
+
+    return [`${startLabel} - ${endDay}`, endMonth, String(end.getFullYear())];
+};
+
+// ─── Dashboard ───────────────────────────────────────────────────────────────
+
+async function getDashboard() {
+    const data = await apiRequest('/api/admin/dashboard');
+    // Transform BE response to match FE expected format
+    return {
+        stats: [
+            {
+                label: 'Total Users',
+                value: String(data.totalUsers || 0),
+                trend: `${data.pendingRegistrations || 0} pending`,
+                tone: 'users',
+            },
+            {
+                label: 'Active Tournaments',
+                value: String(data.totalTournaments || 0),
+                trend: '',
+                tone: 'tournaments',
+            },
+            {
+                label: 'Pending Registrations',
+                value: String(data.pendingRegistrations || 0),
+                trend: `${data.totalHorses || 0} horses`,
+                tone: 'registrations',
+            },
+            {
+                label: 'Pending Results',
+                value: String(data.pendingResults || 0),
+                trend: '',
+                tone: 'results',
+            },
+        ],
+        tournaments: [],
+        approvals: [],
+        users: [],
+    };
+}
+
+// ─── Users ───────────────────────────────────────────────────────────────────
+
+async function getUsers() {
+    const data = await apiRequest('/api/admin/users');
+    // Map BE fields to FE expected fields
+    return data.map((u) => ({
+        id: u.userId,
+        name: u.fullName,
+        email: u.email,
+        role: u.role,
+        status: u.status,
+        verified: u.emailVerified,
+        createdAt: u.createdAt,
+        avatar: (u.fullName || '').split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
+    }));
+}
+
+async function getUserById(id) {
+    return apiRequest(`/api/admin/users/${id}`);
+}
+
+async function updateUserStatus(id, status) {
+    const action = mapUserAction(status);
+    return apiRequest(`/api/admin/users/${id}/${action}`, { method: 'PUT' });
+}
+
+function mapUserAction(status) {
+    const s = (status || '').toLowerCase();
+    if (s === 'active' || s === 'approved') return 'approve';
+    if (s === 'inactive' || s === 'rejected') return 'reject';
+    if (s === 'banned' || s === 'blocked') return 'block';
+    if (s === 'unblocked') return 'unblock';
+    return 'approve';
+}
+
+// ─── Horses ──────────────────────────────────────────────────────────────────
+
+async function getHorses() {
+    const data = await apiRequest('/api/admin/horses');
+    const horses = data.map((h) => ({
+        id: h.horseId,
+        name: h.horseName,
+        age: h.age,
+        heightCm: h.heightCm,
+        weightKg: h.weightKg,
+        healthStatus: h.healthStatus,
+        isActive: h.isActive,
+        ownerId: h.ownerId,
+        breedId: h.breedId,
+        achievementSummary: h.achievementSummary,
+        createdAt: h.createdAt,
+        approval: h.isActive ? 'Active' : 'Pending',
+        breed: `Breed #${h.breedId || 0}`,
+        reportStatus: 'Active',
+    }));
+    return { horses, reports: [] };
+}
+
+async function getHorseById(id) {
+    return apiRequest(`/api/admin/horses/${id}`);
+}
+
+async function updateHorseApproval(id, approval) {
+    const action = (approval || '').toLowerCase().includes('active') || (approval || '').toLowerCase().includes('approved')
+        ? 'approve'
+        : 'suspend';
+    return apiRequest(`/api/admin/horses/${id}/${action}`, { method: 'PUT' });
+}
+
+// ─── Tournaments ─────────────────────────────────────────────────────────────
+
+async function getTournaments() {
+    const data = await apiRequest('/api/admin/tournaments');
+    return data.map((t) => ({
+        id: t.tournamentId,
+        name: t.tournamentName,
+        className: t.description || '',
+        startDate: t.startDate ? t.startDate.split('T')[0] : '',
+        endDate: t.endDate ? t.endDate.split('T')[0] : '',
+        location: t.location,
+        city: t.location,
+        maxHorses: t.maxHorses,
+        registeredHorses: t.entriesCount || 0,
+        prizePool: t.prizePool,
+        status: t.status,
+        rules: t.rules,
+        createdAt: t.createdAt,
+        imagePosition: '50% center',
+    }));
+}
+
+async function getTournamentById(id) {
+    return apiRequest(`/api/admin/tournaments/${id}`);
+}
+
+async function createTournament(payload) {
+    // The BE doesn't have a create endpoint in the controllers we read,
+    // but we'll structure the call for when it's added
+    return apiRequest('/api/admin/tournaments', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+}
+
+async function updateTournamentStatus(id, status) {
+    const action = (status || '').toLowerCase().includes('cancel') ? 'cancel' : 'approve';
+    return apiRequest(`/api/admin/tournaments/${id}/${action}`, { method: 'PUT' });
+}
+
+async function updateTournament(id, patch) {
+    // If patch contains status change, use the status endpoint
+    if (patch.status) {
+        return updateTournamentStatus(id, patch.status);
+    }
+    // Otherwise attempt a general PUT (if BE supports it)
+    return apiRequest(`/api/admin/tournaments/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(patch),
+    });
+}
+
+async function deleteTournament(id) {
+    return apiRequest(`/api/admin/tournaments/${id}/cancel`, { method: 'PUT' });
+}
+
+// ─── Race Registrations ──────────────────────────────────────────────────────
+
+async function getRegistrations() {
+    return apiRequest('/api/admin/registrations');
+}
+
+async function getRegistrationById(id) {
+    return apiRequest(`/api/admin/registrations/${id}`);
+}
+
+async function approveRegistration(id) {
+    return apiRequest(`/api/admin/registrations/${id}/approve`, { method: 'PUT' });
+}
+
+async function rejectRegistration(id) {
+    return apiRequest(`/api/admin/registrations/${id}/reject`, { method: 'PUT' });
+}
+
+// ─── Race Results ────────────────────────────────────────────────────────────
+
+async function getResultSubmissions() {
+    const data = await apiRequest('/api/admin/results');
+    return data.map((r) => ({
+        id: r.resultId,
+        raceId: r.raceId,
+        registrationId: r.registrationId,
+        finishPosition: r.finishPosition,
+        finishTimeSeconds: r.finishTimeSeconds,
+        score: r.score,
+        status: r.status,
+        enteredByRefereeId: r.enteredByRefereeId,
+        adminConfirmedBy: r.adminConfirmedBy,
+        publishedAt: r.publishedAt,
+        note: r.note,
+        createdAt: r.createdAt,
+        slug: `result-${r.resultId}`,
+        name: `Race #${r.raceId}`,
+        tone: r.status === 'Draft' ? 'gold' : 'green',
+    }));
+}
+
+async function getPendingResults() {
+    return apiRequest('/api/admin/results/pending');
+}
+
+async function getResultDetail(idOrSlug) {
+    const id = String(idOrSlug).replace('result-', '');
+    const result = await apiRequest(`/api/admin/results/${id}`);
+    return {
+        race: `Race #${result.raceId}`,
+        results: [result],
+    };
+}
+
+async function publishResult(idOrSlug) {
+    const id = String(idOrSlug).replace('result-', '');
+    return apiRequest(`/api/admin/results/${id}/approve`, { method: 'PUT' });
+}
+
+async function rejectResult(id) {
+    return apiRequest(`/api/admin/results/${id}/reject`, { method: 'PUT' });
+}
+
+// ─── Reports (Violations) ────────────────────────────────────────────────────
+
+async function getReports() {
+    return apiRequest('/api/admin/reports');
+}
+
+async function getReportById(id) {
+    return apiRequest(`/api/admin/reports/${id}`);
+}
+
+async function getReportsToday() {
+    return apiRequest('/api/admin/reports/today');
+}
+
+async function getReportStatistics() {
+    return apiRequest('/api/admin/reports/statistics');
+}
+
+async function resolveReport(id) {
+    return apiRequest(`/api/admin/reports/${id}/resolve`, { method: 'PUT' });
+}
+
+async function rejectReport(id) {
+    return apiRequest(`/api/admin/reports/${id}/reject`, { method: 'PUT' });
+}
+
+// ─── Verifications ───────────────────────────────────────────────────────────
+
+async function getVerifications() {
+    return apiRequest('/api/admin/verifications');
+}
+
+async function getOwnerVerifications() {
+    return apiRequest('/api/admin/verifications/owners');
+}
+
+async function getJockeyVerifications() {
+    return apiRequest('/api/admin/verifications/jockeys');
+}
+
+async function getVerificationById(id) {
+    return apiRequest(`/api/admin/verifications/${id}`);
+}
+
+async function approveVerification(id) {
+    return apiRequest(`/api/admin/verifications/${id}/approve`, { method: 'PUT' });
+}
+
+async function rejectVerification(id) {
+    return apiRequest(`/api/admin/verifications/${id}/reject`, { method: 'PUT' });
+}
+
+// ─── Notifications (no BE endpoint yet - placeholder) ────────────────────────
+
+async function getNotifications() {
+    // No notifications endpoint in BE yet, return empty array
+    return [];
+}
+
+async function markNotificationRead(id) {
+    // Placeholder until BE adds notification endpoints
+    return { message: 'Marked as read', id };
+}
+
+// ─── Predictions (no BE endpoint yet - placeholder) ──────────────────────────
+
+async function getPredictions() {
+    // No predictions endpoint in BE yet, return empty array
+    return [];
+}
+
+async function updatePredictionStatus(id, status) {
+    // Placeholder
+    return { message: 'Status updated', id, status };
+}
+
+// ─── Horse Reports (mapped to BE reports/violations) ─────────────────────────
+
+async function closeHorseReport(id) {
+    return resolveReport(id);
+}
+
+async function deleteHorseReport(id) {
+    // No delete endpoint in BE - use reject as alternative
+    return rejectReport(id);
+}
+
+// ─── Export ──────────────────────────────────────────────────────────────────
+
+export const adminApi = {
+    formatters: {
+        toDateLabel,
+        toMoney,
+        toShortDateParts,
+    },
+
+    // Dashboard
+    getDashboard,
+
+    // Users
+    getUsers,
+    getUserById,
+    updateUserStatus,
+
+    // Horses
+    getHorses,
+    getHorseById,
+    updateHorseApproval,
+
+    // Tournaments
+    getTournaments,
+    getTournamentById,
+    createTournament,
+    updateTournamentStatus,
+    updateTournament,
+    deleteTournament,
+
+    // Race Registrations
+    getRegistrations,
+    getRegistrationById,
+    approveRegistration,
+    rejectRegistration,
+
+    // Race Results
+    getResultSubmissions,
+    getPendingResults,
+    getResultDetail,
+    publishResult,
+    rejectResult,
+
+    // Reports
+    getReports,
+    getReportById,
+    getReportsToday,
+    getReportStatistics,
+    resolveReport,
+    rejectReport,
+
+    // Verifications
+    getVerifications,
+    getOwnerVerifications,
+    getJockeyVerifications,
+    getVerificationById,
+    approveVerification,
+    rejectVerification,
+
+    // Notifications
+    getNotifications,
+    markNotificationRead,
+
+    // Predictions
+    getPredictions,
+    updatePredictionStatus,
+
+    // Horse reports
+    closeHorseReport,
+    deleteHorseReport,
+};

@@ -18,7 +18,7 @@ import {
     FaUserTie,
 } from 'react-icons/fa';
 
-import { adminMockApi } from '../../api/adminMockApi';
+import { adminApi as adminMockApi } from '../../api/adminApi';
 
 import AdminLayout from './AdminLayout';
 
