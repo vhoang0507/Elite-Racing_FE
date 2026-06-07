@@ -22,7 +22,6 @@ const VerifyEmail = () => {
     const navigate = useNavigate();
     const [email, setEmail] = useState(location.state?.email || '');
     const [code, setCode] = useState('');
-    const [otpDemo, setOtpDemo] = useState(location.state?.otpDemo || '');
     const [message, setMessage] = useState(location.state?.message || '');
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,7 +72,6 @@ const VerifyEmail = () => {
             });
 
             setMessage(response?.message || response?.Message || 'A new OTP has been sent.');
-            setOtpDemo(response?.otpDemo || response?.OtpDemo || '');
         } catch (err) {
             setError(err.message || 'Could not resend OTP. Please try again.');
         } finally {
@@ -136,12 +134,6 @@ const VerifyEmail = () => {
                                 required
                             />
                         </div>
-
-                        {otpDemo && (
-                            <div className="mb-4 rounded-[10px] border border-[#d7c27c] bg-[#fff9e8] px-4 py-3 text-sm font-semibold text-[#74540b]">
-                                Demo OTP: {otpDemo}
-                            </div>
-                        )}
 
                         {message && (
                             <div className="mb-4 rounded-[10px] border border-[#b9e5c5] bg-[#f1fff5] px-4 py-3 text-sm font-semibold text-[#1d6b35]">
