@@ -13,7 +13,7 @@ import {
     FaTrashAlt,
 } from 'react-icons/fa';
 
-import { adminMockApi } from '../../api/adminMockApi';
+import { adminApi as adminMockApi } from '../../api/adminApi';
 import horseRacing from '../../assets/horse-racing.jpg';
 
 import AdminLayout from './AdminLayout';

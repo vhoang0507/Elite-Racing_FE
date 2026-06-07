@@ -17,7 +17,7 @@ import {
 } from 'react-icons/fa';
 
 import AdminLayout from './AdminLayout';
-import { adminMockApi } from '../../api/adminMockApi';
+import { adminApi as adminMockApi } from '../../api/adminApi';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 const headingClass = 'flex items-center justify-between gap-[18px] max-[720px]:flex-col max-[720px]:items-stretch';
