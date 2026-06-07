@@ -1,80 +1,56 @@
-import {
-    useState,
-} from 'react';
-
-import {
-    Link,
-    useNavigate,
-} from 'react-router-dom';
-
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import {
     FaBell,
-    FaChartBar,
+    FaCalendarAlt,
     FaChartLine,
-    FaClipboardCheck,
-    FaFlagCheckered,
+    FaCog,
+    FaEnvelope,
     FaHorseHead,
-    FaPlus,
     FaQuestionCircle,
     FaSearch,
     FaSignOutAlt,
-    FaUsers,
 } from 'react-icons/fa';
 
 import { clearAuthSession } from '../../utils/tokenStorage';
-
-const adminAccount = {
-    initials: 'EC',
-    name: 'Ethan Crawford',
-    role: 'ADMIN',
-    email: 'ethan.crawford@eliteracing.com',
-    id: 'AD-0001',
-    department: 'League Operations',
-    status: 'Active',
-};
+import { jockeyAccount } from '../../data/jockeyMockData';
 
 const navigation = [
     {
         key: 'dashboard',
         label: 'Dashboard',
         icon: FaChartLine,
-        path: '/admin/dashboard',
+        path: '/jockey/dashboard',
     },
     {
-        key: 'users',
-        label: 'User Management',
-        icon: FaUsers,
-        path: '/admin/users',
+        key: 'invitations',
+        label: 'Pending Invitations',
+        icon: FaEnvelope,
+        path: '/jockey/invitations',
     },
     {
-        key: 'horses',
-        label: 'Horse Management',
+        key: 'accepted',
+        label: 'Accepted Races',
         icon: FaHorseHead,
-        path: '/admin/horses',
+        path: '/jockey/accepted',
     },
     {
-        key: 'races',
-        label: 'Race Management',
-        icon: FaFlagCheckered,
-        path: '/admin/races',
-    },
-    {
-        key: 'predictions',
-        label: 'Prediction Management',
-        icon: FaChartBar,
-        path: '/admin/predictions',
-    },
-    {
-        key: 'results',
-        label: 'Validate Results',
-        icon: FaClipboardCheck,
-        path: '/admin/results',
+        key: 'schedule',
+        label: 'Schedule',
+        icon: FaCalendarAlt,
+        path: '/jockey/schedule',
     },
     {
         key: 'notifications',
         label: 'Notifications',
         icon: FaBell,
-        path: '/admin/notifications',
+        path: '/jockey/notifications',
+    },
+    {
+        key: 'settings',
+        label: 'Settings',
+        icon: FaCog,
+        path: '/jockey/settings',
     },
 ];
 
@@ -101,7 +77,7 @@ const iconButtonClasses = [
     'hover:bg-[#f8e5e1]',
 ].join(' ');
 
-function AdminLayout({
+function JockeyLayout({
     activeKey,
     children,
     mainClassName = '',
@@ -120,29 +96,30 @@ function AdminLayout({
 
     return (
         <div className={shellClasses}>
+            {/* Sidebar */}
             <aside
-                aria-label="Admin navigation"
+                aria-label="Jockey navigation"
                 className="sticky top-0 flex min-h-screen flex-col gap-6 border-r border-[var(--admin-border)] bg-[#fff0ed] px-[18px] pb-5 pt-7 max-[980px]:static max-[980px]:min-h-0 max-[980px]:gap-4"
             >
+                {/* Logo */}
                 <div className="flex items-center gap-2.5 text-[1.1rem] font-black text-[var(--admin-primary)]">
-                    <span className="grid h-9 w-9 place-items-center rounded-full bg-[var(--admin-primary)] text-[0.78rem] font-black tracking-normal text-white">
-                        ER
-                    </span>
                     <span>Elite Racing League</span>
                 </div>
 
+                {/* Profile */}
                 <div className="flex items-center gap-3 px-1.5 py-2">
                     <div className="grid h-[42px] w-[42px] flex-none place-items-center overflow-hidden rounded-full bg-[linear-gradient(145deg,#650404,#c04733)] text-[0.8rem] font-extrabold text-white">
-                        EC
+                        {jockeyAccount.initials}
                     </div>
                     <div>
-                        <strong className="block text-[var(--admin-ink)]">Ethan Crawford</strong>
+                        <strong className="block text-[var(--admin-ink)]">{jockeyAccount.name}</strong>
                         <span className="mt-0.5 block text-[0.72rem] font-extrabold text-[var(--admin-primary)]">
-                            ADMIN
+                            {jockeyAccount.role}
                         </span>
                     </div>
                 </div>
 
+                {/* Navigation */}
                 <nav className="grid gap-2 max-[980px]:grid-cols-2 max-[720px]:grid-cols-1">
                     {navigation.map((item) => {
                         const Icon = item.icon;
@@ -167,14 +144,7 @@ function AdminLayout({
 
                 <div className="flex-1 max-[980px]:hidden" />
 
-                <Link
-                    className="inline-flex min-h-[38px] w-full cursor-pointer items-center justify-center gap-[9px] rounded-md bg-[var(--admin-primary)] px-3.5 font-extrabold text-white no-underline transition-colors duration-200 hover:bg-[var(--admin-primary-dark)]"
-                    to="/admin/tournaments/create"
-                >
-                    <FaPlus aria-hidden="true" />
-                    <span>New tournament</span>
-                </Link>
-
+                {/* Footer links */}
                 <div className="grid gap-2 border-t border-[var(--admin-border)] pt-4">
                     <button
                         className="inline-flex min-h-[38px] cursor-pointer items-center justify-start gap-[9px] rounded-md border-0 bg-transparent px-0 font-bold text-[#5c4642] transition-colors duration-200 hover:bg-[#f8dfda] hover:text-[var(--admin-primary)]"
@@ -194,10 +164,12 @@ function AdminLayout({
                 </div>
             </aside>
 
-            <main className={`min-w-0 flex flex-col min-h-screen ${mainClassName}`}>
+            {/* Main Content */}
+            <main className={`min-w-0 ${mainClassName}`}>
+                {/* Header */}
                 <header className="sticky top-0 z-[4] flex h-16 items-center justify-between gap-5 border-b border-[var(--admin-border)] bg-[var(--admin-surface)] px-11 max-[980px]:h-auto max-[980px]:items-stretch max-[980px]:px-5 max-[980px]:py-3 max-[720px]:flex-col">
                     <label
-                        aria-label="Search admin records"
+                        aria-label="Search records"
                         className="flex h-10 w-[min(420px,100%)] items-center gap-2.5 rounded-full border border-[var(--admin-border)] bg-[#fffaf8] px-4 text-[var(--admin-muted)]"
                     >
                         <FaSearch aria-hidden="true" />
@@ -223,7 +195,7 @@ function AdminLayout({
                                 onClick={() => setIsProfileOpen((current) => !current)}
                                 type="button"
                             >
-                                {adminAccount.initials}
+                                {jockeyAccount.initials}
                             </button>
 
                             {isProfileOpen && (
@@ -233,12 +205,12 @@ function AdminLayout({
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="grid h-14 w-14 flex-none place-items-center rounded-full bg-[linear-gradient(145deg,#650404,#c04733)] text-[0.95rem] font-black text-white">
-                                            {adminAccount.initials}
+                                            {jockeyAccount.initials}
                                         </div>
                                         <div className="min-w-0">
-                                            <strong className="block truncate text-[1.05rem] text-[var(--admin-ink)]">{adminAccount.name}</strong>
+                                            <strong className="block truncate text-[1.05rem] text-[var(--admin-ink)]">{jockeyAccount.name}</strong>
                                             <span className="mt-1 inline-flex rounded-full bg-[#ffe8e4] px-2.5 py-1 text-[0.66rem] font-black text-[var(--admin-primary)]">
-                                                {adminAccount.role}
+                                                {jockeyAccount.role}
                                             </span>
                                         </div>
                                     </div>
@@ -246,21 +218,17 @@ function AdminLayout({
                                     <div className="grid gap-2 text-[0.84rem]">
                                         <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
                                             <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Email</span>
-                                            <strong className="break-words text-[var(--admin-ink)]">{adminAccount.email}</strong>
+                                            <strong className="break-words text-[var(--admin-ink)]">{jockeyAccount.email}</strong>
                                         </div>
                                         <div className="grid grid-cols-2 gap-2">
                                             <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
                                                 <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Account ID</span>
-                                                <strong>{adminAccount.id}</strong>
+                                                <strong>{jockeyAccount.id}</strong>
                                             </div>
                                             <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
                                                 <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Status</span>
-                                                <strong className="text-[#0aa15f]">{adminAccount.status}</strong>
+                                                <strong className="text-[#0aa15f]">{jockeyAccount.status}</strong>
                                             </div>
-                                        </div>
-                                        <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                            <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Department</span>
-                                            <strong>{adminAccount.department}</strong>
                                         </div>
                                     </div>
 
@@ -277,22 +245,10 @@ function AdminLayout({
                     </div>
                 </header>
 
-                <div className="flex-1">
-                    {children}
-                </div>
-
-                <footer className="flex items-center justify-between border-t border-[var(--admin-border)] bg-[var(--admin-surface)] px-11 py-5 text-[0.82rem] text-[var(--admin-muted)] max-[720px]:flex-col max-[720px]:gap-3 max-[720px]:px-5">
-                    <strong className="text-[var(--admin-primary)]">Elite Racing League</strong>
-                    <div className="flex flex-wrap gap-4">
-                        <a href="#" className="text-[var(--admin-muted)] no-underline hover:text-[var(--admin-primary)]">Terms of Service</a>
-                        <a href="#" className="text-[var(--admin-muted)] no-underline hover:text-[var(--admin-primary)]">Privacy Policy</a>
-                        <a href="#" className="text-[var(--admin-muted)] no-underline hover:text-[var(--admin-primary)]">Contact Support</a>
-                        <a href="#" className="text-[var(--admin-muted)] no-underline hover:text-[var(--admin-primary)]">Racing Rules</a>
-                    </div>
-                </footer>
+                {children}
             </main>
         </div>
     );
 }
 
-export default AdminLayout;
+export default JockeyLayout;

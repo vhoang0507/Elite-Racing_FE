@@ -15,14 +15,11 @@ import {
     FaUsers,
 } from 'react-icons/fa';
 
-import {
-    adminMockApi,
-    adminMockTotals,
-} from '../../api/adminMockApi';
+import { adminMockApi } from '../../api/adminMockApi';
 
 import AdminLayout from './AdminLayout';
 
-const formatClass = (value) => value.toLowerCase().replace(/\s+/g, '-');
+const formatClass = (value) => String(value || '').toLowerCase().replace(/\s+/g, '-');
 
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-7 px-11 py-9 max-[780px]:px-5';
 const selectClass = 'h-8 min-w-[86px] cursor-pointer appearance-none border-0 bg-transparent bg-[url("data:image/svg+xml,%3Csvg_width=%2714%27_height=%2714%27_viewBox=%270_0_14_14%27_fill=%27none%27_xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cpath_d=%27M3.5_5.25L7_8.75L10.5_5.25%27_stroke=%27%232b1d1b%27_stroke-width=%271.8%27_stroke-linecap=%27round%27_stroke-linejoin=%27round%27/%3E%3C/svg%3E")] bg-[length:14px_14px] bg-[right_2px_center] bg-no-repeat py-0 pl-0 pr-[26px] text-[0.8rem] font-bold text-[var(--admin-ink)] outline-0';
@@ -42,9 +39,10 @@ const roleClass = {
 };
 
 const statusClass = {
-    active: 'border-[#9fdcb9] bg-[#e8f7ee] text-[#16864f]',
     pending: 'border-[#efd06a] bg-[#fff7db] text-[#a17809]',
-    suspended: 'border-[#e7a49a] bg-[#ffe8e4] text-[var(--admin-primary)]',
+    active: 'border-[#9fdcb9] bg-[#e8f7ee] text-[#16864f]',
+    inactive: 'border-[#dbc3bf] bg-[#f3e8e6] text-[#7f645f]',
+    banned: 'border-[#e7a49a] bg-[#ffe8e4] text-[var(--admin-primary)]',
 };
 
 const badgeClass = 'inline-flex min-h-[22px] items-center rounded border px-2 text-[0.68rem] font-black uppercase';
@@ -92,21 +90,21 @@ function UserManagement() {
     const summaryCards = useMemo(() => [
         {
             label: 'Total Users',
-            value: (adminMockTotals.users + users.length).toLocaleString('en-US'),
+            value: users.length.toLocaleString('en-US'),
             detail: 'All registered accounts',
             icon: FaUsers,
             tone: 'users',
         },
         {
             label: 'Pending Approval',
-            value: String(users.filter((user) => user.status === 'Pending').length).padStart(2, '0'),
+            value: String(users.filter((user) => formatClass(user.status) === 'pending').length),
             detail: 'Awaiting verification',
             icon: FaCalendarCheck,
             tone: 'pending',
         },
         {
-            label: 'Reports Today',
-            value: String(users.filter((user) => user.status === 'Suspended').length).padStart(2, '0'),
+            label: 'Banned Users',
+            value: String(users.filter((user) => formatClass(user.status) === 'banned').length),
             detail: 'Requires attention',
             icon: FaExclamationTriangle,
             tone: 'reports',
@@ -165,9 +163,10 @@ function UserManagement() {
                                 <span>Status:</span>
                                 <select className={selectClass} onChange={handleFilterChange(setStatusFilter)} value={statusFilter}>
                                     <option value="all">All</option>
-                                    <option value="active">Active</option>
                                     <option value="pending">Pending</option>
-                                    <option value="suspended">Suspended</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                    <option value="banned">Banned</option>
                                 </select>
                             </label>
 

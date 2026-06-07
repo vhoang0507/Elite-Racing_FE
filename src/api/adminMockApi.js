@@ -1,7 +1,4 @@
-import {
-    adminBaseTotals,
-    adminSeedData,
-} from '../data/adminMockData';
+import { adminSeedData } from '../data/adminMockData';
 
 const STORAGE_KEY = 'elite-racing-admin-mock-v2';
 const MOCK_DELAY = 180;
@@ -10,26 +7,155 @@ const clone = (value) => JSON.parse(JSON.stringify(value));
 
 const canUseStorage = () => typeof window !== 'undefined' && Boolean(window.localStorage);
 
+const normalizeStatus = (value) => String(value || '').trim().toLowerCase();
+
+const mapStatus = (value, statusMap, fallback = 'Pending') => statusMap[normalizeStatus(value)] || fallback;
+
+const tournamentStatusMap = {
+    pending: 'Pending',
+    draft: 'Pending',
+    active: 'Active',
+    inactive: 'Inactive',
+    completed: 'Inactive',
+    banned: 'Banned',
+    cancelled: 'Banned',
+};
+
+const userStatusMap = {
+    pending: 'Pending',
+    active: 'Active',
+    inactive: 'Inactive',
+    banned: 'Banned',
+    suspended: 'Banned',
+};
+
+const reportStatusMap = {
+    pending: 'Pending',
+    open: 'Pending',
+    active: 'Active',
+    closed: 'Active',
+    inactive: 'Inactive',
+    banned: 'Banned',
+};
+
+const predictionStatusMap = {
+    pending: 'Pending',
+    draft: 'Pending',
+    active: 'Active',
+    publish: 'Active',
+    published: 'Active',
+    inactive: 'Inactive',
+    disabled: 'Inactive',
+    banned: 'Banned',
+};
+
+const resultStatusMap = {
+    pending: 'Pending',
+    draft: 'Pending',
+    'referee confirmed': 'Pending',
+    active: 'Active',
+    'admin approved': 'Active',
+    published: 'Active',
+    inactive: 'Inactive',
+    returned: 'Inactive',
+    banned: 'Banned',
+};
+
+const notificationStatusMap = {
+    pending: 'Pending',
+    unread: 'Pending',
+    active: 'Active',
+    read: 'Active',
+    inactive: 'Inactive',
+    banned: 'Banned',
+};
+
+const horseApprovalStatusMap = {
+    pending: 'Pending',
+    active: 'Active',
+    approved: 'Active',
+    inactive: 'Inactive',
+    banned: 'Banned',
+    rejected: 'Banned',
+};
+
+const horseHealthStatusMap = {
+    pending: 'Pending',
+    'needs review': 'Pending',
+    active: 'Active',
+    cleared: 'Active',
+    inactive: 'Inactive',
+    banned: 'Banned',
+};
+
+const migrateAdminStatuses = (store) => ({
+    ...store,
+    tournaments: store.tournaments.map((tournament) => ({
+        ...tournament,
+        status: mapStatus(tournament.status, tournamentStatusMap),
+    })),
+    users: store.users.map((user) => ({
+        ...user,
+        status: mapStatus(user.status, userStatusMap),
+    })),
+    horses: store.horses.map((horse) => ({
+        ...horse,
+        approval: mapStatus(horse.approval, horseApprovalStatusMap),
+        healthStatus: mapStatus(horse.healthStatus, horseHealthStatusMap),
+        reportStatus: mapStatus(horse.reportStatus, reportStatusMap),
+    })),
+    horseReports: store.horseReports.map((report) => ({
+        ...report,
+        status: mapStatus(report.status, reportStatusMap),
+    })),
+    predictions: store.predictions.map((prediction) => ({
+        ...prediction,
+        status: mapStatus(prediction.status, predictionStatusMap),
+    })),
+    resultSubmissions: store.resultSubmissions.map((submission) => ({
+        ...submission,
+        status: mapStatus(submission.status, resultStatusMap),
+    })),
+    raceResultDetails: Object.fromEntries(Object.entries(store.raceResultDetails).map(([slug, detail]) => [
+        slug,
+        {
+            ...detail,
+            results: detail.results.map((result) => ({
+                ...result,
+                status: mapStatus(result.status, resultStatusMap),
+            })),
+        },
+    ])),
+    notifications: store.notifications.map((notification) => ({
+        ...notification,
+        status: mapStatus(notification.status, notificationStatusMap),
+    })),
+});
+
 const readStore = () => {
     if (!canUseStorage()) {
-        return clone(adminSeedData);
+        return migrateAdminStatuses(clone(adminSeedData));
     }
 
     const saved = window.localStorage.getItem(STORAGE_KEY);
 
     if (!saved) {
-        const seeded = clone(adminSeedData);
+        const seeded = migrateAdminStatuses(clone(adminSeedData));
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
         return seeded;
     }
 
     try {
-        return {
+        const store = {
             ...clone(adminSeedData),
             ...JSON.parse(saved),
         };
+        const migratedStore = migrateAdminStatuses(store);
+
+        writeStore(migratedStore);
+        return migratedStore;
     } catch {
-        const seeded = clone(adminSeedData);
+        const seeded = migrateAdminStatuses(clone(adminSeedData));
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
         return seeded;
     }
@@ -52,7 +178,11 @@ const updateStore = async (updater) => {
     return wait(nextStore);
 };
 
-const countByStatus = (items, status) => items.filter((item) => item.status === status).length;
+const countByStatus = (items, status) => items.filter((item) => normalizeStatus(item.status) === normalizeStatus(status)).length;
+
+const countByApproval = (items, approval) => items.filter((item) => normalizeStatus(item.approval) === normalizeStatus(approval)).length;
+
+const isPendingResult = (submission) => normalizeStatus(submission.status) === 'pending';
 
 const toMoney = (value) => `$${Number(value || 0).toLocaleString('en-US')}`;
 
@@ -80,33 +210,34 @@ const toShortDateParts = (startDate, endDate) => {
 };
 
 const createDashboard = (store) => {
-    const pendingUsers = store.users.filter((user) => user.status === 'Pending');
-    const pendingHorses = store.horses.filter((horse) => horse.approval === 'Pending');
-    const openReports = store.horseReports.filter((report) => report.status === 'Open');
+    const pendingUsers = store.users.filter((user) => normalizeStatus(user.status) === 'pending');
+    const pendingHorses = store.horses.filter((horse) => normalizeStatus(horse.approval) === 'pending');
+    const openReports = store.horseReports.filter((report) => normalizeStatus(report.status) === 'open');
+    const pendingResults = store.resultSubmissions.filter(isPendingResult);
 
     return {
         stats: [
             {
                 label: 'Total Users',
-                value: (adminBaseTotals.users + store.users.length).toLocaleString('en-US'),
+                value: store.users.length.toLocaleString('en-US'),
                 trend: `${pendingUsers.length} pending`,
                 tone: 'users',
             },
             {
                 label: 'Active Tournaments',
                 value: String(countByStatus(store.tournaments, 'Active')),
-                trend: `${countByStatus(store.tournaments, 'Draft')} drafts`,
+                trend: `${countByStatus(store.tournaments, 'Pending')} pending`,
                 tone: 'tournaments',
             },
             {
                 label: 'Pending Registrations',
-                value: String(pendingUsers.length + pendingHorses.length),
+                value: String(countByApproval(store.horses, 'Pending')),
                 trend: `${pendingHorses.length} horses`,
                 tone: 'registrations',
             },
             {
                 label: 'Pending Results',
-                value: String(store.resultSubmissions.filter((submission) => submission.status !== 'Published').length),
+                value: String(pendingResults.length),
                 trend: `${openReports.length} disputed`,
                 tone: 'results',
             },
@@ -163,7 +294,7 @@ export const adminMockApi = {
                 maxHorses: Number(payload.maxHorses || 20),
                 registeredHorses: 0,
                 prizePool: Number(payload.goldPrize || 0) + Number(payload.silverPrize || 0) + Number(payload.bronzePrize || 0),
-                status,
+                status: mapStatus(status, tournamentStatusMap, 'Active'),
                 imagePosition: '50% center',
                 createdAt: new Date().toISOString().slice(0, 10),
             },
@@ -177,7 +308,7 @@ export const adminMockApi = {
             tournament.id === id
                 ? {
                     ...tournament,
-                    status,
+                    status: mapStatus(status, tournamentStatusMap),
                 }
                 : tournament
         )),
@@ -195,6 +326,7 @@ export const adminMockApi = {
                 ? {
                     ...tournament,
                     ...patch,
+                    status: patch.status ? mapStatus(patch.status, tournamentStatusMap) : tournament.status,
                 }
                 : tournament
         )),
@@ -208,8 +340,8 @@ export const adminMockApi = {
             user.id === id
                 ? {
                     ...user,
-                    status,
-                    verified: status === 'Active',
+                    status: mapStatus(status, userStatusMap),
+                    verified: normalizeStatus(status) === 'active',
                 }
                 : user
         )),
@@ -229,7 +361,7 @@ export const adminMockApi = {
             horse.id === id
                 ? {
                     ...horse,
-                    approval,
+                    approval: mapStatus(approval, horseApprovalStatusMap),
                 }
                 : horse
         )),
@@ -241,7 +373,7 @@ export const adminMockApi = {
             report.id === id
                 ? {
                     ...report,
-                    status: 'Closed',
+                    status: 'Active',
                 }
                 : report
         )),
@@ -249,8 +381,8 @@ export const adminMockApi = {
             horse.id === store.horseReports.find((report) => report.id === id)?.horseId
                 ? {
                     ...horse,
-                    reportStatus: 'Closed',
-                    healthStatus: 'Cleared',
+                    reportStatus: 'Active',
+                    healthStatus: 'Active',
                 }
                 : horse
         )),
@@ -269,7 +401,7 @@ export const adminMockApi = {
             prediction.id === id
                 ? {
                     ...prediction,
-                    status,
+                    status: mapStatus(status, predictionStatusMap),
                 }
                 : prediction
         )),
@@ -288,7 +420,7 @@ export const adminMockApi = {
             submission.slug === slug
                 ? {
                     ...submission,
-                    status: 'Published',
+                    status: 'Active',
                     tone: 'red',
                 }
                 : submission
@@ -299,7 +431,7 @@ export const adminMockApi = {
                 ...store.raceResultDetails[slug],
                 results: store.raceResultDetails[slug].results.map((result) => ({
                     ...result,
-                    status: 'Admin Approved',
+                    status: 'Active',
                 })),
             },
         },
@@ -313,11 +445,9 @@ export const adminMockApi = {
             notification.id === id
                 ? {
                     ...notification,
-                    status: 'Read',
+                    status: 'Active',
                 }
                 : notification
         )),
     })),
 };
-
-export const adminMockTotals = adminBaseTotals;

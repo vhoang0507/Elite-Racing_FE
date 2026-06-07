@@ -68,7 +68,7 @@ function CreateTournament() {
     };
 
     const handleSaveDraft = (event) => {
-        persistTournament(event.currentTarget.form, 'Draft');
+        persistTournament(event.currentTarget.form, 'Pending');
     };
 
     return (

@@ -32,12 +32,10 @@ const tableCellClass = (isLast = false, align = 'left') => [
     'px-[22px] py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]',
 ].join(' ');
 const statusClass = {
-    published: 'border-[#e8b6ad] bg-[#fbe5e1] text-[var(--admin-primary-dark)]',
-    open: 'border-[#e2cd79] bg-[#f7efcf] text-[#6a520d]',
-    draft: 'border-[#e0beb2] bg-[#f2ded7] text-[#7b4c42]',
+    pending: 'border-[#e2cd79] bg-[#f7efcf] text-[#6a520d]',
     active: 'border-[#afe2c4] bg-[#dff7e9] text-[#118548]',
-    completed: 'border-[#dbaaa5] bg-[#f5e1df] text-[var(--admin-primary-dark)]',
-    cancelled: 'border-[#f5b8bf] bg-[#ffe5e7] text-[#c3222c]',
+    inactive: 'border-[#dbaaa5] bg-[#f5e1df] text-[var(--admin-primary-dark)]',
+    banned: 'border-[#f5b8bf] bg-[#ffe5e7] text-[#c3222c]',
 };
 const avatarBaseClass = 'grid h-[42px] w-[42px] flex-none place-items-center overflow-hidden rounded-full text-[0.8rem] font-extrabold text-white';
 const avatarClass = {
@@ -66,7 +64,7 @@ const roleAvatarClass = (role = '') => {
     return avatarClass[key] || avatarClass.default;
 };
 
-const statusKey = (value) => value.toLowerCase().replace(/\s+/g, '-');
+const statusKey = (value) => String(value || '').toLowerCase().replace(/\s+/g, '-');
 
 const matchesQuery = (values, query) => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -135,7 +133,7 @@ function AdminDashboard() {
 
     const handleApproval = async (approval, nextStatus) => {
         if (approval.source === 'user') {
-            await adminMockApi.updateUserStatus(approval.id, nextStatus === 'Approved' ? 'Active' : 'Suspended');
+            await adminMockApi.updateUserStatus(approval.id, nextStatus);
         } else {
             await adminMockApi.updateHorseApproval(approval.id, nextStatus);
         }
@@ -266,11 +264,11 @@ function AdminDashboard() {
                                         </div>
 
                                         <div className="grid grid-cols-2 gap-2">
-                                            <button className="inline-flex min-h-[34px] cursor-pointer items-center justify-center gap-[7px] rounded-md bg-[var(--admin-primary)] text-[0.78rem] font-[850] text-white" onClick={() => handleApproval(approval, 'Approved')} type="button">
+                                            <button className="inline-flex min-h-[34px] cursor-pointer items-center justify-center gap-[7px] rounded-md bg-[var(--admin-primary)] text-[0.78rem] font-[850] text-white" onClick={() => handleApproval(approval, 'Active')} type="button">
                                                 <FaCheck aria-hidden="true" />
                                                 <span>Approve</span>
                                             </button>
-                                            <button className="inline-flex min-h-[34px] cursor-pointer items-center justify-center gap-[7px] rounded-md border border-[#d89288] bg-white text-[0.78rem] font-[850] text-[var(--admin-primary)]" onClick={() => handleApproval(approval, 'Rejected')} type="button">
+                                            <button className="inline-flex min-h-[34px] cursor-pointer items-center justify-center gap-[7px] rounded-md border border-[#d89288] bg-white text-[0.78rem] font-[850] text-[var(--admin-primary)]" onClick={() => handleApproval(approval, 'Banned')} type="button">
                                                 <FaTimes aria-hidden="true" />
                                                 <span>Reject</span>
                                             </button>
@@ -337,7 +335,7 @@ function AdminDashboard() {
                                     </div>
                                     <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
                                         <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Status</span>
-                                        <strong className={selectedUser.status === 'Active' ? 'text-[#0aa15f]' : 'text-[var(--admin-primary)]'}>{selectedUser.status}</strong>
+                                        <strong className={statusKey(selectedUser.status) === 'active' ? 'text-[#0aa15f]' : 'text-[var(--admin-primary)]'}>{selectedUser.status}</strong>
                                     </div>
                                     <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
                                         <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Verified</span>

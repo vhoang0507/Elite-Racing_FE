@@ -15,15 +15,12 @@ import {
     FaTrophy,
 } from 'react-icons/fa';
 
-import {
-    adminMockApi,
-    adminMockTotals,
-} from '../../api/adminMockApi';
+import { adminMockApi } from '../../api/adminMockApi';
 import horseRacing from '../../assets/horse-racing.jpg';
 
 import AdminLayout from './AdminLayout';
 
-const formatClass = (value) => value.toLowerCase();
+const formatClass = (value) => String(value || '').toLowerCase();
 
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-7 px-11 py-10 max-[820px]:px-5 max-[820px]:py-7';
 const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]';
@@ -31,9 +28,10 @@ const panelTitleClass = 'flex min-h-[58px] items-center border-b border-[var(--a
 const selectFieldClass = 'flex h-[42px] items-center gap-2 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[#80625d]';
 const selectClass = 'h-full w-full min-w-0 cursor-pointer appearance-none border-0 bg-transparent text-[0.8rem] font-bold text-[#5f4b47] outline-0';
 const statusClass = {
-    publish: 'bg-[#e8f7ee] text-[#16864f] before:bg-[#16864f]',
-    draft: 'bg-[#fff7db] text-[#a17809] before:bg-[#a17809]',
-    disabled: 'bg-[#ffe8e4] text-[var(--admin-primary)] before:bg-[var(--admin-primary)]',
+    pending: 'bg-[#fff7db] text-[#a17809] before:bg-[#a17809]',
+    active: 'bg-[#e8f7ee] text-[#16864f] before:bg-[#16864f]',
+    inactive: 'bg-[#f3e8e6] text-[#7f645f] before:bg-[#7f645f]',
+    banned: 'bg-[#ffe8e4] text-[var(--admin-primary)] before:bg-[var(--admin-primary)]',
 };
 const rankClass = {
     gold: 'bg-[#ffd85a] text-[#7b5a05]',
@@ -84,16 +82,18 @@ function PredictionManagement() {
 
     const summaryCards = useMemo(() => {
         const topPrediction = [...predictions].sort((current, next) => next.count - current.count)[0];
+        const totalPredictions = predictions.reduce((total, prediction) => total + Number(prediction.count || 0), 0);
+        const activeEvents = predictions.filter((prediction) => formatClass(prediction.status) === 'active').length;
 
         return [
             {
                 label: 'Total Predictions',
-                value: (adminMockTotals.predictions + predictions.reduce((total, prediction) => total + prediction.count, 0)).toLocaleString('en-US'),
+                value: totalPredictions.toLocaleString('en-US'),
                 icon: FaRegChartBar,
             },
             {
                 label: 'Active Events',
-                value: String(tournaments.length),
+                value: String(activeEvents),
                 icon: FaCalendarAlt,
             },
             {
@@ -102,7 +102,7 @@ function PredictionManagement() {
                 icon: FaSquare,
             },
         ];
-    }, [predictions, tournaments.length]);
+    }, [predictions]);
 
     const filteredPredictions = useMemo(() => {
         const filtered = predictions.filter((prediction) => (
@@ -139,12 +139,12 @@ function PredictionManagement() {
     };
 
     const handleDisable = async (prediction) => {
-        await adminMockApi.updatePredictionStatus(prediction.id, 'Disabled');
+        await adminMockApi.updatePredictionStatus(prediction.id, 'Inactive');
         setPredictions((current) => current.map((item) => (
             item.id === prediction.id
                 ? {
                     ...item,
-                    status: 'Disabled',
+                    status: 'Inactive',
                 }
                 : item
         )));
@@ -200,9 +200,10 @@ function PredictionManagement() {
                         <label className={selectFieldClass}>
                             <select className={selectClass} onChange={(event) => setStatusFilter(event.target.value)} value={statusFilter}>
                                 <option value="all-status">Status: All</option>
-                                <option value="publish">Publish</option>
-                                <option value="draft">Draft</option>
-                                <option value="disabled">Disabled</option>
+                                <option value="pending">Pending</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="banned">Banned</option>
                             </select>
                             <FaChevronDown aria-hidden="true" />
                         </label>
