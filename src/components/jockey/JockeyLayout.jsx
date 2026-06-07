@@ -36,7 +36,7 @@ const navigation = [
     },
     {
         key: 'schedule',
-        label: 'Schedule',
+        label: 'Calendar',
         icon: FaCalendarAlt,
         path: '/jockey/schedule',
     },

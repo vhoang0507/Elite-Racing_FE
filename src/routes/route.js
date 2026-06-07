@@ -21,6 +21,7 @@ import ValidateResults from '../components/admin/ValidateResults';
 import JockeyDashboard from '../components/jockey/JockeyDashboard';
 import PendingInvitations from '../components/jockey/PendingInvitations';
 import AcceptedRaces from '../components/jockey/AcceptedRaces';
+import JockeyCalendar from '../components/jockey/JockeyCalendar';
 import HorseOwnerDashboard from '../components/HorseOwner/HorseOwnerDashboard';
 import MyHorse from '../components/HorseOwner/MyHorse';
 import RegisterHorse from '../components/HorseOwner/RegisterHorse';
@@ -104,6 +105,10 @@ const appRoutes = [
     {
         path: '/jockey/accepted',
         element: createElement(AcceptedRaces),
+    },
+    {
+        path: '/jockey/schedule',
+        element: createElement(JockeyCalendar),
     },
     {
         path: '/owner',

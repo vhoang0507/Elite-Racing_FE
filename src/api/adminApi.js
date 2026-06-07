@@ -30,7 +30,7 @@ const toShortDateParts = (startDate, endDate) => {
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 
 async function getDashboard() {
-    const data = await apiRequest('/api/admin/dashboard');
+    const data = await apiRequest('/admin/dashboard');
     // Transform BE response to match FE expected format
     return {
         stats: [
@@ -68,7 +68,7 @@ async function getDashboard() {
 // ─── Users ───────────────────────────────────────────────────────────────────
 
 async function getUsers() {
-    const data = await apiRequest('/api/admin/users');
+    const data = await apiRequest('/admin/users');
     // Map BE fields to FE expected fields
     return data.map((u) => ({
         id: u.userId,
@@ -83,12 +83,12 @@ async function getUsers() {
 }
 
 async function getUserById(id) {
-    return apiRequest(`/api/admin/users/${id}`);
+    return apiRequest(`/admin/users/${id}`);
 }
 
 async function updateUserStatus(id, status) {
     const action = mapUserAction(status);
-    return apiRequest(`/api/admin/users/${id}/${action}`, { method: 'PUT' });
+    return apiRequest(`/admin/users/${id}/${action}`, { method: 'PUT' });
 }
 
 function mapUserAction(status) {
@@ -103,7 +103,7 @@ function mapUserAction(status) {
 // ─── Horses ──────────────────────────────────────────────────────────────────
 
 async function getHorses() {
-    const data = await apiRequest('/api/admin/horses');
+    const data = await apiRequest('/admin/horses');
     const horses = data.map((h) => ({
         id: h.horseId,
         name: h.horseName,
@@ -124,20 +124,20 @@ async function getHorses() {
 }
 
 async function getHorseById(id) {
-    return apiRequest(`/api/admin/horses/${id}`);
+    return apiRequest(`/admin/horses/${id}`);
 }
 
 async function updateHorseApproval(id, approval) {
     const action = (approval || '').toLowerCase().includes('active') || (approval || '').toLowerCase().includes('approved')
         ? 'approve'
         : 'suspend';
-    return apiRequest(`/api/admin/horses/${id}/${action}`, { method: 'PUT' });
+    return apiRequest(`/admin/horses/${id}/${action}`, { method: 'PUT' });
 }
 
 // ─── Tournaments ─────────────────────────────────────────────────────────────
 
 async function getTournaments() {
-    const data = await apiRequest('/api/admin/tournaments');
+    const data = await apiRequest('/admin/tournaments');
     return data.map((t) => ({
         id: t.tournamentId,
         name: t.tournamentName,
@@ -157,13 +157,13 @@ async function getTournaments() {
 }
 
 async function getTournamentById(id) {
-    return apiRequest(`/api/admin/tournaments/${id}`);
+    return apiRequest(`/admin/tournaments/${id}`);
 }
 
 async function createTournament(payload) {
     // The BE doesn't have a create endpoint in the controllers we read,
     // but we'll structure the call for when it's added
-    return apiRequest('/api/admin/tournaments', {
+    return apiRequest('/admin/tournaments', {
         method: 'POST',
         body: JSON.stringify(payload),
     });
@@ -171,7 +171,7 @@ async function createTournament(payload) {
 
 async function updateTournamentStatus(id, status) {
     const action = (status || '').toLowerCase().includes('cancel') ? 'cancel' : 'approve';
-    return apiRequest(`/api/admin/tournaments/${id}/${action}`, { method: 'PUT' });
+    return apiRequest(`/admin/tournaments/${id}/${action}`, { method: 'PUT' });
 }
 
 async function updateTournament(id, patch) {
@@ -180,38 +180,38 @@ async function updateTournament(id, patch) {
         return updateTournamentStatus(id, patch.status);
     }
     // Otherwise attempt a general PUT (if BE supports it)
-    return apiRequest(`/api/admin/tournaments/${id}`, {
+    return apiRequest(`/admin/tournaments/${id}`, {
         method: 'PUT',
         body: JSON.stringify(patch),
     });
 }
 
 async function deleteTournament(id) {
-    return apiRequest(`/api/admin/tournaments/${id}/cancel`, { method: 'PUT' });
+    return apiRequest(`/admin/tournaments/${id}/cancel`, { method: 'PUT' });
 }
 
 // ─── Race Registrations ──────────────────────────────────────────────────────
 
 async function getRegistrations() {
-    return apiRequest('/api/admin/registrations');
+    return apiRequest('/admin/registrations');
 }
 
 async function getRegistrationById(id) {
-    return apiRequest(`/api/admin/registrations/${id}`);
+    return apiRequest(`/admin/registrations/${id}`);
 }
 
 async function approveRegistration(id) {
-    return apiRequest(`/api/admin/registrations/${id}/approve`, { method: 'PUT' });
+    return apiRequest(`/admin/registrations/${id}/approve`, { method: 'PUT' });
 }
 
 async function rejectRegistration(id) {
-    return apiRequest(`/api/admin/registrations/${id}/reject`, { method: 'PUT' });
+    return apiRequest(`/admin/registrations/${id}/reject`, { method: 'PUT' });
 }
 
 // ─── Race Results ────────────────────────────────────────────────────────────
 
 async function getResultSubmissions() {
-    const data = await apiRequest('/api/admin/results');
+    const data = await apiRequest('/admin/results');
     return data.map((r) => ({
         id: r.resultId,
         raceId: r.raceId,
@@ -232,12 +232,12 @@ async function getResultSubmissions() {
 }
 
 async function getPendingResults() {
-    return apiRequest('/api/admin/results/pending');
+    return apiRequest('/admin/results/pending');
 }
 
 async function getResultDetail(idOrSlug) {
     const id = String(idOrSlug).replace('result-', '');
-    const result = await apiRequest(`/api/admin/results/${id}`);
+    const result = await apiRequest(`/admin/results/${id}`);
     return {
         race: `Race #${result.raceId}`,
         results: [result],
@@ -246,63 +246,63 @@ async function getResultDetail(idOrSlug) {
 
 async function publishResult(idOrSlug) {
     const id = String(idOrSlug).replace('result-', '');
-    return apiRequest(`/api/admin/results/${id}/approve`, { method: 'PUT' });
+    return apiRequest(`/admin/results/${id}/approve`, { method: 'PUT' });
 }
 
 async function rejectResult(id) {
-    return apiRequest(`/api/admin/results/${id}/reject`, { method: 'PUT' });
+    return apiRequest(`/admin/results/${id}/reject`, { method: 'PUT' });
 }
 
 // ─── Reports (Violations) ────────────────────────────────────────────────────
 
 async function getReports() {
-    return apiRequest('/api/admin/reports');
+    return apiRequest('/admin/reports');
 }
 
 async function getReportById(id) {
-    return apiRequest(`/api/admin/reports/${id}`);
+    return apiRequest(`/admin/reports/${id}`);
 }
 
 async function getReportsToday() {
-    return apiRequest('/api/admin/reports/today');
+    return apiRequest('/admin/reports/today');
 }
 
 async function getReportStatistics() {
-    return apiRequest('/api/admin/reports/statistics');
+    return apiRequest('/admin/reports/statistics');
 }
 
 async function resolveReport(id) {
-    return apiRequest(`/api/admin/reports/${id}/resolve`, { method: 'PUT' });
+    return apiRequest(`/admin/reports/${id}/resolve`, { method: 'PUT' });
 }
 
 async function rejectReport(id) {
-    return apiRequest(`/api/admin/reports/${id}/reject`, { method: 'PUT' });
+    return apiRequest(`/admin/reports/${id}/reject`, { method: 'PUT' });
 }
 
 // ─── Verifications ───────────────────────────────────────────────────────────
 
 async function getVerifications() {
-    return apiRequest('/api/admin/verifications');
+    return apiRequest('/admin/verifications');
 }
 
 async function getOwnerVerifications() {
-    return apiRequest('/api/admin/verifications/owners');
+    return apiRequest('/admin/verifications/owners');
 }
 
 async function getJockeyVerifications() {
-    return apiRequest('/api/admin/verifications/jockeys');
+    return apiRequest('/admin/verifications/jockeys');
 }
 
 async function getVerificationById(id) {
-    return apiRequest(`/api/admin/verifications/${id}`);
+    return apiRequest(`/admin/verifications/${id}`);
 }
 
 async function approveVerification(id) {
-    return apiRequest(`/api/admin/verifications/${id}/approve`, { method: 'PUT' });
+    return apiRequest(`/admin/verifications/${id}/approve`, { method: 'PUT' });
 }
 
 async function rejectVerification(id) {
-    return apiRequest(`/api/admin/verifications/${id}/reject`, { method: 'PUT' });
+    return apiRequest(`/admin/verifications/${id}/reject`, { method: 'PUT' });
 }
 
 // ─── Notifications (no BE endpoint yet - placeholder) ────────────────────────
