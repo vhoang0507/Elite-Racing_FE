@@ -1,22 +1,54 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import HorseOwnerLayout from "../HorseOwnerLayout";
+import { ownerApi } from "../../../api/ownerApi";
 
 export default function RegisterHorse() {
     const navigate = useNavigate();
+    const [breeds, setBreeds] = useState([]);
     const [form, setForm] = useState({
         horseName: "",
-        breedType: "",
+        breedId: "",
         age: "",
-        height: "",
-        weight: "",
-        achievement: "",
-        healthState: "Healthy",
-        notes: "",
+        heightCm: "",
+        weightKg: "",
+        achievementSummary: "",
+        healthStatus: "Healthy",
+        imageUrl: "",
     });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        ownerApi.getHorseBreeds()
+            .then(setBreeds)
+            .catch(() => {});
+    }, []);
 
     const handleChange = (e) => {
         setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
+
+    const handleSubmit = async () => {
+        setError('');
+        setIsSubmitting(true);
+        try {
+            await ownerApi.createHorse({
+                horseName: form.horseName,
+                breedId: Number(form.breedId),
+                age: Number(form.age),
+                heightCm: Number(form.heightCm),
+                weightKg: Number(form.weightKg),
+                healthStatus: form.healthStatus,
+                achievementSummary: form.achievementSummary,
+                imageUrl: form.imageUrl || null,
+            });
+            navigate('/owner/my-horse');
+        } catch (err) {
+            setError(err.message || 'Failed to register horse');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const inputClass = "w-full rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-white px-3 py-2.5 text-[0.9rem] text-[var(--admin-ink)] outline-none focus:border-[var(--admin-primary)]";
@@ -44,12 +76,11 @@ export default function RegisterHorse() {
 
                         <div className="mb-4">
                             <label className={labelClass}>Breed Type</label>
-                            <select name="breedType" value={form.breedType} onChange={handleChange} className={inputClass}>
+                            <select name="breedId" value={form.breedId} onChange={handleChange} className={inputClass}>
                                 <option value="">Select Breed</option>
-                                <option>Arabian</option>
-                                <option>Thoroughbred</option>
-                                <option>Mustang</option>
-                                <option>Andalusian</option>
+                                {breeds.map(b => (
+                                    <option key={b.breedId} value={b.breedId}>{b.breedName}</option>
+                                ))}
                             </select>
                         </div>
 
@@ -60,17 +91,17 @@ export default function RegisterHorse() {
                             </div>
                             <div>
                                 <label className={labelClass}>Height (Cm)</label>
-                                <input name="height" value={form.height} onChange={handleChange} placeholder="15.2" type="number" className={inputClass} />
+                                <input name="heightCm" value={form.heightCm} onChange={handleChange} placeholder="155" type="number" className={inputClass} />
                             </div>
                             <div>
                                 <label className={labelClass}>Weight (Kg)</label>
-                                <input name="weight" value={form.weight} onChange={handleChange} placeholder="1100" type="number" className={inputClass} />
+                                <input name="weightKg" value={form.weightKg} onChange={handleChange} placeholder="500" type="number" className={inputClass} />
                             </div>
                         </div>
 
                         <div className="mb-4">
                             <label className={labelClass}>Achievement Summary & Bloodline History</label>
-                            <textarea name="achievement" value={form.achievement} onChange={handleChange}
+                            <textarea name="achievementSummary" value={form.achievementSummary} onChange={handleChange}
                                 placeholder="Detail recent race placements, notable lineage, and distinctive physical characteristics..."
                                 className={`${inputClass} min-h-[100px] resize-y`} />
                         </div>
@@ -82,7 +113,7 @@ export default function RegisterHorse() {
 
                         <div className="mb-4">
                             <label className={labelClass}>Current Health State</label>
-                            <select name="healthState" value={form.healthState} onChange={handleChange} className={inputClass}>
+                            <select name="healthStatus" value={form.healthStatus} onChange={handleChange} className={inputClass}>
                                 <option>Healthy</option>
                                 <option>Injured</option>
                                 <option>Training</option>
@@ -107,11 +138,18 @@ export default function RegisterHorse() {
 
                 {/* Buttons */}
                 <div className="flex gap-3">
+                    {error && <p className="m-0 text-[0.82rem] text-[#c62828]">{error}</p>}
+                </div>
+                <div className="flex gap-3">
                     <button onClick={() => navigate("/owner/my-horse")} className="min-h-[38px] cursor-pointer rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-white px-6 font-bold text-[var(--admin-ink)] hover:bg-[#f5f5f5]">
                         Draft
                     </button>
-                    <button className="min-h-[38px] cursor-pointer rounded-[var(--admin-radius)] border-0 bg-[var(--admin-primary)] px-6 font-bold text-white hover:bg-[var(--admin-primary-dark)]">
-                        Register Horse
+                    <button
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
+                        className="min-h-[38px] cursor-pointer rounded-[var(--admin-radius)] border-0 bg-[var(--admin-primary)] px-6 font-bold text-white hover:bg-[var(--admin-primary-dark)] disabled:opacity-50"
+                    >
+                        {isSubmitting ? 'Registering...' : 'Register Horse'}
                     </button>
                 </div>
             </section>

@@ -10,15 +10,15 @@ export default function StatCard({ icon, label, value }) {
 
 const styles = {
     card: {
-        backgroundColor: "#fff",
-        borderRadius: "12px",
+        backgroundColor: "#fffefd",
+        borderRadius: "8px",
         padding: "20px",
-        border: "1px solid #eee",
+        border: "1px solid #edcfc9",
         display: "flex",
         flexDirection: "column",
         gap: "8px",
     },
     icon: { fontSize: "24px" },
-    label: { margin: 0, fontSize: "13px", color: "#999" },
-    value: { margin: 0, fontSize: "28px", fontWeight: "bold", color: "#111" },
+    label: { margin: 0, fontSize: "13px", color: "#705f5b" },
+    value: { margin: 0, fontSize: "28px", fontWeight: "bold", color: "#2d2020" },
 };
