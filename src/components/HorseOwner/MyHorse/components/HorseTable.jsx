@@ -1,32 +1,46 @@
-const horses = [
-    { name: "Desert Thunder", img: "/Horse1.jpg", breed: "Arabian", age: "5y", height: "155 cm", weight: "520 kg", health: "Healthy", status: "ACTIVE" },
-    { name: "Shadow Flame", img: "/Horse2.jpg", breed: "Thoroughbred", age: "4y", height: "170 cm", weight: "495 kg", health: "Injured", status: "INACTIVE" },
-    { name: "Silver Arrow", img: "/Horse1.jpg", breed: "Mustang", age: "6y", height: "160 cm", weight: "510 kg", health: "Training", status: "ACTIVE" },
-    { name: "Storm King", img: "/Horse2.jpg", breed: "Thoroughbred", age: "3y", height: "172 cm", weight: "486 kg", health: "Healthy", status: "ACTIVE" },
-    { name: "Royal Highness", img: "/Horse1.jpg", breed: "Andalusian", age: "7y", height: "160 cm", weight: "540 kg", health: "Healthy", status: "ACTIVE" },
-];
+import { useEffect, useState } from "react";
+import { ownerApi } from "../../../../api/ownerApi";
 
 const healthColor = {
-    Healthy: { bg: "#d4edda", color: "#155724" },
-    Injured: { bg: "#f8d7da", color: "#721c24" },
+    Healthy: { bg: "#dff7e9", color: "#118548" },
+    Injured: { bg: "#f5e1df", color: "#860707" },
     Training: { bg: "#fff3cd", color: "#856404" },
 };
 
-const statusColor = {
-    ACTIVE: { bg: "#d4edda", color: "#155724" },
-    INACTIVE: { bg: "#f8d7da", color: "#721c24" },
-};
-
 export default function HorseTable() {
+    const [horses, setHorses] = useState([]);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const [search, setSearch] = useState('');
+    const pageSize = 5;
+
+    const fetchHorses = (p = page, s = search) => {
+        ownerApi.getHorses({ page: p, pageSize, search: s || undefined })
+            .then((res) => {
+                setHorses(res.items || []);
+                setTotalPages(res.totalPages || 1);
+                setTotalItems(res.totalItems || 0);
+            })
+            .catch(() => {});
+    };
+
+    useEffect(() => { fetchHorses(); }, [page]);
+
+    const handleSearch = () => { setPage(1); fetchHorses(1, search); };
+
     return (
         <div style={styles.wrapper}>
             {/* Filter Bar */}
             <div style={styles.filterBar}>
-                <input placeholder="Search horse name..." style={styles.search} />
-                <select style={styles.select}><option>All Breeds</option></select>
-                <select style={styles.select}><option>Health Status</option></select>
-                <button style={styles.filterBtn}>Filter</button>
-                <select style={styles.select}><option>Sort by: Name</option></select>
+                <input
+                    placeholder="Search horse name..."
+                    style={styles.search}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                />
+                <button style={styles.filterBtn} onClick={handleSearch}>Filter</button>
             </div>
 
             {/* Table */}
@@ -39,25 +53,28 @@ export default function HorseTable() {
                     </tr>
                 </thead>
                 <tbody>
-                    {horses.map((horse, i) => (
-                        <tr key={i} style={styles.tr}>
+                    {horses.length === 0 && (
+                        <tr><td colSpan={8} style={{ ...styles.td, textAlign: 'center', color: '#705f5b' }}>No horses found</td></tr>
+                    )}
+                    {horses.map((horse) => (
+                        <tr key={horse.horseId} style={styles.tr}>
                             <td style={styles.td}>
                                 <div style={styles.horseName}>
-                                    <img src={horse.img} alt={horse.name} style={styles.horseImg} />
-                                    <span>{horse.name}</span>
+                                    {horse.imageUrl && <img src={horse.imageUrl} alt={horse.horseName} style={styles.horseImg} />}
+                                    <span style={{ fontWeight: 'bold' }}>{horse.horseName}</span>
                                 </div>
                             </td>
-                            <td style={styles.td}>{horse.breed}</td>
-                            <td style={styles.td}>{horse.age}</td>
-                            <td style={styles.td}>{horse.height}</td>
-                            <td style={styles.td}>{horse.weight}</td>
+                            <td style={styles.td}>{horse.breedName}</td>
+                            <td style={styles.td}>{horse.age}y</td>
+                            <td style={styles.td}>{horse.heightCm} cm</td>
+                            <td style={styles.td}>{horse.weightKg} kg</td>
                             <td style={styles.td}>
-                                <span style={{ ...styles.badge, ...healthColor[horse.health] }}>
-                                    {horse.health}
+                                <span style={{ ...styles.badge, ...(healthColor[horse.healthStatus] || { bg: '#f5f5f5', color: '#555' }) }}>
+                                    {horse.healthStatus}
                                 </span>
                             </td>
                             <td style={styles.td}>
-                                <span style={{ ...styles.badge, ...statusColor[horse.status] }}>
+                                <span style={{ ...styles.badge, backgroundColor: horse.isActive ? '#dff7e9' : '#f5e1df', color: horse.isActive ? '#118548' : '#860707' }}>
                                     {horse.status}
                                 </span>
                             </td>
@@ -72,14 +89,13 @@ export default function HorseTable() {
 
             {/* Pagination */}
             <div style={styles.pagination}>
-                <span style={styles.pageInfo}>Showing 1 to 5 of 12 horses</span>
+                <span style={styles.pageInfo}>Showing {(page - 1) * pageSize + 1} to {Math.min(page * pageSize, totalItems)} of {totalItems} horses</span>
                 <div style={styles.pages}>
-                    {[1, 2, 3, 4].map(n => (
-                        <button key={n} style={{ ...styles.pageBtn, ...(n === 1 ? styles.activePage : {}) }}>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
+                        <button key={n} style={{ ...styles.pageBtn, ...(n === page ? styles.activePage : {}) }} onClick={() => setPage(n)}>
                             {n}
                         </button>
                     ))}
-                    <button style={styles.pageBtn}>›</button>
                 </div>
             </div>
         </div>
@@ -87,22 +103,21 @@ export default function HorseTable() {
 }
 
 const styles = {
-    wrapper: { backgroundColor: "#fff", borderRadius: "12px", padding: "20px", border: "1px solid #eee" },
+    wrapper: { backgroundColor: "#fffefd", borderRadius: "12px", padding: "20px", border: "1px solid #edcfc9" },
     filterBar: { display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap" },
-    search: { padding: "8px 12px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "13px", flex: 1 },
-    select: { padding: "8px 12px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "13px", cursor: "pointer" },
-    filterBtn: { padding: "8px 16px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "13px", cursor: "pointer", backgroundColor: "#fff" },
+    search: { padding: "8px 12px", borderRadius: "8px", border: "1px solid #edcfc9", fontSize: "13px", flex: 1 },
+    filterBtn: { padding: "8px 16px", borderRadius: "8px", border: "1px solid #edcfc9", fontSize: "13px", cursor: "pointer", backgroundColor: "#fffefd" },
     table: { width: "100%", borderCollapse: "collapse" },
-    th: { textAlign: "left", padding: "10px 12px", fontSize: "12px", color: "#999", fontWeight: "600", textTransform: "uppercase", borderBottom: "1px solid #eee" },
-    tr: { borderBottom: "1px solid #f5f5f5" },
-    td: { padding: "12px", fontSize: "14px" },
+    th: { textAlign: "left", padding: "10px 12px", fontSize: "12px", color: "#705f5b", fontWeight: "600", textTransform: "uppercase", borderBottom: "1px solid #edcfc9" },
+    tr: { borderBottom: "1px solid #f5f0ee" },
+    td: { padding: "12px", fontSize: "14px", color: "#2d2020" },
     horseName: { display: "flex", alignItems: "center", gap: "10px" },
     horseImg: { width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover" },
     badge: { padding: "3px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: "500" },
     iconBtn: { background: "none", border: "none", cursor: "pointer", fontSize: "16px", marginRight: "4px" },
     pagination: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px" },
-    pageInfo: { fontSize: "13px", color: "#999" },
+    pageInfo: { fontSize: "13px", color: "#705f5b" },
     pages: { display: "flex", gap: "6px" },
-    pageBtn: { width: "32px", height: "32px", borderRadius: "6px", border: "1px solid #ddd", background: "#fff", cursor: "pointer", fontSize: "13px" },
-    activePage: { backgroundColor: "#8B0000", color: "#fff", border: "none" },
+    pageBtn: { width: "32px", height: "32px", borderRadius: "6px", border: "1px solid #edcfc9", background: "#fffefd", cursor: "pointer", fontSize: "13px" },
+    activePage: { backgroundColor: "#860707", color: "#fff", border: "none" },
 };

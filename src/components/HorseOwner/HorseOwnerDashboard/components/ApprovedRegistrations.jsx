@@ -1,31 +1,25 @@
-const data = [
-    {
-        tournament: "Silverstone Stakes",
-        horse: "Storm Breaker",
-        jockey: "Marcus Vane",
-        raceDate: "Oct 02, 2024",
-        status: "Ready to Race",
-        statusColor: { bg: "#d4edda", color: "#155724" },
-    },
-    {
-        tournament: "Emerald Mile",
-        horse: "Golden Hoof",
-        jockey: "Pending selection",
-        raceDate: "Nov 12, 2024",
-        status: "Approved",
-        statusColor: { bg: "#d1ecf1", color: "#0c5460" },
-    },
-    {
-        tournament: "Bordeaux Grand Prix",
-        horse: "Elysian Field",
-        jockey: "Sofia Rossi",
-        raceDate: "Oct 28, 2024",
-        status: "Jockey Invited",
-        statusColor: { bg: "#fff3cd", color: "#856404" },
-    },
-];
+import { useEffect, useState } from "react";
+import { ownerApi } from "../../../../api/ownerApi";
 
 export default function ApprovedRegistrations() {
+    const [data, setData] = useState([]);
+
+    useEffect(() => {
+        let mounted = true;
+        ownerApi.getApprovedRegistrations()
+            .then((res) => { if (mounted) setData(res); })
+            .catch(() => {});
+        return () => { mounted = false; };
+    }, []);
+
+    const getStatusStyle = (status) => {
+        const s = (status || '').toLowerCase();
+        if (s.includes('ready')) return { bg: '#dff7e9', color: '#118548' };
+        if (s.includes('approved')) return { bg: '#e3f2fd', color: '#1565c0' };
+        if (s.includes('invited')) return { bg: '#fff3cd', color: '#856404' };
+        return { bg: '#f5f5f5', color: '#555' };
+    };
+
     return (
         <section style={styles.section}>
             <div style={styles.header}>
@@ -45,26 +39,28 @@ export default function ApprovedRegistrations() {
                     </tr>
                 </thead>
                 <tbody>
-                    {data.map((row, i) => (
-                        <tr key={i} style={i % 2 === 0 ? styles.trEven : styles.trOdd}>
-                            <td style={styles.td}>{row.tournament}</td>
-                            <td style={styles.td}>{row.horse}</td>
-                            <td style={styles.td}>{row.jockey}</td>
-                            <td style={styles.td}>{row.raceDate}</td>
-                            <td style={styles.td}>
-                                <span style={{
-                                    ...styles.badge,
-                                    backgroundColor: row.statusColor.bg,
-                                    color: row.statusColor.color,
-                                }}>
-                                    {row.status}
-                                </span>
-                            </td>
-                            <td style={styles.td}>
-                                <button style={styles.raceBtn}>Race Info</button>
-                            </td>
-                        </tr>
-                    ))}
+                    {data.length === 0 && (
+                        <tr><td colSpan={6} style={{ ...styles.td, textAlign: 'center', color: '#999' }}>No approved registrations</td></tr>
+                    )}
+                    {data.map((row, i) => {
+                        const statusStyle = getStatusStyle(row.status);
+                        return (
+                            <tr key={row.registrationId || i} style={i % 2 === 0 ? styles.trEven : styles.trOdd}>
+                                <td style={styles.td}>{row.tournamentName}</td>
+                                <td style={styles.td}>{row.horseName}</td>
+                                <td style={styles.td}>{row.jockeyName || 'Pending selection'}</td>
+                                <td style={styles.td}>{row.raceDate}</td>
+                                <td style={styles.td}>
+                                    <span style={{ ...styles.badge, backgroundColor: statusStyle.bg, color: statusStyle.color }}>
+                                        {row.status}
+                                    </span>
+                                </td>
+                                <td style={styles.td}>
+                                    <button style={styles.raceBtn}>Race Info</button>
+                                </td>
+                            </tr>
+                        );
+                    })}
                 </tbody>
             </table>
         </section>
@@ -72,62 +68,15 @@ export default function ApprovedRegistrations() {
 }
 
 const styles = {
-    section: {
-        backgroundColor: "#fff",
-        borderRadius: "12px",
-        padding: "20px",
-        border: "1px solid #eee",
-        marginBottom: "24px",
-    },
-    header: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: "16px",
-    },
-    filterBtn: {
-        background: "none",
-        border: "1px solid #ddd",
-        borderRadius: "6px",
-        padding: "6px 12px",
-        cursor: "pointer",
-        fontSize: "13px",
-    },
-    table: {
-        width: "100%",
-        borderCollapse: "collapse",
-    },
-    thead: {
-        borderBottom: "1px solid #eee",
-    },
-    th: {
-        textAlign: "left",
-        padding: "10px 12px",
-        fontSize: "12px",
-        color: "#999",
-        fontWeight: "600",
-        textTransform: "uppercase",
-    },
-    td: {
-        padding: "14px 12px",
-        fontSize: "14px",
-        borderBottom: "1px solid #f5f5f5",
-    },
-    trEven: { backgroundColor: "#fff" },
-    trOdd: { backgroundColor: "#fafafa" },
-    badge: {
-        padding: "4px 10px",
-        borderRadius: "20px",
-        fontSize: "12px",
-        fontWeight: "500",
-    },
-    raceBtn: {
-        backgroundColor: "#8B0000",
-        color: "#fff",
-        border: "none",
-        borderRadius: "6px",
-        padding: "6px 14px",
-        cursor: "pointer",
-        fontSize: "13px",
-    },
+    section: { backgroundColor: "#fff", borderRadius: "12px", padding: "20px", border: "1px solid #edcfc9", marginBottom: "0" },
+    header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" },
+    filterBtn: { background: "none", border: "1px solid #edcfc9", borderRadius: "6px", padding: "6px 12px", cursor: "pointer", fontSize: "13px" },
+    table: { width: "100%", borderCollapse: "collapse" },
+    thead: { borderBottom: "1px solid #edcfc9" },
+    th: { textAlign: "left", padding: "10px 12px", fontSize: "12px", color: "#705f5b", fontWeight: "600", textTransform: "uppercase" },
+    td: { padding: "14px 12px", fontSize: "14px", borderBottom: "1px solid #f5f0ee" },
+    trEven: { backgroundColor: "#fffefd" },
+    trOdd: { backgroundColor: "#fff8f6" },
+    badge: { padding: "4px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: "500" },
+    raceBtn: { backgroundColor: "#860707", color: "#fff", border: "none", borderRadius: "6px", padding: "6px 14px", cursor: "pointer", fontSize: "13px" },
 };
