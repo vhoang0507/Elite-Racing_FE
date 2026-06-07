@@ -15,6 +15,7 @@ import icon from '../assets/icon.png';
 const formGroupClass = 'mb-5';
 const labelClass = 'mb-2.5 block text-[0.9rem] font-extrabold text-[#1f3b57]';
 const controlClass = 'h-[54px] w-full rounded-[10px] border border-[#e8caca] bg-white px-4 text-base outline-none focus:border-[#8B0000]';
+const OTP_CODE_LENGTH = 6;
 
 const VerifyEmail = () => {
     const location = useLocation();
@@ -27,10 +28,20 @@ const VerifyEmail = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isResending, setIsResending] = useState(false);
 
+    const handleCodeChange = (event) => {
+        setCode(event.target.value.replace(/\D/g, '').slice(0, OTP_CODE_LENGTH));
+    };
+
     const handleSubmit = async (event) => {
         event.preventDefault();
         setError('');
         setMessage('');
+
+        if (code.length !== OTP_CODE_LENGTH) {
+            setError(`Please enter the ${OTP_CODE_LENGTH}-digit OTP code.`);
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {
@@ -115,13 +126,22 @@ const VerifyEmail = () => {
                                 className={`${controlClass} text-center text-[1.25rem] font-bold tracking-[0.35em]`}
                                 type="text"
                                 inputMode="numeric"
+                                autoComplete="one-time-code"
                                 placeholder="000000"
                                 value={code}
-                                onChange={(event) => setCode(event.target.value)}
-                                maxLength={6}
+                                onChange={handleCodeChange}
+                                maxLength={OTP_CODE_LENGTH}
+                                minLength={OTP_CODE_LENGTH}
+                                pattern={`\\d{${OTP_CODE_LENGTH}}`}
                                 required
                             />
                         </div>
+
+                        {otpDemo && (
+                            <div className="mb-4 rounded-[10px] border border-[#d7c27c] bg-[#fff9e8] px-4 py-3 text-sm font-semibold text-[#74540b]">
+                                Demo OTP: {otpDemo}
+                            </div>
+                        )}
 
                         {message && (
                             <div className="mb-4 rounded-[10px] border border-[#b9e5c5] bg-[#f1fff5] px-4 py-3 text-sm font-semibold text-[#1d6b35]">

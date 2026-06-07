@@ -23,7 +23,7 @@ import horseRacing from '../../assets/horse-racing.jpg';
 
 import AdminLayout from './AdminLayout';
 
-const formatClass = (value) => value.toLowerCase().replace(/\s+/g, '-');
+const formatClass = (value) => String(value || '').toLowerCase().replace(/\s+/g, '-');
 
 const pageShellClass = [
     '[--validate-soft-panel:#fff4f1]',
@@ -46,9 +46,10 @@ const scoreClass = {
 };
 
 const statusClass = {
-    'referee-confirmed': 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
-    draft: 'border-[#ddd6d3] bg-[#f5f4f3] text-[#6f6360]',
-    'admin-approved': 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
+    pending: 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
+    active: 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
+    inactive: 'border-[#ddd6d3] bg-[#f5f4f3] text-[#6f6360]',
+    banned: 'border-[#e8897d] bg-[#ffe8e4] text-[var(--admin-primary)]',
 };
 
 const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[0.78rem] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
@@ -148,9 +149,10 @@ function ValidateResultDetail() {
                                 <FaFilter aria-hidden="true" />
                                 <select className="h-full w-full min-w-0 cursor-pointer border-0 bg-transparent p-0 pr-6 text-[0.78rem] font-bold text-[var(--admin-ink)] outline-0" onChange={(event) => setStatusFilter(event.target.value)} value={statusFilter}>
                                     <option value="all">All Statuses</option>
-                                    <option value="referee-confirmed">Referee Confirmed</option>
-                                    <option value="draft">Draft</option>
-                                    <option value="admin-approved">Admin Approved</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                    <option value="banned">Banned</option>
                                 </select>
                             </label>
 

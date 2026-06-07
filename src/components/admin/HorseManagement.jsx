@@ -13,15 +13,12 @@ import {
     FaTrashAlt,
 } from 'react-icons/fa';
 
-import {
-    adminMockApi,
-    adminMockTotals,
-} from '../../api/adminMockApi';
+import { adminMockApi } from '../../api/adminMockApi';
 import horseRacing from '../../assets/horse-racing.jpg';
 
 import AdminLayout from './AdminLayout';
 
-const formatClass = (value) => value.toLowerCase().replace(/\s+/g, '-');
+const formatClass = (value) => String(value || '').toLowerCase().replace(/\s+/g, '-');
 
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-7 px-11 py-10 max-[860px]:px-5 max-[860px]:py-7';
 
@@ -41,9 +38,10 @@ const summaryClass = {
 };
 
 const approvalClass = {
-    approved: 'border-[#a7dfbf] bg-[#e8f7ee] text-[#16864f]',
     pending: 'border-[#efd06a] bg-[#fff7db] text-[#a17809]',
-    rejected: 'border-[#e7a49a] bg-[#ffe8e4] text-[var(--admin-primary)]',
+    active: 'border-[#a7dfbf] bg-[#e8f7ee] text-[#16864f]',
+    inactive: 'border-[#dbc3bf] bg-[#f3e8e6] text-[#7f645f]',
+    banned: 'border-[#e7a49a] bg-[#ffe8e4] text-[var(--admin-primary)]',
 };
 
 const severityClass = {
@@ -102,19 +100,19 @@ function HorseManagement() {
     const horseStats = useMemo(() => [
         {
             label: 'Total Horses',
-            value: (adminMockTotals.horses + horses.length).toLocaleString('en-US'),
+            value: horses.length.toLocaleString('en-US'),
             icon: FaHorseHead,
             tone: 'total',
         },
         {
             label: 'Pending Approval',
-            value: String(horses.filter((horse) => horse.approval === 'Pending').length).padStart(2, '0'),
+            value: String(horses.filter((horse) => formatClass(horse.approval) === 'pending').length),
             icon: FaCalendarCheck,
             tone: 'pending',
         },
         {
             label: 'Reported Horses',
-            value: String(reports.filter((report) => report.status === 'Open').length).padStart(2, '0'),
+            value: String(reports.filter((report) => formatClass(report.status) === 'pending').length),
             icon: FaExclamationTriangle,
             tone: 'reported',
         },
@@ -138,7 +136,7 @@ function HorseManagement() {
         });
     }, [approvalFilter, breedFilter, healthFilter, horses, query, reportFilter, sortBy]);
 
-    const openReports = reports.filter((report) => report.status === 'Open');
+    const openReports = reports.filter((report) => formatClass(report.status) === 'pending');
     const totalPages = Math.max(1, Math.ceil(filteredHorses.length / pageSize));
     const visibleHorses = filteredHorses.slice((page - 1) * pageSize, page * pageSize);
     const firstShown = filteredHorses.length === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -160,7 +158,7 @@ function HorseManagement() {
             item.id === report.id
                 ? {
                     ...item,
-                    status: 'Closed',
+                    status: 'Active',
                 }
                 : item
         )));
@@ -168,20 +166,20 @@ function HorseManagement() {
             horse.id === report.horseId
                 ? {
                     ...horse,
-                    healthStatus: 'Cleared',
-                    reportStatus: 'Closed',
+                    healthStatus: 'Active',
+                    reportStatus: 'Active',
                 }
                 : horse
         )));
     };
 
     const handleSuspendHorse = async (report) => {
-        await adminMockApi.updateHorseApproval(report.horseId, 'Rejected');
+        await adminMockApi.updateHorseApproval(report.horseId, 'Banned');
         setHorses((current) => current.map((horse) => (
             horse.id === report.horseId
                 ? {
                     ...horse,
-                    approval: 'Rejected',
+                    approval: 'Banned',
                 }
                 : horse
         )));
@@ -189,9 +187,9 @@ function HorseManagement() {
 
     const handleToggleHorseApproval = async (horse) => {
         const approval = horse.approval === 'Pending'
-            ? 'Approved'
-            : horse.approval === 'Approved'
-                ? 'Rejected'
+            ? 'Active'
+            : horse.approval === 'Active'
+                ? 'Banned'
                 : 'Pending';
 
         await adminMockApi.updateHorseApproval(horse.id, approval);
@@ -263,21 +261,26 @@ function HorseManagement() {
 
                             <select className={selectClass} onChange={handleFilterChange(setHealthFilter)} value={healthFilter}>
                                 <option value="health">Health Status</option>
-                                <option value="cleared">Cleared</option>
-                                <option value="needs-review">Needs Review</option>
+                                <option value="pending">Pending</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="banned">Banned</option>
                             </select>
 
                             <select className={selectClass} onChange={handleFilterChange(setApprovalFilter)} value={approvalFilter}>
                                 <option value="registration">Reg Status</option>
-                                <option value="approved">Approved</option>
                                 <option value="pending">Pending</option>
-                                <option value="rejected">Rejected</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="banned">Banned</option>
                             </select>
 
                             <select className={selectClass} onChange={handleFilterChange(setReportFilter)} value={reportFilter}>
                                 <option value="report">Report Status</option>
-                                <option value="open">Open</option>
-                                <option value="closed">Closed</option>
+                                <option value="pending">Pending</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                                <option value="banned">Banned</option>
                             </select>
 
                             <select className={selectClass} onChange={handleFilterChange(setSortBy)} value={sortBy}>

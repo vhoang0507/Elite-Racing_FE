@@ -17,6 +17,9 @@ import RaceManagement from '../components/admin/RaceManagement';
 import UserManagement from '../components/admin/UserManagement';
 import ValidateResultDetail from '../components/admin/ValidateResultDetail';
 import ValidateResults from '../components/admin/ValidateResults';
+import JockeyDashboard from '../components/jockey/JockeyDashboard';
+import PendingInvitations from '../components/jockey/PendingInvitations';
+import AcceptedRaces from '../components/jockey/AcceptedRaces';
 
 const appRoutes = [
     {
@@ -74,6 +77,22 @@ const appRoutes = [
     {
         path: '/admin/notifications',
         element: createElement(Notifications),
+    },
+    {
+        path: '/jockey',
+        element: createElement(Navigate, { to: '/jockey/dashboard' }),
+    },
+    {
+        path: '/jockey/dashboard',
+        element: createElement(JockeyDashboard),
+    },
+    {
+        path: '/jockey/invitations',
+        element: createElement(PendingInvitations),
+    },
+    {
+        path: '/jockey/accepted',
+        element: createElement(AcceptedRaces),
     },
 ];
 

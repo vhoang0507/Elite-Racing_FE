@@ -17,14 +17,11 @@ import {
     FaTrophy,
 } from 'react-icons/fa';
 
-import {
-    adminMockApi,
-    adminMockTotals,
-} from '../../api/adminMockApi';
+import { adminMockApi } from '../../api/adminMockApi';
 
 import AdminLayout from './AdminLayout';
 
-const formatClass = (value) => value.toLowerCase().replace(/\s+/g, '-');
+const formatClass = (value) => String(value || '').toLowerCase().replace(/\s+/g, '-');
 
 const pageShellClass = [
     '[--notifications-soft:#fff4f1]',
@@ -51,6 +48,10 @@ const tagClass = {
     'race-result': 'bg-[#dedfff] text-[#3732a1]',
     report: 'bg-[#ffd3cd] text-[#9a1111]',
     prediction: 'bg-[#f2dcd7] text-[#805349]',
+    pending: 'bg-[#fff7db] text-[#a17809]',
+    active: 'bg-[#e8f7ee] text-[#16864f]',
+    inactive: 'bg-[#f3e8e6] text-[#7f645f]',
+    banned: 'bg-[#ffe8e4] text-[var(--admin-primary)]',
     critical: 'bg-[#b40d0d] text-white',
     'high-priority': 'bg-[#e1bd55] text-[#3f320a]',
     'medium-priority': 'bg-[#bfc2ff] text-[#27236f]',
@@ -125,15 +126,15 @@ function Notifications() {
     const summaryCards = useMemo(() => [
         {
             marker: 'System Total',
-            value: (adminMockTotals.notifications + notifications.length).toLocaleString('en-US'),
+            value: notifications.length.toLocaleString('en-US'),
             label: 'Total Notifications',
             tone: 'total',
             icon: FaBell,
         },
         {
             marker: 'Action Required',
-            value: String(notifications.filter((notification) => notification.status === 'Unread').length).padStart(2, '0'),
-            label: 'Unread Notifications',
+            value: String(notifications.filter((notification) => formatClass(notification.status) === 'pending').length),
+            label: 'Pending Notifications',
             tone: 'action',
             icon: FaCalendarCheck,
         },
@@ -167,7 +168,7 @@ function Notifications() {
             notification.id === id
                 ? {
                     ...notification,
-                    status: 'Read',
+                    status: 'Active',
                 }
                 : notification
         )));
@@ -255,8 +256,10 @@ function Notifications() {
                         <label className="flex h-[38px] items-center rounded-md border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661]">
                             <select className={selectClass} onChange={handleFilterChange(setStatusFilter)} value={statusFilter}>
                                 <option value="all-status">All Status</option>
-                                <option value="unread">Unread</option>
-                                <option value="read">Read</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                    <option value="banned">Banned</option>
                             </select>
                         </label>
 
@@ -279,8 +282,8 @@ function Notifications() {
                                 <article
                                     className={[
                                         'relative grid min-h-[146px] cursor-pointer grid-cols-[auto_minmax(0,1fr)] gap-[18px] rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-[22px] py-[22px] shadow-[0_14px_28px_rgba(91,26,19,0.04)] max-[820px]:grid-cols-1',
-                                        notification.tone === 'urgent' && notification.status === 'Unread' ? 'before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:rounded-full before:bg-[#e42121] before:content-[""]' : '',
-                                        notification.status === 'Read' ? 'opacity-75' : '',
+                                        notification.tone === 'urgent' && formatClass(notification.status) === 'pending' ? 'before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:rounded-full before:bg-[#e42121] before:content-[""]' : '',
+                                        formatClass(notification.status) === 'active' ? 'opacity-75' : '',
                                     ].join(' ')}
                                     key={notification.id}
                                     onClick={() => handleMarkRead(notification.id)}

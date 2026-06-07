@@ -21,7 +21,7 @@ import { adminMockApi } from '../../api/adminMockApi';
 
 import AdminLayout from './AdminLayout';
 
-const formatClass = (value) => value.toLowerCase().replace(/\s+/g, '-');
+const formatClass = (value) => String(value || '').toLowerCase().replace(/\s+/g, '-');
 
 const pageShellClass = [
     '[--validate-soft-panel:#fff4f1]',
@@ -40,11 +40,10 @@ const raceIconClass = {
 };
 
 const statusClass = {
-    'referee-confirmed': 'border-[#9ab8ff] bg-[#e7f0ff] text-[#1747c2]',
-    draft: 'border-[#ddd6d3] bg-[#f7f5f4] text-[#6f6360]',
-    'admin-approved': 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
-    published: 'border-[#da7772] bg-[#ffe8e5] text-[#9d1515]',
-    returned: 'border-[#ffc68f] bg-[#fff0e2] text-[#c4671e]',
+    pending: 'border-[#9ab8ff] bg-[#e7f0ff] text-[#1747c2]',
+    active: 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
+    inactive: 'border-[#ddd6d3] bg-[#f7f5f4] text-[#6f6360]',
+    banned: 'border-[#da7772] bg-[#ffe8e5] text-[#9d1515]',
 };
 
 const iconByTone = {

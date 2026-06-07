@@ -22,7 +22,7 @@ import horseRacing from '../../assets/horse-racing.jpg';
 
 import AdminLayout from './AdminLayout';
 
-const formatClass = (value) => value.toLowerCase();
+const formatClass = (value) => String(value || '').toLowerCase();
 
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-7 px-11 pb-7 pt-11 max-[820px]:px-5 max-[820px]:py-7';
 
@@ -37,12 +37,12 @@ const statClass = {
         soft: 'bg-[#e8fff2]',
         ink: 'text-[#119b54]',
     },
-    draft: {
+    pending: {
         accent: 'before:bg-[#9b7771]',
         soft: 'bg-[#f7eeee]',
         ink: 'text-[#7d615c]',
     },
-    completed: {
+    inactive: {
         accent: 'before:bg-[#2657d8]',
         soft: 'bg-[#eef3ff]',
         ink: 'text-[#2657d8]',
@@ -50,10 +50,10 @@ const statClass = {
 };
 
 const statusClass = {
+    pending: 'border-[#dbc3bf] bg-[#f3e8e6] text-[#7f645f]',
     active: 'border-[#afe2c4] bg-[#dff7e9] text-[#118548]',
-    draft: 'border-[#dbc3bf] bg-[#f3e8e6] text-[#7f645f]',
-    completed: 'border-[#dbaaa5] bg-[#f5e1df] text-[var(--admin-primary-dark)]',
-    cancelled: 'border-[#f5b8bf] bg-[#ffe5e7] text-[#c3222c]',
+    inactive: 'border-[#dbaaa5] bg-[#f5e1df] text-[var(--admin-primary-dark)]',
+    banned: 'border-[#f5b8bf] bg-[#ffe5e7] text-[#c3222c]',
 };
 
 const filterSelectClass = 'h-full w-full min-w-0 cursor-pointer border-0 bg-transparent p-0 text-[0.8rem] font-extrabold text-[#5b403c] outline-0';
@@ -111,23 +111,23 @@ function RaceManagement() {
         },
         {
             label: 'Active Tournaments',
-            value: String(tournaments.filter((tournament) => tournament.status === 'Active').length),
+            value: String(tournaments.filter((tournament) => formatClass(tournament.status) === 'active').length),
             marker: 'Live',
             tone: 'active',
             icon: FaBolt,
         },
         {
-            label: 'Draft Tournaments',
-            value: String(tournaments.filter((tournament) => tournament.status === 'Draft').length),
+            label: 'Pending Tournaments',
+            value: String(tournaments.filter((tournament) => formatClass(tournament.status) === 'pending').length),
             marker: 'Pending',
-            tone: 'draft',
+            tone: 'pending',
             icon: FaEdit,
         },
         {
-            label: 'Completed Tournaments',
-            value: String(tournaments.filter((tournament) => tournament.status === 'Completed').length),
-            marker: 'History',
-            tone: 'completed',
+            label: 'Inactive Tournaments',
+            value: String(tournaments.filter((tournament) => formatClass(tournament.status) === 'inactive').length),
+            marker: 'Inactive',
+            tone: 'inactive',
             icon: FaCheckCircle,
         },
     ], [tournaments]);
@@ -249,10 +249,10 @@ function RaceManagement() {
                                     <FaFilter aria-hidden="true" />
                                     <select className={filterSelectClass} onChange={handleFilterChange(setStatusFilter)} value={statusFilter}>
                                         <option value="all">Status: All</option>
+                                        <option value="pending">Pending</option>
                                         <option value="active">Active</option>
-                                        <option value="draft">Draft</option>
-                                        <option value="completed">Completed</option>
-                                        <option value="cancelled">Cancelled</option>
+                                        <option value="inactive">Inactive</option>
+                                        <option value="banned">Banned</option>
                                     </select>
                                 </label>
 
@@ -385,10 +385,10 @@ function RaceManagement() {
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Status</span>
                                         <select className={editControlClass} defaultValue={editingTournament.status} name="status">
+                                            <option value="Pending">Pending</option>
                                             <option value="Active">Active</option>
-                                            <option value="Draft">Draft</option>
-                                            <option value="Completed">Completed</option>
-                                            <option value="Cancelled">Cancelled</option>
+                                            <option value="Inactive">Inactive</option>
+                                            <option value="Banned">Banned</option>
                                         </select>
                                     </label>
 
