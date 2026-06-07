@@ -61,12 +61,40 @@ const Login = () => {
                 user,
             }, remember);
 
-            if (userRole === 'Admin') {
-                navigate('/admin/dashboard');
-                return;
-            }
+            const nextStep = response?.nextStep || response?.NextStep;
+const userStatus = user?.status || user?.Status;
 
-            setSuccess('Login successful. This role dashboard is not built in the frontend yet.');
+if (userRole === 'Admin') {
+    navigate('/admin/dashboard', { replace: true });
+    return;
+}
+
+if (userRole === 'HorseOwner') {
+    if (nextStep === 'AddHorse' || userStatus === 'Pending') {
+        navigate('/owner/my-horse', { replace: true });
+        return;
+    }
+
+    navigate('/owner/dashboard', { replace: true });
+    return;
+}
+
+if (userRole === 'Jockey') {
+    navigate('/jockey/dashboard', { replace: true });
+    return;
+}
+
+if (userRole === 'Spectator') {
+    navigate('/spectator/dashboard', { replace: true });
+    return;
+}
+
+if (userRole === 'RaceReferee') {
+    setSuccess('Login successful. Referee dashboard is not built in the frontend yet.');
+    return;
+}
+
+setSuccess('Login successful. This role dashboard is not built in the frontend yet.');
         } catch (err) {
             setError(err.message || 'Login failed. Please try again.');
         } finally {

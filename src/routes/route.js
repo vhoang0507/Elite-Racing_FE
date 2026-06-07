@@ -112,7 +112,7 @@ const appRoutes = [
     },
     {
         path: '/owner',
-        element: createElement(Navigate, { to: '/owner/dashboard' }),
+        element: createElement(Navigate, { to: '/owner/my-horse' }),
     },
     {
         path: '/owner/dashboard',
