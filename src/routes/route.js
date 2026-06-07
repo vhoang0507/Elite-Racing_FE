@@ -4,6 +4,7 @@ import {
     Route,
     Routes,
 } from 'react-router-dom';
+import SpectatorDashboard from '../components/Spectator';
 
 import Login from '../components/Login';
 import Register from '../components/Register';
@@ -20,6 +21,16 @@ import ValidateResults from '../components/admin/ValidateResults';
 import JockeyDashboard from '../components/jockey/JockeyDashboard';
 import PendingInvitations from '../components/jockey/PendingInvitations';
 import AcceptedRaces from '../components/jockey/AcceptedRaces';
+import HorseOwnerDashboard from '../components/HorseOwner/HorseOwnerDashboard';
+import MyHorse from '../components/HorseOwner/MyHorse';
+import RegisterHorse from '../components/HorseOwner/RegisterHorse';
+import MyRegistrations from '../components/HorseOwner/MyRegistrations';
+import JockeyAssignment from '../components/HorseOwner/JockeyAssignment';
+import HorseOwnerNotifications from '../components/HorseOwner/Notifications';
+import SpectatorTournaments from '../components/Spectator/SpectatorTournaments';
+import SpectatorPredictions from '../components/Spectator/SpectatorPredictions';
+import SpectatorResultReward from '../components/Spectator/SpectatorResultReward';
+import SpectatorNotificationsPage from '../components/Spectator/SpectatorNotificationsPage';
 
 const appRoutes = [
     {
@@ -93,6 +104,58 @@ const appRoutes = [
     {
         path: '/jockey/accepted',
         element: createElement(AcceptedRaces),
+    },
+    {
+        path: '/owner',
+        element: createElement(Navigate, { to: '/owner/dashboard' }),
+    },
+    {
+        path: '/owner/dashboard',
+        element: createElement(HorseOwnerDashboard),
+    },
+    {
+        path: '/owner/my-horse',
+        element: createElement(MyHorse),
+    },
+    {
+        path: '/owner/register-horse',
+        element: createElement(RegisterHorse),
+    },
+    {
+        path: '/owner/registrations',
+        element: createElement(MyRegistrations),
+    },
+    {
+        path: '/owner/jockey',
+        element: createElement(JockeyAssignment),
+    },
+    {
+        path: '/owner/notifications',
+        element: createElement(HorseOwnerNotifications),
+    },
+    {
+        path: '/spectator',
+        element: createElement(Navigate, { to: '/spectator/dashboard' }),
+    },
+    {
+        path: '/spectator/dashboard',
+        element: createElement(SpectatorDashboard),
+    },
+    {
+        path: '/spectator/tournaments',
+        element: createElement(SpectatorTournaments),
+    },
+    {
+        path: '/spectator/predictions',
+        element: createElement(SpectatorPredictions),
+    },
+    {
+        path: '/spectator/results',
+        element: createElement(SpectatorResultReward),
+    },
+    {
+        path: '/spectator/notifications',
+        element: createElement(SpectatorNotificationsPage),
     },
 ];
 
