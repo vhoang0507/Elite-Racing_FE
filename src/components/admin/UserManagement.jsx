@@ -15,7 +15,7 @@ import {
     FaUsers,
 } from 'react-icons/fa';
 
-import { adminApi as adminMockApi } from '../../api/adminApi';
+import { adminApi } from '../../api/adminApi';
 
 import AdminLayout from './AdminLayout';
 
@@ -76,7 +76,7 @@ function UserManagement() {
     useEffect(() => {
         let isMounted = true;
 
-        adminMockApi.getUsers().then((payload) => {
+        adminApi.getUsers().then((payload) => {
             if (isMounted) {
                 setUsers(payload);
             }
@@ -228,7 +228,7 @@ function UserManagement() {
                                                     {user.verified ? <FaCheck /> : <FaTimes />}
                                                 </span>
                                             </td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]">{adminMockApi.formatters.toDateLabel(user.createdAt)}</td>
+                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]">{adminApi.formatters.toDateLabel(user.createdAt)}</td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]">
                                                 <button aria-label={`View details for ${user.name}`} className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border-0 bg-transparent text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => setSelectedUser(user)} type="button">
                                                     <FaEye aria-hidden="true" />
@@ -307,7 +307,7 @@ function UserManagement() {
                                     </div>
                                     <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
                                         <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Created At</span>
-                                        <strong>{adminMockApi.formatters.toDateLabel(selectedUser.createdAt)}</strong>
+                                        <strong>{adminApi.formatters.toDateLabel(selectedUser.createdAt)}</strong>
                                     </div>
                                 </div>
                             </section>

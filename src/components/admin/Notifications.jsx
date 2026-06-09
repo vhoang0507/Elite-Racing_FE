@@ -17,7 +17,7 @@ import {
     FaTrophy,
 } from 'react-icons/fa';
 
-import { adminApi as adminMockApi } from '../../api/adminApi';
+import { adminApi } from '../../api/adminApi';
 
 import AdminLayout from './AdminLayout';
 
@@ -112,7 +112,7 @@ function Notifications() {
     useEffect(() => {
         let isMounted = true;
 
-        adminMockApi.getNotifications().then((payload) => {
+        adminApi.getNotifications().then((payload) => {
             if (isMounted) {
                 setNotifications(payload);
             }
@@ -163,7 +163,7 @@ function Notifications() {
     };
 
     const handleMarkRead = async (id) => {
-        await adminMockApi.markNotificationRead(id);
+        await adminApi.markNotificationRead(id);
         setNotifications((current) => current.map((notification) => (
             notification.id === id
                 ? {

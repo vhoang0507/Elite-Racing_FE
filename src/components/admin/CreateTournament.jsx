@@ -18,7 +18,7 @@ import {
     FaUserTie,
 } from 'react-icons/fa';
 
-import { adminApi as adminMockApi } from '../../api/adminApi';
+import { adminApi } from '../../api/adminApi';
 
 import AdminLayout from './AdminLayout';
 
@@ -46,7 +46,7 @@ function CreateTournament() {
         const formData = new FormData(form);
 
         setIsSaving(true);
-        await adminMockApi.createTournament({
+        await adminApi.createTournament({
             name: formData.get('name'),
             className: formData.get('breed'),
             location: formData.get('location'),
