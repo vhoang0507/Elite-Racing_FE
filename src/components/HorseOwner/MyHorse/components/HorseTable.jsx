@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ownerApi } from "../../../../api/ownerApi";
 
 const healthColor = {
@@ -15,7 +15,7 @@ export default function HorseTable() {
     const [search, setSearch] = useState('');
     const pageSize = 5;
 
-    const fetchHorses = (p = page, s = search) => {
+    const fetchHorses = useCallback((p = page, s = search) => {
         ownerApi.getHorses({ page: p, pageSize, search: s || undefined })
             .then((res) => {
                 setHorses(res.items || []);
@@ -23,9 +23,9 @@ export default function HorseTable() {
                 setTotalItems(res.totalItems || 0);
             })
             .catch(() => {});
-    };
+    }, [page, search]);
 
-    useEffect(() => { fetchHorses(); }, [page]);
+    useEffect(() => { fetchHorses(); }, [page, fetchHorses]);
 
     const handleSearch = () => { setPage(1); fetchHorses(1, search); };
 

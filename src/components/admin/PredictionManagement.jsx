@@ -15,7 +15,7 @@ import {
     FaTrophy,
 } from 'react-icons/fa';
 
-import { adminApi as adminMockApi } from '../../api/adminApi';
+import { adminApi } from '../../api/adminApi';
 import horseRacing from '../../assets/horse-racing.jpg';
 
 import AdminLayout from './AdminLayout';
@@ -67,7 +67,7 @@ function PredictionManagement() {
     useEffect(() => {
         let isMounted = true;
 
-        adminMockApi.getPredictions().then((payload) => {
+        adminApi.getPredictions().then((payload) => {
             if (isMounted) {
                 setPredictions(payload);
             }
@@ -139,7 +139,7 @@ function PredictionManagement() {
     };
 
     const handleDisable = async (prediction) => {
-        await adminMockApi.updatePredictionStatus(prediction.id, 'Inactive');
+        await adminApi.updatePredictionStatus(prediction.id, 'Inactive');
         setPredictions((current) => current.map((item) => (
             item.id === prediction.id
                 ? {

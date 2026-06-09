@@ -30,8 +30,32 @@ const toShortDateParts = (startDate, endDate) => {
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 
 async function getDashboard() {
-    const data = await apiRequest('/admin/dashboard');
-    // Transform BE response to match FE expected format
+    // Fetch the stats summary plus the lists used by the dashboard panels.
+    // The BE /admin/dashboard endpoint only returns counters, so we fetch
+    // tournaments, users and pending verifications separately and merge them.
+    const [data, tournaments, users, verifications] = await Promise.all([
+        apiRequest('/admin/dashboard'),
+        getTournaments().catch(() => []),
+        getUsers().catch(() => []),
+        getVerifications().catch(() => []),
+    ]);
+
+    // Build the approval queue from pending verifications (HorseOwner / Jockey)
+    const approvals = (verifications || []).map((v) => ({
+        id: v.userId,
+        name: v.fullName,
+        role: v.role,
+        request: 'Account verification',
+        progress: 42,
+        avatar: (v.fullName || '')
+            .split(' ')
+            .map((w) => w[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase(),
+        source: 'user',
+    }));
+
     return {
         stats: [
             {
@@ -59,9 +83,9 @@ async function getDashboard() {
                 tone: 'results',
             },
         ],
-        tournaments: [],
-        approvals: [],
-        users: [],
+        tournaments: (tournaments || []).slice(0, 5),
+        approvals,
+        users: (users || []).slice(0, 6),
     };
 }
 

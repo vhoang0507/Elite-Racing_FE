@@ -17,7 +17,7 @@ import {
     FaTrophy,
 } from 'react-icons/fa';
 
-import { adminApi as adminMockApi } from '../../api/adminApi';
+import { adminApi } from '../../api/adminApi';
 
 import AdminLayout from './AdminLayout';
 
@@ -79,7 +79,7 @@ function ValidateResults() {
     useEffect(() => {
         let isMounted = true;
 
-        adminMockApi.getResultSubmissions().then((payload) => {
+        adminApi.getResultSubmissions().then((payload) => {
             if (isMounted) {
                 setSubmissions(payload);
             }

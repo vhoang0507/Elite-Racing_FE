@@ -17,7 +17,7 @@ import {
 } from 'react-icons/fa';
 
 import AdminLayout from './AdminLayout';
-import { adminApi as adminMockApi } from '../../api/adminApi';
+import { adminApi } from '../../api/adminApi';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 const headingClass = 'flex items-center justify-between gap-[18px] max-[720px]:flex-col max-[720px]:items-stretch';
@@ -96,7 +96,7 @@ function AdminDashboard() {
     useEffect(() => {
         let isMounted = true;
 
-        adminMockApi.getDashboard().then((payload) => {
+        adminApi.getDashboard().then((payload) => {
             if (isMounted) {
                 setDashboard(payload);
                 setIsLoading(false);
@@ -128,14 +128,14 @@ function AdminDashboard() {
     ], query)), [dashboard.users, query]);
 
     const refreshDashboard = async () => {
-        setDashboard(await adminMockApi.getDashboard());
+        setDashboard(await adminApi.getDashboard());
     };
 
     const handleApproval = async (approval, nextStatus) => {
         if (approval.source === 'user') {
-            await adminMockApi.updateUserStatus(approval.id, nextStatus);
+            await adminApi.updateUserStatus(approval.id, nextStatus);
         } else {
-            await adminMockApi.updateHorseApproval(approval.id, nextStatus);
+            await adminApi.updateHorseApproval(approval.id, nextStatus);
         }
 
         await refreshDashboard();
@@ -214,7 +214,7 @@ function AdminDashboard() {
                                                     <strong className="block">{tournament.name}</strong>
                                                     <span className="mt-1 block text-[var(--admin-muted)]">{tournament.className}</span>
                                                 </td>
-                                                <td className={tableCellClass(isLast)}>{adminMockApi.formatters.toDateLabel(tournament.startDate)}</td>
+                                                <td className={tableCellClass(isLast)}>{adminApi.formatters.toDateLabel(tournament.startDate)}</td>
                                                 <td className={tableCellClass(isLast)}>{tournament.registeredHorses}/{tournament.maxHorses}</td>
                                                 <td className={tableCellClass(isLast)}>
                                                     <span className={`inline-flex min-h-6 items-center rounded-[5px] border px-2 text-[0.74rem] font-extrabold ${statusClass[status]}`}>
@@ -345,7 +345,7 @@ function AdminDashboard() {
                                     </div>
                                     <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
                                         <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Created At</span>
-                                        <strong>{adminMockApi.formatters.toDateLabel(selectedUser.createdAt)}</strong>
+                                        <strong>{adminApi.formatters.toDateLabel(selectedUser.createdAt)}</strong>
                                     </div>
                                 </div>
                             </section>

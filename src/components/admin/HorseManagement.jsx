@@ -13,7 +13,7 @@ import {
     FaTrashAlt,
 } from 'react-icons/fa';
 
-import { adminApi as adminMockApi } from '../../api/adminApi';
+import { adminApi } from '../../api/adminApi';
 import horseRacing from '../../assets/horse-racing.jpg';
 
 import AdminLayout from './AdminLayout';
@@ -85,7 +85,7 @@ function HorseManagement() {
     useEffect(() => {
         let isMounted = true;
 
-        adminMockApi.getHorses().then((payload) => {
+        adminApi.getHorses().then((payload) => {
             if (isMounted) {
                 setHorses(payload.horses);
                 setReports(payload.reports);
@@ -153,7 +153,7 @@ function HorseManagement() {
     };
 
     const handleReviewReport = async (report) => {
-        await adminMockApi.closeHorseReport(report.id);
+        await adminApi.closeHorseReport(report.id);
         setReports((current) => current.map((item) => (
             item.id === report.id
                 ? {
@@ -174,7 +174,7 @@ function HorseManagement() {
     };
 
     const handleSuspendHorse = async (report) => {
-        await adminMockApi.updateHorseApproval(report.horseId, 'Banned');
+        await adminApi.updateHorseApproval(report.horseId, 'Banned');
         setHorses((current) => current.map((horse) => (
             horse.id === report.horseId
                 ? {
@@ -192,7 +192,7 @@ function HorseManagement() {
                 ? 'Banned'
                 : 'Pending';
 
-        await adminMockApi.updateHorseApproval(horse.id, approval);
+        await adminApi.updateHorseApproval(horse.id, approval);
         setHorses((current) => current.map((item) => (
             item.id === horse.id
                 ? {
@@ -204,7 +204,7 @@ function HorseManagement() {
     };
 
     const handleDeleteReport = async (id) => {
-        await adminMockApi.deleteHorseReport(id);
+        await adminApi.deleteHorseReport(id);
         setReports((current) => current.filter((report) => report.id !== id));
     };
 

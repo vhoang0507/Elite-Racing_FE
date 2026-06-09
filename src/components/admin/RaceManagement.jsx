@@ -17,7 +17,7 @@ import {
     FaTrashAlt,
 } from 'react-icons/fa';
 
-import { adminApi as adminMockApi } from '../../api/adminApi';
+import { adminApi } from '../../api/adminApi';
 import horseRacing from '../../assets/horse-racing.jpg';
 
 import AdminLayout from './AdminLayout';
@@ -90,7 +90,7 @@ function RaceManagement() {
     useEffect(() => {
         let isMounted = true;
 
-        adminMockApi.getTournaments().then((payload) => {
+        adminApi.getTournaments().then((payload) => {
             if (isMounted) {
                 setTournaments(payload);
             }
@@ -162,7 +162,7 @@ function RaceManagement() {
     };
 
     const handleDelete = async (id) => {
-        await adminMockApi.deleteTournament(id);
+        await adminApi.deleteTournament(id);
         setTournaments((current) => current.filter((tournament) => tournament.id !== id));
         setPage(1);
     };
@@ -184,7 +184,7 @@ function RaceManagement() {
             status: formData.get('status'),
         };
 
-        await adminMockApi.updateTournament(editingTournament.id, patch);
+        await adminApi.updateTournament(editingTournament.id, patch);
         setTournaments((current) => current.map((item) => (
             item.id === editingTournament.id
                 ? {
@@ -294,7 +294,7 @@ function RaceManagement() {
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
                                                 <div className="grid leading-[1.15]">
-                                                    {adminMockApi.formatters.toShortDateParts(tournament.startDate, tournament.endDate).map((line, index) => (
+                                                    {adminApi.formatters.toShortDateParts(tournament.startDate, tournament.endDate).map((line, index) => (
                                                         <span className={index === 2 ? 'mt-0.5 text-[0.7rem] font-extrabold text-[#9a817c]' : ''} key={`${tournament.id}-${line}`}>{line}</span>
                                                     ))}
                                                 </div>
@@ -307,7 +307,7 @@ function RaceManagement() {
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">{tournament.maxHorses}</td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
-                                                <strong className="text-[0.95rem] text-[var(--admin-primary-dark)]">{adminMockApi.formatters.toMoney(tournament.prizePool)}</strong>
+                                                <strong className="text-[0.95rem] text-[var(--admin-primary-dark)]">{adminApi.formatters.toMoney(tournament.prizePool)}</strong>
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
                                                 <span className={`inline-flex min-h-6 items-center rounded border px-2.5 text-[0.68rem] font-black uppercase ${statusClass[formatClass(tournament.status)]}`}>

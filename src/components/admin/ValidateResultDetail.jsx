@@ -18,7 +18,7 @@ import {
     FaStepForward,
 } from 'react-icons/fa';
 
-import { adminApi as adminMockApi } from '../../api/adminApi';
+import { adminApi } from '../../api/adminApi';
 import horseRacing from '../../assets/horse-racing.jpg';
 
 import AdminLayout from './AdminLayout';
@@ -61,13 +61,13 @@ function ValidateResultDetail() {
     const [isPublishing, setIsPublishing] = useState(false);
 
     const loadDetail = async () => {
-        setDetail(await adminMockApi.getResultDetail(resultId));
+        setDetail(await adminApi.getResultDetail(resultId));
     };
 
     useEffect(() => {
         let isMounted = true;
 
-        adminMockApi.getResultDetail(resultId).then((payload) => {
+        adminApi.getResultDetail(resultId).then((payload) => {
             if (isMounted) {
                 setDetail(payload);
             }
@@ -90,7 +90,7 @@ function ValidateResultDetail() {
 
     const handlePublish = async () => {
         setIsPublishing(true);
-        await adminMockApi.publishResult(resultId);
+        await adminApi.publishResult(resultId);
         await loadDetail();
         setIsPublishing(false);
     };
