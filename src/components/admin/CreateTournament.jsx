@@ -42,11 +42,11 @@ function CreateTournament() {
     const navigate = useNavigate();
     const [isSaving, setIsSaving] = useState(false);
 
-    const persistTournament = async (form, status) => {
+    const persistTournament = async (form, shouldPublish = false) => {
         const formData = new FormData(form);
 
         setIsSaving(true);
-        await adminApi.createTournament({
+        const response = await adminApi.createTournament({
             name: formData.get('name'),
             className: formData.get('breed'),
             location: formData.get('location'),
@@ -62,18 +62,24 @@ function CreateTournament() {
             minAge: formData.get('minAge'),
             maxAge: formData.get('maxAge'),
             rules: formData.get('rules'),
-        }, status);
+        });
+
+        // If publishing, approve the tournament to move from Draft → OpenRegistration
+        if (shouldPublish && response?.id) {
+            await adminApi.updateTournamentStatus(response.id, 'OpenRegistration');
+        }
+
         setIsSaving(false);
         navigate('/admin/races');
     };
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        persistTournament(event.currentTarget, 'Active');
+        persistTournament(event.currentTarget, true);
     };
 
     const handleSaveDraft = (event) => {
-        persistTournament(event.currentTarget.form, 'Pending');
+        persistTournament(event.currentTarget.form, false);
     };
 
     return (
