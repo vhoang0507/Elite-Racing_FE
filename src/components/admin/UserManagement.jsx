@@ -342,16 +342,6 @@ function UserManagement() {
                             </section>
                         </div>
                     )}
-
-                    <footer className="mt-auto flex items-center justify-between gap-6 pt-[120px] text-[var(--admin-primary-dark)] max-[780px]:flex-col max-[780px]:items-stretch max-[780px]:pt-12">
-                        <strong className="text-base font-black">Elite Racing League</strong>
-                        <nav aria-label="Footer links" className="flex flex-wrap justify-end gap-7 max-[780px]:justify-start">
-                            <a className="text-[0.76rem] font-extrabold text-[#5c4642] no-underline hover:text-[var(--admin-primary)]" href="#">Terms of Service</a>
-                            <a className="text-[0.76rem] font-extrabold text-[#5c4642] no-underline hover:text-[var(--admin-primary)]" href="#">Privacy Policy</a>
-                            <a className="text-[0.76rem] font-extrabold text-[#5c4642] no-underline hover:text-[var(--admin-primary)]" href="#">Contact Support</a>
-                            <a className="text-[0.76rem] font-extrabold text-[#5c4642] no-underline hover:text-[var(--admin-primary)]" href="#">Racing Rules</a>
-                        </nav>
-                    </footer>
                 </section>
         </AdminLayout>
     );

@@ -43,7 +43,7 @@ function CreateTournament() {
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
 
-    const persistTournament = async (form, shouldPublish = false) => {
+    const persistTournament = async (form) => {
         const formData = new FormData(form);
         setError('');
 
@@ -94,11 +94,7 @@ function CreateTournament() {
                 rules: formData.get('rules'),
             });
 
-            // If publishing, approve the tournament to move from Draft → OpenRegistration
-            if (shouldPublish && response?.id) {
-                await adminApi.updateTournamentStatus(response.id, 'OpenRegistration');
-            }
-
+            // Tournament created with Draft status by default
             navigate('/admin/races');
         } catch (err) {
             setError(err.message || 'Failed to create tournament. Please try again.');
@@ -109,11 +105,11 @@ function CreateTournament() {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        persistTournament(event.currentTarget, true);
+        persistTournament(event.currentTarget);
     };
 
     const handleSaveDraft = (event) => {
-        persistTournament(event.currentTarget.form, false);
+        persistTournament(event.currentTarget.form);
     };
 
     return (
@@ -300,16 +296,6 @@ function CreateTournament() {
                                 </div>
                             </div>
                         </form>
-
-                        <footer className="mt-11 flex items-center justify-between gap-6 text-[var(--admin-primary-dark)] max-[760px]:mt-6 max-[760px]:flex-col max-[760px]:items-stretch">
-                            <strong className="text-[0.95rem] font-black">Elite Racing League</strong>
-                            <nav aria-label="Footer links" className="flex flex-wrap justify-end gap-7 max-[760px]:justify-start">
-                                <a className="text-[0.74rem] font-extrabold text-[#5c4642] no-underline hover:text-[var(--admin-primary)]" href="#">Terms of Service</a>
-                                <a className="text-[0.74rem] font-extrabold text-[#5c4642] no-underline hover:text-[var(--admin-primary)]" href="#">Privacy Policy</a>
-                                <a className="text-[0.74rem] font-extrabold text-[#5c4642] no-underline hover:text-[var(--admin-primary)]" href="#">Contact Support</a>
-                                <a className="text-[0.74rem] font-extrabold text-[#5c4642] no-underline hover:text-[var(--admin-primary)]" href="#">Racing Rules</a>
-                            </nav>
-                        </footer>
                     </div>
                 </section>
         </AdminLayout>
