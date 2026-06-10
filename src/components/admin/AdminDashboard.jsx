@@ -185,7 +185,7 @@ function AdminDashboard() {
                         })}
                     </section>
 
-                    <section className="grid grid-cols-[minmax(0,1fr)_300px] items-start gap-7 max-[1280px]:grid-cols-1">
+                    <section className="grid grid-cols-1 items-start gap-7">
                         <div className={panelClass}>
                             <div className={sectionHeadClass}>
                                 <h2 className="m-0 text-[1.05rem] text-[var(--admin-ink)]">Manage Tournaments</h2>
@@ -233,50 +233,6 @@ function AdminDashboard() {
                                 </table>
                             </div>
                         </div>
-
-                        <aside className={`${panelClass} self-stretch`}>
-                            <div className={sectionHeadClass}>
-                                <h2 className="m-0 text-[1.05rem] text-[var(--admin-ink)]">Approval Queue</h2>
-                                <span className={sectionActionClass}>{visibleApprovals.length} New</span>
-                            </div>
-
-                            <div className="grid gap-3.5 p-[18px]">
-                                {visibleApprovals.map((approval) => (
-                                    <article className="grid gap-3 rounded-lg border border-[var(--admin-border)] bg-[#fffdfc] p-3.5" key={approval.name}>
-                                        <div className="flex items-center gap-3">
-                                            <div className={`${avatarBaseClass} ${avatarClass.default}`}>{approval.avatar}</div>
-                                            <div>
-                                                <strong className="block text-[var(--admin-ink)]">{approval.name}</strong>
-                                                <span className="block text-[0.72rem] font-black uppercase leading-[1.25] text-[var(--admin-primary)]">{approval.role}</span>
-                                                <small className="block leading-[1.25] text-[var(--admin-muted)]">{approval.request}</small>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex justify-between gap-3 text-[0.72rem] font-extrabold text-[var(--admin-muted)]">
-                                            <span>Verification</span>
-                                            <strong>{approval.progress}%</strong>
-                                        </div>
-                                        <div className="h-1.5 overflow-hidden rounded-full bg-[#f2ded7]">
-                                            <span
-                                                className="block h-full rounded-[inherit] bg-[linear-gradient(90deg,var(--admin-primary),var(--admin-gold))]"
-                                                style={{ width: `${approval.progress}%` }}
-                                            />
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <button className="inline-flex min-h-[34px] cursor-pointer items-center justify-center gap-[7px] rounded-md bg-[var(--admin-primary)] text-[0.78rem] font-[850] text-white" onClick={() => handleApproval(approval, 'Active')} type="button">
-                                                <FaCheck aria-hidden="true" />
-                                                <span>Approve</span>
-                                            </button>
-                                            <button className="inline-flex min-h-[34px] cursor-pointer items-center justify-center gap-[7px] rounded-md border border-[#d89288] bg-white text-[0.78rem] font-[850] text-[var(--admin-primary)]" onClick={() => handleApproval(approval, 'Banned')} type="button">
-                                                <FaTimes aria-hidden="true" />
-                                                <span>Reject</span>
-                                            </button>
-                                        </div>
-                                    </article>
-                                ))}
-                            </div>
-                        </aside>
                     </section>
 
                     <section className="grid grid-cols-1 gap-7">
