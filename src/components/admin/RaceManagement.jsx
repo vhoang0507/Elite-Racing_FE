@@ -189,13 +189,21 @@ function RaceManagement() {
         };
 
         try {
-            // Update tournament data
+            // Update tournament data (sends full body including dates)
             await adminApi.updateTournament(editingTournament.id, patch);
 
-            // If status changed, also call the status endpoint
+            // If status changed, call dedicated status endpoints for approve/cancel
             const newStatus = formData.get('status');
             if (newStatus && newStatus !== editingTournament.status) {
-                await adminApi.updateTournamentStatus(editingTournament.id, newStatus);
+                const s = newStatus.toLowerCase();
+                if (s.includes('open') || s === 'openregistration') {
+                    await adminApi.updateTournamentStatus(editingTournament.id, 'OpenRegistration');
+                } else if (s.includes('cancel')) {
+                    await adminApi.updateTournamentStatus(editingTournament.id, 'Cancelled');
+                }
+                // For other statuses (Draft, ClosedRegistration, Ongoing, Completed),
+                // updateTournament already sent the full body to PUT /tournaments/{id}
+                // which the BE uses to update all fields including status changes via the model.
             }
 
             // Refresh tournament list from BE
