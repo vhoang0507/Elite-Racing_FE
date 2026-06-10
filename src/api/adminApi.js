@@ -208,8 +208,14 @@ async function createTournament(payload, status = 'Pending') {
 }
 
 async function updateTournamentStatus(id, status) {
-    const action = (status || '').toLowerCase().includes('cancel') ? 'cancel' : 'approve';
-    return apiRequest(`/admin/tournaments/${id}/${action}`, { method: 'PUT' });
+    const s = (status || '').toLowerCase();
+    if (s.includes('cancel')) return apiRequest(`/admin/tournaments/${id}/cancel`, { method: 'PUT' });
+    if (s.includes('open') || s.includes('approve')) return apiRequest(`/admin/tournaments/${id}/approve`, { method: 'PUT' });
+    // For other status changes, use the general PUT update
+    return apiRequest(`/admin/tournaments/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ status }),
+    });
 }
 
 async function updateTournament(id, patch) {

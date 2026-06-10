@@ -50,10 +50,12 @@ const statClass = {
 };
 
 const statusClass = {
-    pending: 'border-[#dbc3bf] bg-[#f3e8e6] text-[#7f645f]',
-    active: 'border-[#afe2c4] bg-[#dff7e9] text-[#118548]',
-    inactive: 'border-[#dbaaa5] bg-[#f5e1df] text-[var(--admin-primary-dark)]',
-    banned: 'border-[#f5b8bf] bg-[#ffe5e7] text-[#c3222c]',
+    draft: 'border-[#dbc3bf] bg-[#f3e8e6] text-[#7f645f]',
+    openregistration: 'border-[#afe2c4] bg-[#dff7e9] text-[#118548]',
+    closedregistration: 'border-[#e2cd79] bg-[#f7efcf] text-[#6a520d]',
+    ongoing: 'border-[#93c5fd] bg-[#dbeafe] text-[#1e40af]',
+    completed: 'border-[#a5b4fc] bg-[#e0e7ff] text-[#3730a3]',
+    cancelled: 'border-[#dbaaa5] bg-[#f5e1df] text-[var(--admin-primary-dark)]',
 };
 
 const filterSelectClass = 'h-full w-full min-w-0 cursor-pointer border-0 bg-transparent p-0 text-[0.8rem] font-extrabold text-[#5b403c] outline-0';
@@ -110,23 +112,23 @@ function RaceManagement() {
             icon: FaClipboardList,
         },
         {
-            label: 'Active Tournaments',
-            value: String(tournaments.filter((tournament) => formatClass(tournament.status) === 'active').length),
+            label: 'Open Registration',
+            value: String(tournaments.filter((tournament) => formatClass(tournament.status) === 'openregistration').length),
             marker: 'Live',
             tone: 'active',
             icon: FaBolt,
         },
         {
-            label: 'Pending Tournaments',
-            value: String(tournaments.filter((tournament) => formatClass(tournament.status) === 'pending').length),
-            marker: 'Pending',
+            label: 'Draft',
+            value: String(tournaments.filter((tournament) => formatClass(tournament.status) === 'draft').length),
+            marker: 'Draft',
             tone: 'pending',
             icon: FaEdit,
         },
         {
-            label: 'Inactive Tournaments',
-            value: String(tournaments.filter((tournament) => formatClass(tournament.status) === 'inactive').length),
-            marker: 'Inactive',
+            label: 'Completed',
+            value: String(tournaments.filter((tournament) => formatClass(tournament.status) === 'completed').length),
+            marker: 'Done',
             tone: 'inactive',
             icon: FaCheckCircle,
         },
@@ -249,10 +251,12 @@ function RaceManagement() {
                                     <FaFilter aria-hidden="true" />
                                     <select className={filterSelectClass} onChange={handleFilterChange(setStatusFilter)} value={statusFilter}>
                                         <option value="all">Status: All</option>
-                                        <option value="pending">Pending</option>
-                                        <option value="active">Active</option>
-                                        <option value="inactive">Inactive</option>
-                                        <option value="banned">Banned</option>
+                                        <option value="draft">Draft</option>
+                                        <option value="openregistration">Open Registration</option>
+                                        <option value="closedregistration">Closed Registration</option>
+                                        <option value="ongoing">Ongoing</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="cancelled">Cancelled</option>
                                     </select>
                                 </label>
 
@@ -385,10 +389,12 @@ function RaceManagement() {
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Status</span>
                                         <select className={editControlClass} defaultValue={editingTournament.status} name="status">
-                                            <option value="Pending">Pending</option>
-                                            <option value="Active">Active</option>
-                                            <option value="Inactive">Inactive</option>
-                                            <option value="Banned">Banned</option>
+                                            <option value="Draft">Draft</option>
+                                            <option value="OpenRegistration">Open Registration</option>
+                                            <option value="ClosedRegistration">Closed Registration</option>
+                                            <option value="Ongoing">Ongoing</option>
+                                            <option value="Completed">Completed</option>
+                                            <option value="Cancelled">Cancelled</option>
                                         </select>
                                     </label>
 
