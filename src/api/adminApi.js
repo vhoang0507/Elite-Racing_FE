@@ -234,6 +234,7 @@ async function updateTournament(id, patch) {
         minHorseWeightKg: patch.minHorseWeightKg ? Number(patch.minHorseWeightKg) : null,
         maxHorseWeightKg: patch.maxHorseWeightKg ? Number(patch.maxHorseWeightKg) : null,
         rules: patch.rules || '',
+        status: patch.status || null,
     };
 
     return apiRequest(`/admin/tournaments/${id}`, {
