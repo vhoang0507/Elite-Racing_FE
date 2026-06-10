@@ -187,12 +187,15 @@ async function getTournamentById(id) {
 async function createTournament(payload) {
     const mappedPayload = {
         tournamentName: payload.name,
-        description: payload.className || null,
+        description: payload.className || payload.description || null,
         location: payload.location || null,
-        startDate: payload.startDate,
-        endDate: payload.endDate,
+        raceDate: payload.endDate,
+        registrationDeadline: payload.startDate,
         maxHorses: Number(payload.maxHorses || 0),
-        prizePool: Number(payload.goldPrize || 0) + Number(payload.silverPrize || 0) + Number(payload.bronzePrize || 0),
+        prizePool:
+            Number(payload.goldPrize || 0) +
+            Number(payload.silverPrize || 0) +
+            Number(payload.bronzePrize || 0),
         minHorseAge: payload.minAge ? Number(payload.minAge) : null,
         maxHorseAge: payload.maxAge ? Number(payload.maxAge) : null,
         minHorseWeightKg: payload.minWeight ? Number(payload.minWeight) : null,
@@ -218,13 +221,12 @@ async function updateTournamentStatus(id, status) {
 }
 
 async function updateTournament(id, patch) {
-    // Map FE field names to BE DTO (AdminTournamentRequest) field names
     const body = {
         tournamentName: patch.name || patch.tournamentName || '',
         description: patch.className || patch.description || '',
         location: patch.location || patch.city || '',
-        startDate: patch.startDate,
-        endDate: patch.endDate,
+        raceDate: patch.endDate,
+        registrationDeadline: patch.startDate,
         maxHorses: Number(patch.maxHorses || 0),
         prizePool: Number(patch.prizePool || 0),
         minHorseAge: patch.minHorseAge ? Number(patch.minHorseAge) : null,
