@@ -49,23 +49,23 @@ function CreateTournament() {
 
         // Validation
         const name = formData.get('name')?.trim();
-        const startDate = formData.get('startDate');
-        const endDate = formData.get('endDate');
+        const raceDate = formData.get('raceDate');
+        const registrationDeadline = formData.get('registrationDeadline');
         const maxHorses = Number(formData.get('maxHorses') || 0);
 
         if (!name) {
             setError('Tournament name is required.');
             return;
         }
-        if (!startDate) {
+        if (!raceDate) {
             setError('Race Date is required.');
             return;
         }
-        if (!endDate) {
+        if (!registrationDeadline) {
             setError('Registration Deadline is required.');
             return;
         }
-        if (startDate <= endDate) {
+        if (raceDate <= registrationDeadline) {
             setError('Race Date must be after Registration Deadline.');
             return;
         }
@@ -81,8 +81,8 @@ function CreateTournament() {
                 className: formData.get('breed'),
                 location: formData.get('location'),
                 city: formData.get('location'),
-                startDate: startDate,
-                endDate: endDate,
+                startDate: registrationDeadline,
+                endDate: raceDate,
                 maxHorses: formData.get('maxHorses'),
                 goldPrize: formData.get('goldPrize'),
                 silverPrize: formData.get('silverPrize'),
@@ -159,12 +159,12 @@ function CreateTournament() {
                                 <div className={twoColumnClass}>
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Race Date</span>
-                                        <input className={inputClass} name="startDate" type="date" />
+                                        <input className={inputClass} name="raceDate" type="date" />
                                     </label>
 
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Registration Deadline</span>
-                                        <input className={inputClass} name="endDate" type="date" />
+                                        <input className={inputClass} name="registrationDeadline" type="date" />
                                     </label>
                                 </div>
 
