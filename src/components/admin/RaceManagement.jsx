@@ -438,7 +438,7 @@ function RaceManagement() {
 
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Prize Pool</span>
-                                        <input className={editControlClass} defaultValue={editingTournament.prizePool} min="0" name="prizePool" step="1000" type="number" />
+                                        <input className={editControlClass} defaultValue={editingTournament.prizePool} min="0" name="prizePool" step="any" type="number" />
                                     </label>
                                 </div>
 

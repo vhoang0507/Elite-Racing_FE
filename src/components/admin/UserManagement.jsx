@@ -310,6 +310,35 @@ function UserManagement() {
                                         <strong>{adminApi.formatters.toDateLabel(selectedUser.createdAt)}</strong>
                                     </div>
                                 </div>
+
+                                {/* Approve/Reject buttons for Pending Horse Owner or Jockey */}
+                                {formatClass(selectedUser.status) === 'pending' &&
+                                 (formatClass(selectedUser.role) === 'horse owner' || formatClass(selectedUser.role) === 'horseowner' || formatClass(selectedUser.role) === 'jockey') && (
+                                    <div className="flex gap-3 border-t border-[var(--admin-border)] pt-4">
+                                        <button
+                                            className="inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-md bg-[var(--admin-primary)] font-black text-white hover:bg-[var(--admin-primary-dark)]"
+                                            onClick={async () => {
+                                                await adminApi.updateUserStatus(selectedUser.id, 'Active');
+                                                setUsers((current) => current.map((u) => u.id === selectedUser.id ? { ...u, status: 'Active', verified: true } : u));
+                                                setSelectedUser(null);
+                                            }}
+                                            type="button"
+                                        >
+                                            Confirm
+                                        </button>
+                                        <button
+                                            className="inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]"
+                                            onClick={async () => {
+                                                await adminApi.updateUserStatus(selectedUser.id, 'Inactive');
+                                                setUsers((current) => current.map((u) => u.id === selectedUser.id ? { ...u, status: 'Inactive' } : u));
+                                                setSelectedUser(null);
+                                            }}
+                                            type="button"
+                                        >
+                                            Reject
+                                        </button>
+                                    </div>
+                                )}
                             </section>
                         </div>
                     )}
