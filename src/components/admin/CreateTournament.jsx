@@ -58,15 +58,15 @@ function CreateTournament() {
             return;
         }
         if (!startDate) {
-            setError('Start date is required.');
+            setError('Race Date is required.');
             return;
         }
         if (!endDate) {
-            setError('End date (Final Registration Date) is required.');
+            setError('Registration Deadline is required.');
             return;
         }
-        if (startDate >= endDate) {
-            setError('Start date must be before end date.');
+        if (startDate <= endDate) {
+            setError('Race Date must be after Registration Deadline.');
             return;
         }
         if (maxHorses <= 0) {
