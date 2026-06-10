@@ -407,12 +407,12 @@ function RaceManagement() {
                                     </label>
 
                                     <label className={editFieldClass}>
-                                        <span className={editLabelClass}>Start Date</span>
+                                        <span className={editLabelClass}>Race Date</span>
                                         <input className={editControlClass} defaultValue={editingTournament.startDate} name="startDate" required type="date" />
                                     </label>
 
                                     <label className={editFieldClass}>
-                                        <span className={editLabelClass}>End Date</span>
+                                        <span className={editLabelClass}>Registration Deadline</span>
                                         <input className={editControlClass} defaultValue={editingTournament.endDate} name="endDate" required type="date" />
                                     </label>
 

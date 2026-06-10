@@ -158,19 +158,13 @@ function CreateTournament() {
 
                                 <div className={twoColumnClass}>
                                     <label className={fieldClass}>
-                                        <span className={labelClass}>Start Date</span>
-                                        <div className="relative flex min-h-10 items-center">
-                                            <input className={`${controlBaseClass} h-10 py-0 pl-3 pr-9`} name="startDate" type="date" />
-                                            <FaCalendarAlt aria-hidden="true" className={`${iconClass} right-3`} />
-                                        </div>
+                                        <span className={labelClass}>Race Date</span>
+                                        <input className={inputClass} name="startDate" type="date" />
                                     </label>
 
                                     <label className={fieldClass}>
-                                        <span className={labelClass}>Final Registration Date</span>
-                                        <div className="relative flex min-h-10 items-center">
-                                            <input className={`${controlBaseClass} h-10 py-0 pl-3 pr-9`} name="endDate" type="date" />
-                                            <FaCalendarAlt aria-hidden="true" className={`${iconClass} right-3`} />
-                                        </div>
+                                        <span className={labelClass}>Registration Deadline</span>
+                                        <input className={inputClass} name="endDate" type="date" />
                                     </label>
                                 </div>
 
