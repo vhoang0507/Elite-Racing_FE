@@ -88,6 +88,7 @@ function RaceManagement() {
     const [sortBy, setSortBy] = useState('newest');
     const [page, setPage] = useState(1);
     const [editingTournament, setEditingTournament] = useState(null);
+    const [editError, setEditError] = useState('');
 
     useEffect(() => {
         let isMounted = true;
@@ -171,6 +172,7 @@ function RaceManagement() {
 
     const handleEditSubmit = async (event) => {
         event.preventDefault();
+        setEditError('');
 
         const formData = new FormData(event.currentTarget);
         const patch = {
@@ -186,24 +188,23 @@ function RaceManagement() {
             status: formData.get('status'),
         };
 
-        // Update tournament data
-        await adminApi.updateTournament(editingTournament.id, patch);
+        try {
+            // Update tournament data
+            await adminApi.updateTournament(editingTournament.id, patch);
 
-        // If status changed, also call the status endpoint
-        const newStatus = formData.get('status');
-        if (newStatus && newStatus !== editingTournament.status) {
-            await adminApi.updateTournamentStatus(editingTournament.id, newStatus);
+            // If status changed, also call the status endpoint
+            const newStatus = formData.get('status');
+            if (newStatus && newStatus !== editingTournament.status) {
+                await adminApi.updateTournamentStatus(editingTournament.id, newStatus);
+            }
+
+            // Refresh tournament list from BE
+            const freshTournaments = await adminApi.getTournaments();
+            setTournaments(freshTournaments);
+            setEditingTournament(null);
+        } catch (err) {
+            setEditError(err.message || 'Failed to update tournament.');
         }
-
-        setTournaments((current) => current.map((item) => (
-            item.id === editingTournament.id
-                ? {
-                    ...item,
-                    ...patch,
-                }
-                : item
-        )));
-        setEditingTournament(null);
     };
 
     return (
@@ -376,7 +377,6 @@ function RaceManagement() {
                                 <div className="flex items-start justify-between gap-4">
                                     <div>
                                         <h2 className="m-0 text-[1.35rem] leading-[1.15] text-[var(--admin-primary-dark)]">Edit Tournament</h2>
-                                        <span className="mt-2 inline-flex text-[0.8rem] font-black text-[var(--admin-muted)]">{editingTournament.id}</span>
                                     </div>
                                     <button aria-label="Close edit tournament" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => setEditingTournament(null)} type="button">
                                         <FaTimes aria-hidden="true" />
@@ -408,12 +408,12 @@ function RaceManagement() {
 
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Race Date</span>
-                                        <input className={editControlClass} defaultValue={editingTournament.startDate} name="endDate" required type="date" />
+                                        <input className={editControlClass} defaultValue={editingTournament.endDate} name="endDate" required type="date" />
                                     </label>
 
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Registration Deadline</span>
-                                        <input className={editControlClass} defaultValue={editingTournament.endDate} name="startDate" required type="date" />
+                                        <input className={editControlClass} defaultValue={editingTournament.startDate} name="startDate" required type="date" />
                                     </label>
 
                                     <label className={editFieldClass}>
@@ -442,8 +442,14 @@ function RaceManagement() {
                                     </label>
                                 </div>
 
+                                {editError && (
+                                    <div className="rounded-md border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-[0.85rem] font-semibold text-[var(--admin-primary)]">
+                                        {editError}
+                                    </div>
+                                )}
+
                                 <div className="flex justify-end gap-3 max-[720px]:flex-col">
-                                    <button className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-4 font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => setEditingTournament(null)} type="button">
+                                    <button className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-4 font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => { setEditingTournament(null); setEditError(''); }} type="button">
                                         Cancel
                                     </button>
                                     <button className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md bg-[var(--admin-primary)] px-4 font-black text-white hover:bg-[var(--admin-primary-dark)]" type="submit">
@@ -453,16 +459,6 @@ function RaceManagement() {
                             </form>
                         </div>
                     )}
-
-                    <footer className="mt-[132px] flex items-center justify-between gap-6 text-[var(--admin-primary-dark)] max-[820px]:mt-12 max-[820px]:flex-col max-[820px]:items-stretch">
-                        <strong className="text-base font-black">Elite Racing League</strong>
-                        <nav aria-label="Footer links" className="flex flex-wrap justify-end gap-7 max-[820px]:justify-start">
-                            <a className="text-[0.76rem] font-extrabold text-[#5c4642] no-underline hover:text-[var(--admin-primary)]" href="#">Terms of Service</a>
-                            <a className="text-[0.76rem] font-extrabold text-[#5c4642] no-underline hover:text-[var(--admin-primary)]" href="#">Privacy Policy</a>
-                            <a className="text-[0.76rem] font-extrabold text-[#5c4642] no-underline hover:text-[var(--admin-primary)]" href="#">Contact Support</a>
-                            <a className="text-[0.76rem] font-extrabold text-[#5c4642] no-underline hover:text-[var(--admin-primary)]" href="#">Racing Rules</a>
-                        </nav>
-                    </footer>
                 </section>
         </AdminLayout>
     );

@@ -312,16 +312,6 @@ function PredictionManagement() {
                             <span>View All Participants</span>
                         </button>
                     </section>
-
-                    <footer className="mt-16 flex items-center justify-between gap-6 text-[var(--admin-primary-dark)] max-[820px]:flex-col max-[820px]:items-stretch">
-                        <strong className="text-base font-black">Elite Racing League</strong>
-                        <nav aria-label="Footer links" className="flex flex-wrap justify-end gap-7 max-[820px]:justify-start">
-                            <a className="text-[0.76rem] font-extrabold text-[#5c4642] no-underline hover:text-[var(--admin-primary)]" href="#">Terms of Service</a>
-                            <a className="text-[0.76rem] font-extrabold text-[#5c4642] no-underline hover:text-[var(--admin-primary)]" href="#">Privacy Policy</a>
-                            <a className="text-[0.76rem] font-extrabold text-[#5c4642] no-underline hover:text-[var(--admin-primary)]" href="#">Contact Support</a>
-                            <a className="text-[0.76rem] font-extrabold text-[#5c4642] no-underline hover:text-[var(--admin-primary)]" href="#">Racing Rules</a>
-                        </nav>
-                    </footer>
                 </section>
         </AdminLayout>
     );
