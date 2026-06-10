@@ -41,36 +41,70 @@ const actionButtonClass = 'inline-flex min-h-[38px] cursor-pointer items-center 
 function CreateTournament() {
     const navigate = useNavigate();
     const [isSaving, setIsSaving] = useState(false);
+    const [error, setError] = useState('');
 
     const persistTournament = async (form, shouldPublish = false) => {
         const formData = new FormData(form);
+        setError('');
 
-        setIsSaving(true);
-        const response = await adminApi.createTournament({
-            name: formData.get('name'),
-            className: formData.get('breed'),
-            location: formData.get('location'),
-            city: formData.get('location'),
-            startDate: formData.get('startDate'),
-            endDate: formData.get('endDate'),
-            maxHorses: formData.get('maxHorses'),
-            goldPrize: formData.get('goldPrize'),
-            silverPrize: formData.get('silverPrize'),
-            bronzePrize: formData.get('bronzePrize'),
-            minWeight: formData.get('minWeight'),
-            maxWeight: formData.get('maxWeight'),
-            minAge: formData.get('minAge'),
-            maxAge: formData.get('maxAge'),
-            rules: formData.get('rules'),
-        });
+        // Validation
+        const name = formData.get('name')?.trim();
+        const startDate = formData.get('startDate');
+        const endDate = formData.get('endDate');
+        const maxHorses = Number(formData.get('maxHorses') || 0);
 
-        // If publishing, approve the tournament to move from Draft → OpenRegistration
-        if (shouldPublish && response?.id) {
-            await adminApi.updateTournamentStatus(response.id, 'OpenRegistration');
+        if (!name) {
+            setError('Tournament name is required.');
+            return;
+        }
+        if (!startDate) {
+            setError('Start date is required.');
+            return;
+        }
+        if (!endDate) {
+            setError('End date (Final Registration Date) is required.');
+            return;
+        }
+        if (startDate >= endDate) {
+            setError('Start date must be before end date.');
+            return;
+        }
+        if (maxHorses <= 0) {
+            setError('Max horses must be greater than 0.');
+            return;
         }
 
-        setIsSaving(false);
-        navigate('/admin/races');
+        setIsSaving(true);
+        try {
+            const response = await adminApi.createTournament({
+                name: name,
+                className: formData.get('breed'),
+                location: formData.get('location'),
+                city: formData.get('location'),
+                startDate: startDate,
+                endDate: endDate,
+                maxHorses: formData.get('maxHorses'),
+                goldPrize: formData.get('goldPrize'),
+                silverPrize: formData.get('silverPrize'),
+                bronzePrize: formData.get('bronzePrize'),
+                minWeight: formData.get('minWeight'),
+                maxWeight: formData.get('maxWeight'),
+                minAge: formData.get('minAge'),
+                maxAge: formData.get('maxAge'),
+                rules: formData.get('rules'),
+            });
+
+            // If publishing, approve the tournament to move from Draft → OpenRegistration
+            if (shouldPublish && response?.id) {
+                await adminApi.updateTournamentStatus(response.id, 'OpenRegistration');
+            }
+
+            navigate('/admin/races');
+        } catch (err) {
+            setError(err.message || 'Failed to create tournament. Please try again.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleSubmit = (event) => {
@@ -249,6 +283,12 @@ function CreateTournament() {
                                     </select>
                                 </label>
                             </section>
+
+                            {error && (
+                                <div className="rounded-[var(--admin-radius)] border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-[0.85rem] font-semibold text-[var(--admin-primary)]">
+                                    {error}
+                                </div>
+                            )}
 
                             <div className="flex items-center justify-between gap-[18px] pt-0.5 max-[760px]:flex-col max-[760px]:items-stretch">
                                 <Link className={`${actionButtonClass} border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]`} to="/admin/races">

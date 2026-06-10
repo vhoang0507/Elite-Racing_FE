@@ -187,17 +187,17 @@ async function getTournamentById(id) {
 async function createTournament(payload) {
     const mappedPayload = {
         tournamentName: payload.name,
-        description: payload.className,
-        location: payload.location,
+        description: payload.className || null,
+        location: payload.location || null,
         startDate: payload.startDate,
         endDate: payload.endDate,
         maxHorses: Number(payload.maxHorses || 0),
         prizePool: Number(payload.goldPrize || 0) + Number(payload.silverPrize || 0) + Number(payload.bronzePrize || 0),
-        minHorseAge: Number(payload.minAge || 0),
-        maxHorseAge: Number(payload.maxAge || 0),
-        minHorseWeightKg: Number(payload.minWeight || 0),
-        maxHorseWeightKg: Number(payload.maxWeight || 0),
-        rules: payload.rules,
+        minHorseAge: payload.minAge ? Number(payload.minAge) : null,
+        maxHorseAge: payload.maxAge ? Number(payload.maxAge) : null,
+        minHorseWeightKg: payload.minWeight ? Number(payload.minWeight) : null,
+        maxHorseWeightKg: payload.maxWeight ? Number(payload.maxWeight) : null,
+        rules: payload.rules || null,
     };
 
     return apiRequest('/admin/tournaments', {
@@ -241,7 +241,7 @@ async function updateTournament(id, patch) {
 }
 
 async function deleteTournament(id) {
-    return apiRequest(`/admin/tournaments/${id}/cancel`, { method: 'PUT' });
+    return apiRequest(`/admin/tournaments/${id}`, { method: 'DELETE' });
 }
 
 // ─── Race Registrations ──────────────────────────────────────────────────────
