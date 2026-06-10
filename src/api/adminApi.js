@@ -219,14 +219,25 @@ async function updateTournamentStatus(id, status) {
 }
 
 async function updateTournament(id, patch) {
-    // If patch contains status change, use the status endpoint
-    if (patch.status) {
-        return updateTournamentStatus(id, patch.status);
-    }
-    // Otherwise attempt a general PUT (if BE supports it)
+    // Map FE field names to BE DTO (AdminTournamentRequest) field names
+    const body = {
+        tournamentName: patch.name || patch.tournamentName || '',
+        description: patch.className || patch.description || '',
+        location: patch.location || patch.city || '',
+        startDate: patch.startDate,
+        endDate: patch.endDate,
+        maxHorses: Number(patch.maxHorses || 0),
+        prizePool: Number(patch.prizePool || 0),
+        minHorseAge: patch.minHorseAge ? Number(patch.minHorseAge) : null,
+        maxHorseAge: patch.maxHorseAge ? Number(patch.maxHorseAge) : null,
+        minHorseWeightKg: patch.minHorseWeightKg ? Number(patch.minHorseWeightKg) : null,
+        maxHorseWeightKg: patch.maxHorseWeightKg ? Number(patch.maxHorseWeightKg) : null,
+        rules: patch.rules || '',
+    };
+
     return apiRequest(`/admin/tournaments/${id}`, {
         method: 'PUT',
-        body: JSON.stringify(patch),
+        body: JSON.stringify(body),
     });
 }
 

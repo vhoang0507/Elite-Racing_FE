@@ -186,7 +186,15 @@ function RaceManagement() {
             status: formData.get('status'),
         };
 
+        // Update tournament data
         await adminApi.updateTournament(editingTournament.id, patch);
+
+        // If status changed, also call the status endpoint
+        const newStatus = formData.get('status');
+        if (newStatus && newStatus !== editingTournament.status) {
+            await adminApi.updateTournamentStatus(editingTournament.id, newStatus);
+        }
+
         setTournaments((current) => current.map((item) => (
             item.id === editingTournament.id
                 ? {

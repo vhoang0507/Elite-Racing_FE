@@ -87,7 +87,6 @@ function getBadge(type) {
 
 function JockeyNotifications() {
     const [notifications] = useState(notificationsData);
-    const [selectedNotification] = useState(notificationsData[0]);
 
     const totalAlerts = notifications.length;
     const unreadAlerts = notifications.filter(n => n.unread).length;
