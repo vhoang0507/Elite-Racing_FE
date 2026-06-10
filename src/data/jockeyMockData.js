@@ -457,3 +457,60 @@ export const calendarEvents = [
     { date: '2024-06-22', type: 'unavailable' },
     { date: '2024-06-24', type: 'unavailable' },
 ];
+
+export const jockeyProfile = {
+    id: 'J-8829-XR',
+    name: 'Sebastian Reid',
+    email: 'sebastian.reid@eliteracing.com',
+    phone: '+1 (555) 234-8890',
+    weight: '54 kg',
+    health: 'Fit',
+    experienceYears: 8,
+    image:
+        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&q=80',
+};
+
+export const jockeyDistanceExperiences = [
+    {
+        distance: '1000m',
+        level: 'Basic',
+    },
+    {
+        distance: '1500m',
+        level: 'Expert',
+    },
+    {
+        distance: '2400m',
+        level: 'No Experience',
+    },
+];
+
+export const jockeyBreedExperiences = [
+    {
+        id: 1,
+        breed: 'Arabian',
+        description: 'High Stamina',
+        level: 'Expert',
+    },
+    {
+        id: 2,
+        breed: 'Thoroughbred',
+        description: 'Maximum Velocity',
+        level: 'Good',
+    },
+];
+
+export const availableBreeds = [
+    'Arabian',
+    'Thoroughbred',
+    'Quarter Horse',
+    'Mustang',
+    'Morgan',
+];
+
+export const experienceLevels = [
+    'No Experience',
+    'Basic',
+    'Good',
+    'Expert',
+];

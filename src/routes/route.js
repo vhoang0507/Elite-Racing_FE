@@ -32,6 +32,8 @@ import SpectatorTournaments from '../components/Spectator/SpectatorTournaments';
 import SpectatorPredictions from '../components/Spectator/SpectatorPredictions';
 import SpectatorResultReward from '../components/Spectator/SpectatorResultReward';
 import SpectatorNotificationsPage from '../components/Spectator/SpectatorNotificationsPage';
+import JockeyNotifications from '../components/jockey/JockeyNotifications';
+import JockeySetting from '../components/jockey/JockeySetting';
 
 const appRoutes = [
     {
@@ -109,6 +111,13 @@ const appRoutes = [
     {
         path: '/jockey/schedule',
         element: createElement(JockeyCalendar),
+    }, {
+        path: '/jockey/notifications',
+        element: createElement(JockeyNotifications),
+    },
+    {
+        path: '/jockey/settings',
+        element: createElement(JockeySetting),
     },
     {
         path: '/owner',
