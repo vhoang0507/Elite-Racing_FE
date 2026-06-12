@@ -34,12 +34,6 @@ import SpectatorResultReward from '../components/Spectator/SpectatorResultReward
 import SpectatorNotificationsPage from '../components/Spectator/SpectatorNotificationsPage';
 import JockeyNotifications from '../components/jockey/JockeyNotifications';
 import JockeySetting from '../components/jockey/JockeySetting';
-import RefereeDashboard from '../components/referee/RefereeDashboard';
-import RefereeSetting from '../components/referee/RefereeSetting';
-import RefereeNotification from '../components/referee/RefereeNotifications';
-import RefereeAssignedRace from '../components/referee/RefereeAssignedRace';
-import AssignedPreRace from '../components/referee/AssignedPreRace';
-import AssignedPostRace from '../components/referee/AssignedPostRace';
 
 const appRoutes = [
     {
@@ -176,37 +170,6 @@ const appRoutes = [
     {
         path: '/spectator/notifications',
         element: createElement(SpectatorNotificationsPage),
-    },
-    {
-        path: '/referee',
-        element: createElement(
-            Navigate,
-            { to: '/referee/dashboard' }
-        ),
-    },
-    {
-        path: '/referee/dashboard',
-        element: createElement(RefereeDashboard),
-    },
-    {
-        path: '/referee/settings',
-        element: createElement(RefereeSetting),
-    },
-    {
-        path: '/referee/notifications',
-        element: createElement(RefereeNotification),
-    },
-    {
-        path: '/referee/races',
-        element: createElement(RefereeAssignedRace),
-    },
-    {
-        path: '/referee/races/pre-race',
-        element: createElement(AssignedPreRace),
-    },
-    {
-        path: '/referee/races/post-race',
-        element: createElement(AssignedPostRace),
     },
 ];
 

@@ -1,9 +1,25 @@
-const data = [
-    { tournament: "Grosvenor Classic", horse: "Crimson Thunder", regDate: "Sep 15, 2024", status: "Pending" },
-    { tournament: "Emirates Masters", horse: "Midnight Runner", regDate: "Sep 18, 2024", status: "Pending" },
-];
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { ownerApi } from "../../../../api/ownerApi";
+import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
 
 export default function PendingRegistrations() {
+    const navigate = useNavigate();
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        setLoading(true);
+        ownerApi.getPendingRegistrations()
+            .then(setData)
+            .catch((err) => {
+                if (!handleOwnerAccessError(err, navigate)) setData([]);
+            })
+            .finally(() => setLoading(false));
+    }, []);
+
+    if (loading) return <p style={{ textAlign: "center", color: "#999" }}>Loading...</p>;
+
     return (
         <section style={styles.section}>
             <div style={styles.header}>
@@ -14,25 +30,34 @@ export default function PendingRegistrations() {
             <table style={styles.table}>
                 <thead>
                     <tr>
-                        {["Tournament", "Horse", "Reg Date", "Status", "Action"].map(h => (
+                        {["Tournament", "Horse", "Reg Date", "Status", "Note", "Action"].map(h => (
                             <th key={h} style={styles.th}>{h}</th>
                         ))}
                     </tr>
                 </thead>
                 <tbody>
-                    {data.map((row, i) => (
-                        <tr key={i} style={styles.tr}>
-                            <td style={styles.td}>{row.tournament}</td>
-                            <td style={styles.td}>{row.horse}</td>
-                            <td style={styles.td}>{row.regDate}</td>
-                            <td style={styles.td}>
-                                <span style={styles.pendingBadge}>{row.status}</span>
-                            </td>
-                            <td style={styles.td}>
-                                <button style={styles.viewBtn}>View Status</button>
+                    {data.length === 0 ? (
+                        <tr>
+                            <td colSpan={6} style={{ textAlign: "center", padding: "24px", color: "#999" }}>
+                                No pending registrations
                             </td>
                         </tr>
-                    ))}
+                    ) : (
+                        data.map((row) => (
+                            <tr key={row.registrationId} style={styles.tr}>
+                                <td style={styles.td}>{row.tournamentName}</td>
+                                <td style={styles.td}>{row.horseName}</td>
+                                <td style={styles.td}>{row.regDate}</td>
+                                <td style={styles.td}>
+                                    <span style={styles.pendingBadge}>{row.status}</span>
+                                </td>
+                                <td style={styles.td}>{row.adminNote || "-"}</td>
+                                <td style={styles.td}>
+                                    <button style={styles.viewBtn}>View Status</button>
+                                </td>
+                            </tr>
+                        ))
+                    )}
                 </tbody>
             </table>
         </section>

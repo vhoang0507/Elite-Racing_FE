@@ -1,33 +1,86 @@
-export default function RegistrationModal({ tournament, onClose }) {
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { ownerApi } from "../../../../api/ownerApi";
+import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
+
+export default function RegistrationModal({ tournament, onClose, onSuccess }) {
     if (!tournament) return null;
+
+    const navigate = useNavigate();
+    const [horses, setHorses] = useState([]);
+    const [selectedHorse, setSelectedHorse] = useState(null);
+    const [notes, setNotes] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+
+    useEffect(() => {
+        setLoading(true);
+        ownerApi.getEligibleHorses(tournament.raceId)
+            .then(setHorses)
+            .catch((err) => {
+                if (!handleOwnerAccessError(err, navigate)) setHorses([]);
+            })
+            .finally(() => setLoading(false));
+    }, [tournament.raceId]);
+
+    const handleSelectHorse = (horse) => {
+        if (!horse.isEligible) return;
+        setSelectedHorse(horse);
+        setError("");
+    };
+
+    const handleSubmit = async () => {
+        if (!selectedHorse) {
+            setError("Vui lòng chọn ngựa trước khi đăng ký.");
+            return;
+        }
+        setSubmitting(true);
+        setError("");
+        try {
+            await ownerApi.createRegistration({
+                raceId: tournament.raceId,
+                horseId: selectedHorse.horseId,
+                notes,
+            });
+            setSuccess("Đăng ký thành công! Đơn đang chờ Admin duyệt.");
+            setTimeout(() => {
+                onSuccess?.();
+            }, 1500);
+        } catch (err) {
+            if (!handleOwnerAccessError(err, navigate)) {
+                setError(err.message || "Đăng ký thất bại.");
+            }
+        } finally {
+            setSubmitting(false);
+        }
+    };
 
     return (
         <div style={styles.overlay} onClick={onClose}>
             <div style={styles.modal} onClick={e => e.stopPropagation()}>
 
-                {/* Header ảnh */}
+                {/* Header */}
                 <div style={styles.imgWrapper}>
-                    <img src={tournament.img} alt={tournament.name} style={styles.img} />
+                    <img src={tournament.imageUrl || "/DubaiSprintCup.jpg"} alt={tournament.tournamentName} style={styles.img} />
                     <div style={styles.imgOverlay}>
                         <span style={styles.upcomingBadge}>UPCOMING MAJOR EVENT</span>
-                        <h2 style={styles.tournamentName}>{tournament.name}</h2>
+                        <h2 style={styles.tournamentName}>{tournament.tournamentName}</h2>
                     </div>
                     <button style={styles.closeBtn} onClick={onClose}>✕</button>
                 </div>
 
-                {/* Info + Form */}
+                {/* Body */}
                 <div style={styles.body}>
 
                     {/* Cột trái - Tournament Info */}
                     <div style={styles.infoCol}>
-                        <div style={styles.infoRow}><span>📅</span><div><small>DATE & TIME</small><p>12 Jun 2026 • 18:30 GST</p></div></div>
-                        <div style={styles.infoRow}><span>📍</span><div><small>LOCATION</small><p>Dubai Meydan, UAE</p></div></div>
-                        <div style={styles.infoRow}><span>👥</span><div><small>CAPACITY</small><p>Max 12 Horses • 4 Slots Left</p></div></div>
-                        <div style={styles.infoRow}><span>📏</span><div><small>DISTANCE</small><p>2400 m</p></div></div>
-                        <div style={styles.infoRow}><span>💰</span><div><small>PRIZE POOL</small><h3 style={{ margin: 0, color: "#8B0000" }}>$2,000,000</h3></div></div>
-                        <div style={styles.infoRow}><span>🎫</span><div><small>ENTRY FEE</small><p>$5,000</p></div></div>
-                        <div style={styles.infoRow}><span>🏇</span><div><small>ASSIGNED JOCKEY</small><p>Marcus Bennett</p></div></div>
-                        <div style={styles.infoRow}><span>⏰</span><div><small>DEADLINE</small><p style={{ color: "#8B0000" }}>08 Jun 2026</p></div></div>
+                        <div style={styles.infoRow}><span>📅</span><div><small>DATE</small><p>{tournament.raceDate}</p></div></div>
+                        <div style={styles.infoRow}><span>📍</span><div><small>LOCATION</small><p>{tournament.location}</p></div></div>
+                        <div style={styles.infoRow}><span>👥</span><div><small>SLOTS LEFT</small><p>{tournament.availableSlots} / {tournament.maxHorses}</p></div></div>
+                        <div style={styles.infoRow}><span>📏</span><div><small>DISTANCE</small><p>{tournament.distanceMeters} m</p></div></div>
+                        <div style={styles.infoRow}><span>💰</span><div><small>PRIZE POOL</small><h3 style={{ margin: 0, color: "#8B0000" }}>${Number(tournament.prizePool).toLocaleString()}</h3></div></div>
                         <p style={{ fontSize: "11px", color: "#999", marginTop: "8px" }}>
                             ⚠️ Registrations require admin approval before race participation.
                         </p>
@@ -35,58 +88,65 @@ export default function RegistrationModal({ tournament, onClose }) {
 
                     {/* Cột phải - Form */}
                     <div style={styles.formCol}>
-                        <h4 style={styles.stepTitle}>STEP 1: HORSE OWNER INFORMATION</h4>
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
-                            <div>
-                                <label style={styles.label}>Name</label>
-                                <input defaultValue="Ella Smith" style={styles.input} />
-                            </div>
-                            <div>
-                                <label style={styles.label}>Email</label>
-                                <input defaultValue="e.smith@erl.org" style={styles.input} />
-                            </div>
-                        </div>
 
-                        <h4 style={styles.stepTitle}>STEP 2: HORSE INFORMATION</h4>
-                        <select style={{ ...styles.input, marginBottom: "12px" }}>
-                            <option>Choose Your Horse</option>
-                            <option>Desert Thunder</option>
-                            <option>Shadow Dancer</option>
-                        </select>
-
-                        <div style={styles.horseCard}>
-                            <img src="/Horse1.jpg" alt="horse" style={{ width: "48px", height: "48px", borderRadius: "8px", objectFit: "cover" }} />
-                            <div style={{ flex: 1 }}>
-                                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                    <strong>Desert Thunder</strong>
-                                    <span style={{ backgroundColor: "#d4edda", color: "#155724", fontSize: "11px", padding: "2px 8px", borderRadius: "10px" }}>HEALTHY</span>
-                                </div>
-                                <small style={{ color: "#999" }}>Arabian</small>
-                                <div style={{ display: "flex", gap: "16px", marginTop: "4px", fontSize: "12px" }}>
-                                    <span>520kg</span><span>168cm</span><span>5 years</span><span style={{ color: "green" }}>Active</span>
-                                </div>
+                        <h4 style={styles.stepTitle}>STEP 1: CHỌN NGỰA</h4>
+                        {loading ? (
+                            <p style={{ color: "#999" }}>Loading horses...</p>
+                        ) : horses.length === 0 ? (
+                            <p style={{ color: "#999" }}>Không có ngựa nào hợp lệ.</p>
+                        ) : (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+                                {horses.map(horse => (
+                                    <div
+                                        key={horse.horseId}
+                                        onClick={() => handleSelectHorse(horse)}
+                                        style={{
+                                            ...styles.horseCard,
+                                            opacity: horse.isEligible ? 1 : 0.5,
+                                            cursor: horse.isEligible ? "pointer" : "not-allowed",
+                                            border: selectedHorse?.horseId === horse.horseId ? "2px solid #8B0000" : "1px solid #eee",
+                                        }}
+                                    >
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                                <strong>{horse.horseName}</strong>
+                                                <span style={{
+                                                    fontSize: "11px", padding: "2px 8px", borderRadius: "10px",
+                                                    backgroundColor: horse.isEligible ? "#d4edda" : "#f8d7da",
+                                                    color: horse.isEligible ? "#155724" : "#721c24",
+                                                }}>
+                                                    {horse.isEligible ? "Eligible" : "Ineligible"}
+                                                </span>
+                                            </div>
+                                            <small style={{ color: "#999" }}>{horse.breedName} • {horse.age}y • {horse.weightKg}kg • {horse.healthStatus}</small>
+                                            {!horse.isEligible && (
+                                                <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#721c24" }}>{horse.ineligibleReason}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        </div>
+                        )}
 
-                        <h4 style={styles.stepTitle}>STEP 3: PAYMENT</h4>
-                        <div style={styles.paymentBox}>
-                            <div style={styles.payRow}><span>Participation Fee</span><span>$5,000.00</span></div>
-                            <div style={styles.payRow}><span>Insurance</span><span>$500.00</span></div>
-                            <div style={styles.payRow}><span>Stable Service</span><span>$300.00</span></div>
-                            <div style={{ ...styles.payRow, fontWeight: "bold", borderTop: "1px solid #eee", paddingTop: "8px", marginTop: "4px" }}>
-                                <span>TOTAL AMOUNT</span><span style={{ color: "#8B0000" }}>$5,800.00</span>
-                            </div>
-                            <button style={styles.payBtn}>💳 Proceed Payment</button>
-                        </div>
-
-                        <h4 style={styles.stepTitle}>STEP 4: ADDITIONAL NOTES</h4>
+                        <h4 style={styles.stepTitle}>STEP 2: GHI CHÚ (tùy chọn)</h4>
                         <textarea
-                            placeholder="Dietary restrictions, stable placement preferences, or equipment details..."
-                            style={{ ...styles.input, height: "80px", resize: "vertical" }}
+                            value={notes}
+                            onChange={e => setNotes(e.target.value)}
+                            placeholder="Dietary restrictions, stable placement preferences..."
+                            style={{ ...styles.input, height: "80px", resize: "vertical", marginBottom: "16px" }}
                         />
 
-                        <div style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
-                            <button style={styles.submitBtn}>Submit Registration ➤</button>
+                        {error && <p style={{ color: "#721c24", fontSize: "13px", marginBottom: "8px" }}>{error}</p>}
+                        {success && <p style={{ color: "#155724", fontSize: "13px", marginBottom: "8px" }}>{success}</p>}
+
+                        <div style={{ display: "flex", gap: "12px" }}>
+                            <button
+                                onClick={handleSubmit}
+                                disabled={submitting}
+                                style={{ ...styles.submitBtn, opacity: submitting ? 0.7 : 1 }}
+                            >
+                                {submitting ? "Đang gửi..." : "Submit Registration ➤"}
+                            </button>
                             <button style={styles.cancelBtn} onClick={onClose}>Cancel</button>
                         </div>
                     </div>
@@ -110,12 +170,8 @@ const styles = {
     infoRow: { display: "flex", gap: "10px", marginBottom: "12px", alignItems: "flex-start", fontSize: "13px" },
     formCol: { padding: "20px" },
     stepTitle: { fontSize: "11px", color: "#999", fontWeight: "700", letterSpacing: "1px", margin: "0 0 10px" },
-    label: { fontSize: "12px", color: "#555", display: "block", marginBottom: "4px" },
     input: { width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "13px", boxSizing: "border-box" },
-    horseCard: { display: "flex", gap: "12px", padding: "12px", border: "1px solid #eee", borderRadius: "8px", marginBottom: "16px" },
-    paymentBox: { backgroundColor: "#faf8f8", borderRadius: "8px", padding: "14px", marginBottom: "16px" },
-    payRow: { display: "flex", justifyContent: "space-between", fontSize: "13px", marginBottom: "6px" },
-    payBtn: { width: "100%", padding: "10px", backgroundColor: "#8B0000", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", marginTop: "8px", fontSize: "14px" },
+    horseCard: { display: "flex", gap: "12px", padding: "12px", borderRadius: "8px", marginBottom: "4px" },
     submitBtn: { flex: 1, padding: "10px", backgroundColor: "#8B0000", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px", fontWeight: "bold" },
     cancelBtn: { padding: "10px 20px", backgroundColor: "#fff", border: "1px solid #ddd", borderRadius: "8px", cursor: "pointer", fontSize: "14px" },
 };

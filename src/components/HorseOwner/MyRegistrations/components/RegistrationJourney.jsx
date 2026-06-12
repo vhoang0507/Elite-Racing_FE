@@ -1,42 +1,79 @@
-const steps = [
-    { number: 1, label: "Submitted", desc: "Initial form receipt" },
-    { number: 2, label: "Pending Review", desc: "Admin verification" },
-    { number: 3, label: "Approved", desc: "Entry confirmed" },
-    { number: 4, label: "Jockey Selection", desc: "Athlete assignment" },
-    { number: 5, label: "Ready to Race", desc: "Pre-race checks ok" },
-];
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { ownerApi } from "../../../../api/ownerApi";
+import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
 
 export default function RegistrationJourney() {
-    const currentStep = 3;
+    const navigate = useNavigate();
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchLatest = async () => {
+            setLoading(true);
+            try {
+                const [pending, approved] = await Promise.all([
+                    ownerApi.getPendingRegistrations().catch(() => []),
+                    ownerApi.getApprovedRegistrationsList().catch(() => []),
+                ]);
+
+                const all = [...pending, ...approved];
+                if (all.length === 0) {
+                    setData(null);
+                    return;
+                }
+
+                const latest = all[0];
+                const journey = await ownerApi.getRegistrationJourney(latest.registrationId);
+                setData(journey);
+            } catch (err) {
+                if (!handleOwnerAccessError(err, navigate)) setData(null);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchLatest();
+    }, []);
+
+    if (loading) return <p style={{ textAlign: "center", color: "#999" }}>Loading...</p>;
+
+    if (!data) return (
+        <section style={styles.section}>
+            <h3 style={{ margin: "0 0 24px", textAlign: "center" }}>Registration Journey</h3>
+            <p style={{ textAlign: "center", color: "#999" }}>No active registrations found.</p>
+        </section>
+    );
 
     return (
         <section style={styles.section}>
-            <h3 style={{ margin: "0 0 24px", textAlign: "center" }}>Registration Journey</h3>
+            <h3 style={{ margin: "0 0 8px", textAlign: "center" }}>Registration Journey</h3>
+            <p style={{ textAlign: "center", color: "#999", fontSize: "13px", marginBottom: "24px" }}>
+                Status: <strong>{data.currentStatus}</strong>
+            </p>
 
             <div style={styles.timeline}>
-                {steps.map((step, i) => (
+                {data.steps.map((step, i) => (
                     <div key={i} style={styles.stepWrapper}>
-                        {/* Line trước */}
                         {i > 0 && (
                             <div style={{
                                 ...styles.line,
-                                backgroundColor: step.number <= currentStep ? "#8B0000" : "#ddd",
+                                backgroundColor: step.isCompleted ? "#8B0000" : "#ddd",
                             }} />
                         )}
-
                         <div style={styles.step}>
                             <div style={{
                                 ...styles.circle,
-                                backgroundColor: step.number <= currentStep ? "#8B0000" : "#fff",
-                                color: step.number <= currentStep ? "#fff" : "#999",
-                                border: step.number <= currentStep ? "none" : "2px solid #ddd",
+                                backgroundColor: step.isCompleted ? "#8B0000" : "#fff",
+                                color: step.isCompleted ? "#fff" : "#999",
+                                border: step.isCompleted ? "none" : "2px solid #ddd",
                             }}>
-                                {step.number}
+                                {step.stepNumber}
                             </div>
-                            <p style={{ ...styles.label, color: step.number <= currentStep ? "#111" : "#999" }}>
+                            <p style={{ ...styles.label, color: step.isCompleted ? "#111" : "#999" }}>
                                 {step.label}
                             </p>
-                            <p style={styles.desc}>{step.desc}</p>
+                            <p style={styles.desc}>{step.description}</p>
                         </div>
                     </div>
                 ))}

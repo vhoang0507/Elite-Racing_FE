@@ -73,6 +73,39 @@ export async function getHorseBreeds() {
     return apiRequest('/owner/horse-breeds');
 }
 
+// ─── Registrations ───────────────────────────────────────────────────────────
+
+export async function getOpenTournaments(limit = 3) {
+    return apiRequest(`/owner/registrations/open-tournaments?limit=${limit}`);
+}
+
+export async function getEligibleHorses(raceId) {
+    return apiRequest(`/owner/registrations/eligible-horses?raceId=${raceId}`);
+}
+
+export async function createRegistration(payload) {
+    return apiRequest('/owner/registrations', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+}
+
+export async function getPendingRegistrations() {
+    return apiRequest('/owner/registrations/pending');
+}
+
+export async function getApprovedRegistrationsList() {
+    return apiRequest('/owner/registrations/approved');
+}
+
+export async function getRegistrationDetail(registrationId) {
+    return apiRequest(`/owner/registrations/${registrationId}`);
+}
+
+export async function getRegistrationJourney(registrationId) {
+    return apiRequest(`/owner/registrations/${registrationId}/journey`);
+}
+
 // ─── Export grouped ──────────────────────────────────────────────────────────
 
 export const ownerApi = {
@@ -87,4 +120,11 @@ export const ownerApi = {
     updateHorse,
     updateHorseStatus,
     getHorseBreeds,
+    getOpenTournaments,
+    getEligibleHorses,
+    createRegistration,
+    getPendingRegistrations,
+    getApprovedRegistrationsList,
+    getRegistrationDetail,
+    getRegistrationJourney,
 };

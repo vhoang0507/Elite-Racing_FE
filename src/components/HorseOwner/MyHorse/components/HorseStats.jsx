@@ -1,27 +1,28 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { ownerApi } from "../../../../api/ownerApi";
+import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
 
 export default function HorseStats() {
-    const [stats, setStats] = useState({ totalHorses: 0, activeHorses: 0, injuredHorses: 0, inRaces: 0 });
+    const navigate = useNavigate();
+    const [stats, setStats] = useState(null);
 
     useEffect(() => {
-        let mounted = true;
         ownerApi.getHorseStats()
-            .then((data) => { if (mounted) setStats(data); })
-            .catch(() => {});
-        return () => { mounted = false; };
+            .then(setStats)
+            .catch((err) => handleOwnerAccessError(err, navigate));
     }, []);
 
-    const cards = [
-        { label: "Total Horses", value: String(stats.totalHorses).padStart(2, '0'), icon: "🐴" },
-        { label: "Active Horses", value: String(stats.activeHorses).padStart(2, '0'), icon: "✅" },
-        { label: "Injured Horses", value: String(stats.injuredHorses).padStart(2, '0'), icon: "🏥" },
-        { label: "In Races", value: String(stats.inRaces).padStart(2, '0'), icon: "🏆" },
+    const items = [
+        { label: "Total Horses", value: stats?.totalHorses ?? "-", icon: "🐴" },
+        { label: "Active Horses", value: stats?.activeHorses ?? "-", icon: "✅" },
+        { label: "Injured Horses", value: stats?.injuredHorses ?? "-", icon: "🏥" },
+        { label: "In Races", value: stats?.inRaces ?? "-", icon: "🏆" },
     ];
 
     return (
         <div style={styles.grid}>
-            {cards.map((s, i) => (
+            {items.map((s, i) => (
                 <div key={i} style={styles.card}>
                     <span style={styles.icon}>{s.icon}</span>
                     <div>
@@ -36,8 +37,8 @@ export default function HorseStats() {
 
 const styles = {
     grid: { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" },
-    card: { backgroundColor: "#fffefd", borderRadius: "12px", padding: "20px", border: "1px solid #edcfc9", display: "flex", alignItems: "center", gap: "16px" },
+    card: { backgroundColor: "#fff", borderRadius: "12px", padding: "20px", border: "1px solid #eee", display: "flex", alignItems: "center", gap: "16px" },
     icon: { fontSize: "28px" },
-    label: { margin: 0, fontSize: "12px", color: "#705f5b" },
-    value: { margin: 0, fontSize: "28px", fontWeight: "bold", color: "#2d2020" },
+    label: { margin: 0, fontSize: "12px", color: "#999" },
+    value: { margin: 0, fontSize: "28px", fontWeight: "bold", color: "#111" },
 };
