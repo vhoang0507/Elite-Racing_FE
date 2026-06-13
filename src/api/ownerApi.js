@@ -70,9 +70,8 @@ export async function updateHorseStatus(horseId, isActive) {
 // ─── Horse Breeds ────────────────────────────────────────────────────────────
 
 export async function getHorseBreeds() {
-    return apiRequest('/owner/horse-breeds');
+    return apiRequest('/owner/lookups/horse-breeds');
 }
-
 // ─── Registrations ───────────────────────────────────────────────────────────
 
 export async function getOpenTournaments(limit = 3) {
