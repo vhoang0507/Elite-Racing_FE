@@ -374,16 +374,17 @@ async function markNotificationRead(id) {
     return { message: 'Marked as read', id };
 }
 
-// ─── Predictions (no BE endpoint yet - placeholder) ──────────────────────────
+// ─── Predictions ─────────────────────────────────────────────────────────────
 
 async function getPredictions() {
-    // No predictions endpoint in BE yet, return empty array
-    return [];
+    return apiRequest('/admin/predictions');
 }
 
 async function updatePredictionStatus(id, status) {
-    // Placeholder
-    return { message: 'Status updated', id, status };
+    return apiRequest(`/admin/predictions/${id}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status }),
+    });
 }
 
 // ─── Horse Reports (mapped to BE reports/violations) ─────────────────────────
