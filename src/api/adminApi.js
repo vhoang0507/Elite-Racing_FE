@@ -165,6 +165,7 @@ async function getTournaments() {
     return data.map((t) => ({
         id: t.tournamentId,
         name: t.tournamentName,
+        description: t.description || '',
         className: t.description || '',
         startDate: t.startDate ? t.startDate.split('T')[0] : '',
         endDate: t.endDate ? t.endDate.split('T')[0] : '',

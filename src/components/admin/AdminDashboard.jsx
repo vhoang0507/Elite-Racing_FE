@@ -110,7 +110,7 @@ function AdminDashboard() {
 
     const visibleTournaments = useMemo(() => dashboard.tournaments.filter((tournament) => matchesQuery([
         tournament.name,
-        tournament.className,
+        tournament.description,
         tournament.city,
         tournament.status,
     ], query)), [dashboard.tournaments, query]);
@@ -197,7 +197,8 @@ function AdminDashboard() {
                                     <thead>
                                         <tr>
                                             <th className={tableHeadClass}>Tournament name</th>
-                                            <th className={tableHeadClass}>Date</th>
+                                            <th className={tableHeadClass}>Race Date</th>
+                                            <th className={tableHeadClass}>Registration Deadline</th>
                                             <th className={tableHeadClass}>Entries</th>
                                             <th className={tableHeadClass}>Status</th>
                                             <th className={`${tableHeadClass} text-right`}>Actions</th>
@@ -212,8 +213,9 @@ function AdminDashboard() {
                                             <tr key={tournament.name}>
                                                 <td className={tableCellClass(isLast)}>
                                                     <strong className="block">{tournament.name}</strong>
-                                                    <span className="mt-1 block text-[var(--admin-muted)]">{tournament.className}</span>
+                                                    <span className="mt-1 block text-[var(--admin-muted)]">{tournament.description}</span>
                                                 </td>
+                                                <td className={tableCellClass(isLast)}>{adminApi.formatters.toDateLabel(tournament.endDate)}</td>
                                                 <td className={tableCellClass(isLast)}>{adminApi.formatters.toDateLabel(tournament.startDate)}</td>
                                                 <td className={tableCellClass(isLast)}>{tournament.registeredHorses}/{tournament.maxHorses}</td>
                                                 <td className={tableCellClass(isLast)}>
