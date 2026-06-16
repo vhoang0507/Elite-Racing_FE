@@ -11,13 +11,7 @@ import {
     FaBullseye,
 } from 'react-icons/fa';
 
-import { clearAuthSession } from '../../utils/tokenStorage';
-
-const spectatorAccount = {
-    initials: 'SR',
-    name: 'Sebastian Reid',
-    role: 'SPECTATOR',
-};
+import { clearAuthSession, getAuthUser } from '../../utils/tokenStorage';
 
 const navigation = [
     { key: 'dashboard', label: 'Dashboard', icon: FaChartLine, path: '/spectator/dashboard' },
@@ -46,6 +40,8 @@ const iconButtonClasses = 'relative inline-flex h-[38px] w-[38px] cursor-pointer
 function SpectatorLayout({ activeKey, children }) {
     const navigate = useNavigate();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const user = getAuthUser();
+    const initials = user?.fullName?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() ?? 'SP';
 
     const handleLogout = () => {
         clearAuthSession();
@@ -63,12 +59,12 @@ function SpectatorLayout({ activeKey, children }) {
 
                 <div className="flex items-center gap-3 px-1.5 py-2">
                     <div className="grid h-[42px] w-[42px] flex-none place-items-center rounded-full bg-[linear-gradient(145deg,#650404,#c04733)] text-[0.8rem] font-extrabold text-white">
-                        {spectatorAccount.initials}
+                        {initials}
                     </div>
                     <div>
-                        <strong className="block text-[var(--admin-ink)]">{spectatorAccount.name}</strong>
+                        <strong className="block text-[var(--admin-ink)]">{user?.fullName ?? 'Spectator'}</strong>
                         <span className="mt-0.5 block text-[0.72rem] font-extrabold text-[var(--admin-primary)]">
-                            {spectatorAccount.role}
+                            SPECTATOR
                         </span>
                     </div>
                 </div>
@@ -118,13 +114,36 @@ function SpectatorLayout({ activeKey, children }) {
                             <FaBell />
                             <span className="absolute right-2.5 top-[9px] h-2 w-2 rounded-full border-2 border-[var(--admin-surface)] bg-[var(--admin-primary)]" />
                         </button>
-                        <button
-                            className={`${iconButtonClasses} overflow-hidden rounded-full bg-[linear-gradient(145deg,#650404,#c04733)] text-[0.72rem] font-black text-white`}
-                            onClick={() => setIsProfileOpen(!isProfileOpen)}
-                            type="button"
-                        >
-                            {spectatorAccount.initials}
-                        </button>
+                        <div className="relative">
+                            <button
+                                className={`${iconButtonClasses} overflow-hidden rounded-full bg-[linear-gradient(145deg,#650404,#c04733)] text-[0.72rem] font-black text-white`}
+                                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                                type="button"
+                            >
+                                {initials}
+                            </button>
+
+                            {isProfileOpen && (
+                                <section className="absolute right-0 top-12 z-30 grid w-[min(300px,calc(100vw-40px))] gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5 shadow-[0_18px_42px_rgba(45,32,32,0.18)]">
+                                    <div className="flex items-center gap-3">
+                                        <div className="grid h-12 w-12 flex-none place-items-center rounded-full bg-[linear-gradient(145deg,#650404,#c04733)] text-[0.9rem] font-black text-white">
+                                            {initials}
+                                        </div>
+                                        <div>
+                                            <strong className="block text-[var(--admin-ink)]">{user?.fullName}</strong>
+                                            <span className="text-[0.72rem] text-[var(--admin-muted)]">{user?.email}</span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        className="inline-flex min-h-9 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]"
+                                        onClick={() => setIsProfileOpen(false)}
+                                        type="button"
+                                    >
+                                        Close
+                                    </button>
+                                </section>
+                            )}
+                        </div>
                     </div>
                 </header>
 
