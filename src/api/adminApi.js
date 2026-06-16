@@ -384,7 +384,7 @@ async function getPredictions() {
 async function updatePredictionStatus(id, status) {
     return apiRequest(`/admin/predictions/${id}/status`, {
         method: 'PUT',
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ Status: status }),
     });
 }
 

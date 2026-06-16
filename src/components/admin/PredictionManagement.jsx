@@ -5,9 +5,9 @@ import {
 } from 'react';
 
 import {
-    FaBan,
     FaCalendarAlt,
     FaChevronDown,
+    FaEllipsisH,
     FaRegChartBar,
     FaSearch,
     FaSortAmountDown,
@@ -29,10 +29,17 @@ const selectFieldClass = 'flex h-[42px] items-center gap-2 rounded-md border bor
 const selectClass = 'h-full w-full min-w-0 cursor-pointer appearance-none border-0 bg-transparent text-[0.8rem] font-bold text-[#5f4b47] outline-0';
 const statusClass = {
     pending: 'bg-[#fff7db] text-[#a17809] before:bg-[#a17809]',
+    locked: 'bg-[#e9f1ff] text-[#2457a6] before:bg-[#2457a6]',
+    evaluated: 'bg-[#e8f7ee] text-[#16864f] before:bg-[#16864f]',
+    cancelled: 'bg-[#ffe8e4] text-[var(--admin-primary)] before:bg-[var(--admin-primary)]',
     active: 'bg-[#e8f7ee] text-[#16864f] before:bg-[#16864f]',
     inactive: 'bg-[#f3e8e6] text-[#7f645f] before:bg-[#7f645f]',
     banned: 'bg-[#ffe8e4] text-[var(--admin-primary)] before:bg-[var(--admin-primary)]',
 };
+const predictionStatusOptions = ['Pending', 'Locked', 'Evaluated', 'Cancelled'];
+const actionMenuWidth = 150;
+const actionMenuHeight = 150;
+const actionMenuViewportPadding = 12;
 const rankClass = {
     gold: 'bg-[#ffd85a] text-[#7b5a05]',
     silver: 'bg-[#e7e9ee] text-[#5f697a]',
@@ -63,6 +70,7 @@ function PredictionManagement() {
     const [statusFilter, setStatusFilter] = useState('all-status');
     const [accuracyFilter, setAccuracyFilter] = useState('all-accuracy');
     const [sortBy, setSortBy] = useState('count');
+    const [actionMenu, setActionMenu] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -83,7 +91,7 @@ function PredictionManagement() {
     const summaryCards = useMemo(() => {
         const topPrediction = [...predictions].sort((current, next) => next.count - current.count)[0];
         const totalPredictions = predictions.reduce((total, prediction) => total + Number(prediction.count || 0), 0);
-        const activeEvents = predictions.filter((prediction) => formatClass(prediction.status) === 'active').length;
+        const activeEvents = predictions.filter((prediction) => formatClass(prediction.status) === 'locked').length;
 
         return [
             {
@@ -138,16 +146,33 @@ function PredictionManagement() {
         setQuery(value);
     };
 
-    const handleDisable = async (prediction) => {
-        await adminApi.updatePredictionStatus(prediction.id, 'Inactive');
+    const handleActionToggle = (event, predictionId) => {
+        const rect = event.currentTarget.getBoundingClientRect();
+        const maxLeft = Math.max(actionMenuViewportPadding, window.innerWidth - actionMenuWidth - actionMenuViewportPadding);
+        const maxTop = Math.max(actionMenuViewportPadding, window.innerHeight - actionMenuHeight - actionMenuViewportPadding);
+
+        setActionMenu((current) => (
+            current?.id === predictionId
+                ? null
+                : {
+                    id: predictionId,
+                    left: Math.min(Math.max(actionMenuViewportPadding, rect.right - actionMenuWidth), maxLeft),
+                    top: Math.min(rect.bottom + 6, maxTop),
+                }
+        ));
+    };
+
+    const handleStatusChange = async (prediction, status) => {
+        const updatedPrediction = await adminApi.updatePredictionStatus(prediction.id, status);
         setPredictions((current) => current.map((item) => (
             item.id === prediction.id
                 ? {
                     ...item,
-                    status: 'Inactive',
+                    status: updatedPrediction?.status || status,
                 }
                 : item
         )));
+        setActionMenu(null);
     };
 
     return (
@@ -201,9 +226,9 @@ function PredictionManagement() {
                             <select className={selectClass} onChange={(event) => setStatusFilter(event.target.value)} value={statusFilter}>
                                 <option value="all-status">Status: All</option>
                                 <option value="pending">Pending</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                                <option value="banned">Banned</option>
+                                <option value="locked">Locked</option>
+                                <option value="evaluated">Evaluated</option>
+                                <option value="cancelled">Cancelled</option>
                             </select>
                             <FaChevronDown aria-hidden="true" />
                         </label>
@@ -261,13 +286,30 @@ function PredictionManagement() {
                                                 </span>
                                             </td>
                                             <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">
-                                                <div className="inline-flex items-center gap-3">
-                                                    <button aria-label={`View analytics for ${prediction.horse}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" type="button">
-                                                        <FaRegChartBar aria-hidden="true" />
+                                                <div className="relative inline-flex items-center gap-3">
+                                                    <button aria-expanded={actionMenu?.id === prediction.id} aria-haspopup="menu" aria-label={`Actions for ${prediction.horse}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" onClick={(event) => handleActionToggle(event, prediction.id)} type="button">
+                                                        <FaEllipsisH aria-hidden="true" />
                                                     </button>
-                                                    <button aria-label={`Disable prediction for ${prediction.horse}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" onClick={() => handleDisable(prediction)} type="button">
-                                                        <FaBan aria-hidden="true" />
-                                                    </button>
+                                                    {actionMenu?.id === prediction.id && (
+                                                        <div className="fixed z-50 min-w-[150px] overflow-hidden rounded-md border border-[var(--admin-border)] bg-[#fffdfc] py-1 shadow-[0_14px_32px_rgba(91,26,19,0.14)]" role="menu" style={{ left: actionMenu.left, top: actionMenu.top }}>
+                                                            {predictionStatusOptions.map((status) => {
+                                                                const isCurrentStatus = formatClass(prediction.status) === formatClass(status);
+
+                                                                return (
+                                                                    <button
+                                                                        className={`flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-2 text-left text-[0.78rem] font-bold ${isCurrentStatus ? 'bg-[#fff0ed] text-[var(--admin-primary)]' : 'text-[#5f4b47] hover:bg-[#fff4f1] hover:text-[var(--admin-primary)]'}`}
+                                                                        disabled={isCurrentStatus}
+                                                                        key={status}
+                                                                        onClick={() => handleStatusChange(prediction, status)}
+                                                                        role="menuitem"
+                                                                        type="button"
+                                                                    >
+                                                                        <span>{status}</span>
+                                                                    </button>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
