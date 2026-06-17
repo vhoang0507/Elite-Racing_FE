@@ -12,6 +12,7 @@ import {
 
 import JockeyLayout from './JockeyLayout';
 import { jockeyApi } from '../../api/jockeyApi';
+import { uploadFile, resolveFileUrl } from '../../api/uploadApi';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]';
@@ -29,6 +30,9 @@ function JockeySetting() {
     const [breedExperiences, setBreedExperiences] = useState([]);
     const [selectedBreed, setSelectedBreed] = useState('');
     const [selectedLevel, setSelectedLevel] = useState('');
+
+    const [selectedFiles, setSelectedFiles] = useState({});
+    const [previewUrls, setPreviewUrls] = useState({});
 
     useEffect(() => {
         const fetchAll = async () => {
@@ -76,21 +80,45 @@ function JockeySetting() {
         setBreedExperiences(prev => prev.filter(e => e.breedId !== breedId));
     };
 
+    const handleFileChange = (field) => (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setSelectedFiles(prev => ({ ...prev, [field]: file }));
+        setPreviewUrls(prev => ({ ...prev, [field]: URL.createObjectURL(file) }));
+    };
+
+    const uploadSelectedFiles = async () => {
+        const uploadedUrls = {};
+        for (const [field, file] of Object.entries(selectedFiles)) {
+            const uploaded = await uploadFile(file, 'jockeys');
+            uploadedUrls[field] = uploaded.url;
+        }
+        return uploadedUrls;
+    };
+
     const handleSave = async () => {
         setSaving(true);
         setError('');
         setSuccess('');
         try {
+            const uploadedUrls = await uploadSelectedFiles();
+
+            const nextProfile = {
+                ...profile,
+                ...uploadedUrls,
+            };
+
             await jockeyApi.updateJockeyVerification({
-                weightKg: profile.weightKg ?? 65,
-                yearsOfExperience: profile.yearsOfExperience ?? 5,
-                healthStatus: 'Healthy',
-                certificateNo: profile.certificateNo,
-                certificateFileUrl: profile.certificateFileUrl,
-                profileImageUrl: profile.profileImageUrl,
-                idCardFrontUrl: profile.idCardFrontUrl,
-                idCardBackUrl: profile.idCardBackUrl,
-                healthCertificateUrl: profile.healthCertificateUrl,
+                weightKg: Number(nextProfile.weightKg ?? 65),
+                yearsOfExperience: Number(nextProfile.yearsOfExperience ?? 5),
+                healthStatus: nextProfile.healthStatus || 'Injured',
+                certificateNo: nextProfile.certificateNo,
+                certificateFileUrl: nextProfile.certificateFileUrl,
+                profileImageUrl: nextProfile.profileImageUrl,
+                idCardFrontUrl: nextProfile.idCardFrontUrl,
+                idCardBackUrl: nextProfile.idCardBackUrl,
+                healthCertificateUrl: nextProfile.healthCertificateUrl,
                 distanceExperiences: distanceExperiences.map(e => ({
                     distanceMeters: e.distanceMeters,
                     skillLevel: e.skillLevel,
@@ -100,6 +128,10 @@ function JockeySetting() {
                     experienceLevel: e.experienceLevel,
                 })),
             });
+
+            setProfile(nextProfile);
+            setSelectedFiles({});
+            setPreviewUrls({});
             setSuccess('Đã gửi hồ sơ. Vui lòng chờ admin duyệt.');
         } catch (err) {
             setError(err.message || 'Failed to save');
@@ -113,6 +145,8 @@ function JockeySetting() {
             <p style={{ textAlign: 'center', padding: '40px', color: '#999' }}>Loading...</p>
         </JockeyLayout>
     );
+
+    const getPreview = (field) => previewUrls[field] ?? (profile?.[field] ? resolveFileUrl(profile[field]) : null);
 
     return (
         <JockeyLayout activeKey="settings">
@@ -130,7 +164,7 @@ function JockeySetting() {
                     <article className={`${panelClass} p-7`}>
                         <div className="flex gap-7 max-[720px]:flex-col">
                             <img
-                                src={profile?.profileImageUrl || '/Jockey1.jpg'}
+                                src={previewUrls.profileImageUrl ? previewUrls.profileImageUrl : (profile?.profileImageUrl ? resolveFileUrl(profile.profileImageUrl) : '/Jockey1.jpg')}
                                 alt={profile?.fullName}
                                 className="h-[190px] w-[150px] rounded-lg border border-[var(--admin-border)] object-cover shadow-md"
                             />
@@ -197,8 +231,8 @@ function JockeySetting() {
                         <div className="rounded-lg border border-[var(--admin-border)] p-4">
                             <p className="mb-3 text-[0.85rem] font-bold">Profile Avatar</p>
                             <div className="mb-3 flex min-h-[140px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-[var(--admin-border)] bg-[#faf8f8] p-4">
-                                {profile?.profileImageUrl ? (
-                                    <img src={profile.profileImageUrl} alt="avatar" className="max-h-[120px] rounded-md object-contain" />
+                                {getPreview('profileImageUrl') ? (
+                                    <img src={getPreview('profileImageUrl')} alt="avatar" className="max-h-[120px] rounded-md object-contain" />
                                 ) : (
                                     <div className="flex flex-col items-center gap-2 text-[#ccc]">
                                         <span className="text-[2rem]">🖼</span>
@@ -207,9 +241,9 @@ function JockeySetting() {
                                 )}
                             </div>
                             <input
-                                value={profile?.profileImageUrl ?? ''}
-                                onChange={e => setProfile(prev => ({ ...prev, profileImageUrl: e.target.value }))}
-                                placeholder="Image URL..."
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange('profileImageUrl')}
                                 className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none focus:border-[var(--admin-primary)]"
                             />
                         </div>
@@ -218,8 +252,8 @@ function JockeySetting() {
                         <div className="rounded-lg border border-[var(--admin-border)] p-4">
                             <p className="mb-3 text-[0.85rem] font-bold">National ID - Front</p>
                             <div className="mb-3 flex min-h-[140px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-[var(--admin-border)] bg-[#faf8f8] p-4">
-                                {profile?.idCardFrontUrl ? (
-                                    <img src={profile.idCardFrontUrl} alt="id front" className="max-h-[120px] rounded-md object-contain" />
+                                {getPreview('idCardFrontUrl') ? (
+                                    <img src={getPreview('idCardFrontUrl')} alt="id front" className="max-h-[120px] rounded-md object-contain" />
                                 ) : (
                                     <div className="flex flex-col items-center gap-2 text-[#ccc]">
                                         <span className="text-[2rem]">🖼</span>
@@ -228,9 +262,9 @@ function JockeySetting() {
                                 )}
                             </div>
                             <input
-                                value={profile?.idCardFrontUrl ?? ''}
-                                onChange={e => setProfile(prev => ({ ...prev, idCardFrontUrl: e.target.value }))}
-                                placeholder="Image URL..."
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange('idCardFrontUrl')}
                                 className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none focus:border-[var(--admin-primary)]"
                             />
                         </div>
@@ -239,8 +273,8 @@ function JockeySetting() {
                         <div className="rounded-lg border border-[var(--admin-border)] p-4">
                             <p className="mb-3 text-[0.85rem] font-bold">National ID - Back</p>
                             <div className="mb-3 flex min-h-[140px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-[var(--admin-border)] bg-[#faf8f8] p-4">
-                                {profile?.idCardBackUrl ? (
-                                    <img src={profile.idCardBackUrl} alt="id back" className="max-h-[120px] rounded-md object-contain" />
+                                {getPreview('idCardBackUrl') ? (
+                                    <img src={getPreview('idCardBackUrl')} alt="id back" className="max-h-[120px] rounded-md object-contain" />
                                 ) : (
                                     <div className="flex flex-col items-center gap-2 text-[#ccc]">
                                         <span className="text-[2rem]">🖼</span>
@@ -249,9 +283,9 @@ function JockeySetting() {
                                 )}
                             </div>
                             <input
-                                value={profile?.idCardBackUrl ?? ''}
-                                onChange={e => setProfile(prev => ({ ...prev, idCardBackUrl: e.target.value }))}
-                                placeholder="Image URL..."
+                                type="file"
+                                accept="image/*"
+                                onChange={handleFileChange('idCardBackUrl')}
                                 className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none focus:border-[var(--admin-primary)]"
                             />
                         </div>
@@ -259,18 +293,14 @@ function JockeySetting() {
                         {/* Horse Racing Certificate */}
                         <div className="rounded-lg border border-[var(--admin-border)] p-4">
                             <p className="mb-3 text-[0.85rem] font-bold">Horse Racing Certificate</p>
-                            {profile?.certificateFileUrl && (
+                            {(selectedFiles.certificateFileUrl || profile?.certificateFileUrl) && (
                                 <div className="mb-2 flex items-center gap-2 rounded-md bg-[#fff3ef] px-3 py-2 text-[0.82rem]">
                                     <span>📄</span>
-                                    <span className="flex-1 truncate text-[var(--admin-primary)]">{profile.certificateFileUrl}</span>
+                                    <span className="flex-1 truncate text-[var(--admin-primary)]">
+                                        {selectedFiles.certificateFileUrl?.name ?? profile?.certificateFileUrl}
+                                    </span>
                                 </div>
                             )}
-                            <div className="mb-3 flex min-h-[80px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-[var(--admin-border)] bg-[#faf8f8] p-4">
-                                <div className="flex flex-col items-center gap-1 text-[#ccc]">
-                                    <span className="text-[1.5rem]">📄</span>
-                                    <span className="text-[0.75rem]">Upload PDF/Image</span>
-                                </div>
-                            </div>
                             <div className="mb-2">
                                 <label className="mb-1 block text-[0.72rem] font-bold uppercase text-[var(--admin-muted)]">Certificate No</label>
                                 <input
@@ -281,9 +311,9 @@ function JockeySetting() {
                                 />
                             </div>
                             <input
-                                value={profile?.certificateFileUrl ?? ''}
-                                onChange={e => setProfile(prev => ({ ...prev, certificateFileUrl: e.target.value }))}
-                                placeholder="Certificate file URL..."
+                                type="file"
+                                accept="image/*,application/pdf"
+                                onChange={handleFileChange('certificateFileUrl')}
                                 className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none focus:border-[var(--admin-primary)]"
                             />
                         </div>
@@ -292,23 +322,16 @@ function JockeySetting() {
                     {/* Health Certificate - full width */}
                     <div className="mt-4 rounded-lg border border-[var(--admin-border)] p-4">
                         <p className="mb-3 text-[0.85rem] font-bold">Health Examination Certificate</p>
-                        <div className="mb-3 flex min-h-[80px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-[var(--admin-border)] bg-[#faf8f8] p-4">
-                            {profile?.healthCertificateUrl ? (
-                                <div className="flex items-center gap-2 text-[0.82rem] text-[var(--admin-muted)]">
-                                    <span>📄</span>
-                                    <span className="truncate">{profile.healthCertificateUrl}</span>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center gap-1 text-[#ccc]">
-                                    <span className="text-[1.5rem]">📄</span>
-                                    <span className="text-[0.75rem]">No file selected</span>
-                                </div>
-                            )}
-                        </div>
+                        {(selectedFiles.healthCertificateUrl || profile?.healthCertificateUrl) && (
+                            <div className="mb-3 flex items-center gap-2 rounded-md bg-[#fff3ef] px-3 py-2 text-[0.82rem]">
+                                <span>📄</span>
+                                <span className="truncate">{selectedFiles.healthCertificateUrl?.name ?? profile?.healthCertificateUrl}</span>
+                            </div>
+                        )}
                         <input
-                            value={profile?.healthCertificateUrl ?? ''}
-                            onChange={e => setProfile(prev => ({ ...prev, healthCertificateUrl: e.target.value }))}
-                            placeholder="Health certificate URL..."
+                            type="file"
+                            accept="image/*,application/pdf"
+                            onChange={handleFileChange('healthCertificateUrl')}
                             className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none focus:border-[var(--admin-primary)]"
                         />
                     </div>

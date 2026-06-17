@@ -19,7 +19,9 @@ export async function apiRequest(endpoint, options = {}) {
     const headers = new Headers(options.headers || {});
     const token = getAuthToken();
 
-    if (options.body && !headers.has('Content-Type')) {
+    const isFormData = options.body instanceof FormData;
+
+    if (options.body && !isFormData && !headers.has('Content-Type')) {
         headers.set('Content-Type', 'application/json');
     }
 
