@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ownerApi } from "../../../../api/ownerApi";
+import { resolveFileUrl } from "../../../../api/uploadApi";
 
 export default function MyHorses() {
     const [horses, setHorses] = useState([]);
@@ -8,7 +9,7 @@ export default function MyHorses() {
         let mounted = true;
         ownerApi.getHorses({ pageSize: 2 })
             .then((res) => { if (mounted) setHorses(res.items || []); })
-            .catch(() => {});
+            .catch(() => { });
         return () => { mounted = false; };
     }, []);
 
@@ -24,7 +25,7 @@ export default function MyHorses() {
                 {horses.map((horse) => (
                     <div key={horse.horseId} style={styles.card}>
                         {horse.imageUrl && (
-                            <img src={horse.imageUrl} alt={horse.horseName} style={{ width: "100px", height: "70px", borderRadius: "8px", objectFit: "cover" }} />
+                            <img src={resolveFileUrl(horse.imageUrl)} alt={horse.horseName} style={{ width: "100px", height: "70px", borderRadius: "8px", objectFit: "cover" }} />
                         )}
                         <div style={styles.info}>
                             <span style={styles.breed}>{horse.breedName || `Breed #${horse.breedId}`}</span>

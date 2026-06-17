@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
+import { resolveFileUrl } from "../../../../api/uploadApi";
 
 const healthColor = {
     Healthy: { bg: "#d4edda", color: "#155724" },
@@ -127,7 +128,7 @@ export default function HorseTable() {
                                 <td style={styles.td}>
                                     <div style={styles.horseName}>
                                         <img
-                                            src={horse.imageUrl || "/Horse1.jpg"}
+                                            src={horse.imageUrl ? resolveFileUrl(horse.imageUrl) : "/Horse1.jpg"}
                                             alt={horse.horseName}
                                             style={styles.horseImg}
                                         />

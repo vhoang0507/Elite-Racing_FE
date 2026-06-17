@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import HorseOwnerLayout from "../HorseOwnerLayout";
 import { ownerApi } from "../../../api/ownerApi";
+import { uploadFile, resolveFileUrl } from "../../../api/uploadApi";
 
 export default function RegisterHorse() {
     const navigate = useNavigate();
@@ -18,30 +19,47 @@ export default function RegisterHorse() {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
+    const [horseImageFile, setHorseImageFile] = useState(null);
+    const [horseImagePreview, setHorseImagePreview] = useState('');
 
     useEffect(() => {
         ownerApi.getHorseBreeds()
             .then(setBreeds)
-            .catch(() => {});
+            .catch(() => { });
     }, []);
 
     const handleChange = (e) => {
         setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
     };
 
+    const handleHorseImageChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setHorseImageFile(file);
+        setHorseImagePreview(URL.createObjectURL(file));
+    };
+
     const handleSubmit = async () => {
         setError('');
         setIsSubmitting(true);
         try {
+            let imageUrl = form.imageUrl || null;
+
+            if (horseImageFile) {
+                const uploaded = await uploadFile(horseImageFile, 'horses');
+                imageUrl = uploaded.url;
+            }
+
             await ownerApi.createHorse({
                 horseName: form.horseName,
                 breedId: Number(form.breedId),
                 age: Number(form.age),
-                heightCm: Number(form.heightCm),
+                heightCm: form.heightCm ? Number(form.heightCm) : null,
                 weightKg: Number(form.weightKg),
                 healthStatus: form.healthStatus,
                 achievementSummary: form.achievementSummary,
-                imageUrl: form.imageUrl || null,
+                imageUrl,
             });
             navigate('/owner/my-horse');
         } catch (err) {
@@ -114,9 +132,12 @@ export default function RegisterHorse() {
                         <div className="mb-4">
                             <label className={labelClass}>Current Health State</label>
                             <select name="healthStatus" value={form.healthStatus} onChange={handleChange} className={inputClass}>
-                                <option>Healthy</option>
-                                <option>Injured</option>
-                                <option>Training</option>
+                                <option value="Healthy">Healthy</option>
+                                <option value="NeedsCheck">NeedsCheck</option>
+                                <option value="Sick">Sick</option>
+                                <option value="Injured">Injured</option>
+                                <option value="Recovering">Recovering</option>
+                                <option value="UnfitToRace">UnfitToRace</option>
                             </select>
                         </div>
 
@@ -130,7 +151,20 @@ export default function RegisterHorse() {
                                 <span className="text-[1.5rem]">📷</span>
                                 <p className="m-0 mt-2 text-[0.82rem] text-[var(--admin-muted)]">Upload Profile Photo</p>
                                 <p className="m-0 mt-1 text-[0.72rem] text-[#bbb]">PNG, JPG up to 10MB</p>
-                                <input type="file" accept="image/*" className="mt-3" />
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleHorseImageChange}
+                                    className="mt-3"
+                                />
+
+                                {horseImagePreview && (
+                                    <img
+                                        src={resolveFileUrl(horseImagePreview)}
+                                        alt="Horse preview"
+                                        className="mx-auto mt-4 max-h-[160px] rounded-md object-cover"
+                                    />
+                                )}
                             </div>
                         </div>
                     </div>
