@@ -8,7 +8,6 @@ import {
 } from 'react-router-dom';
 
 import {
-    FaCalendarAlt,
     FaDollarSign,
     FaGavel,
     FaHorseHead,
@@ -18,7 +17,7 @@ import {
     FaUserTie,
 } from 'react-icons/fa';
 
-import { adminApi } from '../../api/adminApi';
+import { apiRequest } from '../../api/httpClient';
 
 import AdminLayout from './AdminLayout';
 
@@ -37,6 +36,7 @@ const twoColumnClass = 'grid grid-cols-2 gap-3.5 max-[760px]:grid-cols-1';
 const fourColumnClass = 'grid grid-cols-4 gap-3.5 max-[1080px]:grid-cols-2 max-[760px]:grid-cols-1';
 const iconClass = 'pointer-events-none absolute top-1/2 h-[15px] w-[15px] -translate-y-1/2 text-[#9b7771]';
 const actionButtonClass = 'inline-flex min-h-[38px] cursor-pointer items-center justify-center gap-2 rounded-md px-[18px] text-[0.78rem] font-[850] no-underline max-[760px]:w-full';
+const distanceOptions = [1000, 1500, 2400];
 
 function CreateTournament() {
     const navigate = useNavigate();
@@ -51,6 +51,7 @@ function CreateTournament() {
         const name = formData.get('name')?.trim();
         const raceDate = formData.get('raceDate');
         const registrationDeadline = formData.get('registrationDeadline');
+        const distanceMeters = Number(formData.get('distanceMeters') || 0);
         const maxHorses = Number(formData.get('maxHorses') || 0);
 
         if (!name) {
@@ -69,6 +70,10 @@ function CreateTournament() {
             setError('Race Date must be after Registration Deadline.');
             return;
         }
+        if (!distanceOptions.includes(distanceMeters)) {
+            setError('Distance must be 1000, 1500, or 2400 meters.');
+            return;
+        }
         if (maxHorses <= 0) {
             setError('Max horses must be greater than 0.');
             return;
@@ -76,22 +81,26 @@ function CreateTournament() {
 
         setIsSaving(true);
         try {
-            const response = await adminApi.createTournament({
-                name: name,
-                className: formData.get('breed'),
-                location: formData.get('location'),
-                city: formData.get('location'),
-                startDate: registrationDeadline,
-                endDate: raceDate,
-                maxHorses: formData.get('maxHorses'),
-                goldPrize: formData.get('goldPrize'),
-                silverPrize: formData.get('silverPrize'),
-                bronzePrize: formData.get('bronzePrize'),
-                minWeight: formData.get('minWeight'),
-                maxWeight: formData.get('maxWeight'),
-                minAge: formData.get('minAge'),
-                maxAge: formData.get('maxAge'),
-                rules: formData.get('rules'),
+            await apiRequest('/admin/tournaments', {
+                method: 'POST',
+                body: JSON.stringify({
+                    tournamentName: name,
+                    description: formData.get('breed') || formData.get('description') || null,
+                    location: formData.get('location'),
+                    raceDate,
+                    registrationDeadline,
+                    distanceMeters,
+                    maxHorses,
+                    prizePool:
+                        Number(formData.get('goldPrize') || 0)
+                        + Number(formData.get('silverPrize') || 0)
+                        + Number(formData.get('bronzePrize') || 0),
+                    minHorseAge: formData.get('minAge') ? Number(formData.get('minAge')) : null,
+                    maxHorseAge: formData.get('maxAge') ? Number(formData.get('maxAge')) : null,
+                    minHorseWeightKg: formData.get('minWeight') ? Number(formData.get('minWeight')) : null,
+                    maxHorseWeightKg: formData.get('maxWeight') ? Number(formData.get('maxWeight')) : null,
+                    rules: formData.get('rules') || null,
+                }),
             });
 
             // Tournament created with Draft status by default
@@ -167,11 +176,11 @@ function CreateTournament() {
                                 <div className={twoColumnClass}>
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Distance</span>
-                                        <select className={selectClass} defaultValue="" name="distance">
+                                        <select className={selectClass} defaultValue="" name="distanceMeters" required>
                                             <option value="" disabled>Select Distance</option>
-                                            <option value="1000">1000</option>
-                                            <option value="1500">1500</option>
-                                            <option value="2400">2400</option>
+                                            {distanceOptions.map((distanceMeters) => (
+                                                <option key={distanceMeters} value={distanceMeters}>{distanceMeters}m</option>
+                                            ))}
                                         </select>
                                     </label>
 
