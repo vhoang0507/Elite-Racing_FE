@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     Link,
     useLocation,
@@ -20,6 +20,13 @@ const controlClass = 'h-[54px] w-full rounded-[10px] border border-[#ecd1d1] bg-
 const iconClass = 'absolute right-4 top-1/2 -translate-y-1/2 text-base text-[#777]';
 const formGroupClass = 'mb-[22px]';
 const labelClass = 'mb-2.5 block w-full text-left text-[0.95rem] font-bold text-[#1f3b57]';
+
+const roleDashboardRoutes = {
+    Admin: '/admin/dashboard',
+    Jockey: '/jockey/dashboard',
+    RaceReferee: '/referee/dashboard',
+    Spectator: '/spectator/dashboard',
+};
 
 const Login = () => {
     const navigate = useNavigate();
@@ -62,39 +69,31 @@ const Login = () => {
             }, remember);
 
             const nextStep = response?.nextStep || response?.NextStep;
-const userStatus = user?.status || user?.Status;
+            const userStatus = user?.status || user?.Status;
 
-if (userRole === 'Admin') {
-    navigate('/admin/dashboard', { replace: true });
-    return;
-}
+            if (userRole === 'HorseOwner') {
+                if (nextStep === 'AddHorse' || userStatus === 'Pending') {
+                    navigate('/owner/my-horse', { replace: true });
+                    return;
+                }
 
-if (userRole === 'HorseOwner') {
-    if (nextStep === 'AddHorse' || userStatus === 'Pending') {
-        navigate('/owner/my-horse', { replace: true });
-        return;
-    }
+                navigate('/owner/dashboard', { replace: true });
+                return;
+            }
 
-    navigate('/owner/dashboard', { replace: true });
-    return;
-}
+            if (userRole === 'RaceReferee' && (nextStep === 'WaitForActivation' || userStatus === 'Pending')) {
+                navigate('/referee/settings', { replace: true });
+                return;
+            }
 
-if (userRole === 'Jockey') {
-    navigate('/jockey/dashboard', { replace: true });
-    return;
-}
+            const dashboardRoute = roleDashboardRoutes[userRole];
 
-if (userRole === 'Spectator') {
-    navigate('/spectator/dashboard', { replace: true });
-    return;
-}
+            if (dashboardRoute) {
+                navigate(dashboardRoute, { replace: true });
+                return;
+            }
 
-if (userRole === 'RaceReferee') {
-    setSuccess('Login successful. Referee dashboard is not built in the frontend yet.');
-    return;
-}
-
-setSuccess('Login successful. This role dashboard is not built in the frontend yet.');
+            setSuccess('Login successful. This role dashboard is not built in the frontend yet.');
         } catch (err) {
             setError(err.message || 'Login failed. Please try again.');
         } finally {
