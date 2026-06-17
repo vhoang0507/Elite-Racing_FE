@@ -12,13 +12,20 @@ const normalizeStatus = (value) => String(value || '').trim().toLowerCase();
 const mapStatus = (value, statusMap, fallback = 'Pending') => statusMap[normalizeStatus(value)] || fallback;
 
 const tournamentStatusMap = {
-    pending: 'Pending',
-    draft: 'Pending',
-    active: 'Active',
-    inactive: 'Inactive',
-    completed: 'Inactive',
-    banned: 'Banned',
-    cancelled: 'Banned',
+    pending: 'Draft',
+    draft: 'Draft',
+    active: 'OpenRegistration',
+    open: 'OpenRegistration',
+    'open registration': 'OpenRegistration',
+    openregistration: 'OpenRegistration',
+    closed: 'ClosedRegistration',
+    'closed registration': 'ClosedRegistration',
+    closedregistration: 'ClosedRegistration',
+    ongoing: 'Ongoing',
+    inactive: 'Completed',
+    completed: 'Completed',
+    banned: 'Cancelled',
+    cancelled: 'Cancelled',
 };
 
 const userStatusMap = {
@@ -280,7 +287,7 @@ export const adminMockApi = {
 
     getTournaments: async () => wait(readStore().tournaments),
 
-    createTournament: async (payload, status = 'Active') => updateStore((store) => ({
+    createTournament: async (payload, status = 'Draft') => updateStore((store) => ({
         ...store,
         tournaments: [
             {
@@ -294,7 +301,7 @@ export const adminMockApi = {
                 maxHorses: Number(payload.maxHorses || 20),
                 registeredHorses: 0,
                 prizePool: Number(payload.goldPrize || 0) + Number(payload.silverPrize || 0) + Number(payload.bronzePrize || 0),
-                status: mapStatus(status, tournamentStatusMap, 'Active'),
+                status: mapStatus(status, tournamentStatusMap, 'Draft'),
                 imagePosition: '50% center',
                 createdAt: new Date().toISOString().slice(0, 10),
             },
@@ -308,7 +315,7 @@ export const adminMockApi = {
             tournament.id === id
                 ? {
                     ...tournament,
-                    status: mapStatus(status, tournamentStatusMap),
+                    status: mapStatus(status, tournamentStatusMap, tournament.status),
                 }
                 : tournament
         )),
@@ -326,7 +333,7 @@ export const adminMockApi = {
                 ? {
                     ...tournament,
                     ...patch,
-                    status: patch.status ? mapStatus(patch.status, tournamentStatusMap) : tournament.status,
+                    status: patch.status ? mapStatus(patch.status, tournamentStatusMap, tournament.status) : tournament.status,
                 }
                 : tournament
         )),
