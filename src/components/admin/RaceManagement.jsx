@@ -23,6 +23,7 @@ import horseRacing from '../../assets/horse-racing.jpg';
 import AdminLayout from './AdminLayout';
 
 const formatClass = (value) => String(value || '').toLowerCase();
+const isVisibleTournament = (tournament) => formatClass(tournament.status) !== 'cancelled';
 
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-7 px-11 pb-7 pt-11 max-[820px]:px-5 max-[820px]:py-7';
 
@@ -125,6 +126,13 @@ const editFieldClass = 'grid gap-1.5';
 const editLabelClass = 'text-[0.72rem] font-black uppercase text-[#765c58]';
 const editControlClass = 'h-10 w-full min-w-0 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.88rem] font-bold text-[var(--admin-ink)] outline-0 focus:border-[#c6897e] focus:bg-white focus:shadow-[0_0_0_3px_rgba(134,7,7,0.08)]';
 const pageSize = 4;
+const distanceOptions = [1000, 1500, 2400];
+
+const getDistanceMeters = (tournament) => {
+    const distanceMeters = Number(tournament?.distanceMeters ?? tournament?.race?.distanceMeters ?? 0);
+
+    return distanceOptions.includes(distanceMeters) ? distanceMeters : null;
+};
 
 const matchesQuery = (tournament, query) => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -158,14 +166,18 @@ function RaceManagement() {
             const tournamentsWithReferees = await Promise.all((payload || []).map(async (tournament) => {
                 try {
                     const detail = await adminApi.getTournamentById(tournament.id);
-                    return { ...detail, ...tournament };
+                    return {
+                        ...detail,
+                        ...tournament,
+                        distanceMeters: getDistanceMeters(detail) ?? getDistanceMeters(tournament),
+                    };
                 } catch {
                     return tournament;
                 }
             }));
 
             if (isMounted) {
-                setTournaments(tournamentsWithReferees);
+                setTournaments(tournamentsWithReferees.filter(isVisibleTournament));
             }
         });
 
@@ -252,11 +264,17 @@ function RaceManagement() {
             endDate: formData.get('endDate'),
             location: formData.get('location').trim(),
             city: formData.get('city').trim(),
+            distanceMeters: Number(formData.get('distanceMeters') || 0),
             maxHorses: Number(formData.get('maxHorses') || 0),
             registeredHorses: Number(formData.get('registeredHorses') || 0),
             prizePool: Number(formData.get('prizePool') || 0),
             status: formData.get('status'),
         };
+
+        if (!distanceOptions.includes(patch.distanceMeters)) {
+            setEditError('Distance must be 1000, 1500, or 2400 meters.');
+            return;
+        }
 
         try {
             // Update tournament data (now includes status)
@@ -264,8 +282,22 @@ function RaceManagement() {
 
             // Refresh tournament list from BE
             const freshTournaments = await adminApi.getTournaments();
-            setTournaments(freshTournaments);
+            const tournamentsWithDetails = await Promise.all((freshTournaments || []).map(async (tournament) => {
+                try {
+                    const detail = await adminApi.getTournamentById(tournament.id);
+                    return {
+                        ...detail,
+                        ...tournament,
+                        distanceMeters: getDistanceMeters(detail) ?? getDistanceMeters(tournament),
+                    };
+                } catch {
+                    return tournament;
+                }
+            }));
+
+            setTournaments(tournamentsWithDetails.filter(isVisibleTournament));
             setEditingTournament(null);
+            setPage(1);
         } catch (err) {
             setEditError(err.message || 'Failed to update tournament.');
         }
@@ -469,6 +501,16 @@ function RaceManagement() {
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Class</span>
                                         <input className={editControlClass} defaultValue={editingTournament.className} name="className" type="text" />
+                                    </label>
+
+                                    <label className={editFieldClass}>
+                                        <span className={editLabelClass}>Distance</span>
+                                        <select className={editControlClass} defaultValue={getDistanceMeters(editingTournament) ?? ''} name="distanceMeters" required>
+                                            <option value="" disabled>Select Distance</option>
+                                            {distanceOptions.map((distanceMeters) => (
+                                                <option key={distanceMeters} value={distanceMeters}>{distanceMeters}m</option>
+                                            ))}
+                                        </select>
                                     </label>
 
                                     <label className={editFieldClass}>

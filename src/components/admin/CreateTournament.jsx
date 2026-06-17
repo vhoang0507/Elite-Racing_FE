@@ -1,4 +1,5 @@
 import {
+    useEffect,
     useState,
 } from 'react';
 
@@ -42,6 +43,39 @@ function CreateTournament() {
     const navigate = useNavigate();
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState('');
+    const [referees, setReferees] = useState([]);
+    const [isLoadingReferees, setIsLoadingReferees] = useState(true);
+    const [refereeError, setRefereeError] = useState('');
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadReferees = async () => {
+            try {
+                const data = await apiRequest('/admin/tournaments/referees');
+
+                if (isMounted) {
+                    setReferees(Array.isArray(data) ? data : []);
+                    setRefereeError('');
+                }
+            } catch (err) {
+                if (isMounted) {
+                    setReferees([]);
+                    setRefereeError(err.message || 'Failed to load referees.');
+                }
+            } finally {
+                if (isMounted) {
+                    setIsLoadingReferees(false);
+                }
+            }
+        };
+
+        loadReferees();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     const persistTournament = async (form) => {
         const formData = new FormData(form);
@@ -289,12 +323,25 @@ function CreateTournament() {
 
                                 <label className={fieldClass}>
                                     <span className={labelClass}>Select Referee</span>
-                                    <select className={selectClass} defaultValue="" name="referee">
-                                        <option value="" disabled></option>
-                                        <option value="marcus-crawford">Marcus Crawford</option>
-                                        <option value="sarah-jenkins">Sarah Jenkins</option>
-                                        <option value="minh-tran">Minh Tran</option>
+                                    <select className={selectClass} defaultValue="" disabled={isLoadingReferees || !!refereeError} name="referee">
+                                        <option value="" disabled>
+                                            {isLoadingReferees
+                                                ? 'Loading referees...'
+                                                : refereeError
+                                                    ? 'Unable to load referees'
+                                                    : 'Select Referee'}
+                                        </option>
+                                        {referees.map((referee) => (
+                                            <option key={referee.refereeId} value={referee.refereeId}>
+                                                {referee.fullName}{referee.email ? ` (${referee.email})` : ''}
+                                            </option>
+                                        ))}
                                     </select>
+                                    {refereeError && (
+                                        <span className="text-[0.76rem] font-[700] text-[var(--admin-primary)]">
+                                            {refereeError}
+                                        </span>
+                                    )}
                                 </label>
                             </section>
 

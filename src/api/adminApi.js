@@ -172,6 +172,7 @@ async function getTournaments() {
         location: t.location,
         city: t.location,
         maxHorses: t.maxHorses,
+        distanceMeters: getTournamentDistanceMeters(t),
         registeredHorses: t.entriesCount || 0,
         prizePool: t.prizePool,
         status: t.status,
@@ -182,8 +183,26 @@ async function getTournaments() {
 }
 
 async function getTournamentById(id) {
-    return apiRequest(`/admin/tournaments/${id}`);
+    const detail = await apiRequest(`/admin/tournaments/${id}`);
+    let spectatorDetail = null;
+
+    try {
+        spectatorDetail = await apiRequest(`/spectator/tournaments/${id}`);
+    } catch {
+        spectatorDetail = null;
+    }
+
+    return {
+        ...detail,
+        distanceMeters: getTournamentDistanceMeters(detail) ?? getTournamentDistanceMeters(spectatorDetail),
+    };
 }
+
+const getTournamentDistanceMeters = (tournament) => {
+    const distanceMeters = tournament?.distanceMeters ?? tournament?.race?.distanceMeters;
+
+    return distanceMeters == null ? null : Number(distanceMeters);
+};
 
 async function createTournament(payload) {
     const mappedPayload = {
@@ -228,6 +247,7 @@ async function updateTournament(id, patch) {
         location: patch.location || patch.city || '',
         raceDate: patch.endDate,
         registrationDeadline: patch.startDate,
+        distanceMeters: Number(patch.distanceMeters || 0),
         maxHorses: Number(patch.maxHorses || 0),
         prizePool: Number(patch.prizePool || 0),
         minHorseAge: patch.minHorseAge ? Number(patch.minHorseAge) : null,
