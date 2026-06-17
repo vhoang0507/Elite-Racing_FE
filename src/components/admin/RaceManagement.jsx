@@ -58,6 +58,67 @@ const statusClass = {
     cancelled: 'border-[#dbaaa5] bg-[#f5e1df] text-[var(--admin-primary-dark)]',
 };
 
+const normalizeRefereeNames = (value) => {
+    if (!value) {
+        return [];
+    }
+
+    if (Array.isArray(value)) {
+        return value.flatMap(normalizeRefereeNames);
+    }
+
+    if (typeof value === 'string') {
+        return [value];
+    }
+
+    if (typeof value === 'number') {
+        return [`Referee #${value}`];
+    }
+
+    if (typeof value === 'object') {
+        const directName = value.fullName
+            || value.name
+            || value.refereeName
+            || value.refereeFullName
+            || value.userName
+            || value.email;
+
+        if (directName) {
+            return [directName];
+        }
+
+        if (value.referee || value.user || value.account) {
+            return normalizeRefereeNames(value.referee || value.user || value.account);
+        }
+
+        if (value.refereeId || value.userId) {
+            return [`Referee #${value.refereeId || value.userId}`];
+        }
+    }
+
+    return [];
+};
+
+const getRefereeNames = (tournament) => {
+    const sources = [
+        tournament.referees,
+        tournament.assignedReferees,
+        tournament.refereeAssignments,
+        tournament.raceReferees,
+        tournament.tournamentReferees,
+        tournament.referee,
+        tournament.assignedReferee,
+        tournament.refereeName,
+        tournament.assignedRefereeName,
+        tournament.refereeFullName,
+    ];
+
+    return [...new Set(sources
+        .flatMap(normalizeRefereeNames)
+        .map((name) => String(name).trim())
+        .filter(Boolean))];
+};
+
 const filterSelectClass = 'h-full w-full min-w-0 cursor-pointer border-0 bg-transparent p-0 text-[0.8rem] font-extrabold text-[#5b403c] outline-0';
 const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
 const editFieldClass = 'grid gap-1.5';
@@ -93,9 +154,18 @@ function RaceManagement() {
     useEffect(() => {
         let isMounted = true;
 
-        adminApi.getTournaments().then((payload) => {
+        adminApi.getTournaments().then(async (payload) => {
+            const tournamentsWithReferees = await Promise.all((payload || []).map(async (tournament) => {
+                try {
+                    const detail = await adminApi.getTournamentById(tournament.id);
+                    return { ...detail, ...tournament };
+                } catch {
+                    return tournament;
+                }
+            }));
+
             if (isMounted) {
-                setTournaments(payload);
+                setTournaments(tournamentsWithReferees);
             }
         });
 
@@ -275,10 +345,10 @@ function RaceManagement() {
                         </div>
 
                         <div className="w-full overflow-x-auto">
-                            <table className="w-full border-collapse max-[820px]:min-w-[980px]">
+                            <table className="w-full border-collapse max-[820px]:min-w-[1100px]">
                                 <thead>
                                     <tr>
-                                        {['Tournament Name', 'Timeline', 'Location', 'Max Horses', 'Prize Pool', 'Status', 'Actions'].map((heading) => (
+                                        {['Tournament Name', 'Timeline', 'Location', 'Max Horses', 'Prize Pool', 'Referee', 'Status', 'Actions'].map((heading) => (
                                             <th className="whitespace-nowrap border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] py-[18px] text-left text-[0.68rem] uppercase tracking-normal text-[#8b6e68]" key={heading}>
                                                 {heading}
                                             </th>
@@ -315,6 +385,19 @@ function RaceManagement() {
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">{tournament.maxHorses}</td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
                                                 <strong className="text-[0.95rem] text-[var(--admin-primary-dark)]">{adminApi.formatters.toMoney(tournament.prizePool)}</strong>
+                                            </td>
+                                            <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
+                                                {getRefereeNames(tournament).length > 0 ? (
+                                                    <div className="flex max-w-[180px] flex-wrap gap-1.5">
+                                                        {getRefereeNames(tournament).map((referee) => (
+                                                            <span className="inline-flex min-h-6 items-center rounded border border-[#e6d3cf] bg-[#fff7f5] px-2 text-[0.68rem] font-black text-[#6e5550]" key={`${tournament.id}-${referee}`}>
+                                                                {referee}
+                                                            </span>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-[0.76rem] font-extrabold text-[#9a817c]">Unassigned</span>
+                                                )}
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
                                                 <span className={`inline-flex min-h-6 items-center rounded border px-2.5 text-[0.68rem] font-black uppercase ${statusClass[formatClass(tournament.status)]}`}>
