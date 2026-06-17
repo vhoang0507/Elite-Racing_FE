@@ -167,7 +167,12 @@ function CreateTournament() {
                                 <div className={twoColumnClass}>
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Distance</span>
-                                        <input className={inputClass} name="distance" type="text" />
+                                        <select className={selectClass} defaultValue="" name="distance">
+                                            <option value="" disabled>Select Distance</option>
+                                            <option value="1000">1000</option>
+                                            <option value="1500">1500</option>
+                                            <option value="2400">2400</option>
+                                        </select>
                                     </label>
 
                                     <label className={fieldClass}>
@@ -185,7 +190,17 @@ function CreateTournament() {
 
                                 <label className={`${fieldClass} w-[min(310px,100%)] max-[760px]:w-full`}>
                                     <span className={labelClass}>Horse Breed</span>
-                                    <input className={inputClass} name="breed" type="text" />
+                                    <select className={selectClass} defaultValue="" name="breed">
+                                        <option value="" disabled>Select Horse Breed</option>
+                                        <option value="Akhal-Teke">Akhal-Teke</option>
+                                        <option value="Appaloosa">Appaloosa</option>
+                                        <option value="Arabian">Arabian</option>
+                                        <option value="Friesian">Friesian</option>
+                                        <option value="Hanoverian">Hanoverian</option>
+                                        <option value="Mustang">Mustang</option>
+                                        <option value="Quarter Horse">Quarter Horse</option>
+                                        <option value="Thoroughbred">Thoroughbred</option>
+                                    </select>
                                 </label>
 
                                 <div className={fourColumnClass}>

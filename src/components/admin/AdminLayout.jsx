@@ -21,17 +21,7 @@ import {
     FaUsers,
 } from 'react-icons/fa';
 
-import { clearAuthSession } from '../../utils/tokenStorage';
-
-const adminAccount = {
-    initials: 'EC',
-    name: 'Ethan Crawford',
-    role: 'ADMIN',
-    email: 'ethan.crawford@eliteracing.com',
-    id: 'AD-0001',
-    department: 'League Operations',
-    status: 'Active',
-};
+import { clearAuthSession, getAuthUser } from '../../utils/tokenStorage';
 
 const navigation = [
     {
@@ -101,6 +91,20 @@ const iconButtonClasses = [
     'hover:bg-[#f8e5e1]',
 ].join(' ');
 
+function readUserField(user, camelKey, pascalKey = camelKey[0].toUpperCase() + camelKey.slice(1)) {
+    return user?.[camelKey] ?? user?.[pascalKey];
+}
+
+function getInitials(name) {
+    return name
+        ?.split(' ')
+        .filter(Boolean)
+        .map((word) => word[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase() || 'AD';
+}
+
 function AdminLayout({
     activeKey,
     children,
@@ -111,6 +115,13 @@ function AdminLayout({
 }) {
     const navigate = useNavigate();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const authUser = getAuthUser();
+    const accountName = readUserField(authUser, 'fullName') || 'Admin';
+    const accountRole = readUserField(authUser, 'role') || 'Admin';
+    const accountEmail = readUserField(authUser, 'email') || 'No email loaded';
+    const accountStatus = readUserField(authUser, 'status') || 'N/A';
+    const accountId = readUserField(authUser, 'userId') || readUserField(authUser, 'id');
+    const accountInitials = getInitials(accountName);
 
     const handleLogout = () => {
         clearAuthSession();
@@ -133,12 +144,12 @@ function AdminLayout({
 
                 <div className="flex items-center gap-3 px-1.5 py-2">
                     <div className="grid h-[42px] w-[42px] flex-none place-items-center overflow-hidden rounded-full bg-[linear-gradient(145deg,#650404,#c04733)] text-[0.8rem] font-extrabold text-white">
-                        EC
+                        {accountInitials}
                     </div>
                     <div>
-                        <strong className="block text-[var(--admin-ink)]">Ethan Crawford</strong>
+                        <strong className="block text-[var(--admin-ink)]">{accountName}</strong>
                         <span className="mt-0.5 block text-[0.72rem] font-extrabold text-[var(--admin-primary)]">
-                            ADMIN
+                            {accountRole.toUpperCase()}
                         </span>
                     </div>
                 </div>
@@ -223,7 +234,7 @@ function AdminLayout({
                                 onClick={() => setIsProfileOpen((current) => !current)}
                                 type="button"
                             >
-                                {adminAccount.initials}
+                                {accountInitials}
                             </button>
 
                             {isProfileOpen && (
@@ -233,12 +244,12 @@ function AdminLayout({
                                 >
                                     <div className="flex items-center gap-3">
                                         <div className="grid h-14 w-14 flex-none place-items-center rounded-full bg-[linear-gradient(145deg,#650404,#c04733)] text-[0.95rem] font-black text-white">
-                                            {adminAccount.initials}
+                                            {accountInitials}
                                         </div>
                                         <div className="min-w-0">
-                                            <strong className="block truncate text-[1.05rem] text-[var(--admin-ink)]">{adminAccount.name}</strong>
+                                            <strong className="block truncate text-[1.05rem] text-[var(--admin-ink)]">{accountName}</strong>
                                             <span className="mt-1 inline-flex rounded-full bg-[#ffe8e4] px-2.5 py-1 text-[0.66rem] font-black text-[var(--admin-primary)]">
-                                                {adminAccount.role}
+                                                {accountRole.toUpperCase()}
                                             </span>
                                         </div>
                                     </div>
@@ -246,21 +257,21 @@ function AdminLayout({
                                     <div className="grid gap-2 text-[0.84rem]">
                                         <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
                                             <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Email</span>
-                                            <strong className="break-words text-[var(--admin-ink)]">{adminAccount.email}</strong>
+                                            <strong className="break-words text-[var(--admin-ink)]">{accountEmail}</strong>
                                         </div>
                                         <div className="grid grid-cols-2 gap-2">
                                             <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
                                                 <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Account ID</span>
-                                                <strong>{adminAccount.id}</strong>
+                                                <strong>{accountId ? `AD-${String(accountId).padStart(5, '0')}` : 'N/A'}</strong>
                                             </div>
                                             <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
                                                 <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Status</span>
-                                                <strong className="text-[#0aa15f]">{adminAccount.status}</strong>
+                                                <strong className="text-[#0aa15f]">{accountStatus}</strong>
                                             </div>
                                         </div>
                                         <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
                                             <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Department</span>
-                                            <strong>{adminAccount.department}</strong>
+                                            <strong>League Operations</strong>
                                         </div>
                                     </div>
 
