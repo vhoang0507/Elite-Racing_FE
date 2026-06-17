@@ -115,10 +115,7 @@ function RefereeAssignedRace() {
                                 <span>Final Result Certification</span>
                             </div>
 
-                            <div className="flex items-center gap-3">
-                                <FaFileAlt className="text-gray-500" />
-                                <span>Post-Event Summary</span>
-                            </div>
+
 
                         </div>
 
