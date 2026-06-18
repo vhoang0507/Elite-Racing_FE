@@ -92,10 +92,14 @@ export default function JockeyAssignment() {
                 </div>
 
                 {/* Main Content */}
-                <div className="grid grid-cols-[220px_1fr] gap-5 max-[900px]:grid-cols-1">
-                    <HorseInfo />
+                {hasTournament ? (
+                    <div className="grid grid-cols-[220px_1fr] gap-5 max-[900px]:grid-cols-1">
+                        <HorseInfo horseName={selectedRegistration.horseName} />
+                        <JockeyGrid onInvite={setSelectedJockey} disableInvite={!hasTournament} />
+                    </div>
+                ) : (
                     <JockeyGrid onInvite={setSelectedJockey} disableInvite={!hasTournament} />
-                </div>
+                )}
             </section>
 
             {selectedJockey && (
