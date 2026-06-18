@@ -176,7 +176,13 @@ function AdminDashboard() {
     };
 
     const handleApproval = async (approval, nextStatus) => {
-        if (approval.source === 'user') {
+        if (approval.source === 'user' && approval.role === 'Jockey') {
+            if (nextStatus === 'Active' || nextStatus === 'Approved') {
+                await adminApi.approveVerification(approval.id);
+            } else {
+                await adminApi.rejectVerification(approval.id);
+            }
+        } else if (approval.source === 'user') {
             await adminApi.updateUserStatus(approval.id, nextStatus);
         } else {
             await adminApi.updateHorseApproval(approval.id, nextStatus);

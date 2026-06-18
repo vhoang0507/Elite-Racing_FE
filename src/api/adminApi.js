@@ -379,8 +379,11 @@ async function approveVerification(id) {
     return apiRequest(`/admin/verifications/${id}/approve`, { method: 'PUT' });
 }
 
-async function rejectVerification(id) {
-    return apiRequest(`/admin/verifications/${id}/reject`, { method: 'PUT' });
+async function rejectVerification(id, reason) {
+    return apiRequest(`/admin/verifications/${id}/reject`, {
+        method: 'PUT',
+        body: JSON.stringify({ reason }),
+    });
 }
 
 // ─── Notifications (no BE endpoint yet - placeholder) ────────────────────────
