@@ -10,7 +10,6 @@ import {
 
 import {
     FaBolt,
-    FaChevronLeft,
     FaChevronRight,
     FaFlagCheckered,
     FaHorseHead,
@@ -54,7 +53,7 @@ const iconByTone = {
     orange: FaHorseHead,
 };
 
-const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[0.78rem] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
+const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
 const pageSize = 5;
 
 const matchesQuery = (submission, query) => {
@@ -186,13 +185,11 @@ function ValidateResults() {
                             </table>
                         </div>
 
-                        <div className="flex min-h-16 items-center justify-between gap-[18px] px-6 py-3.5 text-[0.78rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch">
-                            <span>Showing {firstShown} to {lastShown} of {filteredSubmissions.length} results</span>
+                        <div className="flex min-h-[68px] items-center justify-between gap-[18px] px-[22px] py-4 text-[0.82rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch">
+                            <span>Showing {firstShown} - {lastShown} of {filteredSubmissions.length} results</span>
 
                             <div className="flex items-center gap-2 max-[820px]:flex-wrap">
-                                <button aria-label="Previous page" className={pageButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">
-                                    <FaChevronLeft aria-hidden="true" className="h-2.5 w-2.5" />
-                                </button>
+                                <button aria-label="Previous page" className={pageButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">&lt;</button>
                                 {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
                                     <button
                                         className={`${pageButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]' : ''}`}
@@ -203,9 +200,7 @@ function ValidateResults() {
                                         {pageNumber}
                                     </button>
                                 ))}
-                                <button aria-label="Next page" className={pageButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">
-                                    <FaChevronRight aria-hidden="true" className="h-2.5 w-2.5" />
-                                </button>
+                                <button aria-label="Next page" className={pageButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">&gt;</button>
                             </div>
                         </div>
                     </section>

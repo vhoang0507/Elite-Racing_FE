@@ -46,6 +46,8 @@ const rankClass = {
     bronze: 'bg-[#f3c29a] text-[#79430c]',
 };
 const rankTone = ['gold', 'silver', 'bronze'];
+const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
+const pageSize = 4;
 
 const matchesQuery = (prediction, query) => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -71,6 +73,7 @@ function PredictionManagement() {
     const [accuracyFilter, setAccuracyFilter] = useState('all-accuracy');
     const [sortBy, setSortBy] = useState('count');
     const [actionMenu, setActionMenu] = useState(null);
+    const [page, setPage] = useState(1);
 
     useEffect(() => {
         let isMounted = true;
@@ -142,8 +145,24 @@ function PredictionManagement() {
             tone: rankTone[index],
         })), [predictions]);
 
+    const totalPages = Math.max(1, Math.ceil(filteredPredictions.length / pageSize));
+    const visiblePredictions = filteredPredictions.slice((page - 1) * pageSize, page * pageSize);
+    const firstShown = filteredPredictions.length === 0 ? 0 : (page - 1) * pageSize + 1;
+    const lastShown = Math.min(page * pageSize, filteredPredictions.length);
+
     const handleQueryChange = (value) => {
         setQuery(value);
+        setPage(1);
+    };
+
+    const handleFilterChange = (setter) => (event) => {
+        setter(event.target.value);
+        setPage(1);
+    };
+
+    const handleSortToggle = () => {
+        setSortBy((current) => (current === 'count' ? 'horse' : current === 'horse' ? 'tournament' : 'count'));
+        setPage(1);
     };
 
     const handleActionToggle = (event, predictionId) => {
@@ -213,7 +232,7 @@ function PredictionManagement() {
                         </label>
 
                         <label className={selectFieldClass}>
-                            <select className={selectClass} onChange={(event) => setTournamentFilter(event.target.value)} value={tournamentFilter}>
+                            <select className={selectClass} onChange={handleFilterChange(setTournamentFilter)} value={tournamentFilter}>
                                 <option value="all-tournaments">All Tournaments</option>
                                 {tournaments.map((tournament) => (
                                     <option key={tournament} value={tournament}>{tournament}</option>
@@ -223,7 +242,7 @@ function PredictionManagement() {
                         </label>
 
                         <label className={selectFieldClass}>
-                            <select className={selectClass} onChange={(event) => setStatusFilter(event.target.value)} value={statusFilter}>
+                            <select className={selectClass} onChange={handleFilterChange(setStatusFilter)} value={statusFilter}>
                                 <option value="all-status">Status: All</option>
                                 <option value="pending">Pending</option>
                                 <option value="locked">Locked</option>
@@ -234,7 +253,7 @@ function PredictionManagement() {
                         </label>
 
                         <label className={selectFieldClass}>
-                            <select className={selectClass} onChange={(event) => setAccuracyFilter(event.target.value)} value={accuracyFilter}>
+                            <select className={selectClass} onChange={handleFilterChange(setAccuracyFilter)} value={accuracyFilter}>
                                 <option value="all-accuracy">Accuracy: Any</option>
                                 <option value="high">High Accuracy</option>
                                 <option value="medium">Medium Accuracy</option>
@@ -242,7 +261,7 @@ function PredictionManagement() {
                             <FaChevronDown aria-hidden="true" />
                         </label>
 
-                        <button className="inline-flex h-[42px] cursor-pointer items-center justify-center gap-2 rounded-md bg-[var(--admin-primary)] px-3 font-black text-white hover:bg-[var(--admin-primary-dark)]" onClick={() => setSortBy((current) => (current === 'count' ? 'horse' : current === 'horse' ? 'tournament' : 'count'))} type="button">
+                        <button className="inline-flex h-[42px] cursor-pointer items-center justify-center gap-2 rounded-md bg-[var(--admin-primary)] px-3 font-black text-white hover:bg-[var(--admin-primary-dark)]" onClick={handleSortToggle} type="button">
                             <FaSortAmountDown aria-hidden="true" />
                             <span>Sort</span>
                         </button>
@@ -265,7 +284,7 @@ function PredictionManagement() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredPredictions.map((prediction) => (
+                                    {visiblePredictions.map((prediction) => (
                                         <tr key={prediction.id}>
                                             <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">{prediction.tournament}</td>
                                             <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">{prediction.spectator}</td>
@@ -318,12 +337,22 @@ function PredictionManagement() {
                             </table>
                         </div>
 
-                        <div className="flex min-h-[62px] items-center justify-between gap-4 px-[22px] py-4 text-[0.82rem] font-bold text-[var(--admin-muted)]">
-                            <span>Showing {filteredPredictions.length} of {predictions.length} predictions</span>
+                        <div className="flex min-h-[68px] items-center justify-between gap-[18px] px-[22px] py-4 text-[0.82rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch">
+                            <span>Showing {firstShown} - {lastShown} of {filteredPredictions.length} predictions</span>
 
-                            <div className="flex items-center gap-2">
-                                <button aria-label="Previous page" className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" type="button">&lt;</button>
-                                <button aria-label="Next page" className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" type="button">&gt;</button>
+                            <div className="flex items-center gap-2 max-[820px]:flex-wrap">
+                                <button aria-label="Previous page" className={paginationButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">&lt;</button>
+                                {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+                                    <button
+                                        className={`${paginationButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]' : ''}`}
+                                        key={pageNumber}
+                                        onClick={() => setPage(pageNumber)}
+                                        type="button"
+                                    >
+                                        {pageNumber}
+                                    </button>
+                                ))}
+                                <button aria-label="Next page" className={paginationButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">&gt;</button>
                             </div>
                         </div>
                     </section>

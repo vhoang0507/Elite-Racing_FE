@@ -7,8 +7,6 @@ import {
 import {
     FaBell,
     FaCalendarCheck,
-    FaChevronLeft,
-    FaChevronRight,
     FaClock,
     FaExclamationTriangle,
     FaFlagCheckered,
@@ -66,7 +64,7 @@ const iconByTone = {
 };
 
 const selectClass = 'h-full w-full min-w-0 cursor-pointer border-0 bg-transparent px-0 pr-6 text-[0.78rem] font-bold text-[#5f4b47] outline-0';
-const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--notifications-line)] bg-[#fffdfc] text-[0.78rem] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
+const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
 const pageSize = 4;
 
 const matchesQuery = (notification, query) => {
@@ -326,13 +324,11 @@ function Notifications() {
                         })}
                     </section>
 
-                    <div className={`${panelWidthClass} flex min-h-[58px] items-center justify-between gap-[18px] border-t border-[var(--notifications-line)] pt-2.5 text-[0.78rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch`}>
-                        <span>Showing {firstShown} to {lastShown} of {filteredNotifications.length} entries</span>
+                    <div className={`${panelWidthClass} flex min-h-[68px] items-center justify-between gap-[18px] px-[22px] py-4 text-[0.82rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch`}>
+                        <span>Showing {firstShown} - {lastShown} of {filteredNotifications.length} entries</span>
 
                         <div className="flex items-center gap-2 max-[820px]:flex-wrap">
-                            <button aria-label="Previous page" className={paginationButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">
-                                <FaChevronLeft aria-hidden="true" className="h-2.5 w-2.5" />
-                            </button>
+                            <button aria-label="Previous page" className={paginationButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">&lt;</button>
                             {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
                                 <button
                                     className={`${paginationButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]' : ''}`}
@@ -343,9 +339,7 @@ function Notifications() {
                                     {pageNumber}
                                 </button>
                             ))}
-                            <button aria-label="Next page" className={paginationButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">
-                                <FaChevronRight aria-hidden="true" className="h-2.5 w-2.5" />
-                            </button>
+                            <button aria-label="Next page" className={paginationButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">&gt;</button>
                         </div>
                     </div>
                 </section>

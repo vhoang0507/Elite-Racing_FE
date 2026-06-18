@@ -7,8 +7,6 @@ import {
 import {
     FaCalendarCheck,
     FaCheck,
-    FaChevronLeft,
-    FaChevronRight,
     FaExclamationTriangle,
     FaEye,
     FaTimes,
@@ -46,7 +44,7 @@ const statusClass = {
 };
 
 const badgeClass = 'inline-flex min-h-[22px] items-center rounded border px-2 text-[0.68rem] font-black uppercase';
-const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-transparent bg-white font-extrabold text-[var(--admin-ink)] hover:border-[var(--admin-border)] hover:text-[var(--admin-primary)]';
+const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
 const pageSize = 5;
 
 const matchesQuery = (user, query) => {
@@ -240,20 +238,14 @@ function UserManagement() {
                             </table>
                         </div>
 
-                        <div className="flex items-center justify-between gap-[18px] px-5 py-3.5 text-[0.82rem] font-bold text-[var(--admin-ink)] max-[780px]:flex-col max-[780px]:items-stretch">
+                        <div className="flex min-h-[68px] items-center justify-between gap-[18px] px-[22px] py-4 text-[0.82rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch">
                             <span>Showing {firstShown} - {lastShown} of {filteredUsers.length} entries</span>
 
-                            <div className="flex items-center gap-2 max-[780px]:flex-wrap">
-                                <label className="flex items-center gap-2">
-                                    <span>Jump to:</span>
-                                    <input className="h-[34px] w-12 rounded-md border border-[var(--admin-border)] px-2.5 text-center outline-0" inputMode="numeric" max={totalPages} min="1" onChange={(event) => setPage(Math.min(totalPages, Math.max(1, Number(event.target.value) || 1)))} value={page} />
-                                </label>
-                                <button aria-label="Previous page" className={paginationButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">
-                                    <FaChevronLeft aria-hidden="true" />
-                                </button>
+                            <div className="flex items-center gap-2 max-[820px]:flex-wrap">
+                                <button aria-label="Previous page" className={paginationButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">&lt;</button>
                                 {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
                                     <button
-                                        className={`${paginationButtonClass} ${pageNumber === page ? 'bg-[var(--admin-primary)] text-white hover:text-white' : ''}`}
+                                        className={`${paginationButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]' : ''}`}
                                         key={pageNumber}
                                         onClick={() => setPage(pageNumber)}
                                         type="button"
@@ -261,9 +253,7 @@ function UserManagement() {
                                         {pageNumber}
                                     </button>
                                 ))}
-                                <button aria-label="Next page" className={paginationButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">
-                                    <FaChevronRight aria-hidden="true" />
-                                </button>
+                                <button aria-label="Next page" className={paginationButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">&gt;</button>
                             </div>
                         </div>
                     </section>

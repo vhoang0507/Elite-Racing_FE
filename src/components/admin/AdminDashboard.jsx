@@ -86,6 +86,8 @@ function AdminDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [query, setQuery] = useState('');
     const [selectedUser, setSelectedUser] = useState(null);
+    const [isShowingAllTournaments, setIsShowingAllTournaments] = useState(false);
+    const [isShowingAllUsers, setIsShowingAllUsers] = useState(false);
 
     const todayLabel = useMemo(() => new Intl.DateTimeFormat('en-US', {
         day: 'numeric',
@@ -132,21 +134,45 @@ function AdminDashboard() {
     };
 
     const handleViewAllTournaments = async () => {
+        if (isShowingAllTournaments) {
+            const payload = await adminApi.getDashboard();
+
+            setDashboard((current) => ({
+                ...current,
+                tournaments: payload.tournaments,
+            }));
+            setIsShowingAllTournaments(false);
+            return;
+        }
+
         const tournaments = await adminApi.getTournaments();
 
         setDashboard((current) => ({
             ...current,
             tournaments,
         }));
+        setIsShowingAllTournaments(true);
     };
 
     const handleViewAllUsers = async () => {
+        if (isShowingAllUsers) {
+            const payload = await adminApi.getDashboard();
+
+            setDashboard((current) => ({
+                ...current,
+                users: payload.users,
+            }));
+            setIsShowingAllUsers(false);
+            return;
+        }
+
         const users = await adminApi.getUsers();
 
         setDashboard((current) => ({
             ...current,
             users,
         }));
+        setIsShowingAllUsers(true);
     };
 
     const handleApproval = async (approval, nextStatus) => {
@@ -262,17 +288,56 @@ function AdminDashboard() {
                                 <button className={sectionActionClass} onClick={handleViewAllUsers} type="button">View all</button>
                             </div>
 
-                            <div className="grid grid-cols-5 gap-3.5 overflow-x-auto p-[18px] [grid-template-columns:repeat(5,minmax(118px,1fr))]">
-                                {visibleUsers.map((user) => (
-                                    <article className="grid min-w-[118px] justify-items-center gap-[7px] rounded-lg border border-[var(--admin-border)] bg-[#fffdfc] px-2.5 py-4 text-center" key={user.name}>
-                                        <div className={`${avatarBaseClass} ${roleAvatarClass(user.role)}`}>
-                                            {user.avatar}
-                                        </div>
-                                        <strong className="block text-[0.9rem] text-[var(--admin-ink)]">{user.name}</strong>
-                                        <span className="text-[0.78rem] font-bold text-[var(--admin-muted)]">{user.role}</span>
-                                        <button className="min-h-6 cursor-pointer rounded-full bg-[#ffe8e4] px-[9px] text-[0.68rem] font-[850] text-[var(--admin-primary)]" onClick={() => setSelectedUser(user)} type="button">Details</button>
-                                    </article>
-                                ))}
+                            <div className="w-full overflow-x-auto">
+                                <table className="w-full border-collapse max-[720px]:min-w-[820px]">
+                                    <thead>
+                                        <tr>
+                                            <th className={tableHeadClass}>Full name</th>
+                                            <th className={tableHeadClass}>Email</th>
+                                            <th className={tableHeadClass}>Role</th>
+                                            <th className={tableHeadClass}>Status</th>
+                                            <th className={tableHeadClass}>Verified</th>
+                                            <th className={`${tableHeadClass} text-right`}>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {visibleUsers.map((user, index) => {
+                                            const isLast = index === visibleUsers.length - 1;
+                                            const status = statusKey(user.status);
+
+                                            return (
+                                                <tr key={user.id || user.email || user.name}>
+                                                    <td className={tableCellClass(isLast)}>
+                                                        <div className="flex min-w-[220px] items-center gap-3">
+                                                            <div className={`${avatarBaseClass} h-10 w-10 ${roleAvatarClass(user.role)}`}>
+                                                                {user.avatar}
+                                                            </div>
+                                                            <div>
+                                                                <strong className="block">{user.name}</strong>
+                                                                <span className="mt-1 block text-[var(--admin-muted)]">{user.id}</span>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className={tableCellClass(isLast)}>{user.email}</td>
+                                                    <td className={tableCellClass(isLast)}>{user.role}</td>
+                                                    <td className={tableCellClass(isLast)}>
+                                                        <span className={`inline-flex min-h-6 items-center rounded-[5px] border px-2 text-[0.74rem] font-extrabold ${statusClass[status] || statusClass.pending}`}>
+                                                            {user.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className={tableCellClass(isLast)}>
+                                                        <span className={`inline-grid h-[22px] w-[22px] place-items-center rounded-full ${user.verified ? 'text-[#0aa15f]' : 'text-[#d71920]'}`}>
+                                                            {user.verified ? <FaCheck aria-hidden="true" /> : <FaTimes aria-hidden="true" />}
+                                                        </span>
+                                                    </td>
+                                                    <td className={tableCellClass(isLast, 'right')}>
+                                                        <button className="min-h-6 cursor-pointer rounded-full bg-[#ffe8e4] px-[9px] text-[0.68rem] font-[850] text-[var(--admin-primary)]" onClick={() => setSelectedUser(user)} type="button">Details</button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </section>
