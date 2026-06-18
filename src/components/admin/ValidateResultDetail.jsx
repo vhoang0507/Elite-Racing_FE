@@ -10,12 +10,8 @@ import {
 } from 'react-router-dom';
 
 import {
-    FaChevronLeft,
-    FaChevronRight,
     FaFilter,
     FaRedoAlt,
-    FaStepBackward,
-    FaStepForward,
 } from 'react-icons/fa';
 
 import { adminApi } from '../../api/adminApi';
@@ -52,13 +48,15 @@ const statusClass = {
     banned: 'border-[#e8897d] bg-[#ffe8e4] text-[var(--admin-primary)]',
 };
 
-const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[0.78rem] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
+const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
+const pageSize = 5;
 
 function ValidateResultDetail() {
     const { resultId } = useParams();
     const [detail, setDetail] = useState(null);
     const [statusFilter, setStatusFilter] = useState('all');
     const [isPublishing, setIsPublishing] = useState(false);
+    const [page, setPage] = useState(1);
 
     const loadDetail = async () => {
         setDetail(await adminApi.getResultDetail(resultId));
@@ -87,6 +85,16 @@ function ValidateResultDetail() {
             statusFilter === 'all' || formatClass(result.status) === statusFilter
         ));
     }, [detail, statusFilter]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredResults.length / pageSize));
+    const visibleResults = filteredResults.slice((page - 1) * pageSize, page * pageSize);
+    const firstShown = filteredResults.length === 0 ? 0 : (page - 1) * pageSize + 1;
+    const lastShown = Math.min(page * pageSize, filteredResults.length);
+
+    const handleStatusFilterChange = (event) => {
+        setStatusFilter(event.target.value);
+        setPage(1);
+    };
 
     const handlePublish = async () => {
         setIsPublishing(true);
@@ -147,7 +155,7 @@ function ValidateResultDetail() {
                         <div className="flex min-h-[70px] items-center gap-3 border-b border-[var(--admin-border)] bg-[var(--validate-soft-panel)] px-6 py-3.5 max-[820px]:flex-col max-[820px]:items-stretch">
                             <label className="inline-flex h-[38px] w-[285px] items-center gap-2.5 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[#765d58] max-[820px]:w-full">
                                 <FaFilter aria-hidden="true" />
-                                <select className="h-full w-full min-w-0 cursor-pointer border-0 bg-transparent p-0 pr-6 text-[0.78rem] font-bold text-[var(--admin-ink)] outline-0" onChange={(event) => setStatusFilter(event.target.value)} value={statusFilter}>
+                                <select className="h-full w-full min-w-0 cursor-pointer border-0 bg-transparent p-0 pr-6 text-[0.78rem] font-bold text-[var(--admin-ink)] outline-0" onChange={handleStatusFilterChange} value={statusFilter}>
                                     <option value="all">All Statuses</option>
                                     <option value="pending">Pending</option>
                                     <option value="active">Active</option>
@@ -166,7 +174,7 @@ function ValidateResultDetail() {
                             </button>
 
                             <span className="ml-auto text-[0.72rem] font-extrabold text-[#5f4b47] max-[820px]:ml-0">
-                                Showing {filteredResults.length} of {detail.results.length} Entries
+                                Showing {firstShown} - {lastShown} of {filteredResults.length} Entries
                             </span>
                         </div>
 
@@ -183,7 +191,7 @@ function ValidateResultDetail() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredResults.map((result) => (
+                                    {visibleResults.map((result) => (
                                         <tr key={result.horse}>
                                             <td className="w-[150px] whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-5 pl-[62px] align-middle text-[0.78rem] font-bold text-[#6d5752] max-[820px]:pl-6">
                                                 <span className={`inline-grid h-7 w-7 place-items-center rounded-full text-[0.72rem] font-black ${positionClass[result.position]}`}>
@@ -213,31 +221,22 @@ function ValidateResultDetail() {
                             </table>
                         </div>
 
-                        <div className="grid min-h-[74px] grid-cols-[1fr_auto_1fr] items-center gap-[18px] bg-[#fffaf8] px-6 py-3.5 max-[820px]:grid-cols-1">
-                            <div className="flex items-center gap-2 max-[820px]:justify-center">
-                                <button aria-label="First page" className={pageButtonClass} type="button">
-                                    <FaStepBackward aria-hidden="true" className="h-3 w-3" />
-                                </button>
-                                <button aria-label="Previous page" className={pageButtonClass} type="button">
-                                    <FaChevronLeft aria-hidden="true" className="h-3 w-3" />
-                                </button>
-                            </div>
+                        <div className="flex min-h-[68px] items-center justify-between gap-[18px] px-[22px] py-4 text-[0.82rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch">
+                            <span>Showing {firstShown} - {lastShown} of {filteredResults.length} entries</span>
 
-                            <div className="flex items-center gap-2 max-[820px]:justify-center">
-                                <button className={`${pageButtonClass} border-[var(--admin-primary)] bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]`} type="button">1</button>
-                                <button className={pageButtonClass} type="button">2</button>
-                                <button className={pageButtonClass} type="button">3</button>
-                                <span className="font-black text-[#6f5b57]">...</span>
-                                <button className={pageButtonClass} type="button">5</button>
-                            </div>
-
-                            <div className="flex items-center justify-end gap-2 max-[820px]:justify-center">
-                                <button aria-label="Next page" className={pageButtonClass} type="button">
-                                    <FaChevronRight aria-hidden="true" className="h-3 w-3" />
-                                </button>
-                                <button aria-label="Last page" className={pageButtonClass} type="button">
-                                    <FaStepForward aria-hidden="true" className="h-3 w-3" />
-                                </button>
+                            <div className="flex items-center gap-2 max-[820px]:flex-wrap">
+                                <button aria-label="Previous page" className={pageButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">&lt;</button>
+                                {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+                                    <button
+                                        className={`${pageButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]' : ''}`}
+                                        key={pageNumber}
+                                        onClick={() => setPage(pageNumber)}
+                                        type="button"
+                                    >
+                                        {pageNumber}
+                                    </button>
+                                ))}
+                                <button aria-label="Next page" className={pageButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">&gt;</button>
                             </div>
                         </div>
                     </section>

@@ -50,7 +50,7 @@ const severityClass = {
 };
 
 const selectClass = 'h-[38px] min-w-[142px] cursor-pointer rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.78rem] font-bold text-[#5f4b47] outline-0';
-const pageButtonClass = 'min-h-[34px] cursor-pointer rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
+const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
 const pageSize = 4;
 
 const matchesQuery = (horse, query) => {
@@ -335,13 +335,13 @@ function HorseManagement() {
                             </table>
                         </div>
 
-                        <div className="flex min-h-[62px] items-center justify-between gap-[18px] px-5 py-3.5 text-[0.82rem] font-bold text-[var(--admin-muted)] max-[860px]:flex-col max-[860px]:items-stretch">
+                        <div className="flex min-h-[68px] items-center justify-between gap-[18px] px-[22px] py-4 text-[0.82rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch">
                             <span>Showing {firstShown} - {lastShown} of {filteredHorses.length} horses</span>
-                            <div className="flex items-center gap-2">
-                                <button className={pageButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">Previous</button>
+                            <div className="flex items-center gap-2 max-[820px]:flex-wrap">
+                                <button aria-label="Previous page" className={pageButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">&lt;</button>
                                 {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
                                     <button
-                                        className={`${pageButtonClass} ${pageNumber === page ? 'bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]' : ''}`}
+                                        className={`${pageButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]' : ''}`}
                                         key={pageNumber}
                                         onClick={() => setPage(pageNumber)}
                                         type="button"
@@ -349,7 +349,7 @@ function HorseManagement() {
                                         {pageNumber}
                                     </button>
                                 ))}
-                                <button className={pageButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">Next</button>
+                                <button aria-label="Next page" className={pageButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">&gt;</button>
                             </div>
                         </div>
                     </section>
