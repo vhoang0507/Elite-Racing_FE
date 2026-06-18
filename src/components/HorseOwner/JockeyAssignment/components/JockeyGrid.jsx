@@ -11,66 +11,67 @@ const healthColor = {
     Injured: { color: "#721c24" },
 };
 
-export default function JockeyGrid({ onInvite }) {
+export default function JockeyGrid({ onInvite, disableInvite = false }) {
     return (
         <div style={styles.grid}>
-            {jockeys.map((jockey, i) => (
-                <div key={i} style={styles.card}>
-                    {/* Image */}
-                    <div style={styles.imgWrapper}>
-                        <img src={jockey.img} alt={jockey.name} style={styles.img} />
-                        <span style={{
-                            ...styles.statusBadge,
-                            backgroundColor: jockey.status === "ACTIVE" ? "#d4edda" : "#f8d7da",
-                            color: jockey.status === "ACTIVE" ? "#155724" : "#721c24",
-                        }}>
-                            {jockey.status}
-                        </span>
-                    </div>
-
-                    {/* Name */}
-                    <p style={styles.name}>{jockey.name}</p>
-
-                    {/* Stats */}
-                    <div style={styles.statsRow}>
-                        <div style={styles.stat}>
-                            <small style={styles.statLabel}>EXPERIENCE</small>
-                            <p style={styles.statValue}>{jockey.experience} Years</p>
+            {jockeys.map((jockey, i) => {
+                const canInvite = jockey.status === "ACTIVE" && !disableInvite;
+                return (
+                    <div key={i} style={styles.card}>
+                        <div style={styles.imgWrapper}>
+                            <img src={jockey.img} alt={jockey.name} style={styles.img} />
+                            <span style={{
+                                ...styles.statusBadge,
+                                backgroundColor: jockey.status === "ACTIVE" ? "#d4edda" : "#f8d7da",
+                                color: jockey.status === "ACTIVE" ? "#155724" : "#721c24",
+                            }}>
+                                {jockey.status}
+                            </span>
                         </div>
-                        <div style={styles.stat}>
-                            <small style={styles.statLabel}>WEIGHT</small>
-                            <p style={styles.statValue}>{jockey.weight}</p>
+
+                        <p style={styles.name}>{jockey.name}</p>
+
+                        <div style={styles.statsRow}>
+                            <div style={styles.stat}>
+                                <small style={styles.statLabel}>EXPERIENCE</small>
+                                <p style={styles.statValue}>{jockey.experience} Years</p>
+                            </div>
+                            <div style={styles.stat}>
+                                <small style={styles.statLabel}>WEIGHT</small>
+                                <p style={styles.statValue}>{jockey.weight}</p>
+                            </div>
+                            <div style={styles.stat}>
+                                <small style={styles.statLabel}>HEALTH</small>
+                                <p style={{ ...styles.statValue, ...healthColor[jockey.health] }}>{jockey.health}</p>
+                            </div>
                         </div>
-                        <div style={styles.stat}>
-                            <small style={styles.statLabel}>HEALTH</small>
-                            <p style={{ ...styles.statValue, ...healthColor[jockey.health] }}>{jockey.health}</p>
+
+                        <div style={styles.divider} />
+
+                        <div style={styles.infoRow}>
+                            <span style={styles.infoLabel}>Distance Skill</span>
+                            <span style={styles.infoValue}>{jockey.distance}</span>
                         </div>
-                    </div>
+                        <div style={styles.infoRow}>
+                            <span style={styles.infoLabel}>Breed Skill</span>
+                            <span style={styles.infoValue}>{jockey.breed}</span>
+                        </div>
 
-                    <div style={styles.divider} />
-
-                    <div style={styles.infoRow}>
-                        <span style={styles.infoLabel}>Distance Skill</span>
-                        <span style={styles.infoValue}>{jockey.distance}</span>
+                        <button
+                            style={{
+                                ...styles.inviteBtn,
+                                backgroundColor: canInvite ? "#8B0000" : "#ccc",
+                                cursor: canInvite ? "pointer" : "not-allowed",
+                            }}
+                            disabled={!canInvite}
+                            title={disableInvite ? "Vui lòng chọn một giải đấu đã được duyệt trước" : undefined}
+                            onClick={() => canInvite && onInvite(jockey)}
+                        >
+                            Send Invitation
+                        </button>
                     </div>
-                    <div style={styles.infoRow}>
-                        <span style={styles.infoLabel}>Breed Skill</span>
-                        <span style={styles.infoValue}>{jockey.breed}</span>
-                    </div>
-
-                    {/* Button */}
-                    <button
-                        style={{
-                            ...styles.inviteBtn,
-                            backgroundColor: jockey.status === "ACTIVE" ? "#8B0000" : "#ccc",
-                            cursor: jockey.status === "ACTIVE" ? "pointer" : "not-allowed",
-                        }}
-                        onClick={() => jockey.status === "ACTIVE" && onInvite(jockey)}
-                    >
-                        Send Invitation
-                    </button>
-                </div>
-            ))}
+                );
+            })}
         </div>
     );
 }

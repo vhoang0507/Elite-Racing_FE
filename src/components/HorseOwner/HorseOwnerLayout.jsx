@@ -13,13 +13,7 @@ import {
     FaUserFriends,
 } from 'react-icons/fa';
 
-import { clearAuthSession } from '../../utils/tokenStorage';
-
-const ownerAccount = {
-    initials: 'ES',
-    name: 'Ella Smith',
-    role: 'HORSE OWNER',
-};
+import { clearAuthSession, getAuthUser } from '../../utils/tokenStorage';
 
 const navigation = [
     { key: 'dashboard', label: 'Dashboard', icon: FaChartLine, path: '/owner/dashboard' },
@@ -49,6 +43,8 @@ const iconButtonClasses = 'relative inline-flex h-[38px] w-[38px] cursor-pointer
 function HorseOwnerLayout({ activeKey, children }) {
     const navigate = useNavigate();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const user = getAuthUser();
+    const initials = user?.fullName?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() ?? 'HO';
 
     const handleLogout = () => {
         clearAuthSession();
@@ -66,12 +62,12 @@ function HorseOwnerLayout({ activeKey, children }) {
 
                 <div className="flex items-center gap-3 px-1.5 py-2">
                     <div className="grid h-[42px] w-[42px] flex-none place-items-center rounded-full bg-[linear-gradient(145deg,#650404,#c04733)] text-[0.8rem] font-extrabold text-white">
-                        {ownerAccount.initials}
+                        {initials}
                     </div>
                     <div>
-                        <strong className="block text-[var(--admin-ink)]">{ownerAccount.name}</strong>
+                        <strong className="block text-[var(--admin-ink)]">{user?.fullName ?? 'Horse Owner'}</strong>
                         <span className="mt-0.5 block text-[0.72rem] font-extrabold text-[var(--admin-primary)]">
-                            {ownerAccount.role}
+                            HORSE OWNER
                         </span>
                     </div>
                 </div>
@@ -126,7 +122,7 @@ function HorseOwnerLayout({ activeKey, children }) {
                             onClick={() => setIsProfileOpen(!isProfileOpen)}
                             type="button"
                         >
-                            {ownerAccount.initials}
+                            {initials}
                         </button>
                     </div>
                 </header>
