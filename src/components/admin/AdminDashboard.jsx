@@ -131,6 +131,24 @@ function AdminDashboard() {
         setDashboard(await adminApi.getDashboard());
     };
 
+    const handleViewAllTournaments = async () => {
+        const tournaments = await adminApi.getTournaments();
+
+        setDashboard((current) => ({
+            ...current,
+            tournaments,
+        }));
+    };
+
+    const handleViewAllUsers = async () => {
+        const users = await adminApi.getUsers();
+
+        setDashboard((current) => ({
+            ...current,
+            users,
+        }));
+    };
+
     const handleApproval = async (approval, nextStatus) => {
         if (approval.source === 'user') {
             await adminApi.updateUserStatus(approval.id, nextStatus);
@@ -189,7 +207,7 @@ function AdminDashboard() {
                         <div className={panelClass}>
                             <div className={sectionHeadClass}>
                                 <h2 className="m-0 text-[1.05rem] text-[var(--admin-ink)]">Manage Tournaments</h2>
-                                <button className={sectionActionClass} type="button">View all</button>
+                                <button className={sectionActionClass} onClick={handleViewAllTournaments} type="button">View all</button>
                             </div>
 
                             <div className="w-full overflow-x-auto">
@@ -241,7 +259,7 @@ function AdminDashboard() {
                         <div className={panelClass}>
                             <div className={sectionHeadClass}>
                                 <h2 className="m-0 text-[1.05rem] text-[var(--admin-ink)]">Users</h2>
-                                <button className={sectionActionClass} type="button">View all</button>
+                                <button className={sectionActionClass} onClick={handleViewAllUsers} type="button">View all</button>
                             </div>
 
                             <div className="grid grid-cols-5 gap-3.5 overflow-x-auto p-[18px] [grid-template-columns:repeat(5,minmax(118px,1fr))]">
