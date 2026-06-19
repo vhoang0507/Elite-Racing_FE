@@ -5,7 +5,6 @@ import {
 } from 'react';
 
 import {
-    FaCalendarAlt,
     FaChartLine,
     FaCheck,
     FaClipboardCheck,
@@ -15,13 +14,13 @@ import {
     FaTrophy,
     FaUsers,
 } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 import AdminLayout from './AdminLayout';
 import { adminApi } from '../../api/adminApi';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 const headingClass = 'flex items-center justify-between gap-[18px] max-[720px]:flex-col max-[720px]:items-stretch';
-const quietButtonClass = 'inline-flex min-h-[38px] cursor-pointer items-center justify-center gap-[9px] rounded-md border border-[var(--admin-border)] bg-[var(--admin-surface)] px-3.5 font-extrabold text-[var(--admin-primary)] transition-colors duration-200 hover:bg-[#fff0ed]';
 const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]';
 const sectionHeadClass = 'flex min-h-[58px] items-center justify-between gap-[18px] border-b border-[var(--admin-border)] px-[22px] max-[720px]:flex-col max-[720px]:items-stretch';
 const sectionActionClass = 'rounded-full bg-[#ffe8e4] px-2.5 py-1.5 text-[0.72rem] font-black uppercase text-[var(--admin-primary)] transition-colors duration-200 hover:bg-[#ffd8d2]';
@@ -77,6 +76,7 @@ const matchesQuery = (values, query) => {
 };
 
 function AdminDashboard() {
+    const navigate = useNavigate();
     const [dashboard, setDashboard] = useState({
         stats: [],
         tournaments: [],
@@ -86,8 +86,6 @@ function AdminDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [query, setQuery] = useState('');
     const [selectedUser, setSelectedUser] = useState(null);
-    const [isShowingAllTournaments, setIsShowingAllTournaments] = useState(false);
-    const [isShowingAllUsers, setIsShowingAllUsers] = useState(false);
 
     const todayLabel = useMemo(() => new Intl.DateTimeFormat('en-US', {
         day: 'numeric',
@@ -110,7 +108,7 @@ function AdminDashboard() {
         };
     }, []);
 
-    const visibleTournaments = useMemo(() => dashboard.tournaments.filter((tournament) => matchesQuery([
+    const visibleTournaments = useMemo(() => dashboard.tournaments.filter((tournament) => statusKey(tournament.status) !== 'cancelled' && matchesQuery([
         tournament.name,
         tournament.description,
         tournament.city,
@@ -133,46 +131,12 @@ function AdminDashboard() {
         setDashboard(await adminApi.getDashboard());
     };
 
-    const handleViewAllTournaments = async () => {
-        if (isShowingAllTournaments) {
-            const payload = await adminApi.getDashboard();
-
-            setDashboard((current) => ({
-                ...current,
-                tournaments: payload.tournaments,
-            }));
-            setIsShowingAllTournaments(false);
-            return;
-        }
-
-        const tournaments = await adminApi.getTournaments();
-
-        setDashboard((current) => ({
-            ...current,
-            tournaments,
-        }));
-        setIsShowingAllTournaments(true);
+    const handleViewAllTournaments = () => {
+        navigate('/admin/races');
     };
 
-    const handleViewAllUsers = async () => {
-        if (isShowingAllUsers) {
-            const payload = await adminApi.getDashboard();
-
-            setDashboard((current) => ({
-                ...current,
-                users: payload.users,
-            }));
-            setIsShowingAllUsers(false);
-            return;
-        }
-
-        const users = await adminApi.getUsers();
-
-        setDashboard((current) => ({
-            ...current,
-            users,
-        }));
-        setIsShowingAllUsers(true);
+    const handleViewAllUsers = () => {
+        navigate('/admin/users');
     };
 
     const handleApproval = async (approval, nextStatus) => {
@@ -208,10 +172,6 @@ function AdminDashboard() {
                                 Today: {todayLabel}
                             </p>
                         </div>
-                        <button className={quietButtonClass} type="button">
-                            <FaCalendarAlt aria-hidden="true" />
-                            <span>June report</span>
-                        </button>
                     </div>
 
                     {isLoading ? (

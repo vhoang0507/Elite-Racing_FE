@@ -175,6 +175,7 @@ async function getTournaments() {
         distanceMeters: getTournamentDistanceMeters(t),
         registeredHorses: t.entriesCount || 0,
         prizePool: t.prizePool,
+        referee: t.referee && t.referee !== 'Unassigned' ? t.referee : null,
         status: t.status,
         rules: t.rules,
         createdAt: t.createdAt,

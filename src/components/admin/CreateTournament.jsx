@@ -10,7 +10,6 @@ import {
 
 import {
     FaDollarSign,
-    FaGavel,
     FaHorseHead,
     FaInfoCircle,
     FaMapMarkerAlt,
@@ -83,7 +82,9 @@ function CreateTournament() {
 
         // Validation
         const name = formData.get('name')?.trim();
-        const raceDate = formData.get('raceDate');
+        const raceDateTime = formData.get('raceDate');
+        const [raceDate, raceStartTimeValue = ''] = String(raceDateTime || '').split('T');
+        const raceStartTime = raceStartTimeValue.slice(0, 5);
         const registrationDeadline = formData.get('registrationDeadline');
         const distanceMeters = Number(formData.get('distanceMeters') || 0);
         const maxHorses = Number(formData.get('maxHorses') || 0);
@@ -92,7 +93,7 @@ function CreateTournament() {
             setError('Tournament name is required.');
             return;
         }
-        if (!raceDate) {
+        if (!raceDateTime || !raceDate || !raceStartTime) {
             setError('Race Date is required.');
             return;
         }
@@ -122,6 +123,7 @@ function CreateTournament() {
                     description: formData.get('breed') || formData.get('description') || null,
                     location: formData.get('location'),
                     raceDate,
+                    raceStartTime,
                     registrationDeadline,
                     distanceMeters,
                     maxHorses,
@@ -149,10 +151,6 @@ function CreateTournament() {
     const handleSubmit = (event) => {
         event.preventDefault();
         persistTournament(event.currentTarget);
-    };
-
-    const handleSaveDraft = (event) => {
-        persistTournament(event.currentTarget.form);
     };
 
     return (
@@ -198,7 +196,7 @@ function CreateTournament() {
                                 <div className={twoColumnClass}>
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Race Date</span>
-                                        <input className={inputClass} name="raceDate" type="date" />
+                                        <input className={inputClass} lang="en-US" name="raceDate" type="datetime-local" />
                                     </label>
 
                                     <label className={fieldClass}>
@@ -357,10 +355,6 @@ function CreateTournament() {
                                 </Link>
 
                                 <div className="flex items-center justify-end gap-3.5 max-[760px]:flex-col max-[760px]:items-stretch">
-                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]`} disabled={isSaving} onClick={handleSaveDraft} type="button">
-                                        <FaGavel aria-hidden="true" />
-                                        <span>{isSaving ? 'Saving...' : 'Save Draft'}</span>
-                                    </button>
                                     <button className={`${actionButtonClass} bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary-dark)]`} disabled={isSaving} type="submit">
                                         {isSaving ? 'Saving...' : 'Publish Tournament'}
                                     </button>
