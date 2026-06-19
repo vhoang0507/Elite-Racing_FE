@@ -499,7 +499,7 @@ function RaceManagement() {
                                     </label>
 
                                     <label className={editFieldClass}>
-                                        <span className={editLabelClass}>Class</span>
+                                        <span className={editLabelClass}>Breed</span>
                                         <input className={editControlClass} defaultValue={editingTournament.className} name="className" type="text" />
                                     </label>
 

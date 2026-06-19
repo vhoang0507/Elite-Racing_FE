@@ -222,7 +222,7 @@ function AdminLayout({
                     </label>
 
                     <div className="flex items-center gap-2 max-[720px]:justify-end">
-                        <button aria-label="Notifications" className={iconButtonClasses} type="button">
+                        <button aria-label="Notifications" className={iconButtonClasses} onClick={() => navigate('/admin/notifications')} type="button">
                             <FaBell aria-hidden="true" />
                             <span className="absolute right-2.5 top-[9px] h-2 w-2 rounded-full border-2 border-[var(--admin-surface)] bg-[var(--admin-primary)]" />
                         </button>
