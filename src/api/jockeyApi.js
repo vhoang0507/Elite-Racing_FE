@@ -38,6 +38,7 @@ export async function getJockeyDashboard() {
 
 // ─── Invitations ──────────────────────────────────────────────────────────────
 
+<<<<<<< HEAD
 export async function getPendingInvitations(params = {}) {
     const query = new URLSearchParams();
     if (params.search) query.set('search', params.search);
@@ -49,6 +50,10 @@ export async function getPendingInvitations(params = {}) {
 
 export async function getInvitationDetail(invitationId) {
     return apiRequest(`/jockey/invitations/${invitationId}`);
+=======
+export async function getPendingInvitations() {
+    return apiRequest('/jockey/invitations/pending');
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
 }
 
 export async function acceptInvitation(id) {
@@ -104,6 +109,7 @@ export async function markAllNotificationsAsRead() {
 export async function deleteNotification(id) {
     return apiRequest(`/jockey/notifications/${id}`, { method: 'DELETE' });
 }
+<<<<<<< HEAD
 
 // ─── Export grouped ──────────────────────────────────────────────────────────
 
@@ -134,6 +140,28 @@ export const jockeyApi = {
     getJockeyCalendar,
 
     // Notifications
+=======
+// ─── Export grouped ──────────────────────────────────────────────────────────
+
+export const jockeyApi = {
+    getJockeyProfile,
+    updateJockeyProfile,
+    updateJockeyVerification,
+    getJockeySettingsOptions,
+    getJockeyHorseBreeds,
+    getJockeyDashboard,
+    getJockeyCalendar,
+    getPendingInvitations,
+    getAcceptedRaces,
+    getRaceDetail,
+    acceptInvitation,
+    rejectInvitation,
+    getJockeyProfile,
+    updateJockeyProfile,
+    updateJockeyVerification,
+    getJockeySettingsOptions,
+    getJockeyHorseBreeds,
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
     getNotificationSummary,
     getNotifications,
     markNotificationAsRead,

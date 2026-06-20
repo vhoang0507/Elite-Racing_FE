@@ -10,7 +10,10 @@ import {
     FaQuestionCircle,
     FaSearch,
     FaSignOutAlt,
+<<<<<<< HEAD
     FaTrophy,
+=======
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
     FaUserFriends,
 } from 'react-icons/fa';
 
@@ -22,7 +25,10 @@ const navigation = [
     { key: 'register-horse', label: 'Register Horse', icon: FaPlusCircle, path: '/owner/register-horse' },
     { key: 'registrations', label: 'My Registrations', icon: FaClipboardList, path: '/owner/registrations' },
     { key: 'jockey', label: 'Jockey Assignment', icon: FaUserFriends, path: '/owner/jockey' },
+<<<<<<< HEAD
     { key: 'rewards', label: 'Result & Reward', icon: FaTrophy, path: '/owner/rewards' },
+=======
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
     { key: 'notifications', label: 'Notifications', icon: FaBell, path: '/owner/notifications' },
 ];
 

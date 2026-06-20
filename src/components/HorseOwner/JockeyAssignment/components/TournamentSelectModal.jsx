@@ -29,9 +29,13 @@ export default function TournamentSelectModal({ registrations, selectedId, onSel
                                 </div>
                                 <div style={styles.itemMeta}>
                                     <span>{r.raceDate}</span>
+<<<<<<< HEAD
                                     <span style={styles.statusBadge}>
                                         {r.hasOfficialJockey ? "OFFICIAL" : r.registrationStatus}
                                     </span>
+=======
+                                    <span style={styles.statusBadge}>{r.status}</span>
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
                                 </div>
                             </button>
                         ))}
@@ -89,7 +93,11 @@ const styles = {
         textAlign: "left",
     },
     itemActive: {
+<<<<<<< HEAD
         borderColor: "#610000",
+=======
+        borderColor: "#8B0000",
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
         backgroundColor: "#fff5f5",
     },
     itemMain: { display: "flex", flexDirection: "column" },

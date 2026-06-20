@@ -105,6 +105,7 @@ export async function getRegistrationJourney(registrationId) {
     return apiRequest(`/owner/registrations/${registrationId}/journey`);
 }
 
+<<<<<<< HEAD
 // ─── Jockey Assignment ───────────────────────────────────────────────────────
 
 export async function getJockeyAssignmentContext(registrationId) {
@@ -179,6 +180,8 @@ export async function getJockeyAssignmentRegistrations() {
     return apiRequest('/owner/jockey-assignment/registrations');
 }
 
+=======
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
 // ─── Export grouped ──────────────────────────────────────────────────────────
 
 export const ownerApi = {
@@ -200,6 +203,7 @@ export const ownerApi = {
     getApprovedRegistrationsList,
     getRegistrationDetail,
     getRegistrationJourney,
+<<<<<<< HEAD
     getJockeyAssignmentContext,
     getJockeyAssignmentSummary,
     getJockeyCandidates,
@@ -212,4 +216,6 @@ export const ownerApi = {
     getHorseResults,
     getHorsePerformance,
     getJockeyAssignmentRegistrations,
+=======
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
 };

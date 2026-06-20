@@ -41,8 +41,11 @@ import RefereeAssignedRace from '../components/referee/RefereeAssignedRace';
 import RefereeDashboard from '../components/referee/RefereeDashboard';
 import RefereeNotifications from '../components/referee/RefereeNotifications';
 import RefereeSetting from '../components/referee/RefereeSetting';
+<<<<<<< HEAD
 import ResultReward from '../components/HorseOwner/ResultReward';
 import HorseResultDetail from '../components/HorseOwner/ResultReward/HorseDetail';
+=======
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
 
 const appRoutes = [
     {
@@ -185,6 +188,7 @@ const appRoutes = [
         element: createElement(JockeyAssignment),
     },
     {
+<<<<<<< HEAD
         path: '/owner/rewards',
         element: createElement(ResultReward),
     },
@@ -193,6 +197,8 @@ const appRoutes = [
         element: createElement(HorseResultDetail),
     },
     {
+=======
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
         path: '/owner/notifications',
         element: createElement(HorseOwnerNotifications),
     },

@@ -1,16 +1,24 @@
+<<<<<<< HEAD
 import { useCallback, useEffect, useState } from "react";
+=======
+import { useEffect, useState } from "react";
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
 import HorseOwnerLayout from "../HorseOwnerLayout";
 import HorseInfo from "./components/HorseInfo";
 import JockeyGrid from "./components/JockeyGrid";
 import InvitationModal from "./components/InvitationModal";
 import TournamentSelectModal from "./components/TournamentSelectModal";
+<<<<<<< HEAD
 import ActivityTimeline from "./components/ActivityTimeline";
 import InvitationResponses from "./components/InvitationResponses";
+=======
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
 import { ownerApi } from "../../../api/ownerApi";
 
 export default function JockeyAssignment() {
     const [selectedJockey, setSelectedJockey] = useState(null);
     const [registrations, setRegistrations] = useState([]);
+<<<<<<< HEAD
     const [selectedRegistrationId, setSelectedRegistrationId] = useState(null);
     const [context, setContext] = useState(null);
     const [summary, setSummary] = useState({ invitedCount: 0, pendingCount: 0, acceptedCount: 0 });
@@ -26,12 +34,26 @@ export default function JockeyAssignment() {
     useEffect(() => {
         let mounted = true;
         ownerApi.getJockeyAssignmentRegistrations()
+=======
+    const [selectedRegistration, setSelectedRegistration] = useState(null);
+    const [isTournamentModalOpen, setIsTournamentModalOpen] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        let mounted = true;
+        ownerApi.getApprovedRegistrationsList()
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
             .then((data) => {
                 if (!mounted) return;
                 const list = data ?? [];
                 setRegistrations(list);
                 if (list.length > 0) {
+<<<<<<< HEAD
                     setSelectedRegistrationId(list[0].registrationId);
+=======
+                    setSelectedRegistration(list[0]);
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
                 }
             })
             .catch((err) => {
@@ -43,6 +65,7 @@ export default function JockeyAssignment() {
         return () => { mounted = false; };
     }, []);
 
+<<<<<<< HEAD
     const selectedRegistration = registrations.find(
         (r) => r.registrationId === selectedRegistrationId
     ) ?? null;
@@ -101,6 +124,9 @@ export default function JockeyAssignment() {
         setIsTournamentModalOpen(false);
         // reload context/candidates/summary/invitations tự động qua useEffect ở trên
     };
+=======
+    const hasTournament = Boolean(selectedRegistration);
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
 
     return (
         <HorseOwnerLayout activeKey="jockey">
@@ -108,6 +134,7 @@ export default function JockeyAssignment() {
                 <div className="flex items-center justify-between max-[720px]:flex-col max-[720px]:items-start max-[720px]:gap-3">
                     <div>
                         <h2 className="m-0 text-[1.8rem] text-[var(--admin-primary-dark)]">Jockey Assignment</h2>
+<<<<<<< HEAD
                         {hasTournament && (
                             <p className="m-0 mt-1 text-[0.85rem] text-[var(--admin-muted)]">
                                 Find the perfect match for your thoroughbred for {selectedRegistration.tournamentName}.
@@ -214,29 +241,101 @@ export default function JockeyAssignment() {
                             </div>
                         </div>
                     </>
+=======
+                        <p className="m-0 mt-1 text-[0.85rem] text-[var(--admin-muted)]">
+                            {hasTournament
+                                ? `Find the perfect match for your thoroughbred for ${selectedRegistration.tournamentName}.`
+                                : "Bạn chưa có giải đấu nào được duyệt. Hãy chọn một giải đã được duyệt để tiếp tục."}
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => setIsTournamentModalOpen(true)}
+                        className="inline-flex min-h-[38px] cursor-pointer items-center rounded-md bg-[var(--admin-primary)] px-5 font-bold text-white hover:bg-[var(--admin-primary-dark)]"
+                    >
+                        Change tournament
+                    </button>
+                </div>
+
+                {/* Tournament Info */}
+                {loading ? (
+                    <p className="text-[0.82rem] text-[var(--admin-muted)]">Loading...</p>
+                ) : hasTournament ? (
+                    <div className="flex flex-wrap gap-4 text-[0.82rem] text-[var(--admin-muted)]">
+                        <span>🏆 {selectedRegistration.tournamentName}</span>
+                        <span>📅 {selectedRegistration.raceDate}</span>
+                        <span>🐴 {selectedRegistration.horseName}</span>
+                    </div>
+                ) : (
+                    <div className="rounded-[var(--admin-radius)] border border-dashed border-[var(--admin-border)] bg-[#fff8f6] px-4 py-3 text-[0.82rem] text-[var(--admin-muted)]">
+                        Chưa có giải đấu nào được duyệt cho bạn. Việc gửi lời mời jockey sẽ tạm khoá cho đến khi bạn chọn một giải đã được duyệt.
+                    </div>
+                )}
+
+                {error && <p className="text-[0.82rem] text-red-700">{error}</p>}
+
+                {/* Filter Bar */}
+                <div className="flex flex-wrap gap-2.5">
+                    <input
+                        placeholder="Search jockey name..."
+                        className="h-9 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-white px-3 text-[0.82rem] outline-none focus:border-[var(--admin-primary)]"
+                        style={{ width: '220px' }}
+                    />
+                    <select className="h-9 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-white px-3 text-[0.82rem]">
+                        <option>Health Status</option>
+                        <option>Fit</option>
+                        <option>Injured</option>
+                        <option>Suspended</option>
+                    </select>
+                    <button className="h-9 cursor-pointer rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-white px-4 text-[0.82rem] font-bold hover:bg-[#f5f5f5]">Filter</button>
+                    <button className="h-9 cursor-pointer rounded-[var(--admin-radius)] border border-[#afe2c4] bg-[#dff7e9] px-4 text-[0.82rem] font-bold text-[#118548]">Active</button>
+                    <button className="h-9 cursor-pointer rounded-[var(--admin-radius)] border border-[#dbaaa5] bg-[#f5e1df] px-4 text-[0.82rem] font-bold text-[var(--admin-primary)]">Inactive</button>
+                </div>
+
+                {/* Main Content */}
+                {hasTournament ? (
+                    <div className="grid grid-cols-[220px_1fr] gap-5 max-[900px]:grid-cols-1">
+                        <HorseInfo horseName={selectedRegistration.horseName} />
+                        <JockeyGrid onInvite={setSelectedJockey} disableInvite={!hasTournament} />
+                    </div>
+                ) : (
+                    <JockeyGrid onInvite={setSelectedJockey} disableInvite={!hasTournament} />
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
                 )}
             </section>
 
             {selectedJockey && (
                 <InvitationModal
                     jockey={selectedJockey}
+<<<<<<< HEAD
                     registrationId={selectedRegistrationId}
                     tournamentName={selectedRegistration?.tournamentName}
                     onClose={() => setSelectedJockey(null)}
                     onSent={handleInvitationSent}
+=======
+                    onClose={() => setSelectedJockey(null)}
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
                 />
             )}
 
             {isTournamentModalOpen && (
                 <TournamentSelectModal
                     registrations={registrations}
+<<<<<<< HEAD
                     selectedId={selectedRegistrationId}
                     onSelect={handleChangeTournament}
+=======
+                    selectedId={selectedRegistration?.registrationId}
+                    onSelect={(r) => {
+                        setSelectedRegistration(r);
+                        setIsTournamentModalOpen(false);
+                    }}
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
                     onClose={() => setIsTournamentModalOpen(false)}
                 />
             )}
         </HorseOwnerLayout>
     );
+<<<<<<< HEAD
 }
 
 function StatCard({ icon, label, value }) {
@@ -249,4 +348,6 @@ function StatCard({ icon, label, value }) {
             </div>
         </div>
     );
+=======
+>>>>>>> 1224d1d5ed14a0ebf79afefffc13dc0813d468b0
 }
