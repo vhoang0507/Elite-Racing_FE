@@ -10,6 +10,7 @@ import Login from '../components/Login';
 import Register from '../components/Register';
 import VerifyEmail from '../components/VerifyEmail';
 import AdminDashboard from '../components/admin/AdminDashboard';
+import CreateRefereeAccount from '../components/admin/CreateRefereeAccount';
 import CreateTournament from '../components/admin/CreateTournament';
 import HorseManagement from '../components/admin/HorseManagement';
 import Notifications from '../components/admin/Notifications';
@@ -81,6 +82,10 @@ const appRoutes = [
     {
         path: '/admin/users',
         element: createElement(UserManagement),
+    },
+    {
+        path: '/admin/referees/create',
+        element: createElement(CreateRefereeAccount),
     },
     {
         path: '/admin/horses',

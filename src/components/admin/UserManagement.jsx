@@ -5,7 +5,12 @@ import {
 } from 'react';
 
 import {
+    useNavigate,
+} from 'react-router-dom';
+
+import {
     FaCalendarCheck,
+    FaChevronDown,
     FaCheck,
     FaExclamationTriangle,
     FaEye,
@@ -20,7 +25,9 @@ import AdminLayout from './AdminLayout';
 const formatClass = (value) => String(value || '').toLowerCase().replace(/\s+/g, '-');
 
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-7 px-11 py-9 max-[780px]:px-5';
-const selectClass = 'h-8 min-w-[86px] cursor-pointer appearance-none border-0 bg-transparent bg-[url("data:image/svg+xml,%3Csvg_width=%2714%27_height=%2714%27_viewBox=%270_0_14_14%27_fill=%27none%27_xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cpath_d=%27M3.5_5.25L7_8.75L10.5_5.25%27_stroke=%27%232b1d1b%27_stroke-width=%271.8%27_stroke-linecap=%27round%27_stroke-linejoin=%27round%27/%3E%3C/svg%3E")] bg-[length:14px_14px] bg-[right_2px_center] bg-no-repeat py-0 pl-0 pr-[26px] text-[0.8rem] font-bold text-[var(--admin-ink)] outline-0';
+const selectWrapClass = 'relative inline-flex min-w-[86px] items-center';
+const selectClass = 'h-8 min-w-[86px] cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-6 text-[0.8rem] font-bold text-[var(--admin-ink)] outline-0';
+const selectIconClass = 'pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-[0.7rem] text-[var(--admin-ink)]';
 
 const summaryIconClass = {
     users: 'text-[#ff9a8d]',
@@ -64,6 +71,7 @@ const matchesQuery = (user, query) => {
 };
 
 function UserManagement() {
+    const navigate = useNavigate();
     const [users, setUsers] = useState([]);
     const [query, setQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
@@ -147,28 +155,34 @@ function UserManagement() {
                         <div className="flex items-center justify-end gap-2 max-[1180px]:justify-start max-[780px]:flex-col max-[780px]:items-stretch">
                             <label className="inline-flex h-[38px] items-center gap-2 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.8rem] font-black text-[var(--admin-ink)] max-[780px]:w-full">
                                 <span>Role:</span>
-                                <select className={selectClass} onChange={handleFilterChange(setRoleFilter)} value={roleFilter}>
-                                    <option value="all">All</option>
-                                    <option value="admin">Admin</option>
-                                    <option value="horse-owner">Horse Owner</option>
-                                    <option value="jockey">Jockey</option>
-                                    <option value="referee">Referee</option>
-                                    <option value="spectator">Spectator</option>
-                                </select>
+                                <span className={selectWrapClass}>
+                                    <select className={selectClass} onChange={handleFilterChange(setRoleFilter)} value={roleFilter}>
+                                        <option value="all">All</option>
+                                        <option value="admin">Admin</option>
+                                        <option value="horse-owner">Horse Owner</option>
+                                        <option value="jockey">Jockey</option>
+                                        <option value="referee">Referee</option>
+                                        <option value="spectator">Spectator</option>
+                                    </select>
+                                    <FaChevronDown aria-hidden="true" className={selectIconClass} />
+                                </span>
                             </label>
 
                             <label className="inline-flex h-[38px] items-center gap-2 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.8rem] font-black text-[var(--admin-ink)] max-[780px]:w-full">
                                 <span>Status:</span>
-                                <select className={selectClass} onChange={handleFilterChange(setStatusFilter)} value={statusFilter}>
-                                    <option value="all">All</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                    <option value="banned">Banned</option>
-                                </select>
+                                <span className={selectWrapClass}>
+                                    <select className={selectClass} onChange={handleFilterChange(setStatusFilter)} value={statusFilter}>
+                                        <option value="all">All</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                        <option value="banned">Banned</option>
+                                    </select>
+                                    <FaChevronDown aria-hidden="true" className={selectIconClass} />
+                                </span>
                             </label>
 
-                            <button className="h-[38px] min-w-[92px] cursor-pointer rounded-md border-0 bg-[var(--admin-primary)] font-black text-white hover:bg-[var(--admin-primary-dark)] max-[780px]:w-full" onClick={() => setPage(1)} type="button">Search</button>
+                            <button className="h-[38px] min-w-[92px] cursor-pointer rounded-md border-0 bg-[var(--admin-primary)] font-normal text-white hover:bg-[var(--admin-primary-dark)] max-[780px]:w-full" onClick={() => navigate('/admin/referees/create')} type="button">Create Referee Account</button>
                         </div>
                     </div>
 

@@ -69,7 +69,13 @@ const normalizeRefereeNames = (value) => {
     }
 
     if (typeof value === 'string') {
-        return [value];
+        const refereeName = value.trim();
+
+        if (!refereeName || refereeName.toLowerCase() === 'unassigned') {
+            return [];
+        }
+
+        return [refereeName];
     }
 
     if (typeof value === 'number') {
@@ -78,18 +84,23 @@ const normalizeRefereeNames = (value) => {
 
     if (typeof value === 'object') {
         const directName = value.fullName
+            || value.FullName
             || value.name
+            || value.Name
             || value.refereeName
+            || value.RefereeName
             || value.refereeFullName
+            || value.RefereeFullName
             || value.userName
+            || value.UserName
             || value.email;
 
         if (directName) {
-            return [directName];
+            return normalizeRefereeNames(directName);
         }
 
-        if (value.referee || value.user || value.account) {
-            return normalizeRefereeNames(value.referee || value.user || value.account);
+        if (value.referee || value.Referee || value.user || value.User || value.account || value.Account) {
+            return normalizeRefereeNames(value.referee || value.Referee || value.user || value.User || value.account || value.Account);
         }
 
         if (value.refereeId || value.userId) {
@@ -107,11 +118,17 @@ const getRefereeNames = (tournament) => {
         tournament.refereeAssignments,
         tournament.raceReferees,
         tournament.tournamentReferees,
+        tournament.TournamentReferees,
         tournament.referee,
+        tournament.Referee,
         tournament.assignedReferee,
+        tournament.AssignedReferee,
         tournament.refereeName,
+        tournament.RefereeName,
         tournament.assignedRefereeName,
+        tournament.AssignedRefereeName,
         tournament.refereeFullName,
+        tournament.RefereeFullName,
     ];
 
     return [...new Set(sources
@@ -125,6 +142,9 @@ const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items
 const editFieldClass = 'grid gap-1.5';
 const editLabelClass = 'text-[0.72rem] font-black uppercase text-[#765c58]';
 const editControlClass = 'h-10 w-full min-w-0 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.88rem] font-bold text-[var(--admin-ink)] outline-0 focus:border-[#c6897e] focus:bg-white focus:shadow-[0_0_0_3px_rgba(134,7,7,0.08)]';
+const detailItemClass = 'grid gap-1 rounded-md bg-[#fff8f6] p-3';
+const detailLabelClass = 'text-[0.66rem] font-black uppercase text-[#765c58]';
+const detailValueClass = 'break-words text-[0.9rem] font-bold text-[var(--admin-ink)]';
 const pageSize = 4;
 const distanceOptions = [1000, 1500, 2400];
 
@@ -150,12 +170,61 @@ const matchesQuery = (tournament, query) => {
     ].some((value) => String(value).toLowerCase().includes(normalizedQuery));
 };
 
+const readTournamentField = (tournament, ...keys) => {
+    for (const key of keys) {
+        const value = tournament?.[key];
+
+        if (value !== undefined && value !== null && value !== '') {
+            return value;
+        }
+    }
+
+    return null;
+};
+
+const detailValue = (value, fallback = '-') => (
+    value === undefined || value === null || value === '' ? fallback : value
+);
+
+const getRaceTimeLabel = (tournament) => {
+    const explicitTime = readTournamentField(tournament, 'raceStartTime', 'RaceStartTime');
+
+    if (explicitTime) {
+        return String(explicitTime).slice(0, 5);
+    }
+
+    const raceDateTime = readTournamentField(tournament, 'raceDateTime', 'raceDate', 'RaceDate')
+        ?? tournament?.race?.raceDate
+        ?? tournament?.Race?.RaceDate;
+
+    if (!raceDateTime) {
+        return '-';
+    }
+
+    const timeMatch = String(raceDateTime).match(/T(\d{2}:\d{2})/);
+
+    return timeMatch?.[1] ?? '-';
+};
+
+function DetailItem({
+    children,
+    label,
+}) {
+    return (
+        <div className={detailItemClass}>
+            <span className={detailLabelClass}>{label}</span>
+            <div className={detailValueClass}>{children}</div>
+        </div>
+    );
+}
+
 function RaceManagement() {
     const [tournaments, setTournaments] = useState([]);
     const [query, setQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [sortBy, setSortBy] = useState('newest');
     const [page, setPage] = useState(1);
+    const [selectedTournament, setSelectedTournament] = useState(null);
     const [editingTournament, setEditingTournament] = useState(null);
     const [editError, setEditError] = useState('');
 
@@ -169,6 +238,7 @@ function RaceManagement() {
                     return {
                         ...detail,
                         ...tournament,
+                        referee: getRefereeNames(tournament).length > 0 ? getRefereeNames(tournament) : getRefereeNames(detail),
                         distanceMeters: getDistanceMeters(detail) ?? getDistanceMeters(tournament),
                     };
                 } catch {
@@ -438,7 +508,7 @@ function RaceManagement() {
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
                                                 <div className="inline-flex items-center gap-3.5">
-                                                    <button aria-label={`View ${tournament.name}`} className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" type="button">
+                                                    <button aria-label={`View ${tournament.name}`} className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" onClick={() => setSelectedTournament(tournament)} type="button">
                                                         <FaEye aria-hidden="true" />
                                                     </button>
                                                     <button aria-label={`Edit ${tournament.name}`} className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" onClick={() => setEditingTournament(tournament)} type="button">
@@ -474,6 +544,89 @@ function RaceManagement() {
                             </div>
                         </div>
                     </section>
+
+                    {selectedTournament && (
+                        <div className="fixed inset-0 z-20 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={() => setSelectedTournament(null)} role="presentation">
+                            <section
+                                aria-label={`Details for ${selectedTournament.name}`}
+                                className="grid max-h-[calc(100vh-48px)] w-[min(820px,100%)] gap-5 overflow-y-auto rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 shadow-[0_20px_48px_rgba(45,32,32,0.22)]"
+                                onClick={(event) => event.stopPropagation()}
+                                role="dialog"
+                            >
+                                <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                        <h2 className="m-0 text-[1.45rem] leading-[1.15] text-[var(--admin-primary-dark)]">{selectedTournament.name}</h2>
+                                        <p className="mb-0 mt-1.5 text-[0.86rem] font-semibold text-[var(--admin-muted)]">
+                                            Tournament details and assigned race configuration.
+                                        </p>
+                                    </div>
+                                    <button aria-label="Close tournament details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => setSelectedTournament(null)} type="button">
+                                        <FaTimes aria-hidden="true" />
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3 max-[720px]:grid-cols-1">
+                                    <DetailItem label="Tournament ID">
+                                        {detailValue(readTournamentField(selectedTournament, 'id', 'tournamentId', 'TournamentId'))}
+                                    </DetailItem>
+                                    <DetailItem label="Status">
+                                        <span className={`inline-flex min-h-6 w-fit items-center rounded border px-2.5 text-[0.68rem] font-black uppercase ${statusClass[formatClass(selectedTournament.status)] || statusClass.draft}`}>
+                                            {detailValue(selectedTournament.status)}
+                                        </span>
+                                    </DetailItem>
+                                    <DetailItem label="Registration Deadline">
+                                        {adminApi.formatters.toDateLabel(selectedTournament.startDate)}
+                                    </DetailItem>
+                                    <DetailItem label="Race Date">
+                                        {adminApi.formatters.toDateLabel(selectedTournament.endDate)}
+                                    </DetailItem>
+                                    <DetailItem label="Race Time">
+                                        {getRaceTimeLabel(selectedTournament)}
+                                    </DetailItem>
+                                    <DetailItem label="Location">
+                                        {detailValue(selectedTournament.location || selectedTournament.city)}
+                                    </DetailItem>
+                                    <DetailItem label="Distance">
+                                        {getDistanceMeters(selectedTournament) ? `${getDistanceMeters(selectedTournament)}m` : '-'}
+                                    </DetailItem>
+                                    <DetailItem label="Max Horses">
+                                        {detailValue(selectedTournament.maxHorses)}
+                                    </DetailItem>
+                                    <DetailItem label="Registered Horses">
+                                        {detailValue(readTournamentField(selectedTournament, 'registeredHorses', 'entriesCount', 'EntriesCount'))}
+                                    </DetailItem>
+                                    <DetailItem label="Prize Pool">
+                                        {adminApi.formatters.toMoney(selectedTournament.prizePool)}
+                                    </DetailItem>
+                                    <DetailItem label="Referee">
+                                        {getRefereeNames(selectedTournament).length > 0 ? getRefereeNames(selectedTournament).join(', ') : 'Unassigned'}
+                                    </DetailItem>
+                                    <DetailItem label="Horse Age Range">
+                                        {detailValue(readTournamentField(selectedTournament, 'minHorseAge', 'MinHorseAge'))} - {detailValue(readTournamentField(selectedTournament, 'maxHorseAge', 'MaxHorseAge'))} years
+                                    </DetailItem>
+                                    <DetailItem label="Horse Weight Range">
+                                        {detailValue(readTournamentField(selectedTournament, 'minHorseWeightKg', 'MinHorseWeightKg'))} - {detailValue(readTournamentField(selectedTournament, 'maxHorseWeightKg', 'MaxHorseWeightKg'))} kg
+                                    </DetailItem>
+                                    <DetailItem label="Created By">
+                                        {detailValue(readTournamentField(selectedTournament, 'createdBy', 'CreatedBy'))}
+                                    </DetailItem>
+                                    <DetailItem label="Created At">
+                                        {readTournamentField(selectedTournament, 'createdAt', 'CreatedAt')
+                                            ? adminApi.formatters.toDateLabel(String(readTournamentField(selectedTournament, 'createdAt', 'CreatedAt')).split('T')[0])
+                                            : '-'}
+                                    </DetailItem>
+                                    <div className={`${detailItemClass} col-span-2 max-[720px]:col-span-1`}>
+                                        <span className={detailLabelClass}>Description / Breed</span>
+                                        <div className={detailValueClass}>{detailValue(selectedTournament.description || selectedTournament.className)}</div>
+                                    </div>
+                                    <div className={`${detailItemClass} col-span-2 max-[720px]:col-span-1`}>
+                                        <span className={detailLabelClass}>Rules</span>
+                                        <div className={`${detailValueClass} whitespace-pre-wrap leading-relaxed`}>{detailValue(selectedTournament.rules)}</div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    )}
 
                     {editingTournament && (
                         <div className="fixed inset-0 z-20 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={() => setEditingTournament(null)} role="presentation">
