@@ -127,6 +127,28 @@ function mapUserAction(status) {
 // Referees
 const readApiField = (item, camelKey, pascalKey = camelKey[0].toUpperCase() + camelKey.slice(1)) => item?.[camelKey] ?? item?.[pascalKey];
 
+const fallbackHorseBreedNames = {
+    4: 'Thoroughbred',
+    5: 'Arabian',
+    6: 'Quarter Horse',
+    7: 'Standardbred',
+    8: 'Morgan',
+    9: 'Appaloosa',
+};
+
+const getHorseBreedName = (horse) => {
+    const breedName = readApiField(horse, 'breedName');
+    const breed = readApiField(horse, 'breed');
+    const nestedBreedName = typeof breed === 'object' ? readApiField(breed, 'breedName') : '';
+    const breedId = Number(readApiField(horse, 'breedId'));
+
+    if (breedName) return breedName;
+    if (typeof breed === 'string' && breed) return breed;
+    if (nestedBreedName) return nestedBreedName;
+
+    return fallbackHorseBreedNames[breedId] || `Breed #${breedId || 0}`;
+};
+
 const mapReferee = (referee) => ({
     refereeId: readApiField(referee, 'refereeId'),
     userId: readApiField(referee, 'userId'),
@@ -179,21 +201,29 @@ async function createRefereeAccount(payload) {
 // ─── Horses ──────────────────────────────────────────────────────────────────
 
 async function getHorses() {
-    const data = await apiRequest('/admin/horses');
+    const [data, users] = await Promise.all([
+        apiRequest('/admin/horses'),
+        getUsers().catch(() => []),
+    ]);
+    const ownerNamesById = new Map((users || []).map((user) => [Number(user.id), user.name]));
+
     const horses = data.map((h) => ({
         id: h.horseId,
         name: h.horseName,
         age: h.age,
         heightCm: h.heightCm,
+        weight: h.weightKg,
         weightKg: h.weightKg,
         healthStatus: h.healthStatus,
+        imageUrl: readApiField(h, 'imageUrl'),
         isActive: h.isActive,
         ownerId: h.ownerId,
+        owner: readApiField(h, 'ownerName') || readApiField(h, 'ownerFullName') || ownerNamesById.get(Number(h.ownerId)) || `Owner #${h.ownerId || 0}`,
         breedId: h.breedId,
         achievementSummary: h.achievementSummary,
         createdAt: h.createdAt,
-        approval: h.isActive ? 'Active' : 'Pending',
-        breed: `Breed #${h.breedId || 0}`,
+        approval: readApiField(h, 'approval') || readApiField(h, 'status') || 'Pending',
+        breed: getHorseBreedName(h),
         reportStatus: 'Active',
     }));
     return { horses, reports: [] };

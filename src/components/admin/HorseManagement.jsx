@@ -6,14 +6,15 @@ import {
 
 import {
     FaCalendarCheck,
-    FaEllipsisV,
     FaExclamationTriangle,
+    FaEye,
     FaHorseHead,
     FaSearch,
     FaTrashAlt,
 } from 'react-icons/fa';
 
 import { adminApi } from '../../api/adminApi';
+import { resolveFileUrl } from '../../api/uploadApi';
 import horseRacing from '../../assets/horse-racing.jpg';
 
 import AdminLayout from './AdminLayout';
@@ -52,6 +53,7 @@ const severityClass = {
 const selectClass = 'h-[38px] min-w-[142px] cursor-pointer rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.78rem] font-bold text-[#5f4b47] outline-0';
 const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
 const pageSize = 4;
+const horseApprovalStorageKey = 'adminHorseApprovalStatuses';
 
 const matchesQuery = (horse, query) => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -71,6 +73,50 @@ const matchesQuery = (horse, query) => {
     ].some((value) => String(value).toLowerCase().includes(normalizedQuery));
 };
 
+const readStoredHorseApprovals = () => {
+    try {
+        return JSON.parse(localStorage.getItem(horseApprovalStorageKey) || '{}');
+    } catch {
+        return {};
+    }
+};
+
+const writeStoredHorseApproval = (horseId, approval) => {
+    const storedApprovals = readStoredHorseApprovals();
+    localStorage.setItem(horseApprovalStorageKey, JSON.stringify({
+        ...storedApprovals,
+        [horseId]: approval,
+    }));
+};
+
+const detailValue = (value, suffix = '') => {
+    if (value === null || value === undefined || value === '') {
+        return '-';
+    }
+
+    return `${value}${suffix}`;
+};
+
+const formatDetailDate = (value) => {
+    if (!value) {
+        return '-';
+    }
+
+    return new Intl.DateTimeFormat('en-US', {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    }).format(new Date(value));
+};
+
+function HorseDetailItem({ label, value }) {
+    return (
+        <div className="rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-3">
+            <span className="block text-[0.68rem] font-black uppercase text-[#765c58]">{label}</span>
+            <strong className="mt-1 block text-[0.9rem] text-[var(--admin-ink)]">{value}</strong>
+        </div>
+    );
+}
+
 function HorseManagement() {
     const [horses, setHorses] = useState([]);
     const [reports, setReports] = useState([]);
@@ -81,13 +127,18 @@ function HorseManagement() {
     const [reportFilter, setReportFilter] = useState('report');
     const [sortBy, setSortBy] = useState('newest');
     const [page, setPage] = useState(1);
+    const [selectedHorseId, setSelectedHorseId] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
 
         adminApi.getHorses().then((payload) => {
             if (isMounted) {
-                setHorses(payload.horses);
+                const storedApprovals = readStoredHorseApprovals();
+                setHorses(payload.horses.map((horse) => ({
+                    ...horse,
+                    approval: storedApprovals[horse.id] || horse.approval,
+                })));
                 setReports(payload.reports);
             }
         });
@@ -141,6 +192,7 @@ function HorseManagement() {
     const visibleHorses = filteredHorses.slice((page - 1) * pageSize, page * pageSize);
     const firstShown = filteredHorses.length === 0 ? 0 : (page - 1) * pageSize + 1;
     const lastShown = Math.min(page * pageSize, filteredHorses.length);
+    const selectedHorse = horses.find((horse) => horse.id === selectedHorseId) || null;
 
     const handleQueryChange = (value) => {
         setQuery(value);
@@ -185,14 +237,9 @@ function HorseManagement() {
         )));
     };
 
-    const handleToggleHorseApproval = async (horse) => {
-        const approval = horse.approval === 'Pending'
-            ? 'Active'
-            : horse.approval === 'Active'
-                ? 'Banned'
-                : 'Pending';
-
+    const handleUpdateHorseApproval = async (horse, approval) => {
         await adminApi.updateHorseApproval(horse.id, approval);
+        writeStoredHorseApproval(horse.id, approval);
         setHorses((current) => current.map((item) => (
             item.id === horse.id
                 ? {
@@ -201,6 +248,7 @@ function HorseManagement() {
                 }
                 : item
         )));
+        setSelectedHorseId(null);
     };
 
     const handleDeleteReport = async (id) => {
@@ -301,15 +349,14 @@ function HorseManagement() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {visibleHorses.map((horse, index) => (
+                                    {visibleHorses.map((horse) => (
                                         <tr key={horse.id}>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
                                                 <div className="flex min-w-[220px] items-center gap-3">
                                                     <img
-                                                        alt=""
+                                                        alt={horse.name}
                                                         className="h-11 w-11 flex-none rounded-md object-cover"
-                                                        src={horseRacing}
-                                                        style={{ objectPosition: `${35 + index * 15}% center` }}
+                                                        src={horse.imageUrl ? resolveFileUrl(horse.imageUrl) : horseRacing}
                                                     />
                                                     <div>
                                                         <strong className="block text-[var(--admin-ink)]">{horse.name}</strong>
@@ -317,16 +364,16 @@ function HorseManagement() {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">{horse.age} yrs / {horse.weight} kg</td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">{horse.owner}</td>
+                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">{horse.age ?? '-'} yrs / {horse.weight ?? '-'} kg</td>
+                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">{horse.owner || '-'}</td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
                                                 <span className={`inline-flex min-h-6 items-center rounded border px-2.5 text-[0.68rem] font-black uppercase ${approvalClass[formatClass(horse.approval)]}`}>
                                                     {horse.approval}
                                                 </span>
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
-                                                <button aria-label={`Cycle approval for ${horse.name}`} className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md bg-transparent text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => handleToggleHorseApproval(horse)} type="button">
-                                                    <FaEllipsisV aria-hidden="true" />
+                                                <button aria-label={`View details for ${horse.name}`} className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md bg-transparent text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => setSelectedHorseId(horse.id)} type="button">
+                                                    <FaEye aria-hidden="true" />
                                                 </button>
                                             </td>
                                         </tr>
@@ -393,6 +440,55 @@ function HorseManagement() {
                         </div>
                     </section>
                 </section>
+
+                {selectedHorse && (
+                    <div className="fixed inset-0 z-50 grid place-items-center bg-[rgba(37,18,14,0.45)] px-4 py-6" role="dialog" aria-modal="true" aria-labelledby="horse-detail-title">
+                        <section className="max-h-[92vh] w-full max-w-[860px] overflow-y-auto rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_24px_70px_rgba(37,18,14,0.28)]">
+                            <div className="flex items-start justify-between gap-4 border-b border-[var(--admin-border)] bg-[#fff4f1] px-6 py-5">
+                                <div>
+                                    <h2 id="horse-detail-title" className="m-0 text-[1.35rem] text-[var(--admin-primary-dark)]">{selectedHorse.name}</h2>
+                                    <span className="mt-1 block text-[0.82rem] font-bold text-[var(--admin-muted)]">{selectedHorse.breed}</span>
+                                </div>
+                                <button className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[1.15rem] font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => setSelectedHorseId(null)} type="button" aria-label="Close horse details">
+                                    ×
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-[260px_1fr] gap-6 p-6 max-[760px]:grid-cols-1">
+                                <img
+                                    alt={selectedHorse.name}
+                                    className="h-[230px] w-full rounded-md object-cover"
+                                    src={selectedHorse.imageUrl ? resolveFileUrl(selectedHorse.imageUrl) : horseRacing}
+                                />
+
+                                <div className="grid gap-4">
+                                    <div className="grid grid-cols-2 gap-3 max-[620px]:grid-cols-1">
+                                        <HorseDetailItem label="Horse Name" value={detailValue(selectedHorse.name)} />
+                                        <HorseDetailItem label="Breed" value={detailValue(selectedHorse.breed)} />
+                                        <HorseDetailItem label="Age" value={detailValue(selectedHorse.age, ' yrs')} />
+                                        <HorseDetailItem label="Weight" value={detailValue(selectedHorse.weight, ' kg')} />
+                                        <HorseDetailItem label="Height" value={detailValue(selectedHorse.heightCm, ' cm')} />
+                                        <HorseDetailItem label="Owner" value={detailValue(selectedHorse.owner)} />
+                                        <HorseDetailItem label="Health Status" value={detailValue(selectedHorse.healthStatus)} />
+                                        <HorseDetailItem label="Approval" value={detailValue(selectedHorse.approval)} />
+                                        <HorseDetailItem label="Registered At" value={formatDetailDate(selectedHorse.createdAt)} />
+                                        <HorseDetailItem label="Owner ID" value={detailValue(selectedHorse.ownerId)} />
+                                    </div>
+
+                                    <div className="rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-4">
+                                        <span className="block text-[0.68rem] font-black uppercase text-[#765c58]">Achievement Summary</span>
+                                        <p className="mt-2 text-[0.88rem] font-semibold leading-[1.55] text-[#5f4b47]">{detailValue(selectedHorse.achievementSummary)}</p>
+                                    </div>
+
+                                    <div className="flex flex-wrap justify-end gap-3">
+                                        <button className="min-h-[38px] cursor-pointer rounded-md border border-[#d89288] bg-white px-4 font-black text-[var(--admin-primary)] hover:bg-[#fff0ed]" onClick={() => handleUpdateHorseApproval(selectedHorse, 'Banned')} type="button">Reject</button>
+                                        <button className="min-h-[38px] cursor-pointer rounded-md bg-[var(--admin-primary)] px-4 font-black text-white hover:bg-[var(--admin-primary-dark)]" onClick={() => handleUpdateHorseApproval(selectedHorse, 'Active')} type="button">Confirm</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                )}
         </AdminLayout>
     );
 }
