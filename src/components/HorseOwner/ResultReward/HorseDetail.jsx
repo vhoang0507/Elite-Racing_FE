@@ -1,0 +1,170 @@
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import HorseOwnerLayout from "../HorseOwnerLayout";
+import { ownerApi } from "../../../api/ownerApi";
+
+function formatTime(seconds) {
+    if (seconds == null) return "—";
+    const m = Math.floor(seconds / 60);
+    const s = (seconds % 60).toFixed(1);
+    return m > 0 ? `${m}:${s.padStart(4, "0")}` : `${s}s`;
+}
+
+export default function HorseResultDetail() {
+    const { resultId } = useParams();
+    const navigate = useNavigate();
+    const [data, setData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        let mounted = true;
+        setLoading(true);
+        ownerApi.getHorsePerformance(resultId)
+            .then((res) => { if (mounted) setData(res); })
+            .catch((err) => { if (mounted) setError(err.message || 'Failed to load horse performance'); })
+            .finally(() => { if (mounted) setLoading(false); });
+        return () => { mounted = false; };
+    }, [resultId]);
+
+    return (
+        <HorseOwnerLayout activeKey="rewards">
+            <section className="grid gap-6 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7">
+                <button
+                    type="button"
+                    onClick={() => navigate(-1)}
+                    className="inline-flex items-center gap-1 self-start border-0 bg-transparent p-0 text-[0.8rem] font-semibold text-[var(--admin-muted)] hover:text-[var(--admin-primary)]"
+                >
+                    ← Back to Fleet
+                </button>
+
+                {loading && <p className="text-[0.85rem] text-[var(--admin-muted)]">Loading...</p>}
+                {error && <p className="text-[0.85rem] text-red-700">{error}</p>}
+
+                {!loading && data && (
+                    <>
+                        <h2 className="m-0 text-[1.6rem] text-[var(--admin-primary-dark)]">{data.horse.horseName}</h2>
+
+                        <div className="grid grid-cols-[1fr_1fr] gap-5 max-[900px]:grid-cols-1">
+                            <HorseProfileCard horse={data.horse} />
+                            <AchievementsCard achievements={data.achievements} />
+                        </div>
+
+                        <RaceHistoryTable history={data.raceHistory} />
+                    </>
+                )}
+            </section>
+        </HorseOwnerLayout>
+    );
+}
+
+function HorseProfileCard({ horse }) {
+    return (
+        <div style={styles.card}>
+            <div style={styles.profileRow}>
+                <img src={horse.imageUrl || "/Horse1.jpg"} alt={horse.horseName} style={styles.profileImg} />
+                <div>
+                    <p style={styles.horseName}>{horse.horseName}</p>
+                    <p style={styles.horseBreed}>{horse.breedName}</p>
+                </div>
+            </div>
+            <div style={styles.infoGrid}>
+                <div><small style={styles.label}>AGE</small><p style={styles.value}>{horse.age} yrs</p></div>
+                <div><small style={styles.label}>WEIGHT</small><p style={styles.value}>{horse.weightKg} kg</p></div>
+                <div><small style={styles.label}>OWNER</small><p style={styles.value}>{horse.ownerName}</p></div>
+                <div><small style={styles.label}>ASSIGNED JOCKEY</small><p style={styles.value}>{horse.assignedJockeyName ?? "—"}</p></div>
+            </div>
+        </div>
+    );
+}
+
+function AchievementsCard({ achievements }) {
+    const items = [
+        { icon: "🏆", label: "Title", value: achievements.championTitles > 0 ? `Champion Titles x${achievements.championTitles}` : "No titles yet" },
+        { icon: "⏱", label: "Best Time", value: achievements.bestTime != null ? formatTime(achievements.bestTime) : "—" },
+        { icon: "🔥", label: "Current Streak", value: `${achievements.currentWinStreak} Consecutive Wins` },
+        { icon: "⭐", label: "Award", value: achievements.award || "—" },
+    ];
+
+    return (
+        <div style={styles.card}>
+            <p style={styles.cardTitle}>Recent Achievements</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                {items.map((item, i) => (
+                    <div key={i} style={styles.achievementRow}>
+                        <span style={styles.achievementIcon}>{item.icon}</span>
+                        <div>
+                            <p style={styles.achievementLabel}>{item.label}</p>
+                            <p style={styles.achievementValue}>{item.value}</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
+function RaceHistoryTable({ history }) {
+    return (
+        <div style={styles.card}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                <p style={styles.cardTitle}>Race History</p>
+            </div>
+
+            {history.length === 0 ? (
+                <p style={{ color: "#999", fontSize: "0.8rem" }}>No race history yet.</p>
+            ) : (
+                <table style={styles.table}>
+                    <thead>
+                        <tr>
+                            <th style={styles.th}>TOURNAMENT</th>
+                            <th style={styles.th}>DATE</th>
+                            <th style={styles.th}>TRACK</th>
+                            <th style={styles.th}>DIST</th>
+                            <th style={styles.th}>JOCKEY</th>
+                            <th style={styles.th}>POS</th>
+                            <th style={styles.th}>TIME</th>
+                            <th style={styles.th}>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {history.map((h) => (
+                            <tr key={h.resultId}>
+                                <td style={{ ...styles.td, fontWeight: 600, color: "#610000" }}>{h.tournamentName}</td>
+                                <td style={styles.td}>{new Date(h.raceDate).toLocaleDateString()}</td>
+                                <td style={styles.td}>{h.track ?? "—"}</td>
+                                <td style={styles.td}>{h.distanceMeters}m</td>
+                                <td style={styles.td}>{h.jockeyName ?? "—"}</td>
+                                <td style={styles.td}>{h.position ?? "-"}</td>
+                                <td style={styles.td}>{h.finishTime != null ? formatTime(h.finishTime) : "-"}</td>
+                                <td style={styles.td}>
+                                    <span style={styles.statusBadge}>{h.status?.toUpperCase()}</span>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
+        </div>
+    );
+}
+
+const styles = {
+    card: { backgroundColor: "#fff", borderRadius: "12px", border: "1px solid #eee", padding: "20px" },
+    cardTitle: { margin: 0, fontSize: "14px", fontWeight: 700, color: "#610000" },
+    profileRow: { display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", marginBottom: "20px" },
+    profileImg: { width: "90px", height: "90px", borderRadius: "50%", objectFit: "cover", marginBottom: "10px" },
+    horseName: { margin: 0, fontWeight: 700, fontSize: "16px" },
+    horseBreed: { margin: "2px 0", fontSize: "12px", color: "#999" },
+    infoGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" },
+    label: { color: "#999", fontSize: "11px" },
+    value: { margin: "2px 0 0", fontWeight: 600, fontSize: "13px" },
+    achievementRow: { display: "flex", alignItems: "center", gap: "10px" },
+    achievementIcon: { width: "32px", height: "32px", borderRadius: "8px", backgroundColor: "#fde2e1", color: "#610000", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px" },
+    achievementLabel: { margin: 0, fontSize: "11px", color: "#999" },
+    achievementValue: { margin: "2px 0 0", fontWeight: 600, fontSize: "13px" },
+    table: { width: "100%", borderCollapse: "collapse" },
+    th: { textAlign: "left", fontSize: "10px", color: "#999", padding: "6px 8px", borderBottom: "1px solid #eee" },
+    td: { padding: "10px 8px", borderBottom: "1px solid #f5f5f5", fontSize: "12px" },
+    statusBadge: { fontSize: "10px", padding: "3px 8px", borderRadius: "10px", fontWeight: 700, backgroundColor: "#fde2e1", color: "#610000" },
+};
