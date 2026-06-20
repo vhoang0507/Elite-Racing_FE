@@ -213,6 +213,15 @@ const getRaceTimeLabel = (tournament) => {
     return timeMatch?.[1] ?? '-';
 };
 
+const getRaceDateLabel = (tournament) => {
+    const raceDate = readTournamentField(tournament, 'raceDateTime', 'raceDate', 'RaceDate')
+        ?? tournament?.race?.raceDate
+        ?? tournament?.Race?.RaceDate
+        ?? tournament?.endDate;
+
+    return raceDate ? adminApi.formatters.toDateLabel(String(raceDate).split('T')[0]) : '-';
+};
+
 const getRaceTimeInputValue = (tournament) => {
     const raceTime = getRaceTimeLabel(tournament);
 
@@ -471,7 +480,7 @@ function RaceManagement() {
                             <table className="w-full border-collapse max-[820px]:min-w-[1100px]">
                                 <thead>
                                     <tr>
-                                        {['Tournament Name', 'Timeline', 'Location', 'Max Horses', 'Prize Pool', 'Referee', 'Status', 'Actions'].map((heading) => (
+                                        {['Tournament Name', 'Race Date', 'Location', 'Max Horses', 'Prize Pool', 'Referee', 'Status', 'Actions'].map((heading) => (
                                             <th className="whitespace-nowrap border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] py-[18px] text-left text-[0.68rem] uppercase tracking-normal text-[#8b6e68]" key={heading}>
                                                 {heading}
                                             </th>
@@ -493,11 +502,7 @@ function RaceManagement() {
                                                 </div>
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
-                                                <div className="grid leading-[1.15]">
-                                                    {adminApi.formatters.toShortDateParts(tournament.startDate, tournament.endDate).map((line, index) => (
-                                                        <span className={index === 2 ? 'mt-0.5 text-[0.7rem] font-extrabold text-[#9a817c]' : ''} key={`${tournament.id}-${line}`}>{line}</span>
-                                                    ))}
-                                                </div>
+                                                {getRaceDateLabel(tournament)}
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
                                                 <span className="inline-flex items-center gap-1.5">
