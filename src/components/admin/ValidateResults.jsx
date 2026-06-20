@@ -56,6 +56,13 @@ const iconByTone = {
 const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
 const pageSize = 5;
 
+const sortPendingFirst = (items, getStatus) => [...items].sort((current, next) => {
+    const currentRank = formatClass(getStatus(current)) === 'pending' ? 0 : 1;
+    const nextRank = formatClass(getStatus(next)) === 'pending' ? 0 : 1;
+
+    return currentRank - nextRank;
+});
+
 const matchesQuery = (submission, query) => {
     const normalizedQuery = query.trim().toLowerCase();
 
@@ -89,7 +96,10 @@ function ValidateResults() {
         };
     }, []);
 
-    const filteredSubmissions = useMemo(() => submissions.filter((submission) => matchesQuery(submission, query)), [query, submissions]);
+    const filteredSubmissions = useMemo(() => sortPendingFirst(
+        submissions.filter((submission) => matchesQuery(submission, query)),
+        (submission) => submission.status
+    ), [query, submissions]);
     const totalPages = Math.max(1, Math.ceil(filteredSubmissions.length / pageSize));
     const visibleSubmissions = filteredSubmissions.slice((page - 1) * pageSize, page * pageSize);
     const firstShown = filteredSubmissions.length === 0 ? 0 : (page - 1) * pageSize + 1;

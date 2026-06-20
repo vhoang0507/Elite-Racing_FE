@@ -1,6 +1,7 @@
 import {
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react';
 
@@ -19,15 +20,20 @@ import {
 } from 'react-icons/fa';
 
 import { adminApi } from '../../api/adminApi';
+import { resolveFileUrl } from '../../api/uploadApi';
 
 import AdminLayout from './AdminLayout';
 
 const formatClass = (value) => String(value || '').toLowerCase().replace(/\s+/g, '-');
+const isJockeyRole = (role) => formatClass(role) === 'jockey';
 
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-7 px-11 py-9 max-[780px]:px-5';
 const selectWrapClass = 'relative inline-flex min-w-[86px] items-center';
 const selectClass = 'h-8 min-w-[86px] cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-6 text-[0.8rem] font-bold text-[var(--admin-ink)] outline-0';
 const selectIconClass = 'pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-[0.7rem] text-[var(--admin-ink)]';
+const detailItemClass = 'grid gap-1 rounded-md bg-[#fff8f6] p-3';
+const detailLabelClass = 'text-[0.7rem] font-black uppercase text-[#765c58]';
+const documentCardClass = 'grid gap-3 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] p-3';
 
 const summaryIconClass = {
     users: 'text-[#ff9a8d]',
@@ -54,6 +60,140 @@ const badgeClass = 'inline-flex min-h-[22px] items-center rounded border px-2 te
 const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
 const pageSize = 5;
 
+const activeRoleOrder = {
+    admin: 0,
+    horseowner: 1,
+    'horse-owner': 1,
+    jockey: 2,
+    racereferee: 3,
+    referee: 3,
+    spectator: 4,
+};
+
+const getStatusSortRank = (status) => {
+    const statusKey = formatClass(status);
+
+    if (statusKey === 'pending') {
+        return 0;
+    }
+
+    if (statusKey === 'active') {
+        return 1;
+    }
+
+    return 2;
+};
+
+const getActiveRoleRank = (role) => activeRoleOrder[formatClass(role)] ?? 99;
+
+const sortUsersForManagement = (items) => [...items].sort((current, next) => {
+    const currentStatusRank = getStatusSortRank(current.status);
+    const nextStatusRank = getStatusSortRank(next.status);
+
+    if (currentStatusRank !== nextStatusRank) {
+        return currentStatusRank - nextStatusRank;
+    }
+
+    if (currentStatusRank === 1) {
+        return getActiveRoleRank(current.role) - getActiveRoleRank(next.role);
+    }
+
+    return 0;
+});
+
+const readField = (item, camelKey) => {
+    if (!item) {
+        return undefined;
+    }
+
+    const pascalKey = camelKey.charAt(0).toUpperCase() + camelKey.slice(1);
+
+    return item[camelKey] ?? item[pascalKey];
+};
+
+const hasValue = (value) => value !== null && value !== undefined && String(value).trim() !== '';
+
+const displayValue = (value, suffix = '') => (hasValue(value) ? `${value}${suffix}` : '-');
+
+const getListField = (item, key) => {
+    const value = readField(item, key);
+
+    return Array.isArray(value) ? value : [];
+};
+
+const getDocumentName = (url) => {
+    if (!hasValue(url)) {
+        return '';
+    }
+
+    const cleanUrl = String(url).split('?')[0];
+
+    return decodeURIComponent(cleanUrl.split('/').pop() || 'Open document');
+};
+
+const isPdfUrl = (url) => /\.pdf$/i.test(String(url || '').split('?')[0]);
+
+function DetailItem({ label, children }) {
+    return (
+        <div className={detailItemClass}>
+            <span className={detailLabelClass}>{label}</span>
+            <strong className="break-words text-[var(--admin-ink)]">{children}</strong>
+        </div>
+    );
+}
+
+function DocumentPreview({ label, url }) {
+    const resolvedUrl = hasValue(url) ? resolveFileUrl(String(url)) : '';
+    const fileName = getDocumentName(url);
+
+    return (
+        <article className={documentCardClass}>
+            <span className={detailLabelClass}>{label}</span>
+            {resolvedUrl ? (
+                <div className="grid gap-2">
+                    {isPdfUrl(url) ? (
+                        <a
+                            className="grid min-h-[132px] place-items-center rounded-md border border-dashed border-[var(--admin-border)] bg-[#fff8f6] px-3 text-center text-[0.84rem] font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]"
+                            href={resolvedUrl}
+                            rel="noreferrer"
+                            target="_blank"
+                        >
+                            Open PDF document
+                        </a>
+                    ) : (
+                        <a href={resolvedUrl} rel="noreferrer" target="_blank">
+                            <img
+                                alt={label}
+                                className="h-[132px] w-full rounded-md border border-[var(--admin-border)] object-contain"
+                                src={resolvedUrl}
+                            />
+                        </a>
+                    )}
+                    <a className="truncate text-[0.78rem] font-bold text-[var(--admin-primary)]" href={resolvedUrl} rel="noreferrer" target="_blank">
+                        {fileName || 'Open document'}
+                    </a>
+                </div>
+            ) : (
+                <span className="grid min-h-[132px] place-items-center rounded-md border border-dashed border-[var(--admin-border)] bg-[#fff8f6] text-[0.82rem] font-bold text-[var(--admin-muted)]">
+                    Not uploaded
+                </span>
+            )}
+        </article>
+    );
+}
+
+function ExperienceList({ emptyText, items, renderItem }) {
+    if (!items.length) {
+        return <p className="m-0 text-[0.86rem] font-bold text-[var(--admin-muted)]">{emptyText}</p>;
+    }
+
+    return (
+        <div className="grid gap-2">
+            {items.map((item, index) => renderItem(item, index))}
+        </div>
+    );
+}
+
 const matchesQuery = (user, query) => {
     const normalizedQuery = query.trim().toLowerCase();
 
@@ -78,6 +218,9 @@ function UserManagement() {
     const [statusFilter, setStatusFilter] = useState('all');
     const [page, setPage] = useState(1);
     const [selectedUser, setSelectedUser] = useState(null);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [detailError, setDetailError] = useState('');
+    const detailRequestRef = useRef(0);
 
     useEffect(() => {
         let isMounted = true;
@@ -117,11 +260,11 @@ function UserManagement() {
         },
     ], [users]);
 
-    const filteredUsers = useMemo(() => users.filter((user) => (
+    const filteredUsers = useMemo(() => sortUsersForManagement(users.filter((user) => (
         matchesQuery(user, query)
         && (roleFilter === 'all' || formatClass(user.role) === roleFilter)
         && (statusFilter === 'all' || formatClass(user.status) === statusFilter)
-    )), [query, roleFilter, statusFilter, users]);
+    ))), [query, roleFilter, statusFilter, users]);
 
     const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
     const visibleUsers = filteredUsers.slice((page - 1) * pageSize, page * pageSize);
@@ -137,6 +280,52 @@ function UserManagement() {
         setQuery(value);
         setPage(1);
     };
+
+    const handleCloseDetails = () => {
+        detailRequestRef.current += 1;
+        setSelectedUser(null);
+        setDetailLoading(false);
+        setDetailError('');
+    };
+
+    const handleViewDetails = async (user) => {
+        const requestId = detailRequestRef.current + 1;
+        detailRequestRef.current = requestId;
+        setSelectedUser(user);
+        setDetailError('');
+
+        if (!isJockeyRole(user.role)) {
+            setDetailLoading(false);
+            return;
+        }
+
+        setDetailLoading(true);
+
+        try {
+            const jockeyDetail = await adminApi.getVerificationById(user.id);
+
+            if (detailRequestRef.current !== requestId) {
+                return;
+            }
+
+            setSelectedUser((current) => (
+                current?.id === user.id ? { ...current, jockeyDetail } : current
+            ));
+        } catch (error) {
+            if (detailRequestRef.current === requestId) {
+                setDetailError(error.message || 'Failed to load jockey details.');
+            }
+        } finally {
+            if (detailRequestRef.current === requestId) {
+                setDetailLoading(false);
+            }
+        }
+    };
+
+    const selectedUserIsJockey = Boolean(selectedUser && isJockeyRole(selectedUser.role));
+    const selectedJockeyDetail = selectedUser?.jockeyDetail;
+    const jockeyDistanceExperiences = getListField(selectedJockeyDetail, 'distanceExperiences');
+    const jockeyBreedExperiences = getListField(selectedJockeyDetail, 'breedExperiences');
 
     return (
         <AdminLayout
@@ -242,7 +431,7 @@ function UserManagement() {
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]">{adminApi.formatters.toDateLabel(user.createdAt)}</td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]">
-                                                <button aria-label={`View details for ${user.name}`} className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border-0 bg-transparent text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => setSelectedUser(user)} type="button">
+                                                <button aria-label={`View details for ${user.name}`} className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border-0 bg-transparent text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => handleViewDetails(user)} type="button">
                                                     <FaEye aria-hidden="true" />
                                                 </button>
                                             </td>
@@ -273,10 +462,10 @@ function UserManagement() {
                     </section>
 
                     {selectedUser && (
-                        <div className="fixed inset-0 z-20 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={() => setSelectedUser(null)} role="presentation">
+                        <div className="fixed inset-0 z-20 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={handleCloseDetails} role="presentation">
                             <section
                                 aria-label={`Details for ${selectedUser.name}`}
-                                className="grid w-[min(520px,100%)] gap-5 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 shadow-[0_20px_48px_rgba(45,32,32,0.22)]"
+                                className={`grid max-h-[calc(100vh-64px)] ${selectedUserIsJockey ? 'w-[min(920px,100%)]' : 'w-[min(520px,100%)]'} gap-5 overflow-y-auto rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 shadow-[0_20px_48px_rgba(45,32,32,0.22)]`}
                                 onClick={(event) => event.stopPropagation()}
                                 role="dialog"
                             >
@@ -285,35 +474,108 @@ function UserManagement() {
                                         <h2 className="m-0 text-[1.35rem] leading-[1.15] text-[var(--admin-primary-dark)]">{selectedUser.name}</h2>
                                         <span className="mt-2 inline-flex text-[0.8rem] font-black text-[var(--admin-muted)]">{selectedUser.id}</span>
                                     </div>
-                                    <button aria-label="Close user details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => setSelectedUser(null)} type="button">
+                                    <button aria-label="Close user details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={handleCloseDetails} type="button">
                                         <FaTimes aria-hidden="true" />
                                     </button>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3 text-[0.9rem] max-[560px]:grid-cols-1">
-                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Email</span>
-                                        <strong className="break-words text-[var(--admin-ink)]">{selectedUser.email}</strong>
-                                    </div>
-                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Role</span>
+                                    <DetailItem label="Email">{selectedUser.email}</DetailItem>
+                                    <div className={detailItemClass}>
+                                        <span className={detailLabelClass}>Role</span>
                                         <span className={`${badgeClass} w-fit ${roleClass[formatClass(selectedUser.role)]}`}>{selectedUser.role}</span>
                                     </div>
-                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Status</span>
+                                    <div className={detailItemClass}>
+                                        <span className={detailLabelClass}>Status</span>
                                         <span className={`${badgeClass} w-fit ${statusClass[formatClass(selectedUser.status)]}`}>{selectedUser.status}</span>
                                     </div>
-                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Verified</span>
+                                    <div className={detailItemClass}>
+                                        <span className={detailLabelClass}>Verified</span>
                                         <strong className={selectedUser.verified ? 'text-[#0aa15f]' : 'text-[#d71920]'}>
                                             {selectedUser.verified ? 'Verified' : 'Not verified'}
                                         </strong>
                                     </div>
-                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Created At</span>
-                                        <strong>{adminApi.formatters.toDateLabel(selectedUser.createdAt)}</strong>
-                                    </div>
+                                    <DetailItem label="Created At">{adminApi.formatters.toDateLabel(selectedUser.createdAt)}</DetailItem>
                                 </div>
+
+                                {selectedUserIsJockey && (
+                                    <section className="grid gap-5 border-t border-[var(--admin-border)] pt-4">
+                                        <div className="flex items-center justify-between gap-4">
+                                            <h3 className="m-0 text-[1.05rem] text-[var(--admin-primary-dark)]">Jockey Profile</h3>
+                                            {detailLoading && <span className="text-[0.8rem] font-black text-[var(--admin-muted)]">Loading...</span>}
+                                        </div>
+
+                                        {detailError && (
+                                            <p className="m-0 rounded-md border border-[#e7a49a] bg-[#ffe8e4] px-3 py-2 text-[0.86rem] font-bold text-[var(--admin-primary)]">
+                                                {detailError}
+                                            </p>
+                                        )}
+
+                                        {!detailLoading && !detailError && selectedJockeyDetail && (
+                                            <>
+                                                <div className="grid grid-cols-[180px_minmax(0,1fr)] gap-4 max-[760px]:grid-cols-1">
+                                                    <DocumentPreview label="Profile Image" url={readField(selectedJockeyDetail, 'profileImageUrl')} />
+
+                                                    <div className="grid grid-cols-3 gap-3 text-[0.9rem] max-[760px]:grid-cols-1">
+                                                        <DetailItem label="Jockey ID">{displayValue(readField(selectedJockeyDetail, 'jockeyId'))}</DetailItem>
+                                                        <DetailItem label="Jockey Code">{displayValue(readField(selectedJockeyDetail, 'jockeyCode'))}</DetailItem>
+                                                        <DetailItem label="Phone">{displayValue(readField(selectedJockeyDetail, 'phone'))}</DetailItem>
+                                                        <DetailItem label="Weight">{displayValue(readField(selectedJockeyDetail, 'weightKg'), ' kg')}</DetailItem>
+                                                        <DetailItem label="Experience">{displayValue(readField(selectedJockeyDetail, 'yearsOfExperience'), ' years')}</DetailItem>
+                                                        <DetailItem label="Health">{displayValue(readField(selectedJockeyDetail, 'healthStatus'))}</DetailItem>
+                                                        <DetailItem label="Jockey Active">{readField(selectedJockeyDetail, 'isActive') ? 'Active' : 'Inactive'}</DetailItem>
+                                                        <DetailItem label="Certificate No">{displayValue(readField(selectedJockeyDetail, 'certificateNo'))}</DetailItem>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-3 max-[760px]:grid-cols-1">
+                                                    <DocumentPreview label="National ID - Front" url={readField(selectedJockeyDetail, 'idCardFrontUrl')} />
+                                                    <DocumentPreview label="National ID - Back" url={readField(selectedJockeyDetail, 'idCardBackUrl')} />
+                                                    <DocumentPreview label="Horse Racing License" url={readField(selectedJockeyDetail, 'certificateFileUrl')} />
+                                                    <DocumentPreview label="Health Certificate" url={readField(selectedJockeyDetail, 'healthCertificateUrl')} />
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-3 max-[760px]:grid-cols-1">
+                                                    <div className="grid gap-3 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] p-3">
+                                                        <span className={detailLabelClass}>Distance Experience</span>
+                                                        <ExperienceList
+                                                            emptyText="No distance experience."
+                                                            items={jockeyDistanceExperiences}
+                                                            renderItem={(item, index) => (
+                                                                <div className="flex items-center justify-between gap-3 rounded-md bg-[#fff8f6] px-3 py-2 text-[0.86rem]" key={`${readField(item, 'distanceMeters') || index}-distance`}>
+                                                                    <span className="font-bold text-[var(--admin-ink)]">
+                                                                        {readField(item, 'label') || displayValue(readField(item, 'distanceMeters'), 'm')}
+                                                                    </span>
+                                                                    <strong className="text-[var(--admin-primary-dark)]">{displayValue(readField(item, 'skillLevel'))}</strong>
+                                                                </div>
+                                                            )}
+                                                        />
+                                                    </div>
+
+                                                    <div className="grid gap-3 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] p-3">
+                                                        <span className={detailLabelClass}>Breed Experience</span>
+                                                        <ExperienceList
+                                                            emptyText="No breed experience."
+                                                            items={jockeyBreedExperiences}
+                                                            renderItem={(item, index) => (
+                                                                <div className="flex items-center justify-between gap-3 rounded-md bg-[#fff8f6] px-3 py-2 text-[0.86rem]" key={`${readField(item, 'breedId') || index}-breed`}>
+                                                                    <span className="font-bold text-[var(--admin-ink)]">{displayValue(readField(item, 'breedName'))}</span>
+                                                                    <strong className="text-[var(--admin-primary-dark)]">{displayValue(readField(item, 'experienceLevel'))}</strong>
+                                                                </div>
+                                                            )}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {!detailLoading && !detailError && !selectedJockeyDetail && (
+                                            <p className="m-0 rounded-md bg-[#fff8f6] px-3 py-2 text-[0.86rem] font-bold text-[var(--admin-muted)]">
+                                                Jockey details are not available.
+                                            </p>
+                                        )}
+                                    </section>
+                                )}
 
                                 {/* Approve/Reject buttons for Pending Horse Owner or Jockey */}
                                 {formatClass(selectedUser.status) === 'pending' &&
@@ -324,7 +586,7 @@ function UserManagement() {
                                             onClick={async () => {
                                                 await adminApi.updateUserStatus(selectedUser.id, 'Active');
                                                 setUsers((current) => current.map((u) => u.id === selectedUser.id ? { ...u, status: 'Active', verified: true } : u));
-                                                setSelectedUser(null);
+                                                handleCloseDetails();
                                             }}
                                             type="button"
                                         >
@@ -335,7 +597,7 @@ function UserManagement() {
                                             onClick={async () => {
                                                 await adminApi.updateUserStatus(selectedUser.id, 'Inactive');
                                                 setUsers((current) => current.map((u) => u.id === selectedUser.id ? { ...u, status: 'Inactive' } : u));
-                                                setSelectedUser(null);
+                                                handleCloseDetails();
                                             }}
                                             type="button"
                                         >

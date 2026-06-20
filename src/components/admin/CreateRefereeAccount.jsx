@@ -48,6 +48,15 @@ const tableHeadClass = 'border-b border-[var(--admin-border)] bg-[var(--admin-su
 const tableCellClass = 'border-b border-[var(--admin-border)] px-5 py-3.5 align-middle text-[0.86rem] text-[var(--admin-ink)]';
 const statusBadgeClass = 'inline-flex min-h-6 items-center rounded border border-[#9fdcb9] bg-[#e8f7ee] px-2.5 text-[0.66rem] font-black uppercase text-[#16864f]';
 
+const formatClass = (value) => String(value || '').toLowerCase().replace(/\s+/g, '-');
+
+const sortPendingFirst = (items, getStatus) => [...items].sort((current, next) => {
+    const currentRank = formatClass(getStatus(current)) === 'pending' ? 0 : 1;
+    const nextRank = formatClass(getStatus(next)) === 'pending' ? 0 : 1;
+
+    return currentRank - nextRank;
+});
+
 function CreateRefereeAccount() {
     const [form, setForm] = useState(initialForm);
     const [referees, setReferees] = useState([]);
@@ -128,6 +137,8 @@ function CreateRefereeAccount() {
             setIsSaving(false);
         }
     };
+
+    const sortedReferees = sortPendingFirst(referees, (referee) => referee.status);
 
     return (
         <AdminLayout activeKey="users">
@@ -250,7 +261,7 @@ function CreateRefereeAccount() {
                                     <tr>
                                         <td className={tableCellClass} colSpan={6}>No active referees found.</td>
                                     </tr>
-                                ) : referees.map((referee) => (
+                                ) : sortedReferees.map((referee) => (
                                     <tr key={referee.refereeId || referee.email}>
                                         <td className={tableCellClass}>
                                             <strong>{referee.fullName}</strong>

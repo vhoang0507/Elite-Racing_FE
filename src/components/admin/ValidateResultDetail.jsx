@@ -51,6 +51,13 @@ const statusClass = {
 const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
 const pageSize = 5;
 
+const sortPendingFirst = (items, getStatus) => [...items].sort((current, next) => {
+    const currentRank = formatClass(getStatus(current)) === 'pending' ? 0 : 1;
+    const nextRank = formatClass(getStatus(next)) === 'pending' ? 0 : 1;
+
+    return currentRank - nextRank;
+});
+
 function ValidateResultDetail() {
     const { resultId } = useParams();
     const [detail, setDetail] = useState(null);
@@ -81,9 +88,9 @@ function ValidateResultDetail() {
             return [];
         }
 
-        return detail.results.filter((result) => (
+        return sortPendingFirst(detail.results.filter((result) => (
             statusFilter === 'all' || formatClass(result.status) === statusFilter
-        ));
+        )), (result) => result.status);
     }, [detail, statusFilter]);
 
     const totalPages = Math.max(1, Math.ceil(filteredResults.length / pageSize));
