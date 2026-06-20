@@ -124,6 +124,58 @@ function mapUserAction(status) {
     return 'approve';
 }
 
+// Referees
+const readApiField = (item, camelKey, pascalKey = camelKey[0].toUpperCase() + camelKey.slice(1)) => item?.[camelKey] ?? item?.[pascalKey];
+
+const mapReferee = (referee) => ({
+    refereeId: readApiField(referee, 'refereeId'),
+    userId: readApiField(referee, 'userId'),
+    fullName: readApiField(referee, 'fullName') || '',
+    email: readApiField(referee, 'email') || '',
+    phone: readApiField(referee, 'phone') || '',
+    role: readApiField(referee, 'role') || 'RaceReferee',
+    status: readApiField(referee, 'status') || 'Active',
+    emailVerified: Boolean(readApiField(referee, 'emailVerified')),
+    licenseNo: readApiField(referee, 'licenseNo') || '',
+    experienceYears: readApiField(referee, 'experienceYears') ?? 0,
+    isActive: Boolean(readApiField(referee, 'isActive')),
+    createdAt: readApiField(referee, 'createdAt'),
+});
+
+async function getReferees() {
+    const data = await apiRequest('/admin/referees');
+    return Array.isArray(data) ? data.map(mapReferee) : [];
+}
+
+async function createRefereeAccount(payload) {
+    const data = await apiRequest('/admin/referees', {
+        method: 'POST',
+        body: JSON.stringify({
+            FullName: payload.fullName,
+            Email: payload.email,
+            Phone: payload.phone || null,
+            Password: payload.password,
+            ConfirmPassword: payload.confirmPassword,
+            LicenseNo: payload.licenseNo || null,
+            ExperienceYears: payload.experienceYears === '' || payload.experienceYears == null
+                ? null
+                : Number(payload.experienceYears),
+        }),
+    });
+
+    const created = mapReferee(data);
+    const requestedStatus = payload.status || 'Active';
+
+    if (requestedStatus !== 'Active') {
+        await updateUserStatus(created.userId || created.refereeId, requestedStatus);
+    }
+
+    return {
+        ...created,
+        status: requestedStatus,
+    };
+}
+
 // ─── Horses ──────────────────────────────────────────────────────────────────
 
 async function getHorses() {
@@ -175,12 +227,22 @@ async function getTournaments() {
         distanceMeters: getTournamentDistanceMeters(t),
         registeredHorses: t.entriesCount || 0,
         prizePool: t.prizePool,
-        referee: t.referee && t.referee !== 'Unassigned' ? t.referee : null,
+        referee: getAssignedReferee(t),
         status: t.status,
         rules: t.rules,
         createdAt: t.createdAt,
         imagePosition: '50% center',
     }));
+}
+
+function getAssignedReferee(tournament) {
+    const referee = tournament?.referee ?? tournament?.Referee;
+
+    if (!referee || String(referee).trim().toLowerCase() === 'unassigned') {
+        return null;
+    }
+
+    return referee;
 }
 
 async function getTournamentById(id) {
@@ -195,6 +257,8 @@ async function getTournamentById(id) {
 
     return {
         ...detail,
+        race: spectatorDetail?.race ?? detail?.race,
+        raceDateTime: spectatorDetail?.race?.raceDate ?? detail?.race?.raceDate ?? null,
         distanceMeters: getTournamentDistanceMeters(detail) ?? getTournamentDistanceMeters(spectatorDetail),
     };
 }
@@ -439,6 +503,10 @@ export const adminApi = {
     getUsers,
     getUserById,
     updateUserStatus,
+
+    // Referees
+    getReferees,
+    createRefereeAccount,
 
     // Horses
     getHorses,

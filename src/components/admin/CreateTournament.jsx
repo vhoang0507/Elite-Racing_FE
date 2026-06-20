@@ -116,7 +116,7 @@ function CreateTournament() {
 
         setIsSaving(true);
         try {
-            await apiRequest('/admin/tournaments', {
+            const createdTournament = await apiRequest('/admin/tournaments', {
                 method: 'POST',
                 body: JSON.stringify({
                     tournamentName: name,
@@ -138,6 +138,17 @@ function CreateTournament() {
                     rules: formData.get('rules') || null,
                 }),
             });
+
+            const refereeId = formData.get('referee');
+
+            if (refereeId && createdTournament?.tournamentId) {
+                await apiRequest(`/admin/tournaments/${createdTournament.tournamentId}/assign-referee`, {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        RefereeId: Number(refereeId),
+                    }),
+                });
+            }
 
             // Tournament created with Draft status by default
             navigate('/admin/races');
