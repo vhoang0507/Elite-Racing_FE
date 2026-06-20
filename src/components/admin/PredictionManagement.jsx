@@ -49,6 +49,13 @@ const rankTone = ['gold', 'silver', 'bronze'];
 const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
 const pageSize = 4;
 
+const sortPendingFirst = (items, getStatus) => [...items].sort((current, next) => {
+    const currentRank = formatClass(getStatus(current)) === 'pending' ? 0 : 1;
+    const nextRank = formatClass(getStatus(next)) === 'pending' ? 0 : 1;
+
+    return currentRank - nextRank;
+});
+
 const matchesQuery = (prediction, query) => {
     const normalizedQuery = query.trim().toLowerCase();
 
@@ -123,7 +130,7 @@ function PredictionManagement() {
             && (accuracyFilter === 'all-accuracy' || prediction.accuracy.toLowerCase().startsWith(accuracyFilter))
         ));
 
-        return [...filtered].sort((current, next) => {
+        const sorted = [...filtered].sort((current, next) => {
             if (sortBy === 'horse') {
                 return current.horse.localeCompare(next.horse);
             }
@@ -134,6 +141,8 @@ function PredictionManagement() {
 
             return next.count - current.count;
         });
+
+        return sortPendingFirst(sorted, (prediction) => prediction.status);
     }, [accuracyFilter, predictions, query, sortBy, statusFilter, tournamentFilter]);
 
     const topPredicted = useMemo(() => [...predictions]

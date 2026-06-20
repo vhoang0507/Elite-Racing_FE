@@ -311,6 +311,7 @@ async function updateTournament(id, patch) {
         description: patch.className || patch.description || '',
         location: patch.location || patch.city || '',
         raceDate: patch.endDate,
+        raceStartTime: patch.raceStartTime || '',
         registrationDeadline: patch.startDate,
         distanceMeters: Number(patch.distanceMeters || 0),
         maxHorses: Number(patch.maxHorses || 0),

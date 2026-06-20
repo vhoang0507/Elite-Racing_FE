@@ -186,6 +186,13 @@ const detailValue = (value, fallback = '-') => (
     value === undefined || value === null || value === '' ? fallback : value
 );
 
+const sortPendingFirst = (items, getStatus) => [...items].sort((current, next) => {
+    const currentRank = formatClass(getStatus(current)) === 'pending' ? 0 : 1;
+    const nextRank = formatClass(getStatus(next)) === 'pending' ? 0 : 1;
+
+    return currentRank - nextRank;
+});
+
 const getRaceTimeLabel = (tournament) => {
     const explicitTime = readTournamentField(tournament, 'raceStartTime', 'RaceStartTime');
 
@@ -204,6 +211,12 @@ const getRaceTimeLabel = (tournament) => {
     const timeMatch = String(raceDateTime).match(/T(\d{2}:\d{2})/);
 
     return timeMatch?.[1] ?? '-';
+};
+
+const getRaceTimeInputValue = (tournament) => {
+    const raceTime = getRaceTimeLabel(tournament);
+
+    return raceTime === '-' ? '' : raceTime;
 };
 
 function DetailItem({
@@ -293,7 +306,7 @@ function RaceManagement() {
             && (statusFilter === 'all' || formatClass(tournament.status) === statusFilter)
         ));
 
-        return [...filtered].sort((current, next) => {
+        const sorted = [...filtered].sort((current, next) => {
             if (sortBy === 'oldest') {
                 return new Date(current.startDate) - new Date(next.startDate);
             }
@@ -304,6 +317,8 @@ function RaceManagement() {
 
             return new Date(next.startDate) - new Date(current.startDate);
         });
+
+        return sortPendingFirst(sorted, (tournament) => tournament.status);
     }, [query, sortBy, statusFilter, tournaments]);
 
     const totalPages = Math.max(1, Math.ceil(filteredTournaments.length / pageSize));
@@ -338,11 +353,17 @@ function RaceManagement() {
             maxHorses: Number(formData.get('maxHorses') || 0),
             registeredHorses: Number(formData.get('registeredHorses') || 0),
             prizePool: Number(formData.get('prizePool') || 0),
+            raceStartTime: String(formData.get('raceStartTime') || '').trim(),
             status: formData.get('status'),
         };
 
         if (!distanceOptions.includes(patch.distanceMeters)) {
             setEditError('Distance must be 1000, 1500, or 2400 meters.');
+            return;
+        }
+
+        if (!patch.raceStartTime) {
+            setEditError('Race start time is required and must be in HH:mm format. Example: 14:30');
             return;
         }
 
@@ -680,7 +701,10 @@ function RaceManagement() {
 
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Race Date</span>
-                                        <input className={editControlClass} defaultValue={editingTournament.endDate} name="endDate" required type="date" />
+                                        <div className="grid grid-cols-[minmax(0,1fr)_132px] gap-3 max-[720px]:grid-cols-1">
+                                            <input className={editControlClass} defaultValue={editingTournament.endDate} name="endDate" required type="date" />
+                                            <input aria-label="Race start time" className={editControlClass} defaultValue={getRaceTimeInputValue(editingTournament)} name="raceStartTime" required type="time" />
+                                        </div>
                                     </label>
 
                                     <label className={editFieldClass}>

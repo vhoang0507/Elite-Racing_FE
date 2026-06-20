@@ -65,6 +65,13 @@ const roleAvatarClass = (role = '') => {
 
 const statusKey = (value) => String(value || '').toLowerCase().replace(/\s+/g, '-');
 
+const sortPendingFirst = (items, getStatus) => [...items].sort((current, next) => {
+    const currentRank = statusKey(getStatus(current)) === 'pending' ? 0 : 1;
+    const nextRank = statusKey(getStatus(next)) === 'pending' ? 0 : 1;
+
+    return currentRank - nextRank;
+});
+
 const matchesQuery = (values, query) => {
     const normalizedQuery = query.trim().toLowerCase();
 
@@ -108,12 +115,12 @@ function AdminDashboard() {
         };
     }, []);
 
-    const visibleTournaments = useMemo(() => dashboard.tournaments.filter((tournament) => statusKey(tournament.status) !== 'cancelled' && matchesQuery([
+    const visibleTournaments = useMemo(() => sortPendingFirst(dashboard.tournaments.filter((tournament) => statusKey(tournament.status) !== 'cancelled' && matchesQuery([
         tournament.name,
         tournament.description,
         tournament.city,
         tournament.status,
-    ], query)), [dashboard.tournaments, query]);
+    ], query)), (tournament) => tournament.status), [dashboard.tournaments, query]);
 
     const visibleApprovals = useMemo(() => dashboard.approvals.filter((approval) => matchesQuery([
         approval.name,
@@ -121,11 +128,11 @@ function AdminDashboard() {
         approval.request,
     ], query)), [dashboard.approvals, query]);
 
-    const visibleUsers = useMemo(() => dashboard.users.filter((user) => matchesQuery([
+    const visibleUsers = useMemo(() => sortPendingFirst(dashboard.users.filter((user) => matchesQuery([
         user.name,
         user.role,
         user.email,
-    ], query)), [dashboard.users, query]);
+    ], query)), (user) => user.status), [dashboard.users, query]);
 
     const refreshDashboard = async () => {
         setDashboard(await adminApi.getDashboard());
