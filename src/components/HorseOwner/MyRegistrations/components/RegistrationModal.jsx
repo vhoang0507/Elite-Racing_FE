@@ -1,0 +1,177 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { ownerApi } from "../../../../api/ownerApi";
+import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
+
+export default function RegistrationModal({ tournament, onClose, onSuccess }) {
+    if (!tournament) return null;
+
+    const navigate = useNavigate();
+    const [horses, setHorses] = useState([]);
+    const [selectedHorse, setSelectedHorse] = useState(null);
+    const [notes, setNotes] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
+
+    useEffect(() => {
+        setLoading(true);
+        ownerApi.getEligibleHorses(tournament.raceId)
+            .then(setHorses)
+            .catch((err) => {
+                if (!handleOwnerAccessError(err, navigate)) setHorses([]);
+            })
+            .finally(() => setLoading(false));
+    }, [tournament.raceId]);
+
+    const handleSelectHorse = (horse) => {
+        if (!horse.isEligible) return;
+        setSelectedHorse(horse);
+        setError("");
+    };
+
+    const handleSubmit = async () => {
+        if (!selectedHorse) {
+            setError("Vui lòng chọn ngựa trước khi đăng ký.");
+            return;
+        }
+        setSubmitting(true);
+        setError("");
+        try {
+            await ownerApi.createRegistration({
+                raceId: tournament.raceId,
+                horseId: selectedHorse.horseId,
+                notes,
+            });
+            setSuccess("Đăng ký thành công! Đơn đang chờ Admin duyệt.");
+            setTimeout(() => {
+                onSuccess?.();
+            }, 1500);
+        } catch (err) {
+            if (!handleOwnerAccessError(err, navigate)) {
+                setError(err.message || "Đăng ký thất bại.");
+            }
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    return (
+        <div style={styles.overlay} onClick={onClose}>
+            <div style={styles.modal} onClick={e => e.stopPropagation()}>
+
+                {/* Header */}
+                <div style={styles.imgWrapper}>
+                    <img src={tournament.imageUrl || "/DubaiSprintCup.jpg"} alt={tournament.tournamentName} style={styles.img} />
+                    <div style={styles.imgOverlay}>
+                        <span style={styles.upcomingBadge}>UPCOMING MAJOR EVENT</span>
+                        <h2 style={styles.tournamentName}>{tournament.tournamentName}</h2>
+                    </div>
+                    <button style={styles.closeBtn} onClick={onClose}>✕</button>
+                </div>
+
+                {/* Body */}
+                <div style={styles.body}>
+
+                    {/* Cột trái - Tournament Info */}
+                    <div style={styles.infoCol}>
+                        <div style={styles.infoRow}><span>📅</span><div><small>DATE</small><p>{tournament.raceDate}</p></div></div>
+                        <div style={styles.infoRow}><span>📍</span><div><small>LOCATION</small><p>{tournament.location}</p></div></div>
+                        <div style={styles.infoRow}><span>👥</span><div><small>SLOTS LEFT</small><p>{tournament.availableSlots} / {tournament.maxHorses}</p></div></div>
+                        <div style={styles.infoRow}><span>📏</span><div><small>DISTANCE</small><p>{tournament.distanceMeters} m</p></div></div>
+                        <div style={styles.infoRow}><span>💰</span><div><small>PRIZE POOL</small><h3 style={{ margin: 0, color: "#8B0000" }}>${Number(tournament.prizePool).toLocaleString()}</h3></div></div>
+                        <p style={{ fontSize: "11px", color: "#999", marginTop: "8px" }}>
+                            ⚠️ Registrations require admin approval before race participation.
+                        </p>
+                    </div>
+
+                    {/* Cột phải - Form */}
+                    <div style={styles.formCol}>
+
+                        <h4 style={styles.stepTitle}>STEP 1: CHỌN NGỰA</h4>
+                        {loading ? (
+                            <p style={{ color: "#999" }}>Loading horses...</p>
+                        ) : horses.length === 0 ? (
+                            <p style={{ color: "#999" }}>Không có ngựa nào hợp lệ.</p>
+                        ) : (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
+                                {horses.map(horse => (
+                                    <div
+                                        key={horse.horseId}
+                                        onClick={() => handleSelectHorse(horse)}
+                                        style={{
+                                            ...styles.horseCard,
+                                            opacity: horse.isEligible ? 1 : 0.5,
+                                            cursor: horse.isEligible ? "pointer" : "not-allowed",
+                                            border: selectedHorse?.horseId === horse.horseId ? "2px solid #8B0000" : "1px solid #eee",
+                                        }}
+                                    >
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                                <strong>{horse.horseName}</strong>
+                                                <span style={{
+                                                    fontSize: "11px", padding: "2px 8px", borderRadius: "10px",
+                                                    backgroundColor: horse.isEligible ? "#d4edda" : "#f8d7da",
+                                                    color: horse.isEligible ? "#155724" : "#721c24",
+                                                }}>
+                                                    {horse.isEligible ? "Eligible" : "Ineligible"}
+                                                </span>
+                                            </div>
+                                            <small style={{ color: "#999" }}>{horse.breedName} • {horse.age}y • {horse.weightKg}kg • {horse.healthStatus}</small>
+                                            {!horse.isEligible && (
+                                                <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#721c24" }}>{horse.ineligibleReason}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        <h4 style={styles.stepTitle}>STEP 2: GHI CHÚ (tùy chọn)</h4>
+                        <textarea
+                            value={notes}
+                            onChange={e => setNotes(e.target.value)}
+                            placeholder="Dietary restrictions, stable placement preferences..."
+                            style={{ ...styles.input, height: "80px", resize: "vertical", marginBottom: "16px" }}
+                        />
+
+                        {error && <p style={{ color: "#721c24", fontSize: "13px", marginBottom: "8px" }}>{error}</p>}
+                        {success && <p style={{ color: "#155724", fontSize: "13px", marginBottom: "8px" }}>{success}</p>}
+
+                        <div style={{ display: "flex", gap: "12px" }}>
+                            <button
+                                onClick={handleSubmit}
+                                disabled={submitting}
+                                style={{ ...styles.submitBtn, opacity: submitting ? 0.7 : 1 }}
+                            >
+                                {submitting ? "Đang gửi..." : "Submit Registration ➤"}
+                            </button>
+                            <button style={styles.cancelBtn} onClick={onClose}>Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+const styles = {
+    overlay: { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" },
+    modal: { backgroundColor: "#fff", borderRadius: "12px", width: "900px", maxWidth: "95vw", maxHeight: "90vh", overflowY: "auto" },
+    imgWrapper: { position: "relative" },
+    img: { width: "100%", height: "160px", objectFit: "cover", borderRadius: "12px 12px 0 0" },
+    imgOverlay: { position: "absolute", bottom: "16px", left: "16px" },
+    upcomingBadge: { backgroundColor: "#8B0000", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "4px" },
+    tournamentName: { color: "#fff", margin: "4px 0 0", fontSize: "22px", textShadow: "0 1px 3px rgba(0,0,0,0.5)" },
+    closeBtn: { position: "absolute", top: "12px", right: "12px", background: "rgba(0,0,0,0.4)", color: "#fff", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", fontSize: "14px" },
+    body: { display: "grid", gridTemplateColumns: "240px 1fr", gap: "0" },
+    infoCol: { padding: "20px", borderRight: "1px solid #eee", backgroundColor: "#faf8f8" },
+    infoRow: { display: "flex", gap: "10px", marginBottom: "12px", alignItems: "flex-start", fontSize: "13px" },
+    formCol: { padding: "20px" },
+    stepTitle: { fontSize: "11px", color: "#999", fontWeight: "700", letterSpacing: "1px", margin: "0 0 10px" },
+    input: { width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "13px", boxSizing: "border-box" },
+    horseCard: { display: "flex", gap: "12px", padding: "12px", borderRadius: "8px", marginBottom: "4px" },
+    submitBtn: { flex: 1, padding: "10px", backgroundColor: "#8B0000", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px", fontWeight: "bold" },
+    cancelBtn: { padding: "10px 20px", backgroundColor: "#fff", border: "1px solid #ddd", borderRadius: "8px", cursor: "pointer", fontSize: "14px" },
+};
