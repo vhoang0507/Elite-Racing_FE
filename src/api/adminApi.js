@@ -370,6 +370,10 @@ async function getRegistrations() {
     return apiRequest('/admin/registrations');
 }
 
+async function getPendingRegistrations() {
+    return apiRequest('/admin/registrations/pending');
+}
+
 async function getRegistrationById(id) {
     return apiRequest(`/admin/registrations/${id}`);
 }
@@ -378,8 +382,11 @@ async function approveRegistration(id) {
     return apiRequest(`/admin/registrations/${id}/approve`, { method: 'PUT' });
 }
 
-async function rejectRegistration(id) {
-    return apiRequest(`/admin/registrations/${id}/reject`, { method: 'PUT' });
+async function rejectRegistration(id, adminNote = 'Rejected by admin') {
+    return apiRequest(`/admin/registrations/${id}/reject`, {
+        method: 'PUT',
+        body: JSON.stringify({ adminNote }),
+    });
 }
 
 // ─── Race Results ────────────────────────────────────────────────────────────
@@ -554,6 +561,7 @@ export const adminApi = {
 
     // Race Registrations
     getRegistrations,
+    getPendingRegistrations,
     getRegistrationById,
     approveRegistration,
     rejectRegistration,
