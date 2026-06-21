@@ -31,6 +31,7 @@ const controlBaseClass = 'w-full min-w-0 rounded-md border border-[var(--admin-b
 const inputClass = `${controlBaseClass} h-10 px-3`;
 const selectClass = `${controlBaseClass} h-10 px-3`;
 const textareaClass = `${controlBaseClass} min-h-[88px] resize-y px-3 py-3 leading-[1.45]`;
+const fileControlClass = `${controlBaseClass} flex min-h-10 cursor-pointer items-center gap-3 px-3 py-2`;
 const twoColumnClass = 'grid grid-cols-2 gap-3.5 max-[760px]:grid-cols-1';
 const iconClass = 'pointer-events-none absolute top-1/2 h-[15px] w-[15px] -translate-y-1/2 text-[#9b7771]';
 const actionButtonClass = 'inline-flex min-h-[38px] cursor-pointer items-center justify-center gap-2 rounded-md px-[18px] text-[0.78rem] font-[850] no-underline max-[760px]:w-full';
@@ -43,6 +44,7 @@ function CreateTournament() {
     const [referees, setReferees] = useState([]);
     const [isLoadingReferees, setIsLoadingReferees] = useState(true);
     const [refereeError, setRefereeError] = useState('');
+    const [tournamentImageName, setTournamentImageName] = useState('');
     const [tournamentImagePreview, setTournamentImagePreview] = useState('');
 
     useEffect(() => {
@@ -88,6 +90,7 @@ function CreateTournament() {
             URL.revokeObjectURL(tournamentImagePreview);
         }
 
+        setTournamentImageName(file ? file.name : '');
         setTournamentImagePreview(file ? URL.createObjectURL(file) : '');
     };
 
@@ -254,13 +257,15 @@ function CreateTournament() {
 
                                 <label className={fieldClass}>
                                     <span className={labelClass}>Tournament Image</span>
-                                    <input
-                                        accept="image/*"
-                                        className={`${controlBaseClass} min-h-10 px-3 py-2`}
-                                        name="tournamentImage"
-                                        onChange={handleTournamentImageChange}
-                                        type="file"
-                                    />
+                                    <span className={fileControlClass}>
+                                        <span className="inline-flex min-h-7 flex-none items-center rounded-md bg-[var(--admin-primary)] px-3 text-[0.76rem] font-[850] text-white">
+                                            Choose File
+                                        </span>
+                                        <span className="min-w-0 truncate text-[0.86rem] font-semibold text-[#7d6661]">
+                                            {tournamentImageName || 'No file chosen'}
+                                        </span>
+                                    </span>
+                                    <input accept="image/*" className="sr-only" name="tournamentImage" onChange={handleTournamentImageChange} type="file" />
                                 </label>
 
                                 {tournamentImagePreview && (

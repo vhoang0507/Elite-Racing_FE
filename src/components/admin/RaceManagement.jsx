@@ -143,6 +143,7 @@ const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items
 const editFieldClass = 'grid gap-1.5';
 const editLabelClass = 'text-[0.72rem] font-black uppercase text-[#765c58]';
 const editControlClass = 'h-10 w-full min-w-0 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.88rem] font-bold text-[var(--admin-ink)] outline-0 focus:border-[#c6897e] focus:bg-white focus:shadow-[0_0_0_3px_rgba(134,7,7,0.08)]';
+const editFileControlClass = `${editControlClass} flex min-h-10 cursor-pointer items-center gap-3 py-2`;
 const detailItemClass = 'grid gap-1 rounded-md bg-[#fff8f6] p-3';
 const detailLabelClass = 'text-[0.66rem] font-black uppercase text-[#765c58]';
 const detailValueClass = 'break-words text-[0.9rem] font-bold text-[var(--admin-ink)]';
@@ -250,6 +251,7 @@ function RaceManagement() {
     const [selectedTournament, setSelectedTournament] = useState(null);
     const [editingTournament, setEditingTournament] = useState(null);
     const [editError, setEditError] = useState('');
+    const [editTournamentImageName, setEditTournamentImageName] = useState('');
 
     useEffect(() => {
         let isMounted = true;
@@ -347,6 +349,12 @@ function RaceManagement() {
         setPage(1);
     };
 
+    const handleEditTournamentImageChange = (event) => {
+        const file = event.target.files?.[0];
+
+        setEditTournamentImageName(file ? file.name : '');
+    };
+
     const handleEditSubmit = async (event) => {
         event.preventDefault();
         setEditError('');
@@ -401,6 +409,7 @@ function RaceManagement() {
 
             setTournaments(tournamentsWithDetails.filter(isVisibleTournament));
             setEditingTournament(null);
+            setEditTournamentImageName('');
             setPage(1);
         } catch (err) {
             setEditError(err.message || 'Failed to update tournament.');
@@ -541,7 +550,15 @@ function RaceManagement() {
                                                     <button aria-label={`View ${tournament.name}`} className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" onClick={() => setSelectedTournament(tournament)} type="button">
                                                         <FaEye aria-hidden="true" />
                                                     </button>
-                                                    <button aria-label={`Edit ${tournament.name}`} className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" onClick={() => setEditingTournament(tournament)} type="button">
+                                                    <button
+                                                        aria-label={`Edit ${tournament.name}`}
+                                                        className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]"
+                                                        onClick={() => {
+                                                            setEditTournamentImageName('');
+                                                            setEditingTournament(tournament);
+                                                        }}
+                                                        type="button"
+                                                    >
                                                         <FaEdit aria-hidden="true" />
                                                     </button>
                                                     <button aria-label={`Delete ${tournament.name}`} className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" onClick={() => handleDelete(tournament.id)} type="button">
@@ -742,7 +759,15 @@ function RaceManagement() {
 
                                     <label className={`${editFieldClass} col-span-2 max-[720px]:col-span-1`}>
                                         <span className={editLabelClass}>Tournament Image</span>
-                                        <input accept="image/*" className={`${editControlClass} py-2`} name="tournamentImage" type="file" />
+                                        <span className={editFileControlClass}>
+                                            <span className="inline-flex min-h-7 flex-none items-center rounded-md bg-[var(--admin-primary)] px-3 text-[0.76rem] font-[850] text-white">
+                                                Choose File
+                                            </span>
+                                            <span className="min-w-0 truncate text-[0.86rem] font-semibold text-[#7d6661]">
+                                                {editTournamentImageName || 'No file chosen'}
+                                            </span>
+                                        </span>
+                                        <input accept="image/*" className="sr-only" name="tournamentImage" onChange={handleEditTournamentImageChange} type="file" />
                                     </label>
 
                                     <label className={`${editFieldClass} col-span-2 max-[720px]:col-span-1`}>
