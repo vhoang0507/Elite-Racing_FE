@@ -261,6 +261,7 @@ async function getTournaments() {
         status: t.status,
         rules: t.rules,
         createdAt: t.createdAt,
+        imageUrl: readApiField(t, 'imageUrl'),
         imagePosition: '50% center',
     }));
 }
@@ -299,28 +300,42 @@ const getTournamentDistanceMeters = (tournament) => {
     return distanceMeters == null ? null : Number(distanceMeters);
 };
 
+function appendFormValue(formData, key, value) {
+    if (value !== undefined && value !== null) {
+        formData.append(key, value);
+    }
+}
+
 async function createTournament(payload) {
-    const mappedPayload = {
-        tournamentName: payload.name,
-        description: payload.className || payload.description || null,
-        location: payload.location || null,
-        raceDate: payload.endDate,
-        registrationDeadline: payload.startDate,
-        maxHorses: Number(payload.maxHorses || 0),
-        prizePool:
+    const formData = new FormData();
+
+    appendFormValue(formData, 'TournamentName', payload.name || payload.tournamentName || '');
+    appendFormValue(formData, 'Description', payload.description || payload.className || '');
+    appendFormValue(formData, 'Location', payload.location || '');
+    appendFormValue(formData, 'RaceDate', payload.endDate || payload.raceDate || '');
+    appendFormValue(formData, 'RaceStartTime', payload.raceStartTime || '');
+    appendFormValue(formData, 'RegistrationDeadline', payload.startDate || payload.registrationDeadline || '');
+    appendFormValue(formData, 'DistanceMeters', Number(payload.distanceMeters || 0));
+    appendFormValue(formData, 'MaxHorses', Number(payload.maxHorses || 0));
+    appendFormValue(
+        formData,
+        'PrizePool',
+        payload.prizePool ?? (
             Number(payload.goldPrize || 0) +
             Number(payload.silverPrize || 0) +
-            Number(payload.bronzePrize || 0),
-        minHorseAge: payload.minAge ? Number(payload.minAge) : null,
-        maxHorseAge: payload.maxAge ? Number(payload.maxAge) : null,
-        minHorseWeightKg: payload.minWeight ? Number(payload.minWeight) : null,
-        maxHorseWeightKg: payload.maxWeight ? Number(payload.maxWeight) : null,
-        rules: payload.rules || null,
-    };
+            Number(payload.bronzePrize || 0)
+        )
+    );
+    appendFormValue(formData, 'Rules', payload.rules || '');
+    appendFormValue(formData, 'Status', payload.status || '');
+
+    if (typeof File !== 'undefined' && payload.tournamentImage instanceof File && payload.tournamentImage.size > 0) {
+        formData.append('TournamentImage', payload.tournamentImage);
+    }
 
     return apiRequest('/admin/tournaments', {
         method: 'POST',
-        body: JSON.stringify(mappedPayload),
+        body: formData,
     });
 }
 
@@ -336,27 +351,27 @@ async function updateTournamentStatus(id, status) {
 }
 
 async function updateTournament(id, patch) {
-    const body = {
-        tournamentName: patch.name || patch.tournamentName || '',
-        description: patch.className || patch.description || '',
-        location: patch.location || patch.city || '',
-        raceDate: patch.endDate,
-        raceStartTime: patch.raceStartTime || '',
-        registrationDeadline: patch.startDate,
-        distanceMeters: Number(patch.distanceMeters || 0),
-        maxHorses: Number(patch.maxHorses || 0),
-        prizePool: Number(patch.prizePool || 0),
-        minHorseAge: patch.minHorseAge ? Number(patch.minHorseAge) : null,
-        maxHorseAge: patch.maxHorseAge ? Number(patch.maxHorseAge) : null,
-        minHorseWeightKg: patch.minHorseWeightKg ? Number(patch.minHorseWeightKg) : null,
-        maxHorseWeightKg: patch.maxHorseWeightKg ? Number(patch.maxHorseWeightKg) : null,
-        rules: patch.rules || '',
-        status: patch.status || null,
-    };
+    const formData = new FormData();
+
+    appendFormValue(formData, 'TournamentName', patch.name || patch.tournamentName || '');
+    appendFormValue(formData, 'Description', patch.description || patch.className || '');
+    appendFormValue(formData, 'Location', patch.location || patch.city || '');
+    appendFormValue(formData, 'RaceDate', patch.endDate || patch.raceDate || '');
+    appendFormValue(formData, 'RaceStartTime', patch.raceStartTime || '');
+    appendFormValue(formData, 'RegistrationDeadline', patch.startDate || patch.registrationDeadline || '');
+    appendFormValue(formData, 'DistanceMeters', Number(patch.distanceMeters || 0));
+    appendFormValue(formData, 'MaxHorses', Number(patch.maxHorses || 0));
+    appendFormValue(formData, 'PrizePool', Number(patch.prizePool || 0));
+    appendFormValue(formData, 'Rules', patch.rules || '');
+    appendFormValue(formData, 'Status', patch.status || '');
+
+    if (typeof File !== 'undefined' && patch.tournamentImage instanceof File && patch.tournamentImage.size > 0) {
+        formData.append('TournamentImage', patch.tournamentImage);
+    }
 
     return apiRequest(`/admin/tournaments/${id}`, {
         method: 'PUT',
-        body: JSON.stringify(body),
+        body: formData,
     });
 }
 

@@ -18,6 +18,7 @@ import {
 } from 'react-icons/fa';
 
 import { adminApi } from '../../api/adminApi';
+import { resolveFileUrl } from '../../api/uploadApi';
 import horseRacing from '../../assets/horse-racing.jpg';
 
 import AdminLayout from './AdminLayout';
@@ -351,9 +352,10 @@ function RaceManagement() {
         setEditError('');
 
         const formData = new FormData(event.currentTarget);
+        const tournamentImage = formData.get('tournamentImage');
         const patch = {
             name: formData.get('name').trim(),
-            className: formData.get('className').trim(),
+            description: formData.get('description').trim(),
             startDate: formData.get('startDate'),
             endDate: formData.get('endDate'),
             location: formData.get('location').trim(),
@@ -363,7 +365,9 @@ function RaceManagement() {
             registeredHorses: Number(formData.get('registeredHorses') || 0),
             prizePool: Number(formData.get('prizePool') || 0),
             raceStartTime: String(formData.get('raceStartTime') || '').trim(),
+            rules: formData.get('rules'),
             status: formData.get('status'),
+            tournamentImage: typeof File !== 'undefined' && tournamentImage instanceof File && tournamentImage.size > 0 ? tournamentImage : null,
         };
 
         if (!distanceOptions.includes(patch.distanceMeters)) {
@@ -495,7 +499,7 @@ function RaceManagement() {
                                                     <img
                                                         alt=""
                                                         className="h-12 w-12 flex-none rounded-md object-cover"
-                                                        src={horseRacing}
+                                                        src={tournament.imageUrl ? resolveFileUrl(tournament.imageUrl) : horseRacing}
                                                         style={{ objectPosition: tournament.imagePosition }}
                                                     />
                                                     <strong className="max-w-[180px] whitespace-normal leading-[1.15] text-[var(--admin-ink)]">{tournament.name}</strong>
@@ -627,12 +631,6 @@ function RaceManagement() {
                                     <DetailItem label="Referee">
                                         {getRefereeNames(selectedTournament).length > 0 ? getRefereeNames(selectedTournament).join(', ') : 'Unassigned'}
                                     </DetailItem>
-                                    <DetailItem label="Horse Age Range">
-                                        {detailValue(readTournamentField(selectedTournament, 'minHorseAge', 'MinHorseAge'))} - {detailValue(readTournamentField(selectedTournament, 'maxHorseAge', 'MaxHorseAge'))} years
-                                    </DetailItem>
-                                    <DetailItem label="Horse Weight Range">
-                                        {detailValue(readTournamentField(selectedTournament, 'minHorseWeightKg', 'MinHorseWeightKg'))} - {detailValue(readTournamentField(selectedTournament, 'maxHorseWeightKg', 'MaxHorseWeightKg'))} kg
-                                    </DetailItem>
                                     <DetailItem label="Created By">
                                         {detailValue(readTournamentField(selectedTournament, 'createdBy', 'CreatedBy'))}
                                     </DetailItem>
@@ -642,7 +640,7 @@ function RaceManagement() {
                                             : '-'}
                                     </DetailItem>
                                     <div className={`${detailItemClass} col-span-2 max-[720px]:col-span-1`}>
-                                        <span className={detailLabelClass}>Description / Breed</span>
+                                        <span className={detailLabelClass}>Description</span>
                                         <div className={detailValueClass}>{detailValue(selectedTournament.description || selectedTournament.className)}</div>
                                     </div>
                                     <div className={`${detailItemClass} col-span-2 max-[720px]:col-span-1`}>
@@ -678,8 +676,8 @@ function RaceManagement() {
                                     </label>
 
                                     <label className={editFieldClass}>
-                                        <span className={editLabelClass}>Breed</span>
-                                        <input className={editControlClass} defaultValue={editingTournament.className} name="className" type="text" />
+                                        <span className={editLabelClass}>Description</span>
+                                        <input className={editControlClass} defaultValue={editingTournament.description || editingTournament.className} name="description" type="text" />
                                     </label>
 
                                     <label className={editFieldClass}>
@@ -740,6 +738,16 @@ function RaceManagement() {
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Prize Pool</span>
                                         <input className={editControlClass} defaultValue={editingTournament.prizePool} min="0" name="prizePool" step="any" type="number" />
+                                    </label>
+
+                                    <label className={`${editFieldClass} col-span-2 max-[720px]:col-span-1`}>
+                                        <span className={editLabelClass}>Tournament Image</span>
+                                        <input accept="image/*" className={`${editControlClass} py-2`} name="tournamentImage" type="file" />
+                                    </label>
+
+                                    <label className={`${editFieldClass} col-span-2 max-[720px]:col-span-1`}>
+                                        <span className={editLabelClass}>Rules</span>
+                                        <textarea className={`${editControlClass} min-h-[96px] py-2`} defaultValue={editingTournament.rules || ''} name="rules" />
                                     </label>
                                 </div>
 

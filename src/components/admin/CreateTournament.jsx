@@ -10,7 +10,6 @@ import {
 
 import {
     FaDollarSign,
-    FaHorseHead,
     FaInfoCircle,
     FaMapMarkerAlt,
     FaTrophy,
@@ -33,7 +32,6 @@ const inputClass = `${controlBaseClass} h-10 px-3`;
 const selectClass = `${controlBaseClass} h-10 px-3`;
 const textareaClass = `${controlBaseClass} min-h-[88px] resize-y px-3 py-3 leading-[1.45]`;
 const twoColumnClass = 'grid grid-cols-2 gap-3.5 max-[760px]:grid-cols-1';
-const fourColumnClass = 'grid grid-cols-4 gap-3.5 max-[1080px]:grid-cols-2 max-[760px]:grid-cols-1';
 const iconClass = 'pointer-events-none absolute top-1/2 h-[15px] w-[15px] -translate-y-1/2 text-[#9b7771]';
 const actionButtonClass = 'inline-flex min-h-[38px] cursor-pointer items-center justify-center gap-2 rounded-md px-[18px] text-[0.78rem] font-[850] no-underline max-[760px]:w-full';
 const distanceOptions = [1000, 1500, 2400];
@@ -45,6 +43,7 @@ function CreateTournament() {
     const [referees, setReferees] = useState([]);
     const [isLoadingReferees, setIsLoadingReferees] = useState(true);
     const [refereeError, setRefereeError] = useState('');
+    const [tournamentImagePreview, setTournamentImagePreview] = useState('');
 
     useEffect(() => {
         let isMounted = true;
@@ -75,6 +74,22 @@ function CreateTournament() {
             isMounted = false;
         };
     }, []);
+
+    useEffect(() => () => {
+        if (tournamentImagePreview) {
+            URL.revokeObjectURL(tournamentImagePreview);
+        }
+    }, [tournamentImagePreview]);
+
+    const handleTournamentImageChange = (event) => {
+        const file = event.target.files?.[0];
+
+        if (tournamentImagePreview) {
+            URL.revokeObjectURL(tournamentImagePreview);
+        }
+
+        setTournamentImagePreview(file ? URL.createObjectURL(file) : '');
+    };
 
     const persistTournament = async (form) => {
         const formData = new FormData(form);
@@ -116,27 +131,31 @@ function CreateTournament() {
 
         setIsSaving(true);
         try {
+            const payload = new FormData();
+            const tournamentImage = formData.get('tournamentImage');
+
+            payload.append('TournamentName', name);
+            payload.append('Description', formData.get('description') || '');
+            payload.append('Location', formData.get('location') || '');
+            payload.append('RaceDate', raceDate);
+            payload.append('RaceStartTime', raceStartTime);
+            payload.append('RegistrationDeadline', registrationDeadline);
+            payload.append('DistanceMeters', String(distanceMeters));
+            payload.append('MaxHorses', String(maxHorses));
+            payload.append('PrizePool', String(
+                Number(formData.get('goldPrize') || 0)
+                + Number(formData.get('silverPrize') || 0)
+                + Number(formData.get('bronzePrize') || 0)
+            ));
+            payload.append('Rules', formData.get('rules') || '');
+
+            if (typeof File !== 'undefined' && tournamentImage instanceof File && tournamentImage.size > 0) {
+                payload.append('TournamentImage', tournamentImage);
+            }
+
             const createdTournament = await apiRequest('/admin/tournaments', {
                 method: 'POST',
-                body: JSON.stringify({
-                    tournamentName: name,
-                    description: formData.get('breed') || formData.get('description') || null,
-                    location: formData.get('location'),
-                    raceDate,
-                    raceStartTime,
-                    registrationDeadline,
-                    distanceMeters,
-                    maxHorses,
-                    prizePool:
-                        Number(formData.get('goldPrize') || 0)
-                        + Number(formData.get('silverPrize') || 0)
-                        + Number(formData.get('bronzePrize') || 0),
-                    minHorseAge: formData.get('minAge') ? Number(formData.get('minAge')) : null,
-                    maxHorseAge: formData.get('maxAge') ? Number(formData.get('maxAge')) : null,
-                    minHorseWeightKg: formData.get('minWeight') ? Number(formData.get('minWeight')) : null,
-                    maxHorseWeightKg: formData.get('maxWeight') ? Number(formData.get('maxWeight')) : null,
-                    rules: formData.get('rules') || null,
-                }),
+                body: payload,
             });
 
             const refereeId = formData.get('referee');
@@ -229,59 +248,34 @@ function CreateTournament() {
 
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Max Horses</span>
-                                        <input className={inputClass} defaultValue="20" name="maxHorses" type="number" />
+                                        <input className={inputClass} defaultValue="10" name="maxHorses" type="number" />
                                     </label>
                                 </div>
-                            </section>
 
-                            <section className={cardClass}>
-                                <h2 className={cardTitleClass}>
-                                    <FaHorseHead aria-hidden="true" className="flex-none text-[var(--admin-primary)]" />
-                                    <span>SECTION 2: HORSE CONDITIONS</span>
-                                </h2>
-
-                                <label className={`${fieldClass} w-[min(310px,100%)] max-[760px]:w-full`}>
-                                    <span className={labelClass}>Horse Breed</span>
-                                    <select className={selectClass} defaultValue="" name="breed">
-                                        <option value="" disabled>Select Horse Breed</option>
-                                        <option value="Akhal-Teke">Akhal-Teke</option>
-                                        <option value="Appaloosa">Appaloosa</option>
-                                        <option value="Arabian">Arabian</option>
-                                        <option value="Friesian">Friesian</option>
-                                        <option value="Hanoverian">Hanoverian</option>
-                                        <option value="Mustang">Mustang</option>
-                                        <option value="Quarter Horse">Quarter Horse</option>
-                                        <option value="Thoroughbred">Thoroughbred</option>
-                                    </select>
+                                <label className={fieldClass}>
+                                    <span className={labelClass}>Tournament Image</span>
+                                    <input
+                                        accept="image/*"
+                                        className={`${controlBaseClass} min-h-10 px-3 py-2`}
+                                        name="tournamentImage"
+                                        onChange={handleTournamentImageChange}
+                                        type="file"
+                                    />
                                 </label>
 
-                                <div className={fourColumnClass}>
-                                    <label className={fieldClass}>
-                                        <span className={labelClass}>Max Weight (kg)</span>
-                                        <input className={inputClass} defaultValue="650" name="maxWeight" type="number" />
-                                    </label>
-
-                                    <label className={fieldClass}>
-                                        <span className={labelClass}>Min Weight (kg)</span>
-                                        <input className={inputClass} defaultValue="450" name="minWeight" type="number" />
-                                    </label>
-
-                                    <label className={fieldClass}>
-                                        <span className={labelClass}>Max Horse Age (yrs)</span>
-                                        <input className={inputClass} defaultValue="8" name="maxAge" type="number" />
-                                    </label>
-
-                                    <label className={fieldClass}>
-                                        <span className={labelClass}>Min Horse Age (yrs)</span>
-                                        <input className={inputClass} defaultValue="3" name="minAge" type="number" />
-                                    </label>
-                                </div>
+                                {tournamentImagePreview && (
+                                    <img
+                                        alt="Tournament preview"
+                                        className="h-44 w-full rounded-md object-cover"
+                                        src={tournamentImagePreview}
+                                    />
+                                )}
                             </section>
 
                             <section className={cardClass}>
                                 <h2 className={cardTitleClass}>
                                     <FaTrophy aria-hidden="true" className="flex-none text-[var(--admin-primary)]" />
-                                    <span>SECTION 3: PRIZE &amp; RULES</span>
+                                    <span>SECTION 2: PRIZE &amp; RULES</span>
                                 </h2>
 
                                 <div className={`${twoColumnClass} items-start`}>
@@ -327,7 +321,7 @@ function CreateTournament() {
                             <section className={cardClass}>
                                 <h2 className={cardTitleClass}>
                                     <FaUserTie aria-hidden="true" className="flex-none text-[var(--admin-primary)]" />
-                                    <span>SECTION 4: ASSIGN REFEREE</span>
+                                    <span>SECTION 3: ASSIGN REFEREE</span>
                                 </h2>
 
                                 <label className={fieldClass}>
