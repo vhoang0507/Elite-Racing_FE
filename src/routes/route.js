@@ -44,6 +44,7 @@ import RefereeNotifications from '../components/referee/RefereeNotifications';
 import RefereeSetting from '../components/referee/RefereeSetting';
 import ResultReward from '../components/HorseOwner/ResultReward';
 import HorseResultDetail from '../components/HorseOwner/ResultReward/HorseDetail';
+import PreRaceInspectionRegistry from '../components/referee/PreRaceInspectionRegistry';
 
 const appRoutes = [
     {
@@ -152,6 +153,10 @@ const appRoutes = [
     {
         path: '/referee/races/pre-race',
         element: createElement(AssignedPreRace),
+    },
+    {
+        path: '/referee/races/pre-race/:raceId',
+        element: createElement(PreRaceInspectionRegistry),
     },
     {
         path: '/referee/races/post-race',
