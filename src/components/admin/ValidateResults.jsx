@@ -40,6 +40,10 @@ const raceIconClass = {
 
 const statusClass = {
     pending: 'border-[#9ab8ff] bg-[#e7f0ff] text-[#1747c2]',
+    draft: 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
+    refereeconfirmed: 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
+    adminapproved: 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
+    returned: 'border-[#e8897d] bg-[#ffe8e4] text-[var(--admin-primary)]',
     active: 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
     inactive: 'border-[#ddd6d3] bg-[#f7f5f4] text-[#6f6360]',
     banned: 'border-[#da7772] bg-[#ffe8e5] text-[#9d1515]',
@@ -158,7 +162,7 @@ function ValidateResults() {
                                         const Icon = iconByTone[submission.tone] || FaFlagCheckered;
 
                                         return (
-                                            <tr key={submission.race}>
+                                            <tr key={submission.id || submission.race}>
                                                 <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-6 py-[18px] pl-[78px] align-middle max-[820px]:pl-6">
                                                     <div className="flex min-w-80 items-center gap-4">
                                                         <span className={`grid h-9 w-9 flex-none place-items-center rounded-md ${raceIconClass[submission.tone]}`}>
@@ -175,7 +179,7 @@ function ValidateResults() {
                                                     </div>
                                                 </td>
                                                 <td className="w-[260px] whitespace-nowrap border-b border-[var(--admin-border)] px-6 py-[18px] align-middle">
-                                                    <span className={`inline-flex min-h-6 items-center rounded-full border px-2.5 text-[0.66rem] font-extrabold ${statusClass[formatClass(submission.status)]}`}>
+                                                    <span className={`inline-flex min-h-6 items-center rounded-full border px-2.5 text-[0.66rem] font-extrabold ${statusClass[formatClass(submission.status)] || statusClass.pending}`}>
                                                         {submission.status}
                                                     </span>
                                                 </td>

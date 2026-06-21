@@ -406,25 +406,57 @@ async function rejectRegistration(id, adminNote = 'Rejected by admin') {
 
 // ─── Race Results ────────────────────────────────────────────────────────────
 
+const formatRaceLabel = (result) => result.raceName || `Race #${result.raceId || '-'}`;
+
+const formatFinishTime = (seconds) => {
+    if (seconds === null || seconds === undefined || seconds === '') {
+        return '-';
+    }
+
+    const numericSeconds = Number(seconds);
+
+    return Number.isFinite(numericSeconds)
+        ? `${numericSeconds.toFixed(2)}s`
+        : String(seconds);
+};
+
+const mapRaceResult = (result) => {
+    const race = formatRaceLabel(result);
+    const score = result.score ?? '-';
+    const numericScore = Number(result.score);
+
+    return {
+        id: result.resultId,
+        resultId: result.resultId,
+        raceId: result.raceId,
+        registrationId: result.registrationId,
+        finishPosition: result.finishPosition,
+        finishTimeSeconds: result.finishTimeSeconds,
+        score,
+        status: result.status,
+        enteredByRefereeId: result.enteredByRefereeId,
+        adminConfirmedBy: result.adminConfirmedBy,
+        publishedAt: result.publishedAt,
+        note: result.note,
+        createdAt: result.createdAt,
+        updatedAt: result.updatedAt,
+        slug: `result-${result.resultId}`,
+        race,
+        name: race,
+        detail: `Registration #${result.registrationId || '-'}`,
+        tone: result.status === 'Draft' ? 'gold' : 'green',
+        position: result.finishPosition ?? '-',
+        horse: result.horseName || `Registration #${result.registrationId || '-'}`,
+        jockey: result.jockeyName || '-',
+        owner: result.ownerName || '-',
+        finishTime: formatFinishTime(result.finishTimeSeconds),
+        scoreTone: Number.isFinite(numericScore) && numericScore >= 80 ? 'green' : 'gold',
+    };
+};
+
 async function getResultSubmissions() {
     const data = await apiRequest('/admin/results');
-    return data.map((r) => ({
-        id: r.resultId,
-        raceId: r.raceId,
-        registrationId: r.registrationId,
-        finishPosition: r.finishPosition,
-        finishTimeSeconds: r.finishTimeSeconds,
-        score: r.score,
-        status: r.status,
-        enteredByRefereeId: r.enteredByRefereeId,
-        adminConfirmedBy: r.adminConfirmedBy,
-        publishedAt: r.publishedAt,
-        note: r.note,
-        createdAt: r.createdAt,
-        slug: `result-${r.resultId}`,
-        name: `Race #${r.raceId}`,
-        tone: r.status === 'Draft' ? 'gold' : 'green',
-    }));
+    return data.map(mapRaceResult);
 }
 
 async function getPendingResults() {
@@ -434,9 +466,21 @@ async function getPendingResults() {
 async function getResultDetail(idOrSlug) {
     const id = String(idOrSlug).replace('result-', '');
     const result = await apiRequest(`/admin/results/${id}`);
+    const mappedResult = mapRaceResult(result);
+
     return {
-        race: `Race #${result.raceId}`,
-        results: [result],
+        race: mappedResult.race,
+        raceName: mappedResult.race,
+        trackCondition: result.trackCondition || 'Not provided',
+        wind: result.wind || 'Race metadata unavailable',
+        winningTime: mappedResult.finishTime,
+        recordTime: result.recordTime || 'Official submitted result',
+        topPerformer: {
+            horse: mappedResult.horse,
+            jockey: mappedResult.jockey,
+            owner: mappedResult.owner,
+        },
+        results: [mappedResult],
     };
 }
 

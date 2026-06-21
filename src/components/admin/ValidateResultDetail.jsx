@@ -43,6 +43,10 @@ const scoreClass = {
 
 const statusClass = {
     pending: 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
+    draft: 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
+    refereeconfirmed: 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
+    adminapproved: 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
+    returned: 'border-[#e8897d] bg-[#ffe8e4] text-[var(--admin-primary)]',
     active: 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
     inactive: 'border-[#ddd6d3] bg-[#f5f4f3] text-[#6f6360]',
     banned: 'border-[#e8897d] bg-[#ffe8e4] text-[var(--admin-primary)]',
@@ -124,7 +128,7 @@ function ValidateResultDetail() {
         <AdminLayout activeKey="results" mainClassName="validate-detail-main">
                 <section className={pageShellClass}>
                     <h1 className="m-0 text-[1.9rem] leading-[1.15] text-[var(--admin-primary-dark)] max-[820px]:text-[1.5rem]">
-                        Race Result Details: {detail.raceName}
+                        Race Result Details: {detail.raceName || detail.race || 'Race result'}
                     </h1>
 
                     <section
@@ -133,23 +137,23 @@ function ValidateResultDetail() {
                     >
                         <article className="grid min-h-[110px] content-center gap-[5px] overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-5 py-[18px]">
                             <span className="text-[0.62rem] font-black uppercase tracking-normal text-[#704b46]">Track Conditions</span>
-                            <strong className="text-[1.32rem] leading-[1.1] text-[var(--admin-primary)]">{detail.trackCondition}</strong>
-                            <small className="text-[0.76rem] font-semibold text-[#5f4b47]">{detail.wind}</small>
+                            <strong className="text-[1.32rem] leading-[1.1] text-[var(--admin-primary)]">{detail.trackCondition || 'Not provided'}</strong>
+                            <small className="text-[0.76rem] font-semibold text-[#5f4b47]">{detail.wind || 'Race metadata unavailable'}</small>
                         </article>
 
                         <article className="grid min-h-[110px] content-center gap-[5px] overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-5 py-[18px]">
                             <span className="text-[0.62rem] font-black uppercase tracking-normal text-[#704b46]">Winning Time</span>
-                            <strong className="text-[1.32rem] leading-[1.1] text-[var(--admin-primary)]">{detail.winningTime}</strong>
-                            <small className="text-[0.76rem] font-semibold text-[#5f4b47]">{detail.recordTime}</small>
+                            <strong className="text-[1.32rem] leading-[1.1] text-[var(--admin-primary)]">{detail.winningTime || '-'}</strong>
+                            <small className="text-[0.76rem] font-semibold text-[#5f4b47]">{detail.recordTime || 'Official submitted result'}</small>
                         </article>
 
                         <article className="relative flex min-h-[110px] items-center overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-primary)] px-[22px] py-[18px] text-white before:absolute before:inset-0 before:z-[1] before:bg-[linear-gradient(90deg,rgba(134,7,7,0.98)_0%,rgba(134,7,7,0.92)_45%,rgba(134,7,7,0.44)_100%)] before:content-[''] max-[1180px]:col-span-full max-[820px]:col-span-1">
                             <img alt="" className="absolute right-0 top-0 h-full w-[54%] object-cover object-[64%_center]" src={horseRacing} />
                             <div className="relative z-[2] grid max-w-[420px] gap-1">
                                 <span className="text-[0.62rem] font-black uppercase tracking-normal text-[#ffd8d3]">Top Performer</span>
-                                <strong className="text-[1.35rem] leading-[1.05] text-white">{detail.topPerformer.horse}</strong>
+                                <strong className="text-[1.35rem] leading-[1.05] text-white">{detail.topPerformer?.horse || '-'}</strong>
                                 <small className="text-[0.78rem] font-bold text-[#ffd8d3]">
-                                    Jockey: {detail.topPerformer.jockey} | Owner: {detail.topPerformer.owner}
+                                    Jockey: {detail.topPerformer?.jockey || '-'} | Owner: {detail.topPerformer?.owner || '-'}
                                 </small>
                             </div>
                         </article>
@@ -199,7 +203,7 @@ function ValidateResultDetail() {
                                 </thead>
                                 <tbody>
                                     {visibleResults.map((result) => (
-                                        <tr key={result.horse}>
+                                        <tr key={result.id || result.resultId || result.horse}>
                                             <td className="w-[150px] whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-5 pl-[62px] align-middle text-[0.78rem] font-bold text-[#6d5752] max-[820px]:pl-6">
                                                 <span className={`inline-grid h-7 w-7 place-items-center rounded-full text-[0.72rem] font-black ${positionClass[result.position]}`}>
                                                     {result.position}
@@ -218,7 +222,7 @@ function ValidateResultDetail() {
                                                 </span>
                                             </td>
                                             <td className="w-[210px] whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-5 text-center align-middle text-[0.78rem] font-bold text-[#6d5752]">
-                                                <span className={`inline-flex min-h-8 max-w-[92px] items-center justify-center whitespace-normal rounded-full border px-[11px] text-[0.62rem] font-extrabold leading-[1.05] ${statusClass[formatClass(result.status)]}`}>
+                                                <span className={`inline-flex min-h-8 max-w-[92px] items-center justify-center whitespace-normal rounded-full border px-[11px] text-[0.62rem] font-extrabold leading-[1.05] ${statusClass[formatClass(result.status)] || statusClass.pending}`}>
                                                     {result.status}
                                                 </span>
                                             </td>
