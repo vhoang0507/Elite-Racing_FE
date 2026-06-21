@@ -220,6 +220,8 @@ function UserManagement() {
     const [selectedUser, setSelectedUser] = useState(null);
     const [detailLoading, setDetailLoading] = useState(false);
     const [detailError, setDetailError] = useState('');
+    const [detailActionError, setDetailActionError] = useState('');
+    const [detailActionLoading, setDetailActionLoading] = useState('');
     const detailRequestRef = useRef(0);
 
     useEffect(() => {
@@ -286,6 +288,8 @@ function UserManagement() {
         setSelectedUser(null);
         setDetailLoading(false);
         setDetailError('');
+        setDetailActionError('');
+        setDetailActionLoading('');
     };
 
     const handleViewDetails = async (user) => {
@@ -293,6 +297,8 @@ function UserManagement() {
         detailRequestRef.current = requestId;
         setSelectedUser(user);
         setDetailError('');
+        setDetailActionError('');
+        setDetailActionLoading('');
 
         if (!isJockeyRole(user.role)) {
             setDetailLoading(false);
@@ -326,6 +332,36 @@ function UserManagement() {
     const selectedJockeyDetail = selectedUser?.jockeyDetail;
     const jockeyDistanceExperiences = getListField(selectedJockeyDetail, 'distanceExperiences');
     const jockeyBreedExperiences = getListField(selectedJockeyDetail, 'breedExperiences');
+
+    const handleRejectSelectedUser = async () => {
+        if (!selectedUser) {
+            return;
+        }
+
+        setDetailActionError('');
+        setDetailActionLoading('reject');
+
+        try {
+            if (selectedUserIsJockey) {
+                const jockeyId = readField(selectedJockeyDetail, 'jockeyId') || selectedUser.id;
+
+                await adminApi.rejectVerification(jockeyId, 'Rejected by admin');
+            } else {
+                await adminApi.updateUserStatus(selectedUser.id, 'Inactive');
+            }
+
+            setUsers((current) => current.map((user) => (
+                user.id === selectedUser.id
+                    ? { ...user, status: 'Inactive', verified: false }
+                    : user
+            )));
+            handleCloseDetails();
+        } catch (error) {
+            setDetailActionError(error.message || 'Failed to reject this user.');
+        } finally {
+            setDetailActionLoading('');
+        }
+    };
 
     return (
         <AdminLayout
@@ -577,6 +613,12 @@ function UserManagement() {
                                     </section>
                                 )}
 
+                                {detailActionError && (
+                                    <p className="m-0 rounded-md border border-[#e7a49a] bg-[#ffe8e4] px-3 py-2 text-[0.86rem] font-bold text-[var(--admin-primary)]">
+                                        {detailActionError}
+                                    </p>
+                                )}
+
                                 {/* Approve/Reject buttons for Pending Horse Owner or Jockey */}
                                 {formatClass(selectedUser.status) === 'pending' &&
                                  (formatClass(selectedUser.role) === 'horse owner' || formatClass(selectedUser.role) === 'horseowner' || formatClass(selectedUser.role) === 'jockey') && (
@@ -593,15 +635,12 @@ function UserManagement() {
                                             Confirm
                                         </button>
                                         <button
-                                            className="inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]"
-                                            onClick={async () => {
-                                                await adminApi.updateUserStatus(selectedUser.id, 'Inactive');
-                                                setUsers((current) => current.map((u) => u.id === selectedUser.id ? { ...u, status: 'Inactive' } : u));
-                                                handleCloseDetails();
-                                            }}
+                                            className="inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed] disabled:cursor-not-allowed disabled:opacity-70"
+                                            disabled={detailActionLoading === 'reject'}
+                                            onClick={handleRejectSelectedUser}
                                             type="button"
                                         >
-                                            Reject
+                                            {detailActionLoading === 'reject' ? 'Rejecting...' : 'Reject'}
                                         </button>
                                     </div>
                                 )}
