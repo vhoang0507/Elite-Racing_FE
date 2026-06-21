@@ -203,20 +203,38 @@ function JockeySetting() {
                         <div className="grid grid-cols-2 gap-4">
                             <article className={`${panelClass} p-5 text-center`}>
                                 <FaWeight className="mx-auto text-[1.3rem] text-[var(--admin-primary)]" />
-                                <p className="mt-2 text-[0.8rem] text-[var(--admin-muted)]">Weight</p>
-                                <strong className="text-[1.8rem]">{profile?.weightKg ?? '-'}kg</strong>
+                                <p className="mt-2 text-[0.8rem] text-[var(--admin-muted)]">Weight (kg)</p>
+                                <input
+                                    type="number"
+                                    value={profile?.weightKg ?? ''}
+                                    onChange={(e) => setProfile(prev => ({ ...prev, weightKg: e.target.value }))}
+                                    className="mt-1 w-full rounded-md border border-[var(--admin-border)] px-2 py-1 text-center text-[1.2rem] font-bold outline-none focus:border-[var(--admin-primary)]"
+                                />
                             </article>
                             <article className={`${panelClass} p-5 text-center`}>
                                 <FaShieldAlt className="mx-auto text-[1.3rem] text-[#12a150]" />
                                 <p className="mt-2 text-[0.8rem] text-[var(--admin-muted)]">Health</p>
-                                <strong className="text-[1.3rem] text-[#12a150]">{profile?.healthStatus ?? '-'}</strong>
+                                <select
+                                    value={profile?.healthStatus ?? ''}
+                                    onChange={(e) => setProfile(prev => ({ ...prev, healthStatus: e.target.value }))}
+                                    className="mt-1 w-full rounded-md border border-[var(--admin-border)] px-2 py-1 text-center text-[1rem] font-bold text-[#12a150] outline-none focus:border-[var(--admin-primary)]"
+                                >
+                                    <option value="">-- Chọn --</option>
+                                    {options?.healthStatuses?.map((status) => (
+                                        <option key={status} value={status}>{status}</option>
+                                    ))}
+                                </select>
                             </article>
                         </div>
                         <article className={`${panelClass} p-6`}>
-                            <p className="text-[0.75rem] font-black uppercase tracking-wide text-[var(--admin-muted)]">Experience</p>
-                            <strong className="text-[3rem] font-light text-[var(--admin-primary-dark)]">
-                                {profile?.yearsOfExperience ?? '-'} years
-                            </strong>
+                            <p className="text-[0.75rem] font-black uppercase tracking-wide text-[var(--admin-muted)]">Experience (years)</p>
+                            <input
+                                type="number"
+                                min="0"
+                                value={profile?.yearsOfExperience ?? ''}
+                                onChange={(e) => setProfile(prev => ({ ...prev, yearsOfExperience: e.target.value }))}
+                                className="mt-2 w-32 rounded-md border border-[var(--admin-border)] px-3 py-2 text-[1.5rem] font-light text-[var(--admin-primary-dark)] outline-none focus:border-[var(--admin-primary)]"
+                            />
                         </article>
                     </div>
                 </section>
