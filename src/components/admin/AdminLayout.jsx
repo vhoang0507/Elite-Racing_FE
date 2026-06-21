@@ -49,6 +49,12 @@ const navigation = [
         path: '/admin/races',
     },
     {
+        key: 'registrations',
+        label: 'Race Entry Approval',
+        icon: FaClipboardCheck,
+        path: '/admin/registrations',
+    },
+    {
         key: 'predictions',
         label: 'Prediction Management',
         icon: FaChartBar,
@@ -133,7 +139,7 @@ function AdminLayout({
         <div className={shellClasses}>
             <aside
                 aria-label="Admin navigation"
-                className="sticky top-0 flex min-h-screen flex-col gap-6 border-r border-[var(--admin-border)] bg-[#fff0ed] px-[18px] pb-5 pt-7 max-[980px]:static max-[980px]:min-h-0 max-[980px]:gap-4"
+                className="sticky top-0 flex h-screen min-h-screen max-h-screen flex-col gap-5 overflow-hidden border-r border-[var(--admin-border)] bg-[#fff0ed] px-[18px] pb-5 pt-7 max-[980px]:static max-[980px]:h-auto max-[980px]:max-h-none max-[980px]:min-h-0 max-[980px]:gap-4 max-[980px]:overflow-visible"
             >
                 <div className="flex items-center gap-2.5 text-[1.1rem] font-black text-[var(--admin-primary)]">
                     <span className="grid h-9 w-9 place-items-center rounded-full bg-[var(--admin-primary)] text-[0.78rem] font-black tracking-normal text-white">
@@ -154,7 +160,7 @@ function AdminLayout({
                     </div>
                 </div>
 
-                <nav className="grid gap-2 max-[980px]:grid-cols-2 max-[720px]:grid-cols-1">
+                <nav className="grid min-h-0 flex-1 content-start gap-2 overflow-y-auto pr-1 max-[980px]:flex-none max-[980px]:grid-cols-2 max-[980px]:overflow-visible max-[980px]:pr-0 max-[720px]:grid-cols-1">
                     {navigation.map((item) => {
                         const Icon = item.icon;
                         const isActive = item.key === activeKey;
@@ -176,7 +182,7 @@ function AdminLayout({
                     })}
                 </nav>
 
-                <div className="flex-1 max-[980px]:hidden" />
+                <div className="hidden" />
 
                 <Link
                     className="inline-flex min-h-[38px] w-full cursor-pointer items-center justify-center gap-[9px] rounded-md bg-[var(--admin-primary)] px-3.5 font-extrabold text-white no-underline transition-colors duration-200 hover:bg-[var(--admin-primary-dark)]"
