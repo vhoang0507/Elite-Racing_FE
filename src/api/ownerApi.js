@@ -151,6 +151,38 @@ export async function selectOfficialJockey(registrationId, invitationId) {
 
 // ─── Rewards ─────────────────────────────────────────────────────────────────
 
+// Owner Notifications
+
+export async function getNotificationSummary() {
+    return apiRequest('/owner/notifications/summary');
+}
+
+export async function getNotifications({ category = 'All', page = 1, pageSize = 50 } = {}) {
+    const params = new URLSearchParams();
+    if (category) params.set('category', category);
+    if (page) params.set('page', page);
+    if (pageSize) params.set('pageSize', pageSize);
+
+    const query = params.toString();
+    return apiRequest(`/owner/notifications${query ? `?${query}` : ''}`);
+}
+
+export async function getNotificationDetail(notificationId) {
+    return apiRequest(`/owner/notifications/${notificationId}`);
+}
+
+export async function markNotificationAsRead(notificationId) {
+    return apiRequest(`/owner/notifications/${notificationId}/read`, {
+        method: 'PUT',
+    });
+}
+
+export async function markAllNotificationsAsRead() {
+    return apiRequest('/owner/notifications/read-all', {
+        method: 'PUT',
+    });
+}
+
 export async function getRewardSummary() {
     return apiRequest('/owner/rewards/summary');
 }
@@ -208,6 +240,11 @@ export const ownerApi = {
     sendJockeyInvitation,
     getJockeyInvitations,
     selectOfficialJockey,
+    getNotificationSummary,
+    getNotifications,
+    getNotificationDetail,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
     getRewardSummary,
     getAvailableRewards,
     claimReward,
