@@ -80,6 +80,14 @@ function DetailItem({ label, value }) {
 
 function HealthCertificatePreview({ url, compact = false }) {
     if (!url) {
+        if (!compact) {
+            return (
+                <div className="mt-3 grid min-h-[170px] place-items-center rounded-md border border-dashed border-[var(--admin-border)] bg-[#fff8f6] px-4 text-center text-[0.82rem] font-bold text-[var(--admin-muted)]">
+                    Health certificate image not uploaded
+                </div>
+            );
+        }
+
         return (
             <span className="inline-flex min-h-6 items-center rounded border border-[#dbc3bf] bg-[#f3e8e6] px-2.5 text-[0.68rem] font-black uppercase text-[#7f645f]">
                 Not uploaded
@@ -99,9 +107,11 @@ function HealthCertificatePreview({ url, compact = false }) {
     }
 
     return (
-        <a className="mt-3 flex items-center gap-3 rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-3 text-[0.86rem] font-black text-[var(--admin-primary)] no-underline hover:bg-[#fff0ed]" href={resolvedUrl} target="_blank" rel="noreferrer">
-            <img alt="Health certificate" className="h-[70px] w-[96px] rounded-md border border-[var(--admin-border)] object-cover" src={resolvedUrl} />
-            <span>Open health certificate</span>
+        <a className="mt-3 block rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-3 text-[0.86rem] font-black text-[var(--admin-primary)] no-underline hover:bg-[#fff0ed]" href={resolvedUrl} target="_blank" rel="noreferrer">
+            <span className="grid h-[170px] place-items-center overflow-hidden rounded-md border border-[var(--admin-border)] bg-white">
+                <img alt="Health certificate" className="h-full w-full object-contain" src={resolvedUrl} />
+            </span>
+            <span className="mt-2 block text-center">Open health certificate</span>
         </a>
     );
 }

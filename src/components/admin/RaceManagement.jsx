@@ -187,7 +187,7 @@ const pageSize = 4;
 const distanceOptions = [1000, 1500, 2400];
 
 const getDistanceMeters = (tournament) => {
-    const distanceMeters = Number(tournament?.distanceMeters ?? tournament?.race?.distanceMeters ?? 0);
+    const distanceMeters = Number(tournament?.distanceMeters ?? tournament?.DistanceMeters ?? tournament?.race?.distanceMeters ?? tournament?.Race?.DistanceMeters ?? 0);
 
     return distanceOptions.includes(distanceMeters) ? distanceMeters : null;
 };
@@ -272,9 +272,21 @@ const buildTournamentRows = async () => {
     return Promise.all((payload || []).map(async (tournament) => {
         try {
             const detail = await adminApi.getTournamentById(tournament.id);
+            
+            // Extract the race start time directly from detail or tournament to avoid overwrite loss
+            let extractedRaceStartTime = readTournamentField(detail, 'raceStartTime', 'RaceStartTime') || readTournamentField(tournament, 'raceStartTime', 'RaceStartTime');
+            
+            if (!extractedRaceStartTime && detail?.endDate?.includes('T')) {
+                const timePart = detail.endDate.split('T')[1];
+                if (timePart) {
+                    extractedRaceStartTime = timePart.slice(0, 5);
+                }
+            }
+
             return {
                 ...detail,
                 ...tournament,
+                raceStartTime: extractedRaceStartTime,
                 referee: getRefereeNames(tournament).length > 0 ? getRefereeNames(tournament) : getRefereeNames(detail),
                 distanceMeters: getDistanceMeters(detail) ?? getDistanceMeters(tournament),
             };

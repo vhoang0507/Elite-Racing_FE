@@ -12,7 +12,6 @@ import VerifyEmail from '../components/VerifyEmail';
 import AdminDashboard from '../components/admin/AdminDashboard';
 import CreateRefereeAccount from '../components/admin/CreateRefereeAccount';
 import CreateTournament from '../components/admin/CreateTournament';
-import HorseManagement from '../components/admin/HorseManagement';
 import Notifications from '../components/admin/Notifications';
 import PredictionManagement from '../components/admin/PredictionManagement';
 import RaceManagement from '../components/admin/RaceManagement';
@@ -94,10 +93,6 @@ const appRoutes = [
     {
         path: '/admin/referees/create',
         element: createElement(CreateRefereeAccount),
-    },
-    {
-        path: '/admin/horses',
-        element: createElement(HorseManagement),
     },
     {
         path: '/admin/results',
