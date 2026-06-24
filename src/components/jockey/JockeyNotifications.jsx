@@ -10,15 +10,33 @@ import {
 
 import JockeyLayout from './JockeyLayout';
 import { jockeyApi } from '../../api/jockeyApi';
+import { resolveFileUrl } from '../../api/uploadApi';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]';
+
+function HealthCertificateLink({ url }) {
+    if (!url) {
+        return <span className="text-[var(--admin-muted)]">Not uploaded</span>;
+    }
+
+    const resolvedUrl = resolveFileUrl(url);
+
+    return (
+        <a className="inline-flex items-center gap-2 font-bold text-[var(--admin-primary)] no-underline hover:underline" href={resolvedUrl} target="_blank" rel="noreferrer">
+            <img alt="Health certificate" className="h-8 w-11 rounded border border-[var(--admin-border)] object-cover" src={resolvedUrl} />
+            Open certificate
+        </a>
+    );
+}
 
 function JockeyNotifications() {
     const [summary, setSummary] = useState(null);
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedNotif, setSelectedNotif] = useState(null);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [detailError, setDetailError] = useState('');
     const [status, setStatus] = useState('All');
     const [date, setDate] = useState('');
     const [sort, setSort] = useState('Newest');
@@ -66,11 +84,26 @@ function JockeyNotifications() {
 
     const handleClickNotif = async (notif) => {
         setSelectedNotif(notif);
+        setDetailLoading(true);
+        setDetailError('');
+
+        try {
+            const detail = await jockeyApi.getNotificationDetail(notif.notificationId);
+            setSelectedNotif({ ...notif, ...detail });
+        } catch (err) {
+            setDetailError(err.message || 'Failed to load notification detail');
+        } finally {
+            setDetailLoading(false);
+        }
+
         if (!notif.isRead) {
             try {
                 await jockeyApi.markNotificationAsRead(notif.notificationId);
                 setNotifications(prev => prev.map(n =>
                     n.notificationId === notif.notificationId ? { ...n, isRead: true } : n
+                ));
+                setSelectedNotif(prev => (
+                    prev?.notificationId === notif.notificationId ? { ...prev, isRead: true } : prev
                 ));
                 setSummary(prev => prev ? { ...prev, unread: Math.max(0, prev.unread - 1) } : prev);
             } catch { }
@@ -213,6 +246,16 @@ function JockeyNotifications() {
                         {selectedNotif ? (
                             <div className="p-5">
                                 <h3 className="mb-4 text-lg font-bold">Notification Detail</h3>
+                                {detailLoading && (
+                                    <div className="mb-4 rounded-md border border-[var(--admin-border)] bg-[#fff8f6] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-muted)]">
+                                        Loading notification detail...
+                                    </div>
+                                )}
+                                {detailError && (
+                                    <div className="mb-4 rounded-md border border-[#e7a49a] bg-[#ffe8e4] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-primary)]">
+                                        {detailError}
+                                    </div>
+                                )}
                                 <div className="grid gap-4 text-[0.9rem]">
                                     <div>
                                         <div className="text-[var(--admin-muted)] text-[0.75rem] font-bold uppercase mb-1">Title</div>
@@ -232,6 +275,20 @@ function JockeyNotifications() {
                                             {selectedNotif.isRead ? 'Read' : 'Unread'}
                                         </span>
                                     </div>
+                                    {selectedNotif.raceDetail && (
+                                        <div className="rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-4">
+                                            <div className="text-[var(--admin-muted)] text-[0.75rem] font-bold uppercase mb-2">Race Detail</div>
+                                            <div className="grid gap-2">
+                                                <strong>{selectedNotif.raceDetail.raceName}</strong>
+                                                <span>{selectedNotif.raceDetail.horseName} - {selectedNotif.raceDetail.ownerName}</span>
+                                                <span className="text-[var(--admin-muted)]">{selectedNotif.raceDetail.horseHealthStatus || '-'}</span>
+                                                <div>
+                                                    <div className="text-[var(--admin-muted)] text-[0.75rem] font-bold uppercase mb-1">Health Certificate</div>
+                                                    <HealthCertificateLink url={selectedNotif.raceDetail.healthCertificateImageUrl} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ) : (

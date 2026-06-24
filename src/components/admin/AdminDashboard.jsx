@@ -35,6 +35,18 @@ const statusClass = {
     active: 'border-[#afe2c4] bg-[#dff7e9] text-[#118548]',
     inactive: 'border-[#dbaaa5] bg-[#f5e1df] text-[var(--admin-primary-dark)]',
     banned: 'border-[#f5b8bf] bg-[#ffe5e7] text-[#c3222c]',
+    draft: 'bg-[#f3f4f6] text-[#374151]',
+    openregistration: 'bg-[#dcfce7] text-[#15803d]',
+    closedregistration: 'bg-[#fee2e2] text-[#b91c1c]',
+    ongoing: 'bg-[#dbeafe] text-[#1d4ed8]',
+    completed: 'bg-[#ede9fe] text-[#6d28d9]',
+    cancelled: 'bg-[#f3f4f6] text-[#6b7280]',
+};
+const tournamentStatusBaseClass = 'inline-flex min-h-6 items-center rounded-full px-2.5 text-[0.72rem] font-extrabold';
+const getTournamentStatusClass = (status) => `${tournamentStatusBaseClass} ${statusClass[statusKey(status)] || statusClass.draft}`;
+const deadlineClass = {
+    warning: 'text-[#b45309]',
+    danger: 'text-[#b91c1c]',
 };
 const avatarBaseClass = 'grid h-[42px] w-[42px] flex-none place-items-center overflow-hidden rounded-full text-[0.8rem] font-extrabold text-white';
 const avatarClass = {
@@ -224,7 +236,7 @@ function AdminDashboard() {
                                     <tbody>
                                         {visibleTournaments.map((tournament, index) => {
                                             const isLast = index === visibleTournaments.length - 1;
-                                            const status = statusKey(tournament.status);
+                                            const deadlineWarning = adminApi.formatters.getTournamentDeadlineWarning(tournament);
 
                                             return (
                                             <tr key={tournament.name}>
@@ -233,11 +245,18 @@ function AdminDashboard() {
                                                     <span className="mt-1 block text-[var(--admin-muted)]">{tournament.description}</span>
                                                 </td>
                                                 <td className={tableCellClass(isLast)}>{adminApi.formatters.toDateLabel(tournament.endDate)}</td>
-                                                <td className={tableCellClass(isLast)}>{adminApi.formatters.toDateLabel(tournament.startDate)}</td>
+                                                <td className={tableCellClass(isLast)}>
+                                                    <span className="block">{adminApi.formatters.toDateLabel(tournament.startDate)}</span>
+                                                    {deadlineWarning && (
+                                                        <small className={`mt-1 block text-[0.72rem] font-black ${deadlineClass[deadlineWarning.type] || deadlineClass.warning}`}>
+                                                            {deadlineWarning.text}
+                                                        </small>
+                                                    )}
+                                                </td>
                                                 <td className={tableCellClass(isLast)}>{tournament.registeredHorses}/{tournament.maxHorses}</td>
                                                 <td className={tableCellClass(isLast)}>
-                                                    <span className={`inline-flex min-h-6 items-center rounded-[5px] border px-2 text-[0.74rem] font-extrabold ${statusClass[status]}`}>
-                                                        {tournament.status}
+                                                    <span className={getTournamentStatusClass(tournament.status)}>
+                                                        {adminApi.formatters.formatTournamentStatus(tournament.status)}
                                                     </span>
                                                 </td>
                                                 <td className={tableCellClass(isLast, 'right')}>

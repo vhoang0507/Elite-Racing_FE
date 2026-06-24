@@ -117,6 +117,44 @@ function HorseDetailItem({ label, value }) {
     );
 }
 
+function HealthCertificateLink({ url, compact = false }) {
+    if (!url) {
+        if (!compact) {
+            return (
+                <div className="mt-3 grid min-h-[170px] place-items-center rounded-md border border-dashed border-[var(--admin-border)] bg-[#fff8f6] px-4 text-center text-[0.82rem] font-bold text-[var(--admin-muted)]">
+                    Health certificate image not uploaded
+                </div>
+            );
+        }
+
+        return (
+            <span className="inline-flex min-h-6 items-center rounded border border-[#dbc3bf] bg-[#f3e8e6] px-2.5 text-[0.68rem] font-black uppercase text-[#7f645f]">
+                Not uploaded
+            </span>
+        );
+    }
+
+    const resolvedUrl = resolveFileUrl(url);
+
+    if (compact) {
+        return (
+            <a className="inline-flex items-center gap-2 text-[0.78rem] font-black text-[var(--admin-primary)] no-underline hover:underline" href={resolvedUrl} target="_blank" rel="noreferrer">
+                <img alt="Health certificate" className="h-8 w-11 rounded border border-[var(--admin-border)] object-cover" src={resolvedUrl} />
+                View
+            </a>
+        );
+    }
+
+    return (
+        <a className="mt-3 block rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-3 text-[0.86rem] font-black text-[var(--admin-primary)] no-underline hover:bg-[#fff0ed]" href={resolvedUrl} target="_blank" rel="noreferrer">
+            <span className="grid h-[170px] place-items-center overflow-hidden rounded-md border border-[var(--admin-border)] bg-white">
+                <img alt="Health certificate" className="h-full w-full object-contain" src={resolvedUrl} />
+            </span>
+            <span className="mt-2 block text-center">Open health certificate</span>
+        </a>
+    );
+}
+
 function HorseManagement() {
     const [horses, setHorses] = useState([]);
     const [reports, setReports] = useState([]);
@@ -128,6 +166,9 @@ function HorseManagement() {
     const [sortBy, setSortBy] = useState('newest');
     const [page, setPage] = useState(1);
     const [selectedHorseId, setSelectedHorseId] = useState(null);
+    const [selectedHorseDetail, setSelectedHorseDetail] = useState(null);
+    const [selectedHorseLoading, setSelectedHorseLoading] = useState(false);
+    const [selectedHorseError, setSelectedHorseError] = useState('');
 
     useEffect(() => {
         let isMounted = true;
@@ -192,7 +233,7 @@ function HorseManagement() {
     const visibleHorses = filteredHorses.slice((page - 1) * pageSize, page * pageSize);
     const firstShown = filteredHorses.length === 0 ? 0 : (page - 1) * pageSize + 1;
     const lastShown = Math.min(page * pageSize, filteredHorses.length);
-    const selectedHorse = horses.find((horse) => horse.id === selectedHorseId) || null;
+    const selectedHorse = selectedHorseDetail || horses.find((horse) => horse.id === selectedHorseId) || null;
 
     const handleQueryChange = (value) => {
         setQuery(value);
@@ -202,6 +243,34 @@ function HorseManagement() {
     const handleFilterChange = (setter) => (event) => {
         setter(event.target.value);
         setPage(1);
+    };
+
+    const handleOpenHorseDetail = async (horse) => {
+        setSelectedHorseId(horse.id);
+        setSelectedHorseDetail(horse);
+        setSelectedHorseError('');
+        setSelectedHorseLoading(true);
+
+        try {
+            const detail = await adminApi.getHorseById(horse.id);
+            setSelectedHorseDetail({
+                ...horse,
+                ...detail,
+                imageUrl: detail.imageUrl || horse.imageUrl,
+                approval: horse.approval || detail.approval,
+            });
+        } catch (err) {
+            setSelectedHorseError(err.message || 'Cannot load horse detail.');
+        } finally {
+            setSelectedHorseLoading(false);
+        }
+    };
+
+    const handleCloseHorseDetail = () => {
+        handleCloseHorseDetail();
+        setSelectedHorseDetail(null);
+        setSelectedHorseError('');
+        setSelectedHorseLoading(false);
     };
 
     const handleReviewReport = async (report) => {
@@ -341,7 +410,7 @@ function HorseManagement() {
                             <table className="w-full border-collapse max-[860px]:min-w-[820px]">
                                 <thead>
                                     <tr>
-                                        {['Horse & Breed', 'Age/Weight', 'Owner', 'Approval', 'Details'].map((heading) => (
+                                        {['Horse & Breed', 'Age/Weight', 'Owner', 'Health Certificate', 'Approval', 'Details'].map((heading) => (
                                             <th className="whitespace-nowrap border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] py-[18px] text-left text-[0.72rem] uppercase text-[#765c58]" key={heading}>
                                                 {heading}
                                             </th>
@@ -367,12 +436,15 @@ function HorseManagement() {
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">{horse.age ?? '-'} yrs / {horse.weight ?? '-'} kg</td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">{horse.owner || '-'}</td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
+                                                <HealthCertificateLink url={horse.healthCertificateImageUrl} compact />
+                                            </td>
+                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
                                                 <span className={`inline-flex min-h-6 items-center rounded border px-2.5 text-[0.68rem] font-black uppercase ${approvalClass[formatClass(horse.approval)]}`}>
                                                     {horse.approval}
                                                 </span>
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
-                                                <button aria-label={`View details for ${horse.name}`} className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md bg-transparent text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => setSelectedHorseId(horse.id)} type="button">
+                                                <button aria-label={`View details for ${horse.name}`} className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md bg-transparent text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => handleOpenHorseDetail(horse)} type="button">
                                                     <FaEye aria-hidden="true" />
                                                 </button>
                                             </td>
@@ -449,17 +521,29 @@ function HorseManagement() {
                                     <h2 id="horse-detail-title" className="m-0 text-[1.35rem] text-[var(--admin-primary-dark)]">{selectedHorse.name}</h2>
                                     <span className="mt-1 block text-[0.82rem] font-bold text-[var(--admin-muted)]">{selectedHorse.breed}</span>
                                 </div>
-                                <button className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[1.15rem] font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => setSelectedHorseId(null)} type="button" aria-label="Close horse details">
+                                <button className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[1.15rem] font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={handleCloseHorseDetail} type="button" aria-label="Close horse details">
                                     ×
                                 </button>
                             </div>
 
+                            {(selectedHorseLoading || selectedHorseError) && (
+                                <div className={`mx-6 mt-4 rounded-md border px-4 py-3 text-[0.82rem] font-bold ${selectedHorseError ? 'border-[#e7a49a] bg-[#ffe8e4] text-[var(--admin-primary)]' : 'border-[var(--admin-border)] bg-[#fff8f6] text-[var(--admin-muted)]'}`}>
+                                    {selectedHorseError || 'Loading horse detail...'}
+                                </div>
+                            )}
+
                             <div className="grid grid-cols-[260px_1fr] gap-6 p-6 max-[760px]:grid-cols-1">
-                                <img
-                                    alt={selectedHorse.name}
-                                    className="h-[230px] w-full rounded-md object-cover"
-                                    src={selectedHorse.imageUrl ? resolveFileUrl(selectedHorse.imageUrl) : horseRacing}
-                                />
+                                <div className="grid content-start gap-3">
+                                    <img
+                                        alt={selectedHorse.name}
+                                        className="h-[230px] w-full rounded-md object-cover"
+                                        src={selectedHorse.imageUrl ? resolveFileUrl(selectedHorse.imageUrl) : horseRacing}
+                                    />
+                                    <div className="rounded-md border border-[var(--admin-border)] bg-[#fffdfc] p-4">
+                                        <span className="block text-[0.68rem] font-black uppercase text-[#765c58]">Health Certificate</span>
+                                        <HealthCertificateLink url={selectedHorse.healthCertificateImageUrl} />
+                                    </div>
+                                </div>
 
                                 <div className="grid gap-4">
                                     <div className="grid grid-cols-2 gap-3 max-[620px]:grid-cols-1">

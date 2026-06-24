@@ -41,26 +41,11 @@ const menuItems = [
 ];
 
 const shellClasses = [
-    '[--admin-bg:#fbf7f5]',
-    '[--admin-surface:#fffefd]',
-    '[--admin-surface-strong:#fff3ef]',
-    '[--admin-border:#edcfc9]',
-    '[--admin-primary:#860707]',
-    '[--admin-primary-dark:#650404]',
-    '[--admin-ink:#2d2020]',
-    '[--admin-muted:#705f5b]',
-    '[--admin-gold:#a77815]',
-    '[--admin-green:#24715d]',
-    '[--admin-blue:#286a8f]',
-    '[--admin-coral:#bd4f3d]',
-    '[--admin-radius:8px]',
-    "grid h-screen min-h-screen grid-cols-[260px_minmax(0,1fr)] overflow-auto bg-[var(--admin-bg)] text-left font-['Segoe_UI',Arial,sans-serif] text-[var(--admin-ink)]",
-    'max-[980px]:grid-cols-1',
+    'role-shell',
 ].join(' ');
 
 const iconButtonClasses = [
-    'relative inline-flex h-[38px] w-[38px] cursor-pointer items-center justify-center gap-[9px] rounded-md border-0 bg-transparent text-[#5b403c] transition-colors duration-200',
-    'hover:bg-[#f8e5e1]',
+    'role-icon-button',
 ].join(' ');
 
 function readField(source, camelKey, pascalKey = camelKey[0].toUpperCase() + camelKey.slice(1)) {
@@ -195,16 +180,16 @@ function RefereeLayout({
 
     return (
         <div className={shellClasses}>
-            <aside className="sticky top-0 flex min-h-screen flex-col gap-6 border-r border-[var(--admin-border)] bg-[#fff0ed] px-[18px] pb-5 pt-7 max-[980px]:static max-[980px]:min-h-0 max-[980px]:gap-4">
-                <div className="flex items-center gap-2.5 text-[1.1rem] font-black text-[var(--admin-primary)]">
-                    <span className="grid h-9 w-9 place-items-center rounded-full bg-[var(--admin-primary)] text-[0.78rem] font-black text-white">
+            <aside className="role-sidebar">
+                <div className="role-brand">
+                    <span className="role-brand-mark">
                         ER
                     </span>
                     <span>Elite Racing League</span>
                 </div>
 
-                <div className="flex items-center gap-3 px-1.5 py-2">
-                    <div className="grid h-[42px] w-[42px] flex-none place-items-center overflow-hidden rounded-full bg-[linear-gradient(145deg,#650404,#c04733)] text-[0.8rem] font-extrabold text-white">
+                <div className="role-profile-summary">
+                    <div className="role-avatar">
                         {initials}
                     </div>
 
@@ -212,7 +197,7 @@ function RefereeLayout({
                         <strong className="block truncate text-[var(--admin-ink)]">
                             {fullName}
                         </strong>
-                        <span className="mt-0.5 block text-[0.72rem] font-extrabold text-[var(--admin-primary)]">
+                        <span className="role-profile-role">
                             RACE REFEREE
                         </span>
                         {badge && (
@@ -226,7 +211,7 @@ function RefereeLayout({
                     </div>
                 </div>
 
-                <nav className="grid gap-2 max-[980px]:grid-cols-2 max-[720px]:grid-cols-1">
+                <nav className="role-nav">
                     {menuItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = activeKey === item.key;
@@ -236,9 +221,8 @@ function RefereeLayout({
                                 key={item.key}
                                 to={item.path}
                                 className={[
-                                    'inline-flex min-h-[38px] w-full cursor-pointer items-center justify-start gap-[9px] rounded-md px-3 font-bold text-[#5c4642] no-underline transition-colors duration-200',
-                                    'hover:bg-[#f8dfda] hover:text-[var(--admin-primary)]',
-                                    isActive ? 'bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)] hover:text-white' : '',
+                                    'role-nav-item',
+                                    isActive ? 'is-active' : '',
                                 ].join(' ')}
                             >
                                 <Icon className="h-4 w-4 flex-none" />
@@ -250,10 +234,10 @@ function RefereeLayout({
 
                 <div className="flex-1 max-[980px]:hidden" />
 
-                <div className="grid gap-2 border-t border-[var(--admin-border)] pt-4">
+                <div className="role-sidebar-actions">
                     <button
                         type="button"
-                        className="inline-flex min-h-[38px] cursor-pointer items-center justify-start gap-[9px] rounded-md border-0 bg-transparent px-0 font-bold text-[#5c4642] transition-colors duration-200 hover:bg-[#f8dfda] hover:text-[var(--admin-primary)]"
+                        className="role-sidebar-action"
                     >
                         <FaQuestionCircle className="h-4 w-4" />
                         <span>Support</span>
@@ -262,7 +246,7 @@ function RefereeLayout({
                     <button
                         type="button"
                         onClick={handleLogout}
-                        className="inline-flex min-h-[38px] cursor-pointer items-center justify-start gap-[9px] rounded-md border-0 bg-transparent px-0 font-bold text-[#5c4642] transition-colors duration-200 hover:bg-[#f8dfda] hover:text-[var(--admin-primary)]"
+                        className="role-sidebar-action"
                     >
                         <FaSignOutAlt className="h-4 w-4" />
                         <span>Logout</span>
@@ -270,12 +254,11 @@ function RefereeLayout({
                 </div>
             </aside>
 
-            <main className={`min-w-0 flex min-h-screen flex-col ${mainClassName}`}>
-                <header className="sticky top-0 z-[4] flex h-16 items-center justify-between gap-5 border-b border-[var(--admin-border)] bg-[var(--admin-surface)] px-11 max-[980px]:h-auto max-[980px]:items-stretch max-[980px]:px-5 max-[980px]:py-3 max-[720px]:flex-col">
-                    <label className="flex h-10 w-[min(420px,100%)] items-center gap-2.5 rounded-full border border-[var(--admin-border)] bg-[#fffaf8] px-4 text-[var(--admin-muted)]">
+            <main className={`role-main ${mainClassName}`}>
+                <header className="role-header">
+                    <label className="role-search">
                         <FaSearch />
                         <input
-                            className="h-full w-full min-w-0 border-0 bg-transparent p-0 text-[var(--admin-ink)] outline-0"
                             onChange={(event) => onSearchChange?.(event.target.value)}
                             placeholder={searchPlaceholder}
                             type="search"
@@ -302,7 +285,7 @@ function RefereeLayout({
                             <button
                                 type="button"
                                 onClick={() => setIsProfileOpen((current) => !current)}
-                                className={`${iconButtonClasses} overflow-hidden rounded-full bg-[linear-gradient(145deg,#650404,#c04733)] text-[0.72rem] font-black text-white hover:bg-[linear-gradient(145deg,#650404,#c04733)]`}
+                                className={`${iconButtonClasses} role-profile-button`}
                                 aria-expanded={isProfileOpen}
                                 aria-label="Open account profile"
                             >
@@ -310,9 +293,9 @@ function RefereeLayout({
                             </button>
 
                             {isProfileOpen && (
-                                <section className="absolute right-0 top-12 z-30 grid w-[min(340px,calc(100vw-40px))] gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5 shadow-[0_18px_42px_rgba(45,32,32,0.18)]">
+                                <section className="role-popover">
                                     <div className="flex items-center gap-3">
-                                        <div className="grid h-14 w-14 flex-none place-items-center rounded-full bg-[linear-gradient(145deg,#650404,#c04733)] text-[0.95rem] font-black text-white">
+                                        <div className="role-avatar h-14 w-14 text-[0.95rem]">
                                             {initials}
                                         </div>
                                         <div className="min-w-0">
@@ -359,14 +342,14 @@ function RefereeLayout({
                                                 setIsProfileOpen(false);
                                                 navigate('/referee/settings');
                                             }}
-                                            className="inline-flex min-h-9 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]"
+                                            className="secondary-button min-h-9"
                                         >
                                             Settings
                                         </button>
                                         <button
                                             type="button"
                                             onClick={() => setIsProfileOpen(false)}
-                                            className="inline-flex min-h-9 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]"
+                                            className="secondary-button min-h-9"
                                         >
                                             Close
                                         </button>
@@ -381,9 +364,9 @@ function RefereeLayout({
                     {children}
                 </div>
 
-                <footer className="flex items-center justify-between border-t border-[var(--admin-border)] bg-[var(--admin-surface)] px-11 py-5 text-[0.82rem] text-[var(--admin-muted)] max-[720px]:flex-col max-[720px]:gap-3 max-[720px]:px-5">
+                <footer className="role-footer">
                     <strong className="text-[var(--admin-primary)]">Elite Racing League</strong>
-                    <div className="flex flex-wrap gap-4">
+                    <div className="role-footer-links">
                         <a href="#" className="text-[var(--admin-muted)] no-underline hover:text-[var(--admin-primary)]">Terms of Service</a>
                         <a href="#" className="text-[var(--admin-muted)] no-underline hover:text-[var(--admin-primary)]">Privacy Policy</a>
                         <a href="#" className="text-[var(--admin-muted)] no-underline hover:text-[var(--admin-primary)]">Contact Support</a>

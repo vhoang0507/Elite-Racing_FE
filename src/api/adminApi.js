@@ -27,6 +27,72 @@ const toShortDateParts = (startDate, endDate) => {
     return [`${startLabel} - ${endDay}`, endMonth, String(end.getFullYear())];
 };
 
+const tournamentStatusLabels = {
+    Draft: 'Draft',
+    OpenRegistration: 'Open Registration',
+    ClosedRegistration: 'Closed Registration',
+    Ongoing: 'Ongoing',
+    Completed: 'Completed',
+    Cancelled: 'Cancelled',
+};
+
+const formatTournamentStatus = (status) => tournamentStatusLabels[status] || status || '';
+
+const getTournamentDeadlineWarning = (tournament) => {
+    const status = tournament?.status ?? tournament?.Status;
+
+    if (status !== 'OpenRegistration') {
+        return null;
+    }
+
+    const dateValue = tournament?.startDate
+        ?? tournament?.StartDate
+        ?? tournament?.registrationDeadline
+        ?? tournament?.RegistrationDeadline;
+
+    if (!dateValue) {
+        return null;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const dateText = String(dateValue);
+    const deadline = new Date(dateText.includes('T') ? dateText : `${dateText}T00:00:00`);
+
+    if (Number.isNaN(deadline.getTime())) {
+        return null;
+    }
+
+    deadline.setHours(0, 0, 0, 0);
+
+    const diffTime = deadline.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) {
+        return {
+            text: 'Registration deadline expired',
+            type: 'danger',
+        };
+    }
+
+    if (diffDays === 0) {
+        return {
+            text: 'Registration closes today',
+            type: 'warning',
+        };
+    }
+
+    if (diffDays <= 3) {
+        return {
+            text: `Registration closes in ${diffDays} day(s)`,
+            type: 'warning',
+        };
+    }
+
+    return null;
+};
+
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 
 async function getDashboard() {
@@ -149,6 +215,31 @@ const getHorseBreedName = (horse) => {
     return fallbackHorseBreedNames[breedId] || `Breed #${breedId || 0}`;
 };
 
+const mapAdminHorse = (horse, ownerNamesById = new Map()) => {
+    const ownerId = readApiField(horse, 'ownerId');
+
+    return {
+        id: readApiField(horse, 'horseId'),
+        name: readApiField(horse, 'horseName'),
+        age: readApiField(horse, 'age'),
+        heightCm: readApiField(horse, 'heightCm'),
+        weight: readApiField(horse, 'weightKg'),
+        weightKg: readApiField(horse, 'weightKg'),
+        healthStatus: readApiField(horse, 'healthStatus'),
+        imageUrl: readApiField(horse, 'imageUrl'),
+        healthCertificateImageUrl: readApiField(horse, 'healthCertificateImageUrl'),
+        isActive: readApiField(horse, 'isActive'),
+        ownerId,
+        owner: readApiField(horse, 'ownerName') || readApiField(horse, 'ownerFullName') || ownerNamesById.get(Number(ownerId)) || `Owner #${ownerId || 0}`,
+        breedId: readApiField(horse, 'breedId'),
+        achievementSummary: readApiField(horse, 'achievementSummary'),
+        createdAt: readApiField(horse, 'createdAt'),
+        approval: readApiField(horse, 'approval') || readApiField(horse, 'status') || 'Pending',
+        breed: getHorseBreedName(horse),
+        reportStatus: 'Active',
+    };
+};
+
 const mapReferee = (referee) => ({
     refereeId: readApiField(referee, 'refereeId'),
     userId: readApiField(referee, 'userId'),
@@ -207,30 +298,18 @@ async function getHorses() {
     ]);
     const ownerNamesById = new Map((users || []).map((user) => [Number(user.id), user.name]));
 
-    const horses = data.map((h) => ({
-        id: h.horseId,
-        name: h.horseName,
-        age: h.age,
-        heightCm: h.heightCm,
-        weight: h.weightKg,
-        weightKg: h.weightKg,
-        healthStatus: h.healthStatus,
-        imageUrl: readApiField(h, 'imageUrl'),
-        isActive: h.isActive,
-        ownerId: h.ownerId,
-        owner: readApiField(h, 'ownerName') || readApiField(h, 'ownerFullName') || ownerNamesById.get(Number(h.ownerId)) || `Owner #${h.ownerId || 0}`,
-        breedId: h.breedId,
-        achievementSummary: h.achievementSummary,
-        createdAt: h.createdAt,
-        approval: readApiField(h, 'approval') || readApiField(h, 'status') || 'Pending',
-        breed: getHorseBreedName(h),
-        reportStatus: 'Active',
-    }));
+    const horses = data.map((h) => mapAdminHorse(h, ownerNamesById));
     return { horses, reports: [] };
 }
 
 async function getHorseById(id) {
-    return apiRequest(`/admin/horses/${id}`);
+    const [data, users] = await Promise.all([
+        apiRequest(`/admin/horses/${id}`),
+        getUsers().catch(() => []),
+    ]);
+    const ownerNamesById = new Map((users || []).map((user) => [Number(user.id), user.name]));
+
+    return mapAdminHorse(data, ownerNamesById);
 }
 
 async function updateHorseApproval(id, approval) {
@@ -340,11 +419,7 @@ async function createTournament(payload) {
 }
 
 async function updateTournamentStatus(id, status) {
-    const s = (status || '').toLowerCase();
-    if (s.includes('cancel')) return apiRequest(`/admin/tournaments/${id}/cancel`, { method: 'PUT' });
-    if (s.includes('open') || s.includes('approve')) return apiRequest(`/admin/tournaments/${id}/approve`, { method: 'PUT' });
-    // For other status changes, use the general PUT update
-    return apiRequest(`/admin/tournaments/${id}`, {
+    return apiRequest(`/admin/tournaments/${id}/status`, {
         method: 'PUT',
         body: JSON.stringify({ status }),
     });
@@ -484,6 +559,87 @@ async function getResultDetail(idOrSlug) {
     };
 }
 
+const normalizeReports = (payload) => {
+    if (Array.isArray(payload)) {
+        return payload;
+    }
+
+    if (Array.isArray(payload?.items)) {
+        return payload.items;
+    }
+
+    if (Array.isArray(payload?.reports)) {
+        return payload.reports;
+    }
+
+    return [];
+};
+
+const mapRefereeReport = (report) => ({
+    id: report.reportId || report.violationId,
+    reportId: report.reportId,
+    violationId: report.violationId,
+    raceId: report.raceId,
+    registrationId: report.registrationId,
+    refereeId: report.refereeId,
+    title: report.reportContent
+        ? `Report #${report.reportId}`
+        : `${report.violationType || 'Referee Report'} #${report.violationId || report.reportId || '-'}`,
+    content: report.reportContent || report.description || report.note || 'No report content provided.',
+    submittedAt: report.submittedAt || report.createdAt,
+    violationType: report.violationType,
+    action: report.action,
+    penaltyPoints: report.penaltyPoints,
+});
+
+async function getResultReportDetail(idOrSlug) {
+    const id = String(idOrSlug).replace('result-', '');
+    const result = await apiRequest(`/admin/results/${id}`);
+    const mappedResult = mapRaceResult(result);
+    let reports = [];
+    let reportError = '';
+
+    try {
+        const reportPayload = await getReports();
+        reports = normalizeReports(reportPayload)
+            .filter((report) => (
+                Number(report.raceId) === Number(result.raceId)
+                && (
+                    !result.enteredByRefereeId
+                    || !report.refereeId
+                    || Number(report.refereeId) === Number(result.enteredByRefereeId)
+                )
+            ))
+            .map(mapRefereeReport);
+    } catch (error) {
+        reportError = error.message || 'Failed to load referee report.';
+    }
+
+    if (reports.length === 0 && result.note) {
+        reports = [{
+            id: `result-note-${result.resultId}`,
+            raceId: result.raceId,
+            registrationId: result.registrationId,
+            refereeId: result.enteredByRefereeId,
+            title: 'Result Note',
+            content: result.note,
+            submittedAt: result.updatedAt || result.createdAt,
+        }];
+    }
+
+    return {
+        resultId: result.resultId,
+        raceId: result.raceId,
+        raceName: mappedResult.race,
+        registrationId: result.registrationId,
+        refereeId: result.enteredByRefereeId,
+        status: result.status,
+        submittedAt: result.updatedAt || result.createdAt,
+        reports,
+        reportError,
+    };
+}
+
 async function publishResult(idOrSlug) {
     const id = String(idOrSlug).replace('result-', '');
     return apiRequest(`/admin/results/${id}/approve`, { method: 'PUT' });
@@ -588,6 +744,8 @@ async function deleteHorseReport(id) {
 
 export const adminApi = {
     formatters: {
+        formatTournamentStatus,
+        getTournamentDeadlineWarning,
         toDateLabel,
         toMoney,
         toShortDateParts,
@@ -629,6 +787,7 @@ export const adminApi = {
     getResultSubmissions,
     getPendingResults,
     getResultDetail,
+    getResultReportDetail,
     publishResult,
     rejectResult,
 

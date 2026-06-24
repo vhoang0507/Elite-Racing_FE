@@ -132,13 +132,13 @@ function RefereeNotification() {
                 </div>
 
                 {error && (
-                    <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
+                    <div className="mb-6 rounded-[8px] border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
                         {error}
                     </div>
                 )}
 
                 <div className="mb-8 flex flex-wrap gap-5">
-                    <div className="flex w-56 justify-between rounded-xl border border-[#ead3cf] bg-white p-5">
+                    <div className="flex w-56 justify-between rounded-[8px] border border-[#ead3cf] bg-white p-5">
                         <div>
                             <p className="text-sm uppercase text-gray-500">
                                 Total Notifications
@@ -152,7 +152,7 @@ function RefereeNotification() {
                         <FaBell className="text-[#8b0000]" size={22} />
                     </div>
 
-                    <div className="flex w-56 justify-between rounded-xl border border-[#ead3cf] bg-white p-5">
+                    <div className="flex w-56 justify-between rounded-[8px] border border-[#ead3cf] bg-white p-5">
                         <div>
                             <p className="text-sm uppercase text-gray-500">
                                 Unread Alerts
@@ -166,7 +166,7 @@ function RefereeNotification() {
                         <FaExclamationTriangle className="text-red-500" size={22} />
                     </div>
 
-                    <div className="flex items-center gap-3 rounded-xl border border-[#ead3cf] bg-white p-4">
+                    <div className="flex items-center gap-3 rounded-[8px] border border-[#ead3cf] bg-white p-4">
                         <select
                             value={filter}
                             onChange={(event) => setFilter(event.target.value)}
@@ -191,11 +191,11 @@ function RefereeNotification() {
                 <div className="grid gap-8 xl:grid-cols-[360px_1fr]">
                     <div className="space-y-2">
                         {loading ? (
-                            <div className="rounded-xl border border-[#ead3cf] bg-white p-5 text-gray-500">
+                            <div className="rounded-[8px] border border-[#ead3cf] bg-white p-5 text-gray-500">
                                 Loading notifications...
                             </div>
                         ) : filteredNotifications.length === 0 ? (
-                            <div className="rounded-xl border border-[#ead3cf] bg-white p-5 text-gray-500">
+                            <div className="rounded-[8px] border border-[#ead3cf] bg-white p-5 text-gray-500">
                                 No notifications for this filter.
                             </div>
                         ) : (
@@ -204,7 +204,7 @@ function RefereeNotification() {
                                     type="button"
                                     key={item.notificationId}
                                     onClick={() => handleSelect(item)}
-                                    className={`w-full cursor-pointer rounded-xl border border-[#ead3cf] bg-white p-4 text-left hover:bg-[#faf5f4] ${selectedNotification?.notificationId === item.notificationId ? 'ring-2 ring-[#8b0000]' : ''
+                                    className={`w-full cursor-pointer rounded-[8px] border border-[#ead3cf] bg-white p-4 text-left hover:bg-[#faf5f4] ${selectedNotification?.notificationId === item.notificationId ? 'ring-2 ring-[#8b0000]' : ''
                                         }`}
                                 >
                                     <div className="flex justify-between gap-3">
@@ -232,7 +232,7 @@ function RefereeNotification() {
                     </div>
 
                     <div className="space-y-4">
-                        <div className="overflow-hidden rounded-xl border border-[#ead3cf] bg-white">
+                        <div className="overflow-hidden rounded-[8px] border border-[#ead3cf] bg-white">
                             {selectedNotification ? (
                                 <>
                                     <div className="flex items-center justify-between border-b p-4">
@@ -282,7 +282,7 @@ function RefereeNotification() {
                             )}
                         </div>
 
-                        <div className="rounded-xl border border-[#ead3cf] bg-white p-5">
+                        <div className="rounded-[8px] border border-[#ead3cf] bg-white p-5">
                             <h3 className="mb-5 flex items-center gap-2 font-semibold">
                                 <FaInfoCircle className="text-[#8b0000]" />
                                 Recent Referee Activity

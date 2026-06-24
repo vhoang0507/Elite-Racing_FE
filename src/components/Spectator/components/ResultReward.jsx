@@ -1,4 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import {
+    FaBullseye,
+    FaCheckCircle,
+    FaCoins,
+} from 'react-icons/fa';
 import { spectatorApi } from '../../../api/spectatorApi';
 
 export default function ResultReward() {
@@ -12,78 +17,73 @@ export default function ResultReward() {
             .finally(() => setLoading(false));
     }, []);
 
-    if (loading) return <p style={{ textAlign: 'center', color: '#999' }}>Loading...</p>;
+    if (loading) return <p className="m-0 text-center font-semibold text-[var(--admin-muted)]">Loading...</p>;
+
+    const stats = [
+        { label: "Correct Predictions", value: data?.correctPredictions ?? 0, icon: FaCheckCircle, tone: "green" },
+        { label: "Reward Points", value: data?.rewardPoints ?? 0, icon: FaCoins, tone: "gold" },
+        { label: "Prediction Accuracy", value: `${data?.predictionAccuracy ?? 0}%`, icon: FaBullseye, tone: "primary" },
+    ];
 
     return (
-        <div>
-            <h2 style={{ margin: "0 0 4px", fontSize: "28px", fontWeight: "bold" }}>Results & Rewards</h2>
-            <p style={{ margin: "0 0 24px", fontSize: "13px", color: "#999" }}>
-                View race results, earn prediction points, and redeem exclusive racing rewards.
-            </p>
-
-            {/* Stat Cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "24px" }}>
-                {[
-                    { label: "Correct Predictions", value: data?.correctPredictions ?? 0, icon: "✅" },
-                    { label: "Reward Points", value: data?.rewardPoints ?? 0, icon: "🏆" },
-                    { label: "Prediction Accuracy", value: `${data?.predictionAccuracy ?? 0}%`, icon: "🎯" },
-                ].map((s, i) => (
-                    <div key={i} style={styles.statCard}>
-                        <span style={{ fontSize: "24px" }}>{s.icon}</span>
-                        <div>
-                            <small style={styles.statLabel}>{s.label}</small>
-                            <h3 style={styles.statValue}>{s.value}</h3>
-                        </div>
-                    </div>
-                ))}
+        <div className="grid gap-7">
+            <div>
+                <h2 className="page-title">Results & Rewards</h2>
+                <p className="page-subtitle">
+                    View race results, earn prediction points, and redeem exclusive racing rewards.
+                </p>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "24px" }}>
-                {/* Reward Progress */}
-                <div style={styles.card}>
-                    <h3 style={{ margin: "0 0 16px" }}>Reward Progress</h3>
-                    <div style={styles.progressRow}>
-                        <span style={styles.progressLabel}>Current: {data?.rewardPoints ?? 0} pts</span>
+            <div className="grid grid-cols-3 gap-4 max-[900px]:grid-cols-1">
+                {stats.map((s) => {
+                    const Icon = s.icon;
+
+                    return (
+                        <article key={s.label} className="stat-card min-h-[118px]">
+                            <div className={`stat-icon ${s.tone === 'green' ? 'bg-[#dff7e9] text-[#118548]' : s.tone === 'gold' ? 'bg-[#fff3cd] text-[#856404]' : ''}`}>
+                                <Icon aria-hidden="true" />
+                            </div>
+                            <small className="stat-label">{s.label}</small>
+                            <h3 className="stat-value text-[1.8rem]">{s.value}</h3>
+                        </article>
+                    );
+                })}
+            </div>
+
+            <div className="grid grid-cols-2 gap-5 max-[920px]:grid-cols-1">
+                <div className="surface-card p-5">
+                    <h3 className="m-0 mb-4 text-[1.05rem] font-bold">Reward Progress</h3>
+                    <div className="mb-2 flex justify-between text-[0.9rem] font-bold">
+                        <span>Current: {data?.rewardPoints ?? 0} pts</span>
                     </div>
-                    <div style={styles.progressBg}>
-                        <div style={{ ...styles.progressFill, width: `${Math.min(100, (data?.rewardPoints ?? 0) / 20)}%` }} />
+                    <div className="h-2 overflow-hidden rounded-full bg-[#f1e2df]">
+                        <div
+                            className="h-full rounded-full bg-[var(--admin-primary)]"
+                            style={{ width: `${Math.min(100, (data?.rewardPoints ?? 0) / 20)}%` }}
+                        />
                     </div>
-                    <p style={styles.progressHint}>Keep predicting to earn more points!</p>
+                    <p className="m-0 mt-3 text-[0.82rem] text-[var(--admin-muted)]">Keep predicting to earn more points!</p>
                 </div>
 
-                {/* Point History */}
-                <div style={styles.card}>
-                    <h3 style={{ margin: "0 0 16px" }}>POINT HISTORY</h3>
+                <div className="surface-card p-5">
+                    <h3 className="m-0 mb-4 text-[1.05rem] font-bold">Point History</h3>
                     {data?.pointHistory?.length === 0 || !data?.pointHistory ? (
-                        <p style={{ color: '#999', fontSize: '13px' }}>No point history yet.</p>
+                        <p className="m-0 text-[0.9rem] text-[var(--admin-muted)]">No point history yet.</p>
                     ) : (
-                        data.pointHistory.map((p, i) => (
-                            <div key={i} style={styles.historyRow}>
-                                <div>
-                                    <p style={styles.historyLabel}>Correct Prediction</p>
-                                    <small style={{ color: "#999" }}>{p.raceName}</small>
+                        <div className="grid gap-2">
+                            {data.pointHistory.map((p, i) => (
+                                <div key={i} className="flex items-center justify-between border-b border-[#f5f0ee] py-3 last:border-b-0">
+                                    <div>
+                                        <p className="m-0 text-[0.9rem] font-bold">Correct Prediction</p>
+                                        <small className="text-[var(--admin-muted)]">{p.raceName}</small>
+                                    </div>
+                                    <span className="font-black text-[#155724]">+{p.points}</span>
                                 </div>
-                                <span style={styles.historyPoints}>+{p.points}</span>
-                            </div>
-                        ))
+                            ))}
+                        </div>
                     )}
                 </div>
             </div>
         </div>
     );
 }
-
-const styles = {
-    statCard: { backgroundColor: "#fff", borderRadius: "12px", padding: "20px", border: "1px solid #eee", display: "flex", alignItems: "center", gap: "16px" },
-    statLabel: { color: "#999", fontSize: "11px", fontWeight: "600" },
-    statValue: { margin: "4px 0 0", fontSize: "24px", fontWeight: "bold" },
-    card: { backgroundColor: "#fff", borderRadius: "12px", padding: "20px", border: "1px solid #eee" },
-    progressRow: { display: "flex", justifyContent: "space-between", marginBottom: "8px" },
-    progressLabel: { fontSize: "13px", fontWeight: "600" },
-    progressBg: { height: "8px", backgroundColor: "#eee", borderRadius: "4px", marginBottom: "8px" },
-    progressFill: { height: "8px", backgroundColor: "#8B0000", borderRadius: "4px" },
-    progressHint: { fontSize: "12px", color: "#999", margin: 0 },
-    historyRow: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid #f5f5f5" },
-    historyLabel: { margin: 0, fontSize: "13px", fontWeight: "500" },
-    historyPoints: { color: "#155724", fontWeight: "bold", fontSize: "14px" },
-};

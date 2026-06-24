@@ -10,6 +10,7 @@ import {
 
 import JockeyLayout from './JockeyLayout';
 import { jockeyApi } from '../../api/jockeyApi';
+import { resolveFileUrl } from '../../api/uploadApi';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 
@@ -41,6 +42,7 @@ function mapDetailToFlat(detail) {
         horseId: detail.horse?.horseId,
         horseName: detail.horse?.horseName,
         horseImageUrl: detail.horse?.imageUrl,
+        healthCertificateImageUrl: detail.horse?.healthCertificateImageUrl,
         breedName: detail.horse?.breedName,
         age: detail.horse?.age,
         horseHealthStatus: detail.horse?.healthStatus,
@@ -53,6 +55,25 @@ function mapDetailToFlat(detail) {
         matchScore: detail.matchScore,
         matchReasons: detail.matchReasons,
     };
+}
+
+function HealthCertificateBadge({ url }) {
+    if (!url) {
+        return (
+            <span className="mt-2 inline-flex rounded border border-[#dbc3bf] bg-[#f3e8e6] px-2.5 py-1 text-[0.68rem] font-black uppercase text-[#7f645f]">
+                Certificate not uploaded
+            </span>
+        );
+    }
+
+    const resolvedUrl = resolveFileUrl(url);
+
+    return (
+        <a className="mt-2 inline-flex items-center gap-2 rounded border border-[#e7a49a] bg-[#fff8f6] px-2.5 py-1 text-[0.68rem] font-black uppercase text-[var(--admin-primary)] no-underline hover:bg-[#fff0ed]" href={resolvedUrl} target="_blank" rel="noreferrer">
+            <img alt="Health certificate" className="h-7 w-9 rounded object-cover" src={resolvedUrl} />
+            Health certificate
+        </a>
+    );
 }
 
 function PendingInvitations() {
@@ -167,7 +188,7 @@ function PendingInvitations() {
                                     <article key={inv.invitationId} className="overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]">
                                         <div className="relative h-[140px] overflow-hidden bg-[#3d2c1e]">
                                             {inv.horseImageUrl ? (
-                                                <img src={inv.horseImageUrl} alt={inv.horseName} className="h-full w-full object-cover" />
+                                                <img src={resolveFileUrl(inv.horseImageUrl)} alt={inv.horseName} className="h-full w-full object-cover" />
                                             ) : (
                                                 <div className="absolute inset-0 flex items-center justify-center text-white text-[2rem]">🏇</div>
                                             )}
@@ -189,6 +210,7 @@ function PendingInvitations() {
                                                 <span className="mt-1 block text-[var(--admin-muted)]">Breed: {inv.breedName}</span>
                                                 <span className="block text-[var(--admin-muted)]">Age: {formatAge(inv.age)}</span>
                                                 <span className="block text-[var(--admin-muted)]">Status: {inv.horseHealthStatus}</span>
+                                                <HealthCertificateBadge url={inv.healthCertificateImageUrl} />
                                             </div>
                                             <div className="text-right">
                                                 <span className="block text-[0.7rem] font-bold uppercase tracking-wide text-[#118548]">Owner &amp; Details</span>
@@ -272,7 +294,7 @@ function PendingInvitations() {
                         <section className="grid w-[min(600px,100%)] gap-0 overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-xl" onClick={e => e.stopPropagation()}>
                             <div className="relative h-[160px] bg-[#3d2c1e] flex items-center justify-center overflow-hidden">
                                 {selectedInvitation.horseImageUrl ? (
-                                    <img src={selectedInvitation.horseImageUrl} alt={selectedInvitation.horseName} className="h-full w-full object-cover" />
+                                    <img src={resolveFileUrl(selectedInvitation.horseImageUrl)} alt={selectedInvitation.horseName} className="h-full w-full object-cover" />
                                 ) : (
                                     <div className="text-[3rem]">🏇</div>
                                 )}
@@ -295,6 +317,9 @@ function PendingInvitations() {
                                     {selectedInvitation.location && <p className="m-0 mt-1"><strong>Location:</strong> {selectedInvitation.location}</p>}
                                     <p className="m-0 mt-1"><strong>Distance:</strong> {selectedInvitation.distanceMeters}m</p>
                                     <p className="m-0 mt-1"><strong>Horse:</strong> {selectedInvitation.horseName} ({selectedInvitation.breedName})</p>
+                                    <div className="mt-2">
+                                        <HealthCertificateBadge url={selectedInvitation.healthCertificateImageUrl} />
+                                    </div>
                                     <p className="m-0 mt-1"><strong>Fee:</strong> {formatFee(selectedInvitation.feeAmount)}</p>
                                     {selectedInvitation.jockeySelectionDeadline && (
                                         <p className="m-0 mt-1"><strong>Deadline:</strong> {formatDate(selectedInvitation.jockeySelectionDeadline)}</p>

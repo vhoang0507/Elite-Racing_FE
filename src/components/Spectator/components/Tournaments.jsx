@@ -1,4 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import {
+    FaCalendarAlt,
+    FaFlagCheckered,
+    FaHorseHead,
+    FaMapMarkerAlt,
+    FaRulerHorizontal,
+    FaTrophy,
+    FaUsers,
+} from 'react-icons/fa';
 import { spectatorApi } from '../../../api/spectatorApi';
 
 export default function Tournaments() {
@@ -13,120 +22,98 @@ export default function Tournaments() {
     }, []);
 
     const stats = [
-        { label: "PUBLISHED", value: tournaments.length, icon: "📅" },
-        { label: "UPCOMING RACES", value: tournaments.filter(t => t.race?.status === 'Open' || t.race?.status === 'Scheduled').length, icon: "🏇" },
-        { label: "PARTICIPATING HORSES", value: "-", icon: "🐴" },
-        { label: "PROF. JOCKEYS", value: "-", icon: "🏆" },
+        { label: "PUBLISHED", value: tournaments.length, icon: FaCalendarAlt },
+        { label: "UPCOMING RACES", value: tournaments.filter(t => t.race?.status === 'Open' || t.race?.status === 'Scheduled').length, icon: FaFlagCheckered },
+        { label: "PARTICIPATING HORSES", value: "-", icon: FaHorseHead },
+        { label: "PROF. JOCKEYS", value: "-", icon: FaUsers },
     ];
 
     const featured = tournaments[0];
     const rest = tournaments.slice(1);
 
-    if (loading) return <p style={{ textAlign: 'center', color: '#999' }}>Loading...</p>;
+    if (loading) return <p className="m-0 text-center font-semibold text-[var(--admin-muted)]">Loading...</p>;
 
     return (
-        <div>
-            <h2 style={{ margin: "0 0 4px" }}>Tournaments</h2>
-            <p style={{ margin: "0 0 24px", fontSize: "13px", color: "#999" }}>
-                Explore upcoming events, analyze lineups, and predict champions.
-            </p>
-
-            {/* Stat Cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
-                {stats.map((s, i) => (
-                    <div key={i} style={styles.statCard}>
-                        <span style={{ fontSize: "20px" }}>{s.icon}</span>
-                        <div>
-                            <small style={styles.statLabel}>{s.label}</small>
-                            <h3 style={styles.statValue}>{s.value}</h3>
-                        </div>
-                    </div>
-                ))}
+        <div className="grid gap-7">
+            <div>
+                <h2 className="page-title">Tournaments</h2>
+                <p className="page-subtitle">
+                    Explore upcoming events, analyze lineups, and predict champions.
+                </p>
             </div>
 
-            {/* Featured Tournament */}
+            <div className="grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[640px]:grid-cols-1">
+                {stats.map((s) => {
+                    const Icon = s.icon;
+
+                    return (
+                        <article key={s.label} className="stat-card min-h-[118px]">
+                            <div className="stat-icon">
+                                <Icon aria-hidden="true" />
+                            </div>
+                            <small className="stat-label">{s.label}</small>
+                            <h3 className="stat-value text-[1.8rem]">{s.value}</h3>
+                        </article>
+                    );
+                })}
+            </div>
+
             {featured && (
-                <div style={styles.featured}>
-                    <div style={{ background: 'linear-gradient(135deg, #8B0000, #3d1a1a)', height: '220px', position: 'relative' }}>
-                        <div style={styles.featuredOverlay}>
-                            <div style={styles.featuredTags}>
-                                <span style={styles.groupTag}>{featured.status}</span>
-                            </div>
-                            <h2 style={styles.featuredTitle}>{featured.tournamentName}</h2>
-                            <div style={styles.featuredInfo}>
-                                {featured.prizePool && <span>💰 ${Number(featured.prizePool).toLocaleString()}</span>}
-                                {featured.location && <span>📍 {featured.location}</span>}
-                                {featured.race?.raceDate && <span>📅 {featured.race.raceDate?.slice(0, 10)}</span>}
-                                {featured.race?.distanceMeters && <span>📏 {featured.race.distanceMeters}m</span>}
-                            </div>
-                            <div style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
-                                <button style={styles.predictBtn}>Predict Winner</button>
-                                <button style={styles.detailsBtn}>View Details</button>
-                            </div>
+                <div className="visual-banner min-h-[220px] p-6">
+                    <div className="relative z-[1] flex min-h-[172px] flex-col justify-center">
+                        <span className="mb-3 w-fit rounded-[6px] bg-white/20 px-3 py-1 text-[0.72rem] font-black uppercase text-white">
+                            {featured.status}
+                        </span>
+                        <h2 className="m-0 text-[1.8rem] font-black leading-tight text-white">{featured.tournamentName}</h2>
+                        <div className="mt-4 flex flex-wrap gap-4 text-[0.86rem] text-white/85">
+                            {featured.prizePool && <span className="inline-flex items-center gap-2"><FaTrophy /> ${Number(featured.prizePool).toLocaleString()}</span>}
+                            {featured.location && <span className="inline-flex items-center gap-2"><FaMapMarkerAlt /> {featured.location}</span>}
+                            {featured.race?.raceDate && <span className="inline-flex items-center gap-2"><FaCalendarAlt /> {featured.race.raceDate?.slice(0, 10)}</span>}
+                            {featured.race?.distanceMeters && <span className="inline-flex items-center gap-2"><FaRulerHorizontal /> {featured.race.distanceMeters}m</span>}
+                        </div>
+                        <div className="mt-5 flex flex-wrap gap-3">
+                            <button className="secondary-button border-white bg-white text-[#8B0000]">Predict Winner</button>
+                            <button className="secondary-button border-white/70 bg-transparent text-white hover:bg-white/10">View Details</button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Tournament List */}
             {rest.length > 0 && (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div className="grid grid-cols-2 gap-5 max-[900px]:grid-cols-1">
                     {rest.map((t) => (
-                        <div key={t.tournamentId} style={styles.card}>
-                            <div style={{ background: 'linear-gradient(135deg, #3d1a1a, #8B0000)', height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <span style={{ fontSize: '3rem' }}>🏆</span>
+                        <article key={t.tournamentId} className="surface-card">
+                            <div className="visual-banner grid h-[140px] place-items-center rounded-none shadow-none">
+                                <FaTrophy className="relative z-[1] text-[2.6rem] text-white" aria-hidden="true" />
                             </div>
-                            <div style={styles.cardBody}>
-                                <div style={styles.cardHeader}>
+                            <div className="grid gap-3 p-4">
+                                <div className="flex items-start justify-between gap-3">
                                     <div>
-                                        <p style={styles.cardName}>{t.tournamentName}</p>
-                                        <p style={styles.cardDistance}>
-                                            {t.race?.distanceMeters ? `${t.race.distanceMeters}m` : '-'} • {t.race?.raceDate?.slice(0, 10) ?? '-'}
+                                        <p className="m-0 font-bold text-[var(--admin-ink)]">{t.tournamentName}</p>
+                                        <p className="m-0 mt-1 text-[0.82rem] text-[var(--admin-muted)]">
+                                            {t.race?.distanceMeters ? `${t.race.distanceMeters}m` : '-'} / {t.race?.raceDate?.slice(0, 10) ?? '-'}
                                         </p>
                                     </div>
-                                    <span style={styles.cardPrize}>
+                                    <span className="font-black text-[var(--admin-primary)]">
                                         {t.prizePool ? `$${Number(t.prizePool).toLocaleString()}` : '-'}
                                     </span>
                                 </div>
-                                <p style={{ fontSize: '12px', color: '#999', margin: '0 0 8px' }}>{t.location}</p>
-                                <span style={{
-                                    fontSize: '11px', padding: '2px 8px', borderRadius: '10px',
-                                    backgroundColor: t.status === 'OpenRegistration' ? '#d4edda' : '#fff3cd',
-                                    color: t.status === 'OpenRegistration' ? '#155724' : '#856404'
-                                }}>
+                                <p className="m-0 text-[0.82rem] text-[var(--admin-muted)]">{t.location}</p>
+                                <span className={`status-badge w-fit ${t.status === 'OpenRegistration' ? 'bg-[#d4edda] text-[#155724]' : 'bg-[#fff3cd] text-[#856404]'}`}>
                                     {t.status}
                                 </span>
-                                <button style={styles.moreBtn}>More Details</button>
+                                <button className="secondary-button w-full">More Details</button>
                             </div>
-                        </div>
+                        </article>
                     ))}
                 </div>
             )}
 
             {tournaments.length === 0 && (
-                <p style={{ textAlign: 'center', color: '#999', padding: '40px' }}>No tournaments available.</p>
+                <p className="m-0 rounded-[8px] border border-[var(--admin-border)] bg-white p-10 text-center text-[var(--admin-muted)]">
+                    No tournaments available.
+                </p>
             )}
         </div>
     );
 }
-
-const styles = {
-    statCard: { backgroundColor: "#fff", borderRadius: "12px", padding: "16px", border: "1px solid #eee", display: "flex", alignItems: "center", gap: "12px" },
-    statLabel: { color: "#999", fontSize: "11px", fontWeight: "600" },
-    statValue: { margin: "2px 0 0", fontSize: "22px", fontWeight: "bold" },
-    featured: { borderRadius: "12px", overflow: "hidden", marginBottom: "24px" },
-    featuredOverlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, padding: "24px", display: "flex", flexDirection: "column", justifyContent: "center" },
-    featuredTags: { display: "flex", gap: "8px", marginBottom: "8px" },
-    groupTag: { backgroundColor: "rgba(255,255,255,0.2)", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "4px" },
-    featuredTitle: { color: "#fff", margin: "0 0 12px", fontSize: "26px" },
-    featuredInfo: { display: "flex", flexWrap: "wrap", gap: "16px", color: "rgba(255,255,255,0.8)", fontSize: "13px" },
-    predictBtn: { backgroundColor: "#fff", color: "#8B0000", border: "none", borderRadius: "8px", padding: "10px 20px", cursor: "pointer", fontSize: "14px", fontWeight: "bold" },
-    detailsBtn: { backgroundColor: "transparent", color: "#fff", border: "1px solid #fff", borderRadius: "8px", padding: "10px 20px", cursor: "pointer", fontSize: "14px" },
-    card: { backgroundColor: "#fff", borderRadius: "12px", border: "1px solid #eee", overflow: "hidden" },
-    cardBody: { padding: "16px" },
-    cardHeader: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" },
-    cardName: { margin: 0, fontWeight: "bold", fontSize: "15px" },
-    cardDistance: { margin: "4px 0 0", fontSize: "12px", color: "#999" },
-    cardPrize: { color: "#8B0000", fontWeight: "bold", fontSize: "14px" },
-    moreBtn: { width: "100%", padding: "10px", border: "1px solid #ddd", borderRadius: "8px", background: "#fff", cursor: "pointer", fontSize: "13px", marginTop: "12px" },
-};

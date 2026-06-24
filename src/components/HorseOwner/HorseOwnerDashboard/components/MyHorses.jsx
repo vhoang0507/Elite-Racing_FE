@@ -41,6 +41,18 @@ export default function MyHorses() {
                                 <span style={styles.tag}>{horse.age} yrs</span>
                                 <span style={styles.tag}>{horse.weightKg}kg</span>
                             </div>
+                            {horse.healthCertificateImageUrl ? (
+                                <a
+                                    href={resolveFileUrl(horse.healthCertificateImageUrl)}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    style={styles.certificateLink}
+                                >
+                                    Health certificate uploaded
+                                </a>
+                            ) : (
+                                <span style={styles.certificateMissing}>Health certificate not uploaded</span>
+                            )}
                         </div>
                     </div>
                 ))}
@@ -50,15 +62,17 @@ export default function MyHorses() {
 }
 
 const styles = {
-    section: { backgroundColor: "#fffefd", borderRadius: "12px", padding: "20px", border: "1px solid #edcfc9" },
+    section: { backgroundColor: "#fffefd", borderRadius: "8px", padding: "20px", border: "1px solid #edcfc9", boxShadow: "0 12px 28px rgba(91, 26, 19, 0.05)" },
     header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" },
     viewAll: { background: "none", border: "none", color: "#860707", cursor: "pointer", fontSize: "13px", fontWeight: "bold" },
     list: { display: "flex", flexDirection: "column", gap: "12px" },
-    card: { display: "flex", gap: "12px", alignItems: "center", padding: "10px", borderRadius: "8px", border: "1px solid #edcfc9" },
+    card: { display: "flex", gap: "12px", alignItems: "center", padding: "10px", borderRadius: "8px", border: "1px solid #edcfc9", backgroundColor: "#fffaf8" },
     info: { display: "flex", flexDirection: "column", gap: "4px" },
     breed: { fontSize: "11px", color: "#705f5b", fontWeight: "600", textTransform: "uppercase" },
     name: { margin: 0, fontWeight: "bold", fontSize: "15px", color: "#2d2020" },
     tags: { display: "flex", gap: "6px", flexWrap: "wrap" },
-    statusBadge: { fontSize: "11px", padding: "2px 8px", borderRadius: "10px", fontWeight: "600" },
-    tag: { fontSize: "11px", padding: "2px 8px", borderRadius: "10px", backgroundColor: "#fff3ef", color: "#705f5b" },
+    statusBadge: { fontSize: "11px", padding: "2px 8px", borderRadius: "999px", fontWeight: "700" },
+    tag: { fontSize: "11px", padding: "2px 8px", borderRadius: "999px", backgroundColor: "#fff3ef", color: "#705f5b" },
+    certificateLink: { width: "fit-content", color: "#860707", fontSize: "11px", fontWeight: "700", textDecoration: "none" },
+    certificateMissing: { color: "#9a827d", fontSize: "11px", fontWeight: "700" },
 };

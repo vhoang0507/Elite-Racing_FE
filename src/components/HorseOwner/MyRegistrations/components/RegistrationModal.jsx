@@ -2,11 +2,52 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
+import { resolveFileUrl } from "../../../../api/uploadApi";
+
+const getTournamentStatus = (tournament) => tournament.status ?? tournament.Status ?? "OpenRegistration";
+
+const registrationStatusLabel = (status) => {
+    switch (status) {
+        case "OpenRegistration":
+            return "Open Registration";
+        case "ClosedRegistration":
+            return "Registration Closed";
+        case "Ongoing":
+            return "Race Ongoing";
+        case "Completed":
+            return "Completed";
+        default:
+            return "Registration Closed";
+    }
+};
+
+function HealthCertificateLink({ url }) {
+    if (!url) {
+        return <span style={styles.certificateMissing}>Health certificate not uploaded</span>;
+    }
+
+    const resolvedUrl = resolveFileUrl(url);
+
+    return (
+        <a
+            href={resolvedUrl}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(event) => event.stopPropagation()}
+            style={styles.certificateLink}
+        >
+            <img src={resolvedUrl} alt="Health certificate" style={styles.certificateThumb} />
+            Health certificate
+        </a>
+    );
+}
 
 export default function RegistrationModal({ tournament, onClose, onSuccess }) {
     if (!tournament) return null;
 
     const navigate = useNavigate();
+    const tournamentStatus = getTournamentStatus(tournament);
+    const isRegistrationOpen = tournamentStatus === "OpenRegistration";
     const [horses, setHorses] = useState([]);
     const [selectedHorse, setSelectedHorse] = useState(null);
     const [notes, setNotes] = useState("");
@@ -18,7 +59,25 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
     useEffect(() => {
         setLoading(true);
         ownerApi.getEligibleHorses(tournament.raceId)
-            .then(setHorses)
+            .then(async (items) => {
+                const list = Array.isArray(items) ? items : [];
+                const withCertificate = await Promise.all(list.map(async (horse) => {
+                    if (horse.healthCertificateImageUrl) return horse;
+
+                    try {
+                        const detail = await ownerApi.getHorseDetail(horse.horseId);
+                        return {
+                            ...horse,
+                            imageUrl: horse.imageUrl || detail.imageUrl,
+                            healthCertificateImageUrl: detail.healthCertificateImageUrl,
+                        };
+                    } catch {
+                        return horse;
+                    }
+                }));
+
+                setHorses(withCertificate);
+            })
             .catch((err) => {
                 if (!handleOwnerAccessError(err, navigate)) setHorses([]);
             })
@@ -32,6 +91,11 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
     };
 
     const handleSubmit = async () => {
+        if (!isRegistrationOpen) {
+            setError(registrationStatusLabel(tournamentStatus));
+            return;
+        }
+
         if (!selectedHorse) {
             setError("Vui lòng chọn ngựa trước khi đăng ký.");
             return;
@@ -119,6 +183,9 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                                                 </span>
                                             </div>
                                             <small style={{ color: "#999" }}>{horse.breedName} • {horse.age}y • {horse.weightKg}kg • {horse.healthStatus}</small>
+                                            <div style={{ marginTop: "6px" }}>
+                                                <HealthCertificateLink url={horse.healthCertificateImageUrl} />
+                                            </div>
                                             {!horse.isEligible && (
                                                 <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#721c24" }}>{horse.ineligibleReason}</p>
                                             )}
@@ -136,16 +203,19 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                             style={{ ...styles.input, height: "80px", resize: "vertical", marginBottom: "16px" }}
                         />
 
+                        {!isRegistrationOpen && (
+                            <p style={styles.closedNotice}>{registrationStatusLabel(tournamentStatus)}</p>
+                        )}
                         {error && <p style={{ color: "#721c24", fontSize: "13px", marginBottom: "8px" }}>{error}</p>}
                         {success && <p style={{ color: "#155724", fontSize: "13px", marginBottom: "8px" }}>{success}</p>}
 
                         <div style={{ display: "flex", gap: "12px" }}>
                             <button
                                 onClick={handleSubmit}
-                                disabled={submitting}
-                                style={{ ...styles.submitBtn, opacity: submitting ? 0.7 : 1 }}
+                                disabled={submitting || !isRegistrationOpen}
+                                style={{ ...styles.submitBtn, opacity: submitting || !isRegistrationOpen ? 0.7 : 1 }}
                             >
-                                {submitting ? "Đang gửi..." : "Submit Registration ➤"}
+                                {submitting ? "Đang gửi..." : isRegistrationOpen ? "Submit Registration ➤" : registrationStatusLabel(tournamentStatus)}
                             </button>
                             <button style={styles.cancelBtn} onClick={onClose}>Cancel</button>
                         </div>
@@ -172,6 +242,10 @@ const styles = {
     stepTitle: { fontSize: "11px", color: "#999", fontWeight: "700", letterSpacing: "1px", margin: "0 0 10px" },
     input: { width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "13px", boxSizing: "border-box" },
     horseCard: { display: "flex", gap: "12px", padding: "12px", borderRadius: "8px", marginBottom: "4px" },
+    certificateLink: { display: "inline-flex", alignItems: "center", gap: "7px", color: "#8B0000", fontSize: "11px", fontWeight: "700", textDecoration: "none" },
+    certificateThumb: { width: "38px", height: "28px", borderRadius: "6px", border: "1px solid #ead3cf", objectFit: "cover", backgroundColor: "#fff8f6" },
+    certificateMissing: { display: "inline-flex", borderRadius: "999px", backgroundColor: "#f4ecea", color: "#705f5b", fontSize: "11px", fontWeight: "700", padding: "3px 8px" },
+    closedNotice: { color: "#b91c1c", backgroundColor: "#fee2e2", borderRadius: "8px", fontSize: "13px", fontWeight: 700, marginBottom: "8px", padding: "8px 10px" },
     submitBtn: { flex: 1, padding: "10px", backgroundColor: "#8B0000", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px", fontWeight: "bold" },
     cancelBtn: { padding: "10px 20px", backgroundColor: "#fff", border: "1px solid #ddd", borderRadius: "8px", cursor: "pointer", fontSize: "14px" },
 };

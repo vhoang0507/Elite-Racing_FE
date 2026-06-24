@@ -16,11 +16,14 @@ export default function RegisterHorse() {
         achievementSummary: "",
         healthStatus: "Healthy",
         imageUrl: "",
+        healthCertificateImageUrl: "",
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [horseImageFile, setHorseImageFile] = useState(null);
     const [horseImagePreview, setHorseImagePreview] = useState('');
+    const [healthCertificateFile, setHealthCertificateFile] = useState(null);
+    const [healthCertificatePreview, setHealthCertificatePreview] = useState('');
 
     useEffect(() => {
         ownerApi.getHorseBreeds()
@@ -40,15 +43,29 @@ export default function RegisterHorse() {
         setHorseImagePreview(URL.createObjectURL(file));
     };
 
+    const handleHealthCertificateChange = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setHealthCertificateFile(file);
+        setHealthCertificatePreview(URL.createObjectURL(file));
+    };
+
     const handleSubmit = async () => {
         setError('');
         setIsSubmitting(true);
         try {
             let imageUrl = form.imageUrl || null;
+            let healthCertificateImageUrl = form.healthCertificateImageUrl || null;
 
             if (horseImageFile) {
                 const uploaded = await uploadFile(horseImageFile, 'horses');
                 imageUrl = uploaded.url;
+            }
+
+            if (healthCertificateFile) {
+                const uploaded = await uploadFile(healthCertificateFile, 'horses');
+                healthCertificateImageUrl = uploaded.url;
             }
 
             await ownerApi.createHorse({
@@ -60,6 +77,7 @@ export default function RegisterHorse() {
                 healthStatus: form.healthStatus,
                 achievementSummary: form.achievementSummary,
                 imageUrl,
+                healthCertificateImageUrl,
             });
             navigate('/owner/my-horse');
         } catch (err) {
@@ -163,6 +181,29 @@ export default function RegisterHorse() {
                                         src={resolveFileUrl(horseImagePreview)}
                                         alt="Horse preview"
                                         className="mx-auto mt-4 max-h-[160px] rounded-md object-cover"
+                                    />
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className={labelClass}>Upload Health Certificate Image</label>
+                            <div className="rounded-[var(--admin-radius)] border-2 border-dashed border-[var(--admin-border)] p-6 text-center">
+                                <span className="text-[1.5rem]">HC</span>
+                                <p className="m-0 mt-2 text-[0.82rem] text-[var(--admin-muted)]">Upload Health Certificate</p>
+                                <p className="m-0 mt-1 text-[0.72rem] text-[#bbb]">PNG, JPG, WEBP up to 10MB</p>
+                                <input
+                                    type="file"
+                                    accept="image/png,image/jpeg,image/webp"
+                                    onChange={handleHealthCertificateChange}
+                                    className="mt-3"
+                                />
+
+                                {healthCertificatePreview && (
+                                    <img
+                                        src={resolveFileUrl(healthCertificatePreview)}
+                                        alt="Health certificate preview"
+                                        className="mx-auto mt-4 max-h-[180px] rounded-md border border-[var(--admin-border)] object-contain"
                                     />
                                 )}
                             </div>

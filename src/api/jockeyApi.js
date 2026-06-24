@@ -93,6 +93,10 @@ export async function getNotifications({ status, date, sort, page, pageSize } = 
     return apiRequest(`/jockey/notifications${query ? `?${query}` : ''}`);
 }
 
+export async function getNotificationDetail(id) {
+    return apiRequest(`/jockey/notifications/${id}`);
+}
+
 export async function markNotificationAsRead(id) {
     return apiRequest(`/jockey/notifications/${id}/read`, { method: 'PUT' });
 }
@@ -123,6 +127,7 @@ export const jockeyApi = {
     getJockeyCalendar,
     getNotificationSummary,
     getNotifications,
+    getNotificationDetail,
     markNotificationAsRead,
     markAllNotificationsAsRead,
     deleteNotification,
