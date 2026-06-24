@@ -13,7 +13,6 @@ import {
     FaChartLine,
     FaClipboardCheck,
     FaFlagCheckered,
-    FaHorseHead,
     FaPlus,
     FaQuestionCircle,
     FaSearch,
@@ -35,12 +34,6 @@ const navigation = [
         label: 'User Management',
         icon: FaUsers,
         path: '/admin/users',
-    },
-    {
-        key: 'horses',
-        label: 'Horse Management',
-        icon: FaHorseHead,
-        path: '/admin/horses',
     },
     {
         key: 'races',

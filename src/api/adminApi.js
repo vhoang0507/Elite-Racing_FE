@@ -367,14 +367,14 @@ async function getTournamentById(id) {
 
     return {
         ...detail,
-        race: spectatorDetail?.race ?? detail?.race,
-        raceDateTime: spectatorDetail?.race?.raceDate ?? detail?.race?.raceDate ?? null,
+        race: spectatorDetail?.race ?? detail?.race ?? detail?.Race,
+        raceDateTime: spectatorDetail?.race?.raceDate ?? detail?.race?.raceDate ?? detail?.raceDate ?? detail?.RaceDate ?? null,
         distanceMeters: getTournamentDistanceMeters(detail) ?? getTournamentDistanceMeters(spectatorDetail),
     };
 }
 
 const getTournamentDistanceMeters = (tournament) => {
-    const distanceMeters = tournament?.distanceMeters ?? tournament?.race?.distanceMeters;
+    const distanceMeters = tournament?.distanceMeters ?? tournament?.DistanceMeters ?? tournament?.race?.distanceMeters ?? tournament?.Race?.DistanceMeters;
 
     return distanceMeters == null ? null : Number(distanceMeters);
 };
