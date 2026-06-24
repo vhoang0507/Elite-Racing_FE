@@ -425,6 +425,14 @@ async function updateTournamentStatus(id, status) {
     });
 }
 
+async function approveTournament(id) {
+    return apiRequest(`/admin/tournaments/${id}/approve`, { method: 'PUT' });
+}
+
+async function cancelTournament(id) {
+    return apiRequest(`/admin/tournaments/${id}/cancel`, { method: 'PUT' });
+}
+
 async function updateTournament(id, patch) {
     const formData = new FormData();
 
@@ -773,6 +781,8 @@ export const adminApi = {
     getTournamentById,
     createTournament,
     updateTournamentStatus,
+    approveTournament,
+    cancelTournament,
     updateTournament,
     deleteTournament,
 

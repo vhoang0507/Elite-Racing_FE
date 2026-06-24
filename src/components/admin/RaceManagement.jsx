@@ -71,26 +71,18 @@ const deadlineClass = {
 };
 
 const statusActionLabels = {
-    Draft: 'Restore Draft',
-    OpenRegistration: 'Open Registration',
-    ClosedRegistration: 'Close Registration',
-    Ongoing: 'Set Ongoing',
-    Completed: 'Set Completed',
-    Cancelled: 'Cancel Tournament',
+    approve: 'Publish Tournament',
+    cancel: 'Cancel Tournament',
 };
 
 const getTournamentActions = (status) => {
     switch (status) {
         case 'Draft':
-            return ['OpenRegistration', 'Cancelled'];
+            return ['approve', 'cancel'];
         case 'OpenRegistration':
-            return ['ClosedRegistration', 'Cancelled'];
         case 'ClosedRegistration':
-            return ['OpenRegistration', 'Ongoing', 'Cancelled'];
         case 'Ongoing':
-            return ['Completed', 'Cancelled'];
-        case 'Cancelled':
-            return ['Draft'];
+            return ['cancel'];
         default:
             return [];
     }
@@ -412,18 +404,23 @@ function RaceManagement() {
         setPage(1);
     };
 
-    const handleTournamentStatusChange = async (tournament, nextStatus) => {
+    const handleTournamentStatusChange = async (tournament, action) => {
         setUpdatingStatusId(tournament.id);
         setStatusActionError('');
         setStatusActionMessage('');
 
         try {
-            const response = await adminApi.updateTournamentStatus(tournament.id, nextStatus);
-            setStatusActionMessage(response?.message || response?.Message || 'Tournament status updated.');
+            let response;
+            if (action === 'approve') {
+                response = await adminApi.approveTournament(tournament.id);
+            } else if (action === 'cancel') {
+                response = await adminApi.cancelTournament(tournament.id);
+            }
+            setStatusActionMessage(response?.message || response?.Message || `Tournament ${action}d successfully.`);
             setActionMenuId(null);
             await refreshTournamentRows();
         } catch (err) {
-            setStatusActionError(err.message || 'Update status failed.');
+            setStatusActionError(err.message || `Failed to ${action} tournament.`);
         } finally {
             setUpdatingStatusId(null);
         }
