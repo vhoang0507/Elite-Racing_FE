@@ -94,7 +94,7 @@ function CreateTournament() {
         setTournamentImagePreview(file ? URL.createObjectURL(file) : '');
     };
 
-    const persistTournament = async (form) => {
+    const persistTournament = async (form, action) => {
         const formData = new FormData(form);
         setError('');
 
@@ -173,6 +173,12 @@ function CreateTournament() {
             }
 
             // Tournament created with Draft status by default
+            if (action === 'publish' && createdTournament?.tournamentId) {
+                await apiRequest(`/admin/tournaments/${createdTournament.tournamentId}/approve`, {
+                    method: 'PUT',
+                });
+            }
+
             navigate('/admin/races');
         } catch (err) {
             setError(err.message || 'Failed to create tournament. Please try again.');
@@ -183,7 +189,9 @@ function CreateTournament() {
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        persistTournament(event.currentTarget);
+        const submitter = event.nativeEvent.submitter;
+        const action = submitter ? submitter.value : 'publish';
+        persistTournament(event.currentTarget, action);
     };
 
     return (
@@ -365,7 +373,10 @@ function CreateTournament() {
                                 </Link>
 
                                 <div className="flex items-center justify-end gap-3.5 max-[760px]:flex-col max-[760px]:items-stretch">
-                                    <button className={`${actionButtonClass} bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary-dark)]`} disabled={isSaving} type="submit">
+                                    <button className={`${actionButtonClass} bg-[#fffdfc] border border-[var(--admin-primary)] text-[var(--admin-primary)] hover:bg-[#fff0ed]`} disabled={isSaving} name="submitAction" type="submit" value="draft">
+                                        {isSaving ? 'Saving...' : 'Save Draft'}
+                                    </button>
+                                    <button className={`${actionButtonClass} bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary-dark)]`} disabled={isSaving} name="submitAction" type="submit" value="publish">
                                         {isSaving ? 'Saving...' : 'Publish Tournament'}
                                     </button>
                                 </div>
