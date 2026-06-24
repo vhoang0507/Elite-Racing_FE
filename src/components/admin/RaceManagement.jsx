@@ -9,6 +9,7 @@ import {
     FaCheckCircle,
     FaClipboardList,
     FaEdit,
+    FaEllipsisV,
     FaEye,
     FaFilter,
     FaMapMarkerAlt,
@@ -52,12 +53,47 @@ const statClass = {
 };
 
 const statusClass = {
-    draft: 'border-[#dbc3bf] bg-[#f3e8e6] text-[#7f645f]',
-    openregistration: 'border-[#afe2c4] bg-[#dff7e9] text-[#118548]',
-    closedregistration: 'border-[#e2cd79] bg-[#f7efcf] text-[#6a520d]',
-    ongoing: 'border-[#93c5fd] bg-[#dbeafe] text-[#1e40af]',
-    completed: 'border-[#a5b4fc] bg-[#e0e7ff] text-[#3730a3]',
-    cancelled: 'border-[#dbaaa5] bg-[#f5e1df] text-[var(--admin-primary-dark)]',
+    default: 'bg-[#f3f4f6] text-[#374151]',
+    draft: 'bg-[#f3f4f6] text-[#374151]',
+    openregistration: 'bg-[#dcfce7] text-[#15803d]',
+    closedregistration: 'bg-[#fee2e2] text-[#b91c1c]',
+    ongoing: 'bg-[#dbeafe] text-[#1d4ed8]',
+    completed: 'bg-[#ede9fe] text-[#6d28d9]',
+    cancelled: 'bg-[#f3f4f6] text-[#6b7280]',
+};
+
+const statusBadgeBaseClass = 'inline-flex min-h-6 items-center rounded-full px-2.5 text-[0.68rem] font-black';
+const getStatusClass = (status) => `${statusBadgeBaseClass} ${statusClass[formatClass(status)] || statusClass.default}`;
+
+const deadlineClass = {
+    warning: 'text-[#b45309]',
+    danger: 'text-[#b91c1c]',
+};
+
+const statusActionLabels = {
+    Draft: 'Restore Draft',
+    OpenRegistration: 'Open Registration',
+    ClosedRegistration: 'Close Registration',
+    Ongoing: 'Set Ongoing',
+    Completed: 'Set Completed',
+    Cancelled: 'Cancel Tournament',
+};
+
+const getTournamentActions = (status) => {
+    switch (status) {
+        case 'Draft':
+            return ['OpenRegistration', 'Cancelled'];
+        case 'OpenRegistration':
+            return ['ClosedRegistration', 'Cancelled'];
+        case 'ClosedRegistration':
+            return ['OpenRegistration', 'Ongoing', 'Cancelled'];
+        case 'Ongoing':
+            return ['Completed', 'Cancelled'];
+        case 'Cancelled':
+            return ['Draft'];
+        default:
+            return [];
+    }
 };
 
 const normalizeRefereeNames = (value) => {
@@ -230,6 +266,24 @@ const getRaceTimeInputValue = (tournament) => {
     return raceTime === '-' ? '' : raceTime;
 };
 
+const buildTournamentRows = async () => {
+    const payload = await adminApi.getTournaments();
+
+    return Promise.all((payload || []).map(async (tournament) => {
+        try {
+            const detail = await adminApi.getTournamentById(tournament.id);
+            return {
+                ...detail,
+                ...tournament,
+                referee: getRefereeNames(tournament).length > 0 ? getRefereeNames(tournament) : getRefereeNames(detail),
+                distanceMeters: getDistanceMeters(detail) ?? getDistanceMeters(tournament),
+            };
+        } catch {
+            return tournament;
+        }
+    }));
+};
+
 function DetailItem({
     children,
     label,
@@ -252,27 +306,17 @@ function RaceManagement() {
     const [editingTournament, setEditingTournament] = useState(null);
     const [editError, setEditError] = useState('');
     const [editTournamentImageName, setEditTournamentImageName] = useState('');
+    const [actionMenuId, setActionMenuId] = useState(null);
+    const [statusActionError, setStatusActionError] = useState('');
+    const [statusActionMessage, setStatusActionMessage] = useState('');
+    const [updatingStatusId, setUpdatingStatusId] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
 
-        adminApi.getTournaments().then(async (payload) => {
-            const tournamentsWithReferees = await Promise.all((payload || []).map(async (tournament) => {
-                try {
-                    const detail = await adminApi.getTournamentById(tournament.id);
-                    return {
-                        ...detail,
-                        ...tournament,
-                        referee: getRefereeNames(tournament).length > 0 ? getRefereeNames(tournament) : getRefereeNames(detail),
-                        distanceMeters: getDistanceMeters(detail) ?? getDistanceMeters(tournament),
-                    };
-                } catch {
-                    return tournament;
-                }
-            }));
-
+        buildTournamentRows().then((tournamentRows) => {
             if (isMounted) {
-                setTournaments(tournamentsWithReferees.filter(isVisibleTournament));
+                setTournaments(tournamentRows.filter(isVisibleTournament));
             }
         });
 
@@ -349,6 +393,30 @@ function RaceManagement() {
         setPage(1);
     };
 
+    const refreshTournamentRows = async () => {
+        const tournamentRows = await buildTournamentRows();
+
+        setTournaments(tournamentRows.filter(isVisibleTournament));
+        setPage(1);
+    };
+
+    const handleTournamentStatusChange = async (tournament, nextStatus) => {
+        setUpdatingStatusId(tournament.id);
+        setStatusActionError('');
+        setStatusActionMessage('');
+
+        try {
+            const response = await adminApi.updateTournamentStatus(tournament.id, nextStatus);
+            setStatusActionMessage(response?.message || response?.Message || 'Tournament status updated.');
+            setActionMenuId(null);
+            await refreshTournamentRows();
+        } catch (err) {
+            setStatusActionError(err.message || 'Update status failed.');
+        } finally {
+            setUpdatingStatusId(null);
+        }
+    };
+
     const handleEditTournamentImageChange = (event) => {
         const file = event.target.files?.[0];
 
@@ -393,24 +461,9 @@ function RaceManagement() {
             await adminApi.updateTournament(editingTournament.id, patch);
 
             // Refresh tournament list from BE
-            const freshTournaments = await adminApi.getTournaments();
-            const tournamentsWithDetails = await Promise.all((freshTournaments || []).map(async (tournament) => {
-                try {
-                    const detail = await adminApi.getTournamentById(tournament.id);
-                    return {
-                        ...detail,
-                        ...tournament,
-                        distanceMeters: getDistanceMeters(detail) ?? getDistanceMeters(tournament),
-                    };
-                } catch {
-                    return tournament;
-                }
-            }));
-
-            setTournaments(tournamentsWithDetails.filter(isVisibleTournament));
+            await refreshTournamentRows();
             setEditingTournament(null);
             setEditTournamentImageName('');
-            setPage(1);
         } catch (err) {
             setEditError(err.message || 'Failed to update tournament.');
         }
@@ -460,6 +513,18 @@ function RaceManagement() {
                         })}
                     </section>
 
+                    {statusActionError && (
+                        <div className="rounded-md border border-[#f3b8b8] bg-[#fff1f1] px-4 py-3 text-[0.86rem] font-bold text-[#b91c1c]" role="alert">
+                            {statusActionError}
+                        </div>
+                    )}
+
+                    {statusActionMessage && (
+                        <div className="rounded-md border border-[#afe2c4] bg-[#effcf4] px-4 py-3 text-[0.86rem] font-bold text-[#15803d]" role="status">
+                            {statusActionMessage}
+                        </div>
+                    )}
+
                     <section className="overflow-hidden rounded-[var(--admin-radius)] bg-[var(--admin-surface)] shadow-[0_14px_32px_rgba(81,31,22,0.07)]">
                         <div className="flex min-h-[76px] items-center justify-between gap-[18px] border-b border-[var(--admin-border)] px-[22px] py-[18px] max-[1280px]:flex-col max-[1280px]:items-stretch">
                             <h2 className="m-0 text-[1.1rem] text-[var(--admin-ink)]">All Tournaments</h2>
@@ -490,10 +555,10 @@ function RaceManagement() {
                         </div>
 
                         <div className="w-full overflow-x-auto">
-                            <table className="w-full border-collapse max-[820px]:min-w-[1100px]">
+                            <table className="w-full border-collapse max-[820px]:min-w-[1220px]">
                                 <thead>
                                     <tr>
-                                        {['Tournament Name', 'Race Date', 'Location', 'Max Horses', 'Prize Pool', 'Referee', 'Status', 'Actions'].map((heading) => (
+                                        {['Tournament Name', 'Race Date', 'Registration Deadline', 'Location', 'Max Horses', 'Prize Pool', 'Referee', 'Status', 'Actions'].map((heading) => (
                                             <th className="whitespace-nowrap border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] py-[18px] text-left text-[0.68rem] uppercase tracking-normal text-[#8b6e68]" key={heading}>
                                                 {heading}
                                             </th>
@@ -501,7 +566,11 @@ function RaceManagement() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {visibleTournaments.map((tournament) => (
+                                    {visibleTournaments.map((tournament) => {
+                                        const deadlineWarning = adminApi.formatters.getTournamentDeadlineWarning(tournament);
+                                        const statusActions = getTournamentActions(tournament.status);
+
+                                        return (
                                         <tr key={tournament.id}>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
                                                 <div className="flex min-w-[230px] items-center gap-3.5">
@@ -516,6 +585,14 @@ function RaceManagement() {
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
                                                 {getRaceDateLabel(tournament)}
+                                            </td>
+                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
+                                                <span className="block">{adminApi.formatters.toDateLabel(tournament.startDate) || '-'}</span>
+                                                {deadlineWarning && (
+                                                    <small className={`mt-1 block text-[0.72rem] font-black ${deadlineClass[deadlineWarning.type] || deadlineClass.warning}`}>
+                                                        {deadlineWarning.text}
+                                                    </small>
+                                                )}
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
                                                 <span className="inline-flex items-center gap-1.5">
@@ -541,12 +618,12 @@ function RaceManagement() {
                                                 )}
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
-                                                <span className={`inline-flex min-h-6 items-center rounded border px-2.5 text-[0.68rem] font-black uppercase ${statusClass[formatClass(tournament.status)]}`}>
-                                                    {tournament.status}
+                                                <span className={getStatusClass(tournament.status)}>
+                                                    {adminApi.formatters.formatTournamentStatus(tournament.status)}
                                                 </span>
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
-                                                <div className="inline-flex items-center gap-3.5">
+                                                <div className="relative inline-flex items-center gap-3.5">
                                                     <button aria-label={`View ${tournament.name}`} className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" onClick={() => setSelectedTournament(tournament)} type="button">
                                                         <FaEye aria-hidden="true" />
                                                     </button>
@@ -564,10 +641,46 @@ function RaceManagement() {
                                                     <button aria-label={`Delete ${tournament.name}`} className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" onClick={() => handleDelete(tournament.id)} type="button">
                                                         <FaTrashAlt aria-hidden="true" />
                                                     </button>
+                                                    <button
+                                                        aria-expanded={actionMenuId === tournament.id}
+                                                        aria-label={`More actions for ${tournament.name}`}
+                                                        className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+                                                        disabled={updatingStatusId === tournament.id}
+                                                        onClick={() => setActionMenuId((current) => (current === tournament.id ? null : tournament.id))}
+                                                        type="button"
+                                                    >
+                                                        <FaEllipsisV aria-hidden="true" />
+                                                    </button>
+                                                    {actionMenuId === tournament.id && (
+                                                        <div className="absolute right-0 top-9 z-30 grid w-56 overflow-hidden rounded-md border border-[var(--admin-border)] bg-white py-1 text-left shadow-[0_14px_34px_rgba(45,32,32,0.18)]">
+                                                            <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#fff6f4]" onClick={() => { setSelectedTournament(tournament); setActionMenuId(null); }} type="button">
+                                                                View Detail
+                                                            </button>
+                                                            <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#fff6f4]" onClick={() => { setEditTournamentImageName(''); setEditingTournament(tournament); setActionMenuId(null); }} type="button">
+                                                                Edit Tournament
+                                                            </button>
+                                                            {statusActions.length > 0 && <span className="my-1 h-px bg-[var(--admin-border)]" />}
+                                                            {statusActions.map((nextStatus) => (
+                                                                <button
+                                                                    className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed] disabled:cursor-not-allowed disabled:opacity-60"
+                                                                    disabled={updatingStatusId === tournament.id}
+                                                                    key={nextStatus}
+                                                                    onClick={() => handleTournamentStatusChange(tournament, nextStatus)}
+                                                                    type="button"
+                                                                >
+                                                                    {statusActionLabels[nextStatus] || adminApi.formatters.formatTournamentStatus(nextStatus)}
+                                                                </button>
+                                                            ))}
+                                                            {statusActions.length === 0 && (
+                                                                <span className="px-3 py-2 text-[0.76rem] font-bold text-[var(--admin-muted)]">No status actions</span>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </td>
                                         </tr>
-                                    ))}
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
@@ -617,12 +730,17 @@ function RaceManagement() {
                                         {detailValue(readTournamentField(selectedTournament, 'id', 'tournamentId', 'TournamentId'))}
                                     </DetailItem>
                                     <DetailItem label="Status">
-                                        <span className={`inline-flex min-h-6 w-fit items-center rounded border px-2.5 text-[0.68rem] font-black uppercase ${statusClass[formatClass(selectedTournament.status)] || statusClass.draft}`}>
-                                            {detailValue(selectedTournament.status)}
+                                        <span className={`${getStatusClass(selectedTournament.status)} w-fit`}>
+                                            {detailValue(adminApi.formatters.formatTournamentStatus(selectedTournament.status))}
                                         </span>
                                     </DetailItem>
                                     <DetailItem label="Registration Deadline">
-                                        {adminApi.formatters.toDateLabel(selectedTournament.startDate)}
+                                        <span className="block">{adminApi.formatters.toDateLabel(selectedTournament.startDate)}</span>
+                                        {adminApi.formatters.getTournamentDeadlineWarning(selectedTournament) && (
+                                            <small className={`mt-1 block text-[0.72rem] font-black ${deadlineClass[adminApi.formatters.getTournamentDeadlineWarning(selectedTournament).type] || deadlineClass.warning}`}>
+                                                {adminApi.formatters.getTournamentDeadlineWarning(selectedTournament).text}
+                                            </small>
+                                        )}
                                     </DetailItem>
                                     <DetailItem label="Race Date">
                                         {adminApi.formatters.toDateLabel(selectedTournament.endDate)}

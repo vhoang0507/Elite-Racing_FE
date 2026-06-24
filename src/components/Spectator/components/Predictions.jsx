@@ -1,4 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import {
+    FaBullseye,
+    FaCalendarAlt,
+    FaCheckCircle,
+    FaCoins,
+    FaMapMarkerAlt,
+    FaPercent,
+} from 'react-icons/fa';
 import { spectatorApi } from '../../../api/spectatorApi';
 
 export default function Predictions() {
@@ -22,89 +30,94 @@ export default function Predictions() {
     const totalPoints = predictions.reduce((sum, p) => sum + (p.pointsAwarded ?? 0), 0);
 
     const stats = [
-        { label: "PREDICTIONS SUBMITTED", value: totalPredictions, extra: null },
-        { label: "PREDICTION ACCURACY", value: `${accuracy}%`, extra: null },
-        { label: "REWARD POINTS", value: totalPoints, icon: "🏆" },
-        { label: "CORRECT PREDICTIONS", value: correctPredictions, extra: null },
+        { label: "PREDICTIONS SUBMITTED", value: totalPredictions, icon: FaBullseye },
+        { label: "PREDICTION ACCURACY", value: `${accuracy}%`, icon: FaPercent },
+        { label: "REWARD POINTS", value: totalPoints, icon: FaCoins },
+        { label: "CORRECT PREDICTIONS", value: correctPredictions, icon: FaCheckCircle },
     ];
 
-    if (loading) return <p style={{ textAlign: 'center', color: '#999' }}>Loading...</p>;
+    const openTournaments = tournaments.filter(t => t.status === 'OpenRegistration');
+
+    if (loading) return <p className="m-0 text-center font-semibold text-[var(--admin-muted)]">Loading...</p>;
 
     return (
-        <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-                <div>
-                    <h2 style={{ margin: "0 0 4px" }}>Predictions</h2>
-                    <p style={{ margin: 0, fontSize: "13px", color: "#999" }}>
-                        Predict race outcomes, compete with spectators, and earn exclusive rewards.
-                    </p>
+        <div className="grid gap-7">
+            <div>
+                <h2 className="page-title">Predictions</h2>
+                <p className="page-subtitle">
+                    Predict race outcomes, compete with spectators, and earn exclusive rewards.
+                </p>
+            </div>
+
+            <div className="grid grid-cols-4 gap-4 max-[1100px]:grid-cols-2 max-[640px]:grid-cols-1">
+                {stats.map((s) => {
+                    const Icon = s.icon;
+
+                    return (
+                        <article key={s.label} className="stat-card min-h-[118px]">
+                            <div className="stat-icon">
+                                <Icon aria-hidden="true" />
+                            </div>
+                            <small className="stat-label">{s.label}</small>
+                            <h3 className="stat-value text-[1.8rem]">{s.value}</h3>
+                        </article>
+                    );
+                })}
+            </div>
+
+            <div className="surface-card">
+                <div className="section-bar">
+                    <h3 className="m-0 text-[1.05rem] font-bold">My Predictions</h3>
                 </div>
-            </div>
-
-            {/* Stat Cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
-                {stats.map((s, i) => (
-                    <div key={i} style={styles.statCard}>
-                        <small style={styles.statLabel}>{s.label}</small>
-                        <h3 style={styles.statValue}>{s.value}</h3>
-                    </div>
-                ))}
-            </div>
-
-            {/* Predictions List */}
-            <div style={styles.card}>
-                <h3 style={{ margin: "0 0 16px" }}>My Predictions</h3>
                 {predictions.length === 0 ? (
-                    <p style={{ color: '#999', textAlign: 'center', padding: '24px' }}>No predictions yet.</p>
+                    <p className="m-0 p-8 text-center text-[var(--admin-muted)]">No predictions yet.</p>
                 ) : (
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-                            <tr>
-                                {['Tournament', 'Race', 'Predicted Horse', 'Status', 'Points'].map(h => (
-                                    <th key={h} style={{ textAlign: 'left', padding: '10px 12px', fontSize: '12px', color: '#999', fontWeight: '600', borderBottom: '1px solid #eee' }}>{h}</th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {predictions.map((p) => (
-                                <tr key={p.predictionId} style={{ borderBottom: '1px solid #f5f5f5' }}>
-                                    <td style={{ padding: '12px', fontSize: '14px' }}>{p.tournamentName ?? '-'}</td>
-                                    <td style={{ padding: '12px', fontSize: '14px' }}>{p.raceName}</td>
-                                    <td style={{ padding: '12px', fontSize: '14px' }}>{p.predictedHorseName}</td>
-                                    <td style={{ padding: '12px', fontSize: '14px' }}>
-                                        <span style={{
-                                            padding: '3px 10px', borderRadius: '20px', fontSize: '12px',
-                                            backgroundColor: p.isCorrect === true ? '#d4edda' : p.isCorrect === false ? '#f8d7da' : '#fff3cd',
-                                            color: p.isCorrect === true ? '#155724' : p.isCorrect === false ? '#721c24' : '#856404',
-                                        }}>
-                                            {p.isCorrect === true ? 'Correct' : p.isCorrect === false ? 'Wrong' : p.status}
-                                        </span>
-                                    </td>
-                                    <td style={{ padding: '12px', fontSize: '14px', fontWeight: 'bold', color: '#8B0000' }}>
-                                        {p.pointsAwarded > 0 ? `+${p.pointsAwarded}` : '-'}
-                                    </td>
+                    <div className="overflow-x-auto">
+                        <table className="data-table min-w-[760px]">
+                            <thead>
+                                <tr>
+                                    {['Tournament', 'Race', 'Predicted Horse', 'Status', 'Points'].map(h => (
+                                        <th key={h}>{h}</th>
+                                    ))}
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {predictions.map((p) => (
+                                    <tr key={p.predictionId}>
+                                        <td>{p.tournamentName ?? '-'}</td>
+                                        <td>{p.raceName}</td>
+                                        <td>{p.predictedHorseName}</td>
+                                        <td>
+                                            <span className={`status-badge ${p.isCorrect === true ? 'bg-[#d4edda] text-[#155724]' : p.isCorrect === false ? 'bg-[#f8d7da] text-[#721c24]' : 'bg-[#fff3cd] text-[#856404]'}`}>
+                                                {p.isCorrect === true ? 'Correct' : p.isCorrect === false ? 'Wrong' : p.status}
+                                            </span>
+                                        </td>
+                                        <td className="font-black text-[var(--admin-primary)]">
+                                            {p.pointsAwarded > 0 ? `+${p.pointsAwarded}` : '-'}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 
-            {/* Available Tournaments to Predict */}
-            {tournaments.filter(t => t.status === 'OpenRegistration').length > 0 && (
-                <div style={{ ...styles.card, marginTop: '16px' }}>
-                    <h3 style={{ margin: "0 0 16px" }}>Available for Prediction</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        {tournaments.filter(t => t.status === 'OpenRegistration').map(t => (
-                            <div key={t.tournamentId} style={{ padding: '12px', border: '1px solid #eee', borderRadius: '8px' }}>
-                                <p style={{ margin: '0 0 4px', fontWeight: 'bold' }}>{t.tournamentName}</p>
-                                <p style={{ margin: '0', fontSize: '12px', color: '#999' }}>
-                                    📅 {t.race?.raceDate?.slice(0, 10) ?? '-'} • 📍 {t.location ?? '-'}
+            {openTournaments.length > 0 && (
+                <div className="surface-card p-5">
+                    <h3 className="m-0 mb-4 text-[1.05rem] font-bold">Available for Prediction</h3>
+                    <div className="grid grid-cols-2 gap-4 max-[820px]:grid-cols-1">
+                        {openTournaments.map(t => (
+                            <article key={t.tournamentId} className="rounded-[8px] border border-[var(--admin-border)] bg-[#fffaf8] p-4">
+                                <p className="m-0 font-bold">{t.tournamentName}</p>
+                                <p className="m-0 mt-2 flex flex-wrap gap-4 text-[0.82rem] text-[var(--admin-muted)]">
+                                    <span className="inline-flex items-center gap-2"><FaCalendarAlt /> {t.race?.raceDate?.slice(0, 10) ?? '-'}</span>
+                                    <span className="inline-flex items-center gap-2"><FaMapMarkerAlt /> {t.location ?? '-'}</span>
                                 </p>
-                                <button style={{ ...styles.predictBtn, marginTop: '8px', width: '100%' }}>
+                                <button className="primary-button mt-3 w-full">
                                     Make Prediction
                                 </button>
-                            </div>
+                            </article>
                         ))}
                     </div>
                 </div>
@@ -112,11 +125,3 @@ export default function Predictions() {
         </div>
     );
 }
-
-const styles = {
-    statCard: { backgroundColor: "#fff", borderRadius: "12px", padding: "16px", border: "1px solid #eee" },
-    statLabel: { color: "#999", fontSize: "11px", fontWeight: "600" },
-    statValue: { margin: "4px 0 2px", fontSize: "22px", fontWeight: "bold" },
-    card: { backgroundColor: "#fff", borderRadius: "12px", padding: "20px", border: "1px solid #eee" },
-    predictBtn: { backgroundColor: "#8B0000", color: "#fff", border: "none", borderRadius: "8px", padding: "8px 16px", cursor: "pointer", fontSize: "13px" },
-};

@@ -10,6 +10,7 @@ import {
 
 import JockeyLayout from './JockeyLayout';
 import { jockeyApi } from '../../api/jockeyApi';
+import { resolveFileUrl } from '../../api/uploadApi';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 
@@ -19,10 +20,27 @@ const formatDate = (dateStr) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
 };
 
+function HealthCertificateLink({ url }) {
+    if (!url) {
+        return <span className="text-[var(--admin-muted)]">Not uploaded</span>;
+    }
+
+    const resolvedUrl = resolveFileUrl(url);
+
+    return (
+        <a className="inline-flex items-center gap-2 font-bold text-[var(--admin-primary)] no-underline hover:underline" href={resolvedUrl} target="_blank" rel="noreferrer">
+            <img alt="Health certificate" className="h-7 w-9 rounded border border-[var(--admin-border)] object-cover" src={resolvedUrl} />
+            Open certificate
+        </a>
+    );
+}
+
 function AcceptedRaces() {
     const [races, setRaces] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedRace, setSelectedRace] = useState(null);
+    const [selectedRaceLoading, setSelectedRaceLoading] = useState(false);
+    const [selectedRaceError, setSelectedRaceError] = useState('');
 
     useEffect(() => {
         jockeyApi.getAcceptedRaces()
@@ -32,6 +50,27 @@ function AcceptedRaces() {
     }, []);
 
     const upcomingCount = races.filter(r => new Date(r.raceDate) > new Date()).length;
+
+    const handleViewRaceDetail = async (race) => {
+        setSelectedRace(race);
+        setSelectedRaceError('');
+        setSelectedRaceLoading(true);
+
+        try {
+            const detail = await jockeyApi.getRaceDetail(race.raceId);
+            setSelectedRace({ ...race, ...detail });
+        } catch (err) {
+            setSelectedRaceError(err.message || 'Failed to load race detail');
+        } finally {
+            setSelectedRaceLoading(false);
+        }
+    };
+
+    const handleCloseRaceDetail = () => {
+        setSelectedRace(null);
+        setSelectedRaceError('');
+        setSelectedRaceLoading(false);
+    };
 
     if (loading) return (
         <JockeyLayout activeKey="accepted">
@@ -81,7 +120,11 @@ function AcceptedRaces() {
                         races.map((race) => (
                             <article key={race.raceRegistrationId} className="grid grid-cols-[200px_1fr] overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] max-[800px]:grid-cols-1">
                                 <div className="h-full min-h-[200px] overflow-hidden bg-[#3d2c1e] flex items-center justify-center max-[800px]:h-[160px]">
-                                    <span className="text-[4rem]">🏇</span>
+                                    {race.horseImageUrl ? (
+                                        <img src={resolveFileUrl(race.horseImageUrl)} alt={race.horseName || 'Horse'} className="h-full w-full object-cover" />
+                                    ) : (
+                                        <span className="text-[4rem]">🏇</span>
+                                    )}
                                 </div>
 
                                 <div className="flex flex-col gap-4 p-5">
@@ -123,12 +166,18 @@ function AcceptedRaces() {
                                                 <span>{race.ownerName}</span>
                                             </div>
                                         </div>
+                                        <div className="col-span-2">
+                                            <span className="text-[0.65rem] font-bold uppercase text-[var(--admin-muted)]">Health Certificate</span>
+                                            <div className="mt-1 text-[var(--admin-ink)]">
+                                                <HealthCertificateLink url={race.healthCertificateImageUrl} />
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div className="flex justify-end gap-3">
                                         <button
                                             className="inline-flex min-h-[36px] cursor-pointer items-center justify-center rounded-md bg-[var(--admin-primary)] px-5 text-[0.82rem] font-[850] text-white hover:bg-[var(--admin-primary-dark)]"
-                                            onClick={() => setSelectedRace(race)}
+                                            onClick={() => handleViewRaceDetail(race)}
                                             type="button"
                                         >
                                             View Details
@@ -142,11 +191,16 @@ function AcceptedRaces() {
 
                 {/* Detail Modal */}
                 {selectedRace && (
-                    <div className="fixed inset-0 z-20 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8 overflow-auto" onClick={() => setSelectedRace(null)}>
+                    <div className="fixed inset-0 z-20 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8 overflow-auto" onClick={handleCloseRaceDetail}>
                         <section className="grid w-[min(600px,100%)] gap-0 overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-xl" onClick={e => e.stopPropagation()}>
-                            <div className="relative h-[160px] bg-[#3d2c1e] flex items-center justify-center">
-                                <span className="text-[4rem]">🏇</span>
-                                <button className="absolute right-4 top-4 grid h-8 w-8 cursor-pointer place-items-center rounded-full border-0 bg-[rgba(0,0,0,0.5)] text-white" onClick={() => setSelectedRace(null)} type="button">
+                            <div className="relative h-[160px] bg-[#3d2c1e] flex items-center justify-center overflow-hidden">
+                                {selectedRace.horseImageUrl ? (
+                                    <img src={resolveFileUrl(selectedRace.horseImageUrl)} alt={selectedRace.horseName || 'Horse'} className="h-full w-full object-cover" />
+                                ) : (
+                                    <span className="text-[4rem]">🏇</span>
+                                )}
+                                {selectedRace.horseImageUrl && <div className="absolute inset-0 bg-black/35" />}
+                                <button className="absolute right-4 top-4 grid h-8 w-8 cursor-pointer place-items-center rounded-full border-0 bg-[rgba(0,0,0,0.5)] text-white" onClick={handleCloseRaceDetail} type="button">
                                     <FaTimes />
                                 </button>
                                 <div className="absolute bottom-4 left-5">
@@ -158,6 +212,12 @@ function AcceptedRaces() {
                             </div>
 
                             <div className="grid gap-4 p-6">
+                                {(selectedRaceLoading || selectedRaceError) && (
+                                    <div className={`rounded-md border px-4 py-3 text-[0.82rem] font-bold ${selectedRaceError ? 'border-[#e7a49a] bg-[#ffe8e4] text-[var(--admin-primary)]' : 'border-[var(--admin-border)] bg-[#fff8f6] text-[var(--admin-muted)]'}`}>
+                                        {selectedRaceError || 'Loading race detail...'}
+                                    </div>
+                                )}
+
                                 <div className="grid grid-cols-2 gap-4 max-[560px]:grid-cols-1">
                                     <div className="rounded-md bg-[#fff8f6] p-4 text-[0.85rem]">
                                         <h4 className="m-0 mb-2 text-[0.72rem] font-black uppercase text-[var(--admin-primary)]">Race Info</h4>
@@ -168,12 +228,18 @@ function AcceptedRaces() {
                                         <h4 className="m-0 mb-2 text-[0.72rem] font-black uppercase text-[var(--admin-primary)]">Details</h4>
                                         <p className="m-0"><strong>Horse:</strong> {selectedRace.horseName}</p>
                                         <p className="m-0 mt-1"><strong>Owner:</strong> {selectedRace.ownerName}</p>
+                                        <div className="mt-2">
+                                            <strong>Health Certificate:</strong>
+                                            <div className="mt-1">
+                                                <HealthCertificateLink url={selectedRace.healthCertificateImageUrl} />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
                                 <button
                                     className="inline-flex min-h-[40px] cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-4 font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]"
-                                    onClick={() => setSelectedRace(null)}
+                                    onClick={handleCloseRaceDetail}
                                     type="button"
                                 >
                                     Close

@@ -6,6 +6,7 @@ import {
 } from 'react-icons/fa';
 
 import { refereeApi } from '../../api/refereeApi';
+import { resolveFileUrl } from '../../api/uploadApi';
 import RefereeLayout from './RefereeLayout';
 
 function formatDateTime(value) {
@@ -19,10 +20,48 @@ function formatDateTime(value) {
     }).format(new Date(value));
 }
 
+function CertificatePreviewList({ certificates }) {
+    if (!certificates?.length) {
+        return (
+            <p className="m-0 mt-2 text-xs font-semibold text-gray-500">
+                No health certificates uploaded yet.
+            </p>
+        );
+    }
+
+    return (
+        <div className="mt-2 flex flex-wrap gap-2">
+            {certificates.slice(0, 3).map((item) => {
+                const resolvedUrl = resolveFileUrl(item.healthCertificateImageUrl);
+
+                return (
+                    <span
+                        key={item.registrationId}
+                        className="inline-flex items-center gap-2 rounded border border-[#ead3cf] bg-white px-2 py-1 text-xs font-bold text-[#7d0000]"
+                    >
+                        <img
+                            src={resolvedUrl}
+                            alt="Health certificate"
+                            className="h-7 w-9 rounded object-cover"
+                        />
+                        {item.horseName || `#${item.registrationId}`}
+                    </span>
+                );
+            })}
+            {certificates.length > 3 && (
+                <span className="inline-flex items-center rounded bg-[#f7efee] px-2 py-1 text-xs font-bold text-[#7d0000]">
+                    +{certificates.length - 3} more
+                </span>
+            )}
+        </div>
+    );
+}
+
 function AssignedPreRace() {
     const navigate = useNavigate();
 
     const [races, setRaces] = useState([]);
+    const [certificatesByRace, setCertificatesByRace] = useState({});
     const [loadingRaces, setLoadingRaces] = useState(true);
     const [error, setError] = useState('');
 
@@ -32,13 +71,38 @@ function AssignedPreRace() {
         async function loadRaces() {
             setLoadingRaces(true);
             setError('');
+            setCertificatesByRace({});
 
             try {
                 const data = await refereeApi.getAssignedRaces();
+                const assignedRaces = data ?? [];
 
                 if (!ignore) {
-                    setRaces(data ?? []);
+                    setRaces(assignedRaces);
                 }
+
+                Promise.allSettled(
+                    assignedRaces.map(async (race) => {
+                        const registrations = await refereeApi.getRaceRegistrations(race.raceId);
+                        return [
+                            race.raceId,
+                            (registrations ?? []).filter((item) => item.healthCertificateImageUrl),
+                        ];
+                    })
+                ).then((results) => {
+                    if (ignore) return;
+
+                    const next = {};
+
+                    results.forEach((result) => {
+                        if (result.status === 'fulfilled') {
+                            const [raceId, certificates] = result.value;
+                            next[raceId] = certificates;
+                        }
+                    });
+
+                    setCertificatesByRace(next);
+                });
             } catch (err) {
                 if (!ignore) {
                     setError(err.message || 'Failed to load assigned races.');
@@ -65,37 +129,40 @@ function AssignedPreRace() {
 
     return (
         <RefereeLayout activeKey="assigned-races">
-            <div className="p-8">
-                <h1 className="text-5xl font-bold text-[#7d0000]">
+            <section className="page-shell">
+                <h1 className="page-title">
                     Pre-Race Tournaments
                 </h1>
 
-                <p className="mt-2 text-gray-600">
+                <p className="page-subtitle">
                     Select a tournament race to open its inspection registry on a separate page.
                 </p>
 
                 {error && (
-                    <div className="mt-6 rounded-xl border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
+                    <div className="mt-6 rounded-[8px] border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
                         {error}
                     </div>
                 )}
 
                 <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                     {loadingRaces ? (
-                        <div className="rounded-2xl border border-[#ead3cf] bg-white p-6 text-gray-500">
+                        <div className="soft-card p-6 text-gray-500">
                             Loading assigned races...
                         </div>
                     ) : races.length === 0 ? (
-                        <div className="rounded-2xl border border-[#ead3cf] bg-white p-6 text-gray-500">
+                        <div className="soft-card p-6 text-gray-500">
                             No assigned races from backend.
                         </div>
                     ) : (
-                        races.map((race) => (
+                        races.map((race) => {
+                            const certificates = certificatesByRace[race.raceId] ?? [];
+
+                            return (
                             <button
                                 type="button"
                                 key={race.raceId}
                                 onClick={() => openInspectionRegistry(race)}
-                                className="group cursor-pointer rounded-2xl border border-[#ead3cf] bg-white p-6 text-left transition hover:border-[#7d0000] hover:shadow-md"
+                                className="soft-card group cursor-pointer p-6 text-left transition hover:border-[#7d0000] hover:shadow-md"
                             >
                                 <div className="flex justify-between">
                                     <span className="rounded-full bg-[#f7efee] px-3 py-1 text-xs font-semibold">
@@ -107,7 +174,7 @@ function AssignedPreRace() {
                                     </span>
                                 </div>
 
-                                <h2 className="mt-5 text-3xl font-semibold text-[#2b1b1b]">
+                                <h2 className="mt-5 text-2xl font-black text-[#2b1b1b]">
                                     {race.raceName}
                                 </h2>
 
@@ -146,15 +213,23 @@ function AssignedPreRace() {
                                     </div>
                                 </div>
 
-                                <div className="mt-6 flex items-center justify-center gap-3 rounded-xl border border-[#7d0000] py-3 font-semibold text-[#7d0000] transition group-hover:bg-[#7d0000] group-hover:text-white">
+                                <div className="mt-4 rounded border border-[#ead3cf] bg-[#fff8f6] p-3">
+                                    <div className="text-xs font-bold uppercase text-[#7d0000]">
+                                        Health Certificates ({certificates.length})
+                                    </div>
+                                    <CertificatePreviewList certificates={certificates} />
+                                </div>
+
+                                <div className="secondary-button mt-6 gap-3 group-hover:bg-[#7d0000] group-hover:text-white">
                                     Open Inspection Registry
                                     <FaArrowRight />
                                 </div>
                             </button>
-                        ))
+                            );
+                        })
                     )}
                 </div>
-            </div>
+            </section>
         </RefereeLayout>
     );
 }

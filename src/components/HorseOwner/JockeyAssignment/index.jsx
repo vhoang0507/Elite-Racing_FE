@@ -182,6 +182,7 @@ export default function JockeyAssignment() {
                                     context={context}
                                     loading={loadingDetail}
                                     horseImageUrl={selectedRegistration?.horseImageUrl}
+                                    healthCertificateImageUrl={selectedRegistration?.healthCertificateImageUrl}
                                 />
                                 <ActivityTimeline summary={summary} hasOfficialJockey={hasOfficialJockey} />
                             </div>

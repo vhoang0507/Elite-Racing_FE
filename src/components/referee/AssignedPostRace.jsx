@@ -16,7 +16,7 @@ import {
 } from '../../api/refereeApi';
 import RefereeLayout from './RefereeLayout';
 
-const panelClass = 'overflow-hidden rounded-2xl border border-[#ead3cf] bg-white';
+const panelClass = 'surface-card';
 
 const emptyResultForm = {
     registrationId: '',
@@ -492,14 +492,14 @@ function AssignedPostRace() {
 
     return (
         <RefereeLayout activeKey="assigned-races">
-            <div className="space-y-8 p-8">
+            <section className="page-shell">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                        <h1 className="text-5xl font-bold text-[#7d0000]">
+                        <h1 className="page-title">
                             Post-Race Workflow
                         </h1>
 
-                        <p className="mt-2 text-gray-600">
+                        <p className="page-subtitle">
                             Select a race, enter official results, create violations, and submit referee reports.
                         </p>
                     </div>
@@ -508,7 +508,7 @@ function AssignedPostRace() {
                         type="button"
                         onClick={handleRefreshRaceData}
                         disabled={!selectedRaceId || loadingRaceData}
-                        className="flex items-center gap-2 rounded-xl border border-[#7d0000] px-4 py-3 font-semibold text-[#7d0000] disabled:cursor-not-allowed disabled:opacity-60"
+                        className="secondary-button gap-2 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         <FaRedo />
                         Refresh Data
@@ -516,24 +516,24 @@ function AssignedPostRace() {
                 </div>
 
                 {error && (
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
+                    <div className="rounded-[8px] border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
                         {error}
                     </div>
                 )}
 
                 {success && (
-                    <div className="rounded-xl border border-green-200 bg-green-50 px-5 py-4 font-semibold text-green-700">
+                    <div className="rounded-[8px] border border-green-200 bg-green-50 px-5 py-4 font-semibold text-green-700">
                         {success}
                     </div>
                 )}
 
                 <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                     {loadingRaces ? (
-                        <div className="rounded-2xl border border-[#ead3cf] bg-white p-6 text-gray-500">
+                        <div className="soft-card p-6 text-gray-500">
                             Loading assigned races...
                         </div>
                     ) : races.length === 0 ? (
-                        <div className="rounded-2xl border border-[#ead3cf] bg-white p-6 text-gray-500">
+                        <div className="soft-card p-6 text-gray-500">
                             No assigned races from backend.
                         </div>
                     ) : (
@@ -542,7 +542,7 @@ function AssignedPostRace() {
                                 type="button"
                                 key={race.raceId}
                                 onClick={() => handleRaceSelect(race.raceId)}
-                                className={`rounded-2xl border bg-white p-6 text-left transition ${String(selectedRaceId) === String(race.raceId)
+                                className={`soft-card p-6 text-left transition ${String(selectedRaceId) === String(race.raceId)
                                     ? 'border-[#7d0000] shadow-md'
                                     : 'border-[#ead3cf] hover:border-[#7d0000] hover:shadow-sm'
                                     }`}
@@ -557,7 +557,7 @@ function AssignedPostRace() {
                                     </span>
                                 </div>
 
-                                <h2 className="mt-5 text-3xl font-semibold">
+                                <h2 className="mt-5 text-2xl font-black">
                                     {race.raceName}
                                 </h2>
 
@@ -592,7 +592,7 @@ function AssignedPostRace() {
                         </h2>
 
                         {selectedRace && (
-                            <div className="mb-5 rounded-xl bg-[#faf6f5] px-4 py-3 text-sm text-gray-600">
+                            <div className="mb-5 rounded-[8px] bg-[#faf6f5] px-4 py-3 text-sm text-gray-600">
                                 Entering result for{' '}
                                 <span className="font-bold text-[#7d0000]">
                                     {selectedRace.raceName}
@@ -638,7 +638,7 @@ function AssignedPostRace() {
                             </label>
 
                             {selectedResultRegistration && (
-                                <div className="rounded-xl border border-[#ead3cf] p-3 text-sm text-gray-600">
+                                <div className="rounded-[8px] border border-[#ead3cf] p-3 text-sm text-gray-600">
                                     <div className="font-semibold text-[#2b1b1b]">
                                         {selectedResultRegistration.horseName}
                                     </div>
@@ -755,7 +755,7 @@ function AssignedPostRace() {
                         </h2>
 
                         {selectedRace && (
-                            <div className="mb-5 rounded-xl bg-[#faf6f5] px-4 py-3 text-sm text-gray-600">
+                            <div className="mb-5 rounded-[8px] bg-[#faf6f5] px-4 py-3 text-sm text-gray-600">
                                 Create violation for{' '}
                                 <span className="font-bold text-[#7d0000]">
                                     {selectedRace.raceName}
@@ -801,7 +801,7 @@ function AssignedPostRace() {
                             </label>
 
                             {selectedViolationRegistration && (
-                                <div className="rounded-xl border border-[#ead3cf] p-3 text-sm text-gray-600">
+                                <div className="rounded-[8px] border border-[#ead3cf] p-3 text-sm text-gray-600">
                                     <div className="font-semibold text-[#2b1b1b]">
                                         {selectedViolationRegistration.horseName}
                                     </div>
@@ -975,7 +975,7 @@ function AssignedPostRace() {
                 {registrations.length === 0 &&
                     !loadingRaceData &&
                     selectedRaceId && (
-                        <div className="flex items-start gap-3 rounded-2xl border border-yellow-200 bg-yellow-50 p-5 text-yellow-800">
+                        <div className="flex items-start gap-3 rounded-[8px] border border-yellow-200 bg-yellow-50 p-5 text-yellow-800">
                             <FaExclamationTriangle className="mt-1" />
 
                             <div>
@@ -1220,7 +1220,7 @@ function AssignedPostRace() {
                         </div>
                     </div>
                 </section>
-            </div>
+            </section>
         </RefereeLayout>
     );
 }

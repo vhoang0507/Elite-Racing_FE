@@ -11,6 +11,7 @@ import {
     INSPECTION_STATUSES,
     refereeApi,
 } from '../../api/refereeApi';
+import { resolveFileUrl } from '../../api/uploadApi';
 import RefereeLayout from './RefereeLayout';
 
 const filterOptions = [
@@ -40,6 +41,25 @@ function statusFromOutcome(outcome) {
     if (outcome === 'ALLOWED') return INSPECTION_STATUSES.passed;
     if (outcome === 'PROHIBITED') return INSPECTION_STATUSES.failed;
     return INSPECTION_STATUSES.pending;
+}
+
+function HealthCertificateCell({ url }) {
+    if (!url) {
+        return (
+            <span className="inline-flex rounded border border-[#dbc3bf] bg-[#f3e8e6] px-2.5 py-1 text-xs font-bold text-[#7f645f]">
+                Not uploaded
+            </span>
+        );
+    }
+
+    const resolvedUrl = resolveFileUrl(url);
+
+    return (
+        <a className="inline-flex items-center gap-2 font-bold text-[#7d0000] no-underline hover:underline" href={resolvedUrl} target="_blank" rel="noreferrer">
+            <img alt="Health certificate" className="h-8 w-11 rounded border border-[#ead3cf] object-cover" src={resolvedUrl} />
+            View
+        </a>
+    );
 }
 
 function PreRaceInspectionRegistry() {
@@ -228,7 +248,7 @@ function PreRaceInspectionRegistry() {
 
     return (
         <RefereeLayout activeKey="assigned-races">
-            <div className="p-8">
+            <section className="page-shell">
                 <button
                     type="button"
                     onClick={() => navigate('/referee/races/pre-race')}
@@ -240,11 +260,11 @@ function PreRaceInspectionRegistry() {
 
                 <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
                     <div>
-                        <h1 className="text-5xl font-bold text-[#7d0000]">
+                        <h1 className="page-title">
                             Inspection Registry
                         </h1>
 
-                        <p className="mt-2 text-gray-600">
+                        <p className="page-subtitle">
                             Update horse inspection status and rule violations for the selected tournament race.
                         </p>
                     </div>
@@ -255,18 +275,18 @@ function PreRaceInspectionRegistry() {
                 </div>
 
                 {error && (
-                    <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
+                    <div className="mb-6 rounded-[8px] border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
                         {error}
                     </div>
                 )}
 
                 {success && (
-                    <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-5 py-4 font-semibold text-green-700">
+                    <div className="mb-6 rounded-[8px] border border-green-200 bg-green-50 px-5 py-4 font-semibold text-green-700">
                         {success}
                     </div>
                 )}
 
-                <div className="mb-8 rounded-2xl border border-[#ead3cf] bg-white p-6">
+                <div className="surface-card mb-8 p-6">
                     {loadingRace && !selectedRace ? (
                         <div className="text-gray-500">
                             Loading selected race...
@@ -328,10 +348,10 @@ function PreRaceInspectionRegistry() {
                     )}
                 </div>
 
-                <div className="overflow-hidden rounded-2xl border bg-white">
+                <div className="surface-card">
                     <div className="flex flex-wrap items-center justify-between gap-4 border-b p-6">
                         <div>
-                            <h2 className="text-3xl font-semibold">
+                            <h2 className="m-0 text-[1.35rem] font-black">
                                 Inspection Registry
                             </h2>
 
@@ -369,10 +389,11 @@ function PreRaceInspectionRegistry() {
                     </div>
 
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[1100px]">
+                        <table className="data-table min-w-[1220px]">
                             <thead className="bg-[#faf6f5]">
                                 <tr className="text-left">
                                     <th className="p-4">HORSE</th>
+                                    <th className="p-4">HEALTH CERT</th>
                                     <th className="p-4">REG STATUS</th>
                                     <th className="p-4">CHECKLIST</th>
                                     <th className="p-4">RULE REF</th>
@@ -388,7 +409,7 @@ function PreRaceInspectionRegistry() {
                                     <tr>
                                         <td
                                             className="p-6 text-center text-gray-500"
-                                            colSpan={8}
+                                            colSpan={9}
                                         >
                                             Loading inspection registry...
                                         </td>
@@ -397,7 +418,7 @@ function PreRaceInspectionRegistry() {
                                     <tr>
                                         <td
                                             className="p-6 text-center text-gray-500"
-                                            colSpan={8}
+                                            colSpan={9}
                                         >
                                             No inspection items for this filter.
                                         </td>
@@ -430,6 +451,10 @@ function PreRaceInspectionRegistry() {
                                                     <div className="text-sm text-gray-500">
                                                         {horse.registrationCode}
                                                     </div>
+                                                </td>
+
+                                                <td className="p-4">
+                                                    <HealthCertificateCell url={horse.healthCertificateImageUrl || registration?.healthCertificateImageUrl} />
                                                 </td>
 
                                                 <td className="p-4">
@@ -562,7 +587,7 @@ function PreRaceInspectionRegistry() {
                         Showing {rows.length} of {counts.all ?? rows.length} entries
                     </div>
                 </div>
-            </div>
+            </section>
         </RefereeLayout>
     );
 }

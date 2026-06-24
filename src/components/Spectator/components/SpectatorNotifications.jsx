@@ -1,4 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import {
+    FaBell,
+    FaBullseye,
+    FaCheckCircle,
+} from 'react-icons/fa';
 import { spectatorApi } from '../../../api/spectatorApi';
 
 export default function SpectatorNotifications() {
@@ -16,91 +21,86 @@ export default function SpectatorNotifications() {
         try {
             await spectatorApi.markSpectatorNotificationAsRead(id);
             setNotifications(prev => prev.map(n => n.notificationId === id ? { ...n, isRead: true } : n));
-        } catch { }
+        } catch (err) {
+            void err;
+        }
     };
 
     const unread = notifications.filter(n => !n.isRead).length;
 
-    if (loading) return <p style={{ textAlign: 'center', color: '#999' }}>Loading...</p>;
+    if (loading) return <p className="m-0 text-center font-semibold text-[var(--admin-muted)]">Loading...</p>;
+
+    const stats = [
+        { label: "TOTAL ALERTS", value: notifications.length, icon: FaBell },
+        { label: "UNREAD", value: unread, icon: FaBullseye },
+        { label: "READ", value: notifications.length - unread, icon: FaCheckCircle },
+    ];
 
     return (
-        <div>
-            <h2 style={{ margin: "0 0 4px", fontSize: "28px", fontWeight: "bold" }}>Notifications</h2>
-            <p style={{ margin: "0 0 24px", fontSize: "13px", color: "#999" }}>
-                Stay updated with live races, prediction events, tournament news, and exclusive spectator rewards.
-            </p>
-
-            {/* Stat Cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "24px" }}>
-                {[
-                    { label: "TOTAL ALERTS", value: notifications.length, icon: "🔔" },
-                    { label: "UNREAD", value: unread, icon: "🎯" },
-                    { label: "READ", value: notifications.length - unread, icon: "✅" },
-                ].map((s, i) => (
-                    <div key={i} style={styles.statCard}>
-                        <span style={{ fontSize: "24px" }}>{s.icon}</span>
-                        <div>
-                            <small style={styles.statLabel}>{s.label}</small>
-                            <h3 style={styles.statValue}>{s.value}</h3>
-                        </div>
-                    </div>
-                ))}
+        <div className="grid gap-7">
+            <div>
+                <h2 className="page-title">Notifications</h2>
+                <p className="page-subtitle">
+                    Stay updated with live races, prediction events, tournament news, and exclusive spectator rewards.
+                </p>
             </div>
 
-            {/* Notification List */}
-            <div style={styles.list}>
+            <div className="grid grid-cols-3 gap-4 max-[900px]:grid-cols-1">
+                {stats.map((s) => {
+                    const Icon = s.icon;
+
+                    return (
+                        <article key={s.label} className="stat-card min-h-[118px]">
+                            <div className="stat-icon">
+                                <Icon aria-hidden="true" />
+                            </div>
+                            <small className="stat-label">{s.label}</small>
+                            <h3 className="stat-value text-[1.8rem]">{s.value}</h3>
+                        </article>
+                    );
+                })}
+            </div>
+
+            <div className="grid gap-3">
                 {notifications.length === 0 ? (
-                    <p style={{ textAlign: 'center', color: '#999', padding: '40px' }}>No notifications.</p>
+                    <p className="m-0 rounded-[8px] border border-[var(--admin-border)] bg-white p-10 text-center text-[var(--admin-muted)]">
+                        No notifications.
+                    </p>
                 ) : (
                     notifications.map((n) => (
-                        <div key={n.notificationId} style={{
-                            ...styles.notifCard,
-                            borderLeft: !n.isRead ? '3px solid #8B0000' : '3px solid transparent',
-                            backgroundColor: !n.isRead ? '#fff5f5' : '#fff',
-                        }}>
-                            <span style={{ fontSize: "24px" }}>🔔</span>
-                            <div style={{ flex: 1 }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <p style={styles.notifTitle}>{n.title}</p>
-                                    <span style={{
-                                        ...styles.badge,
-                                        backgroundColor: n.isRead ? '#d4edda' : '#fff3cd',
-                                        color: n.isRead ? '#155724' : '#856404',
-                                    }}>
+                        <article
+                            key={n.notificationId}
+                            className={`soft-card flex items-start gap-4 p-4 ${!n.isRead ? 'border-l-[3px] border-l-[var(--admin-primary)] bg-[#fff5f5]' : ''}`}
+                        >
+                            <div className="stat-icon h-10 w-10">
+                                <FaBell aria-hidden="true" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-start justify-between gap-3">
+                                    <p className="m-0 font-bold text-[var(--admin-ink)]">{n.title}</p>
+                                    <span className={`status-badge ${n.isRead ? 'bg-[#d4edda] text-[#155724]' : 'bg-[#fff3cd] text-[#856404]'}`}>
                                         {n.isRead ? 'Read' : 'Unread'}
                                     </span>
                                 </div>
-                                <p style={styles.notifDesc}>{n.message}</p>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px" }}>
-                                    <span style={{ fontSize: "11px", color: "#999" }}>
+                                <p className="m-0 mt-2 text-[0.9rem] text-[var(--admin-muted)]">{n.message}</p>
+                                <div className="mt-3 flex items-center justify-between gap-3 max-[640px]:flex-col max-[640px]:items-start">
+                                    <span className="text-[0.76rem] text-[var(--admin-muted)]">
                                         {new Date(n.createdAt).toLocaleDateString()}
                                     </span>
                                     {!n.isRead && (
                                         <button
                                             onClick={() => handleMarkRead(n.notificationId)}
-                                            style={{ ...styles.actionBtn, backgroundColor: '#8B0000', color: '#fff', border: 'none' }}
+                                            className="primary-button min-h-8 px-3 text-[0.8rem]"
                                         >
                                             Mark Read
                                         </button>
                                     )}
                                 </div>
                             </div>
-                        </div>
+                        </article>
                     ))
                 )}
             </div>
         </div>
     );
 }
-
-const styles = {
-    statCard: { backgroundColor: "#fff", borderRadius: "12px", padding: "20px", border: "1px solid #eee", display: "flex", alignItems: "center", gap: "16px" },
-    statLabel: { color: "#999", fontSize: "11px", fontWeight: "600" },
-    statValue: { margin: "4px 0 0", fontSize: "28px", fontWeight: "bold" },
-    list: { display: "flex", flexDirection: "column", gap: "12px" },
-    notifCard: { borderRadius: "12px", padding: "16px", border: "1px solid #eee", display: "flex", gap: "16px", alignItems: "flex-start" },
-    notifTitle: { margin: 0, fontWeight: "600", fontSize: "14px" },
-    notifDesc: { margin: "4px 0 0", fontSize: "13px", color: "#666" },
-    badge: { fontSize: "11px", padding: "2px 8px", borderRadius: "10px", fontWeight: "500", whiteSpace: "nowrap" },
-    actionBtn: { padding: "6px 14px", borderRadius: "6px", cursor: "pointer", fontSize: "12px", fontWeight: "500" },
-};

@@ -38,9 +38,9 @@ export default function NewTournament() {
 }
 
 const styles = {
-    section: { backgroundColor: "#fff3ef", borderRadius: "12px", padding: "20px", border: "1px solid #edcfc9" },
+    section: { backgroundColor: "#fff3ef", borderRadius: "8px", padding: "20px", border: "1px solid #edcfc9", boxShadow: "0 12px 28px rgba(91, 26, 19, 0.05)" },
     header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" },
-    badge: { backgroundColor: "#860707", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "10px" },
+    badge: { backgroundColor: "#860707", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "999px", fontWeight: 700 },
     viewAll: { background: "none", border: "none", color: "#860707", cursor: "pointer", fontSize: "13px", marginBottom: "16px", padding: 0, fontWeight: "bold" },
     list: { display: "flex", flexDirection: "column", gap: "12px" },
     card: { backgroundColor: "#fffefd", borderRadius: "8px", padding: "14px", border: "1px solid #edcfc9" },
@@ -48,5 +48,5 @@ const styles = {
     name: { margin: 0, fontWeight: "bold", fontSize: "14px", color: "#2d2020" },
     date: { fontSize: "12px", color: "#705f5b" },
     location: { margin: "4px 0 10px", fontSize: "12px", color: "#705f5b" },
-    detailBtn: { width: "100%", padding: "8px", border: "1px solid #edcfc9", borderRadius: "6px", background: "#fffefd", cursor: "pointer", fontSize: "13px", color: "#2d2020" },
+    detailBtn: { width: "100%", padding: "8px", border: "1px solid #edcfc9", borderRadius: "8px", background: "#fffefd", cursor: "pointer", fontSize: "13px", color: "#2d2020", fontWeight: 700 },
 };

@@ -333,6 +333,53 @@ function UserManagement() {
     const jockeyDistanceExperiences = getListField(selectedJockeyDetail, 'distanceExperiences');
     const jockeyBreedExperiences = getListField(selectedJockeyDetail, 'breedExperiences');
 
+    const updateSelectedUserState = (nextStatus, nextVerified) => {
+        if (!selectedUser) {
+            return;
+        }
+
+        setUsers((current) => current.map((user) => (
+            user.id === selectedUser.id
+                ? { ...user, status: nextStatus, verified: nextVerified ?? user.verified }
+                : user
+        )));
+
+        setSelectedUser((current) => (
+            current
+                ? { ...current, status: nextStatus, verified: nextVerified ?? current.verified }
+                : current
+        ));
+    };
+
+    const handleUpdateSelectedUserStatus = async ({
+        apiStatus,
+        nextStatus,
+        nextVerified,
+        loadingKey,
+        confirmMessage,
+        errorMessage,
+    }) => {
+        if (!selectedUser) {
+            return;
+        }
+
+        if (confirmMessage && !window.confirm(confirmMessage)) {
+            return;
+        }
+
+        setDetailActionError('');
+        setDetailActionLoading(loadingKey);
+
+        try {
+            await adminApi.updateUserStatus(selectedUser.id, apiStatus);
+            updateSelectedUserState(nextStatus, nextVerified);
+        } catch (error) {
+            setDetailActionError(error.message || errorMessage || 'Failed to update this user.');
+        } finally {
+            setDetailActionLoading('');
+        }
+    };
+
     const handleRejectSelectedUser = async () => {
         if (!selectedUser) {
             return;
@@ -419,7 +466,7 @@ function UserManagement() {
                                 <article className="flex min-h-[150px] items-start justify-between gap-5 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-7 py-[26px]" key={card.label}>
                                     <div>
                                         <span className="block text-[0.74rem] font-black uppercase tracking-normal text-[#765c58]">{card.label}</span>
-                                        <strong className="mt-2 block text-5xl leading-none text-[var(--admin-primary-dark)]">{card.value}</strong>
+                                        <strong className="mt-2 block text-[2rem] leading-none text-[var(--admin-primary-dark)]">{card.value}</strong>
                                         <small className={`mt-[18px] block text-[0.74rem] font-black ${card.tone === 'reports' ? 'text-[var(--admin-primary)]' : 'text-inherit'}`}>
                                             {card.detail}
                                         </small>
@@ -619,31 +666,69 @@ function UserManagement() {
                                     </p>
                                 )}
 
-                                {/* Approve/Reject buttons for Pending Horse Owner or Jockey */}
-                                {formatClass(selectedUser.status) === 'pending' &&
-                                 (formatClass(selectedUser.role) === 'horse owner' || formatClass(selectedUser.role) === 'horseowner' || formatClass(selectedUser.role) === 'jockey') && (
-                                    <div className="flex gap-3 border-t border-[var(--admin-border)] pt-4">
+                                <div className="flex flex-wrap gap-3 border-t border-[var(--admin-border)] pt-4">
+                                    {['pending', 'inactive'].includes(formatClass(selectedUser.status)) && (
                                         <button
-                                            className="inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-md bg-[var(--admin-primary)] font-black text-white hover:bg-[var(--admin-primary-dark)]"
-                                            onClick={async () => {
-                                                await adminApi.updateUserStatus(selectedUser.id, 'Active');
-                                                setUsers((current) => current.map((u) => u.id === selectedUser.id ? { ...u, status: 'Active', verified: true } : u));
-                                                handleCloseDetails();
-                                            }}
+                                            className="inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-md bg-[var(--admin-primary)] px-4 font-black text-white hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-70"
+                                            disabled={Boolean(detailActionLoading)}
+                                            onClick={() => handleUpdateSelectedUserStatus({
+                                                apiStatus: 'Active',
+                                                nextStatus: 'Active',
+                                                nextVerified: true,
+                                                loadingKey: 'approve',
+                                                errorMessage: 'Failed to approve this user.',
+                                            })}
                                             type="button"
                                         >
-                                            Confirm
+                                            {detailActionLoading === 'approve' ? 'Approving...' : 'Approve'}
                                         </button>
+                                    )}
+
+                                    {formatClass(selectedUser.status) === 'pending' && (
                                         <button
-                                            className="inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed] disabled:cursor-not-allowed disabled:opacity-70"
-                                            disabled={detailActionLoading === 'reject'}
+                                            className="inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-4 font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed] disabled:cursor-not-allowed disabled:opacity-70"
+                                            disabled={Boolean(detailActionLoading)}
                                             onClick={handleRejectSelectedUser}
                                             type="button"
                                         >
                                             {detailActionLoading === 'reject' ? 'Rejecting...' : 'Reject'}
                                         </button>
-                                    </div>
-                                )}
+                                    )}
+
+                                    {formatClass(selectedUser.status) !== 'banned' && (
+                                        <button
+                                            className="inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-md border border-[#e7a49a] bg-[#ffe8e4] px-4 font-black text-[var(--admin-primary)] hover:bg-[#ffd8d2] disabled:cursor-not-allowed disabled:opacity-70"
+                                            disabled={Boolean(detailActionLoading)}
+                                            onClick={() => handleUpdateSelectedUserStatus({
+                                                apiStatus: 'Banned',
+                                                nextStatus: 'Banned',
+                                                loadingKey: 'ban',
+                                                confirmMessage: `Ban ${selectedUser.name}?`,
+                                                errorMessage: 'Failed to ban this user.',
+                                            })}
+                                            type="button"
+                                        >
+                                            {detailActionLoading === 'ban' ? 'Banning...' : 'Ban'}
+                                        </button>
+                                    )}
+
+                                    {formatClass(selectedUser.status) === 'banned' && (
+                                        <button
+                                            className="inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-md bg-[var(--admin-primary)] px-4 font-black text-white hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-70"
+                                            disabled={Boolean(detailActionLoading)}
+                                            onClick={() => handleUpdateSelectedUserStatus({
+                                                apiStatus: 'Unblocked',
+                                                nextStatus: 'Active',
+                                                nextVerified: true,
+                                                loadingKey: 'unblock',
+                                                errorMessage: 'Failed to unblock this user.',
+                                            })}
+                                            type="button"
+                                        >
+                                            {detailActionLoading === 'unblock' ? 'Unblocking...' : 'Unblock'}
+                                        </button>
+                                    )}
+                                </div>
                             </section>
                         </div>
                     )}

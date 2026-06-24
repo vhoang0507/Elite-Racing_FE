@@ -78,6 +78,34 @@ function DetailItem({ label, value }) {
     );
 }
 
+function HealthCertificatePreview({ url, compact = false }) {
+    if (!url) {
+        return (
+            <span className="inline-flex min-h-6 items-center rounded border border-[#dbc3bf] bg-[#f3e8e6] px-2.5 text-[0.68rem] font-black uppercase text-[#7f645f]">
+                Not uploaded
+            </span>
+        );
+    }
+
+    const resolvedUrl = resolveFileUrl(url);
+
+    if (compact) {
+        return (
+            <a className="inline-flex items-center gap-2 text-[0.78rem] font-black text-[var(--admin-primary)] no-underline hover:underline" href={resolvedUrl} target="_blank" rel="noreferrer">
+                <img alt="Health certificate" className="h-8 w-11 rounded border border-[var(--admin-border)] object-cover" src={resolvedUrl} />
+                View
+            </a>
+        );
+    }
+
+    return (
+        <a className="mt-3 flex items-center gap-3 rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-3 text-[0.86rem] font-black text-[var(--admin-primary)] no-underline hover:bg-[#fff0ed]" href={resolvedUrl} target="_blank" rel="noreferrer">
+            <img alt="Health certificate" className="h-[70px] w-[96px] rounded-md border border-[var(--admin-border)] object-cover" src={resolvedUrl} />
+            <span>Open health certificate</span>
+        </a>
+    );
+}
+
 export default function RegistrationManagement() {
     const [registrations, setRegistrations] = useState([]);
     const [selected, setSelected] = useState(null);
@@ -86,14 +114,36 @@ export default function RegistrationManagement() {
     const [loading, setLoading] = useState(true);
     const [savingId, setSavingId] = useState(null);
     const [error, setError] = useState('');
+    const [selectedLoading, setSelectedLoading] = useState(false);
+    const [selectedError, setSelectedError] = useState('');
+    const [registrationStats, setRegistrationStats] = useState({ pending: 0, approved: 0, rejected: 0 });
 
-    const loadRegistrations = async () => {
+    const loadRegistrations = async (nextStatus = statusFilter) => {
         try {
             setLoading(true);
             setError('');
 
-            const data = await adminApi.getRegistrations();
+            let data;
+            let allData;
+
+            if (nextStatus === 'pending') {
+                [data, allData] = await Promise.all([
+                    adminApi.getPendingRegistrations(),
+                    adminApi.getRegistrations().catch(() => []),
+                ]);
+            } else {
+                data = await adminApi.getRegistrations();
+                allData = data;
+            }
+
             setRegistrations(Array.isArray(data) ? data : []);
+
+            const statItems = Array.isArray(allData) ? allData : [];
+            setRegistrationStats({
+                pending: statItems.filter((item) => formatClass(item.status) === 'pending').length,
+                approved: statItems.filter((item) => formatClass(item.status) === 'approved').length,
+                rejected: statItems.filter((item) => formatClass(item.status) === 'rejected').length,
+            });
         } catch (err) {
             setError(err.message || 'Cannot load registrations.');
         } finally {
@@ -102,8 +152,14 @@ export default function RegistrationManagement() {
     };
 
     useEffect(() => {
-        loadRegistrations();
+        loadRegistrations('pending');
     }, []);
+
+    const handleStatusFilterChange = (event) => {
+        const nextStatus = event.target.value;
+        setStatusFilter(nextStatus);
+        loadRegistrations(nextStatus);
+    };
 
     const filteredRegistrations = useMemo(() => {
         const keyword = query.trim().toLowerCase();
@@ -127,9 +183,9 @@ export default function RegistrationManagement() {
         });
     }, [query, registrations, statusFilter]);
 
-    const pendingCount = registrations.filter((item) => formatClass(item.status) === 'pending').length;
-    const approvedCount = registrations.filter((item) => formatClass(item.status) === 'approved').length;
-    const rejectedCount = registrations.filter((item) => formatClass(item.status) === 'rejected').length;
+    const pendingCount = registrationStats.pending;
+    const approvedCount = registrationStats.approved;
+    const rejectedCount = registrationStats.rejected;
 
     const handleApprove = async (registration) => {
         const ok = window.confirm(
@@ -143,7 +199,7 @@ export default function RegistrationManagement() {
         try {
             setSavingId(registration.registrationId);
             await adminApi.approveRegistration(registration.registrationId);
-            await loadRegistrations();
+            await loadRegistrations(statusFilter);
             setSelected(null);
         } catch (err) {
             window.alert(err.message || 'Approve failed.');
@@ -165,12 +221,27 @@ export default function RegistrationManagement() {
         try {
             setSavingId(registration.registrationId);
             await adminApi.rejectRegistration(registration.registrationId, note);
-            await loadRegistrations();
+            await loadRegistrations(statusFilter);
             setSelected(null);
         } catch (err) {
             window.alert(err.message || 'Reject failed.');
         } finally {
             setSavingId(null);
+        }
+    };
+
+    const handleOpenRegistrationDetail = async (registration) => {
+        setSelected(registration);
+        setSelectedError('');
+        setSelectedLoading(true);
+
+        try {
+            const detail = await adminApi.getRegistrationById(registration.registrationId);
+            setSelected({ ...registration, ...detail });
+        } catch (err) {
+            setSelectedError(err.message || 'Cannot load registration detail.');
+        } finally {
+            setSelectedLoading(false);
         }
     };
 
@@ -230,7 +301,7 @@ export default function RegistrationManagement() {
                         <select
                             className="h-[38px] min-w-[160px] cursor-pointer rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.78rem] font-bold text-[#5f4b47] outline-0"
                             value={statusFilter}
-                            onChange={(event) => setStatusFilter(event.target.value)}
+                            onChange={handleStatusFilterChange}
                         >
                             {statusOptions.map((option) => (
                                 <option key={option.value} value={option.value}>
@@ -259,6 +330,7 @@ export default function RegistrationManagement() {
                                             'Horse & Breed',
                                             'Owner',
                                             'Tournament / Race',
+                                            'Health Certificate',
                                             'Race Date',
                                             'Submitted',
                                             'Status',
@@ -279,7 +351,7 @@ export default function RegistrationManagement() {
                                         <tr>
                                             <td
                                                 className="px-[22px] py-8 text-center font-bold text-[var(--admin-muted)]"
-                                                colSpan={7}
+                                                colSpan={8}
                                             >
                                                 No race entry requests found.
                                             </td>
@@ -324,6 +396,10 @@ export default function RegistrationManagement() {
                                                     </td>
 
                                                     <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
+                                                        <HealthCertificatePreview url={item.healthCertificateImageUrl} compact />
+                                                    </td>
+
+                                                    <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
                                                         {formatDateTime(item.raceDate)}
                                                     </td>
 
@@ -344,7 +420,7 @@ export default function RegistrationManagement() {
                                                                 className="grid h-8 w-8 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary)] hover:bg-[#fff0ed]"
                                                                 title="View"
                                                                 type="button"
-                                                                onClick={() => setSelected(item)}
+                                                                onClick={() => handleOpenRegistrationDetail(item)}
                                                             >
                                                                 <FaEye aria-hidden="true" />
                                                             </button>
@@ -410,12 +486,26 @@ export default function RegistrationManagement() {
                             </button>
                         </div>
 
+                        {(selectedLoading || selectedError) && (
+                            <div className={`mx-5 mt-4 rounded-md border px-4 py-3 text-[0.82rem] font-bold ${selectedError ? 'border-[#e7a49a] bg-[#ffe8e4] text-[var(--admin-primary)]' : 'border-[var(--admin-border)] bg-[#fff8f6] text-[var(--admin-muted)]'}`}>
+                                {selectedError || 'Loading race entry detail...'}
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-[240px_1fr] gap-5 p-5 max-[720px]:grid-cols-1">
-                            <img
-                                alt={selected.horseName || 'Horse'}
-                                className="h-[190px] w-full rounded-md object-cover"
-                                src={selected.horseImageUrl ? resolveFileUrl(selected.horseImageUrl) : horseRacing}
-                            />
+                            <div className="grid content-start gap-3">
+                                <img
+                                    alt={selected.horseName || 'Horse'}
+                                    className="h-[190px] w-full rounded-md object-cover"
+                                    src={selected.horseImageUrl ? resolveFileUrl(selected.horseImageUrl) : horseRacing}
+                                />
+                                <div className="rounded-md border border-[var(--admin-border)] bg-[#fffdfc] p-4">
+                                    <span className="block text-[0.68rem] font-black uppercase text-[#765c58]">
+                                        Health Certificate
+                                    </span>
+                                    <HealthCertificatePreview url={selected.healthCertificateImageUrl} />
+                                </div>
+                            </div>
 
                             <div className="grid grid-cols-2 gap-3 max-[720px]:grid-cols-1">
                                 <DetailItem label="Horse Name" value={selected.horseName} />

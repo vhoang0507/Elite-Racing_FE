@@ -30,8 +30,11 @@ export default function HorseOwnerDashboard() {
 
     return (
         <HorseOwnerLayout activeKey="dashboard">
-            <section className="grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7">
-                <h2 className="m-0 text-[1.8rem] text-[var(--admin-primary-dark)]">Dashboard Overview</h2>
+            <section className="page-shell">
+                <div>
+                    <h2 className="page-title">Dashboard Overview</h2>
+                    <p className="page-subtitle">Track horses, registrations, race approvals, and jockey invitations.</p>
+                </div>
 
                 {loading && <p className="text-[var(--admin-muted)]">Loading...</p>}
 

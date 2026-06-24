@@ -4,6 +4,25 @@ import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
 import RegistrationModal from "./RegistrationModal";
 
+const getTournamentStatus = (tournament) => tournament.status ?? tournament.Status ?? "OpenRegistration";
+
+const registrationStatusLabel = (status) => {
+    switch (status) {
+        case "OpenRegistration":
+            return "Open Registration";
+        case "ClosedRegistration":
+            return "Registration Closed";
+        case "Ongoing":
+            return "Race Ongoing";
+        case "Completed":
+            return "Completed";
+        default:
+            return "Registration Closed";
+    }
+};
+
+const canRegisterTournament = (tournament) => getTournamentStatus(tournament) === "OpenRegistration";
+
 export default function OpenTournaments() {
     const navigate = useNavigate();
     const [tournaments, setTournaments] = useState([]);
@@ -32,8 +51,22 @@ export default function OpenTournaments() {
                 <p style={{ color: "#999", textAlign: "center" }}>No open tournaments available.</p>
             ) : (
                 <div style={styles.grid}>
-                    {tournaments.map((t) => (
-                        <div key={t.tournamentId} style={styles.card} onClick={() => setSelected(t)}>
+                    {tournaments.map((t) => {
+                        const tournamentStatus = getTournamentStatus(t);
+                        const canRegister = canRegisterTournament(t);
+
+                        return (
+                        <div
+                            key={t.tournamentId}
+                            style={{
+                                ...styles.card,
+                                cursor: canRegister ? "pointer" : "not-allowed",
+                                opacity: canRegister ? 1 : 0.72,
+                            }}
+                            onClick={() => {
+                                if (canRegister) setSelected(t);
+                            }}
+                        >
                             <div style={styles.imgWrapper}>
                                 <img src={t.imageUrl || "/DubaiSprintCup.jpg"} alt={t.tournamentName} style={styles.img} />
                                 <span style={styles.prizeBadge}>£{Number(t.prizePool).toLocaleString()}+</span>
@@ -43,9 +76,13 @@ export default function OpenTournaments() {
                                 <p style={styles.date}>📅 {t.raceDate}</p>
                                 <p style={styles.date}>📍 {t.location}</p>
                                 <p style={styles.date}>🐎 {t.availableSlots} slots left</p>
+                                <p style={canRegister ? styles.openStatus : styles.closedStatus}>
+                                    {registrationStatusLabel(tournamentStatus)}
+                                </p>
                             </div>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             )}
 
@@ -74,4 +111,6 @@ const styles = {
     info: { padding: "10px" },
     name: { margin: "0 0 4px", fontWeight: "bold", fontSize: "14px" },
     date: { margin: "2px 0", fontSize: "12px", color: "#999" },
+    openStatus: { margin: "8px 0 0", fontSize: "11px", color: "#15803d", fontWeight: 700 },
+    closedStatus: { margin: "8px 0 0", fontSize: "11px", color: "#b91c1c", fontWeight: 700 },
 };

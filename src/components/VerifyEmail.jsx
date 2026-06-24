@@ -14,7 +14,7 @@ import icon from '../assets/icon.png';
 
 const formGroupClass = 'mb-5';
 const labelClass = 'mb-2.5 block text-[0.9rem] font-extrabold text-[#1f3b57]';
-const controlClass = 'h-[54px] w-full rounded-[10px] border border-[#e8caca] bg-white px-4 text-base outline-none focus:border-[#8B0000]';
+const controlClass = 'auth-control h-[52px] w-full rounded-[8px] border bg-white px-4 text-base outline-none';
 const OTP_CODE_LENGTH = 6;
 
 const VerifyEmail = () => {
@@ -80,8 +80,8 @@ const VerifyEmail = () => {
     };
 
     return (
-        <div className="flex h-screen w-full overflow-hidden bg-[#f5f5f5] font-['Segoe_UI',sans-serif] max-[1024px]:h-auto max-[1024px]:min-h-screen max-[1024px]:flex-col max-[1024px]:overflow-auto">
-            <div className="flex h-screen w-[58%] items-center justify-center overflow-y-auto bg-white px-[50px] py-[60px] max-[1024px]:min-h-screen max-[1024px]:w-full max-[1024px]:px-6 max-[1024px]:py-[30px]">
+        <div className="auth-page flex h-screen max-[1024px]:h-auto max-[1024px]:min-h-screen max-[1024px]:flex-col max-[1024px]:overflow-auto">
+            <div className="flex h-screen w-[58%] items-center justify-center overflow-y-auto bg-[rgba(255,254,253,0.92)] px-[50px] py-[60px] max-[1024px]:min-h-screen max-[1024px]:w-full max-[1024px]:px-6 max-[1024px]:py-[30px]">
                 <div className="w-full max-w-[520px]">
                     <div className="mb-8 flex items-center gap-3">
                         <img
@@ -95,7 +95,7 @@ const VerifyEmail = () => {
                         </h2>
                     </div>
 
-                    <h1 className="mb-4 text-[4rem] leading-[1.05] text-[#1f3b57] max-[1024px]:text-5xl">
+                    <h1 className="mb-4 text-[3.25rem] leading-[1.05] text-[#1f3b57] max-[1024px]:text-[2.5rem]">
                         Verify Email
                     </h1>
 
@@ -121,7 +121,7 @@ const VerifyEmail = () => {
                             <label className={labelClass}>OTP CODE</label>
 
                             <input
-                                className={`${controlClass} text-center text-[1.25rem] font-bold tracking-[0.35em]`}
+                                className={`${controlClass} text-center text-[1.25rem] font-bold tracking-normal`}
                                 type="text"
                                 inputMode="numeric"
                                 autoComplete="one-time-code"
@@ -150,7 +150,7 @@ const VerifyEmail = () => {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="mb-4 h-[54px] w-full cursor-pointer rounded-[10px] bg-[#a30000] text-base font-bold text-white"
+                            className="mb-4 h-[52px] w-full cursor-pointer rounded-[8px] bg-[#a30000] text-base font-bold text-white shadow-[0_12px_24px_rgba(139,0,0,0.16)]"
                         >
                             {isSubmitting ? 'Verifying...' : 'Verify Email'}
                         </button>
@@ -159,7 +159,7 @@ const VerifyEmail = () => {
                             type="button"
                             disabled={isResending || !email}
                             onClick={handleResend}
-                            className="mb-[22px] h-[54px] w-full cursor-pointer rounded-[10px] border border-[#8B0000] bg-white text-base font-bold text-[#8B0000]"
+                            className="mb-[22px] h-[52px] w-full cursor-pointer rounded-[8px] border border-[#8B0000] bg-white text-base font-bold text-[#8B0000]"
                         >
                             {isResending ? 'Sending...' : 'Resend OTP'}
                         </button>
@@ -180,7 +180,7 @@ const VerifyEmail = () => {
                     className="absolute inset-0 block h-full w-full object-cover object-center"
                 />
 
-                <div className="absolute inset-0 bg-[rgba(0,0,0,0.35)]" />
+                <div className="auth-hero-overlay absolute inset-0" />
 
                 <div className="absolute bottom-[60px] left-[50px] z-[2] max-w-[420px] text-white">
                     <h1 className="mb-[18px] text-[3.2rem] font-extrabold leading-[1.1]">

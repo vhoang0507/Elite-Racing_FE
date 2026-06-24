@@ -59,26 +59,26 @@ function RefereeAssignedRace() {
             activeKey="assigned-races"
             searchPlaceholder="Search records, horses, races..."
         >
-            <div className="p-8">
+            <section className="page-shell">
                 <div className="mb-10">
-                    <h1 className="text-5xl font-bold text-[#7d0000]">
+                    <h1 className="page-title">
                         Assigned Races
                     </h1>
 
-                    <p className="mt-2 text-gray-600">
+                    <p className="page-subtitle">
                         Manage inspections, race results, and rule violations for assigned races.
                     </p>
                 </div>
 
                 {error && (
-                    <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
+                    <div className="mb-6 rounded-[8px] border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
                         {error}
                     </div>
                 )}
 
-                <div className="mb-8 rounded-2xl border border-[#ead3cf] bg-white">
-                    <div className="flex items-center justify-between border-b border-[#ead3cf] p-5">
-                        <h2 className="text-2xl font-bold text-[#2b1b1b]">
+                <div className="surface-card mb-8">
+                    <div className="section-bar">
+                        <h2 className="m-0 text-[1.05rem] font-bold text-[#2b1b1b]">
                             Current Assignments
                         </h2>
 
@@ -88,7 +88,7 @@ function RefereeAssignedRace() {
                     </div>
 
                     <div className="overflow-x-auto">
-                        <table className="w-full">
+                        <table className="data-table min-w-[760px]">
                             <thead className="bg-[#faf6f5]">
                                 <tr className="text-left">
                                     <th className="p-4">RACE</th>
@@ -141,16 +141,16 @@ function RefereeAssignedRace() {
                 </div>
 
                 <div className="grid gap-8 lg:grid-cols-2">
-                    <div className="rounded-2xl border border-[#ead3cf] bg-white p-8">
-                        <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-xl bg-[#faf5f4]">
+                    <div className="soft-card p-6">
+                        <div className="stat-icon mb-6 h-14 w-14">
                             <FaClipboardCheck size={24} className="text-[#7d0000]" />
                         </div>
 
-                        <h2 className="text-4xl font-bold text-[#2b1b1b]">
+                        <h2 className="text-2xl font-black text-[#2b1b1b]">
                             Pre-Race Inspection
                         </h2>
 
-                        <p className="mt-4 text-lg leading-8 text-gray-600">
+                        <p className="mt-4 text-base leading-7 text-gray-600">
                             Review assigned race registrations, mark inspection status, and record inspection notes before the race starts.
                         </p>
 
@@ -169,23 +169,23 @@ function RefereeAssignedRace() {
                         <button
                             type="button"
                             onClick={() => navigate('/referee/races/pre-race')}
-                            className="mt-10 flex w-full items-center justify-center gap-3 rounded-xl border border-[#7d0000] py-4 font-semibold text-[#7d0000] transition hover:bg-[#7d0000] hover:text-white"
+                            className="secondary-button mt-8 w-full gap-3"
                         >
                             Access Inspections
                             <FaArrowRight />
                         </button>
                     </div>
 
-                    <div className="rounded-2xl border border-[#ead3cf] bg-white p-8">
-                        <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-xl bg-[#faf5f4]">
+                    <div className="soft-card p-6">
+                        <div className="stat-icon mb-6 h-14 w-14">
                             <FaClipboardCheck size={24} className="text-[#7d0000]" />
                         </div>
 
-                        <h2 className="text-4xl font-bold text-[#2b1b1b]">
+                        <h2 className="text-2xl font-black text-[#2b1b1b]">
                             Post-Race
                         </h2>
 
-                        <p className="mt-4 text-lg leading-8 text-gray-600">
+                        <p className="mt-4 text-base leading-7 text-gray-600">
                             Submit official results, confirm result entries, create violation records, and file referee reports.
                         </p>
 
@@ -209,14 +209,14 @@ function RefereeAssignedRace() {
                         <button
                             type="button"
                             onClick={() => navigate('/referee/races/post-race')}
-                            className="mt-10 flex w-full items-center justify-center gap-3 rounded-xl border border-[#7d0000] py-4 font-semibold text-[#7d0000] transition hover:bg-[#7d0000] hover:text-white"
+                            className="secondary-button mt-8 w-full gap-3"
                         >
                             Access Results and Reports
                             <FaArrowRight />
                         </button>
                     </div>
                 </div>
-            </div>
+            </section>
         </RefereeLayout>
     );
 }
