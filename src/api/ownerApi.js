@@ -67,6 +67,12 @@ export async function updateHorseStatus(horseId, isActive) {
     });
 }
 
+export async function deleteHorse(horseId) {
+    return apiRequest(`/owner/horses/${horseId}`, {
+        method: 'DELETE',
+    });
+}
+
 // ─── Horse Breeds ────────────────────────────────────────────────────────────
 
 export async function getHorseBreeds() {
@@ -225,6 +231,7 @@ export const ownerApi = {
     createHorse,
     updateHorse,
     updateHorseStatus,
+    deleteHorse,
     getHorseBreeds,
     getOpenTournaments,
     getEligibleHorses,

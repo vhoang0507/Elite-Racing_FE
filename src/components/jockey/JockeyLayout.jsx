@@ -46,6 +46,7 @@ function JockeyLayout({
     const navigate = useNavigate();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [profile, setProfile] = useState(null);
+    const [lockedAlert, setLockedAlert] = useState(false);
 
     useEffect(() => {
         jockeyApi.getJockeyProfile()
@@ -126,13 +127,17 @@ function JockeyLayout({
 
                         if (isDisabled) {
                             return (
-                                <span
+                                <button
                                     key={item.key}
+                                    type="button"
+                                    onClick={() => setLockedAlert(true)}
                                     className="role-nav-item is-disabled"
+                                    style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }}
                                 >
                                     <Icon className="h-4 w-4 flex-none" />
                                     <span>{item.label}</span>
-                                </span>
+                                    <span style={{ marginLeft: 'auto', fontSize: '10px' }}>🔒</span>
+                                </button>
                             );
                         }
 
@@ -238,6 +243,61 @@ function JockeyLayout({
                 </header>
 
                 <div className="flex-1">{children}</div>
+
+                {/* Locked page alert */}
+                {lockedAlert && (
+                    <div style={{
+                        position: 'fixed', inset: 0, zIndex: 100,
+                        backgroundColor: 'rgba(45,32,32,0.5)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
+                    }}>
+                        <div style={{
+                            backgroundColor: '#fff', borderRadius: '14px', padding: '36px 32px',
+                            maxWidth: '420px', width: '100%', textAlign: 'center',
+                            boxShadow: '0 24px 60px rgba(37,18,14,0.3)',
+                        }}>
+                            <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🔒</div>
+                            <h3 style={{ margin: '0 0 10px', fontSize: '1.3rem', color: '#650404' }}>
+                                Access Restricted
+                            </h3>
+                            <p style={{ margin: '0 0 8px', fontSize: '0.95rem', color: '#555', lineHeight: 1.6 }}>
+                                {profile?.nextStep === 'WaitForActivation'
+                                    ? 'Your profile is currently under admin review. Please wait for approval before accessing this page.'
+                                    : 'You need to complete your jockey profile before accessing this page.'}
+                            </p>
+                            <p style={{ margin: '0 0 24px', fontSize: '0.85rem', color: '#999' }}>
+                                {profile?.nextStep === 'WaitForActivation'
+                                    ? 'You will be notified once your account has been activated.'
+                                    : 'Go to Settings to fill in your details and submit your profile for admin review.'}
+                            </p>
+                            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                                <button
+                                    onClick={() => setLockedAlert(false)}
+                                    style={{
+                                        padding: '10px 22px', borderRadius: '8px',
+                                        border: '1px solid #edcfc9', backgroundColor: '#fff',
+                                        color: '#555', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem',
+                                    }}
+                                >
+                                    Close
+                                </button>
+                                {profile?.nextStep !== 'WaitForActivation' && (
+                                    <button
+                                        onClick={() => { setLockedAlert(false); navigate('/jockey/settings'); }}
+                                        style={{
+                                            padding: '10px 22px', borderRadius: '8px',
+                                            border: 'none', backgroundColor: '#8B0000',
+                                            color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem',
+                                        }}
+                                    >
+                                        Go to Settings
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <footer className="role-footer">
                     <strong className="text-[var(--admin-primary)]">Elite Racing League</strong>
                     <div className="role-footer-links">
