@@ -1,42 +1,77 @@
-import {
-    FaClipboardList,
-    FaEnvelope,
-    FaHorseHead,
-    FaTrophy,
-} from "react-icons/fa";
-
-const toneClass = {
-    blue: 'bg-[#e3f2fd] text-[#1565c0]',
-    gold: 'bg-[#fff3cd] text-[#856404]',
-    green: 'bg-[#dff7e9] text-[#118548]',
-    primary: 'bg-[#ffe8e4] text-[var(--admin-primary)]',
-};
-
-const iconByLabel = {
-    'Approved Races': FaTrophy,
-    'Pending Invitations': FaEnvelope,
-    Registrations: FaClipboardList,
-    'Total Horse': FaHorseHead,
-};
-
-const toneByLabel = {
-    'Approved Races': 'green',
-    'Pending Invitations': 'gold',
-    Registrations: 'blue',
-    'Total Horse': 'primary',
-};
-
-export default function StatCard({ icon, label, value, tone }) {
-    const Icon = typeof icon === 'function' ? icon : iconByLabel[label] || FaHorseHead;
-    const visualTone = tone || toneByLabel[label] || 'primary';
+export default function StatCard({ icon, label, value, accent = "#8B0000" }) {
+    const lightAccent = accent + "18"; // ~10% opacity version of accent
 
     return (
-        <div className="stat-card">
-            <div className={`stat-icon ${toneClass[visualTone] || toneClass.primary}`}>
-                <Icon aria-hidden="true" />
+        <div style={styles.card}>
+            {/* Top accent bar */}
+            <div style={{ ...styles.accentBar, backgroundColor: accent }} />
+
+            <div style={styles.body}>
+                {/* Icon badge */}
+                <div style={{ ...styles.iconBadge, backgroundColor: lightAccent }}>
+                    <span style={styles.icon}>{icon}</span>
+                </div>
+
+                {/* Text */}
+                <div style={styles.textGroup}>
+                    <p style={styles.label}>{label}</p>
+                    <h2 style={{ ...styles.value, color: accent }}>{value}</h2>
+                </div>
             </div>
-            <p className="stat-label m-0">{label}</p>
-            <h2 className="stat-value">{value}</h2>
         </div>
     );
 }
+
+const styles = {
+    card: {
+        backgroundColor: "#fff",
+        borderRadius: "12px",
+        border: "1px solid #edcfc9",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        boxShadow: "0 2px 8px rgba(139,0,0,0.06)",
+    },
+    accentBar: {
+        height: "4px",
+        width: "100%",
+    },
+    body: {
+        display: "flex",
+        alignItems: "center",
+        gap: "16px",
+        padding: "20px 22px",
+    },
+    iconBadge: {
+        width: "52px",
+        height: "52px",
+        borderRadius: "12px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexShrink: 0,
+    },
+    icon: {
+        fontSize: "26px",
+        lineHeight: 1,
+    },
+    textGroup: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "4px",
+    },
+    label: {
+        margin: 0,
+        fontSize: "0.82rem",
+        color: "#9e8e8a",
+        fontWeight: 500,
+        textTransform: "uppercase",
+        letterSpacing: "0.04em",
+    },
+    value: {
+        margin: 0,
+        fontSize: "2rem",
+        fontWeight: 800,
+        lineHeight: 1,
+    },
+};

@@ -12,6 +12,7 @@ import VerifyEmail from '../components/VerifyEmail';
 import AdminDashboard from '../components/admin/AdminDashboard';
 import CreateRefereeAccount from '../components/admin/CreateRefereeAccount';
 import CreateTournament from '../components/admin/CreateTournament';
+import HorseManagement from '../components/admin/HorseManagement';
 import Notifications from '../components/admin/Notifications';
 import PredictionManagement from '../components/admin/PredictionManagement';
 import RaceManagement from '../components/admin/RaceManagement';
@@ -43,6 +44,8 @@ import RefereeNotifications from '../components/referee/RefereeNotifications';
 import RefereeSetting from '../components/referee/RefereeSetting';
 import ResultReward from '../components/HorseOwner/ResultReward';
 import HorseResultDetail from '../components/HorseOwner/ResultReward/HorseDetail';
+import HorseDetail from '../components/HorseOwner/HorseDetail';
+import HorseEdit from '../components/HorseOwner/HorseEdit';
 import PreRaceInspectionRegistry from '../components/referee/PreRaceInspectionRegistry';
 
 const appRoutes = [
@@ -93,6 +96,10 @@ const appRoutes = [
     {
         path: '/admin/referees/create',
         element: createElement(CreateRefereeAccount),
+    },
+    {
+        path: '/admin/horses',
+        element: createElement(HorseManagement),
     },
     {
         path: '/admin/results',
@@ -180,6 +187,14 @@ const appRoutes = [
     {
         path: '/owner/register-horse',
         element: createElement(RegisterHorse),
+    },
+    {
+        path: '/owner/horses/:horseId',
+        element: createElement(HorseDetail),
+    },
+    {
+        path: '/owner/horses/:horseId/edit',
+        element: createElement(HorseEdit),
     },
     {
         path: '/owner/registrations',
