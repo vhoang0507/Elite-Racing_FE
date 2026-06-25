@@ -174,7 +174,7 @@ function AssignedPreRace() {
                                     </span>
                                 </div>
 
-                                <h2 className="mt-5 text-2xl font-black text-[#2b1b1b]">
+                                <h2 className="mt-4 text-[1.05rem] font-bold text-[#2b1b1b]">
                                     {race.raceName}
                                 </h2>
 
@@ -189,7 +189,7 @@ function AssignedPreRace() {
                                     {race.location || 'N/A'}
                                 </div>
 
-                                <div className="mt-6 border-t pt-4">
+                                <div className="mt-4 border-t pt-3">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <div className="text-xs text-gray-400">

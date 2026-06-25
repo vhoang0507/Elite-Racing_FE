@@ -298,7 +298,7 @@ function PreRaceInspectionRegistry() {
                                     RACE
                                 </div>
 
-                                <h2 className="mt-1 text-3xl font-bold text-[#2b1b1b]">
+                                <h2 className="mt-1 text-lg font-bold text-[#2b1b1b]">
                                     {selectedRace?.raceName ||
                                         report?.race?.raceName ||
                                         'Selected race'}
@@ -349,13 +349,13 @@ function PreRaceInspectionRegistry() {
                 </div>
 
                 <div className="surface-card">
-                    <div className="flex flex-wrap items-center justify-between gap-4 border-b p-6">
+                    <div className="section-bar flex-wrap gap-4">
                         <div>
-                            <h2 className="m-0 text-[1.35rem] font-black">
+                            <h2 className="m-0 text-[1.05rem] font-bold">
                                 Inspection Registry
                             </h2>
 
-                            <p className="mt-1 text-sm text-gray-500">
+                            <p className="mt-1 text-sm text-[var(--admin-muted)]">
                                 {selectedRace?.raceName ||
                                     report?.race?.raceName ||
                                     'Selected race'}
@@ -376,10 +376,16 @@ function PreRaceInspectionRegistry() {
                                         type="button"
                                         key={option.key}
                                         onClick={() => setFilter(option.key)}
-                                        className={`rounded px-4 py-2 font-semibold ${filter === option.key
-                                            ? 'bg-[#7d0000] text-white'
-                                            : 'border'
-                                            }`}
+                                        style={{
+                                            padding: '7px 16px',
+                                            borderRadius: 8,
+                                            fontSize: 13,
+                                            fontWeight: 700,
+                                            cursor: 'pointer',
+                                            border: filter === option.key ? 'none' : '1px solid #edcfc9',
+                                            background: filter === option.key ? '#7d0000' : '#fff8f6',
+                                            color: filter === option.key ? '#fff' : '#7d0000',
+                                        }}
                                     >
                                         {option.label} ({count ?? 0})
                                     </button>
@@ -390,17 +396,17 @@ function PreRaceInspectionRegistry() {
 
                     <div className="overflow-x-auto">
                         <table className="data-table min-w-[1220px]">
-                            <thead className="bg-[#faf6f5]">
-                                <tr className="text-left">
-                                    <th className="p-4">HORSE</th>
-                                    <th className="p-4">HEALTH CERT</th>
-                                    <th className="p-4">REG STATUS</th>
-                                    <th className="p-4">CHECKLIST</th>
-                                    <th className="p-4">RULE REF</th>
-                                    <th className="p-4">SEVERITY</th>
-                                    <th className="p-4">DETAILS</th>
-                                    <th className="p-4">OUTCOME</th>
-                                    <th className="p-4">UPDATE</th>
+                            <thead>
+                                <tr>
+                                    <th>Horse</th>
+                                    <th>Health Cert</th>
+                                    <th>Reg Status</th>
+                                    <th>Checklist</th>
+                                    <th>Rule Ref</th>
+                                    <th>Severity</th>
+                                    <th>Details</th>
+                                    <th>Outcome</th>
+                                    <th>Update</th>
                                 </tr>
                             </thead>
 
@@ -443,26 +449,25 @@ function PreRaceInspectionRegistry() {
                                                 key={horse.registrationId}
                                                 className="border-t align-top"
                                             >
-                                                <td className="p-4">
-                                                    <div className="font-bold">
+                                                <td className="px-4 py-3">
+                                                    <div className="font-bold text-[0.9rem]">
                                                         {horse.horseName}
                                                     </div>
 
-                                                    <div className="text-sm text-gray-500">
+                                                    <div className="text-xs text-[var(--admin-muted)]">
                                                         {horse.registrationCode}
                                                     </div>
                                                 </td>
 
-                                                <td className="p-4">
+                                                <td className="px-4 py-3">
                                                     <HealthCertificateCell url={horse.healthCertificateImageUrl || registration?.healthCertificateImageUrl} />
                                                 </td>
 
-                                                <td className="p-4">
-                                                    {registration?.status ??
-                                                        'N/A'}
+                                                <td className="px-4 py-3 text-sm">
+                                                    {registration?.status ?? 'N/A'}
                                                 </td>
 
-                                                <td className="p-4">
+                                                <td className="px-4 py-3">
                                                     <div className="flex gap-1">
                                                         {(horse.checklist ?? []).map(
                                                             (item, idx) =>
@@ -481,97 +486,77 @@ function PreRaceInspectionRegistry() {
                                                     </div>
                                                 </td>
 
-                                                <td className="p-4">
-                                                    {horse.ruleRef}
+                                                <td className="px-4 py-3 text-sm text-[var(--admin-muted)]">
+                                                    {horse.ruleRef || '—'}
                                                 </td>
 
-                                                <td className="p-4">
-                                                    {horse.severity}
+                                                <td className="px-4 py-3">
+                                                    {horse.severity ? (
+                                                        <span style={{
+                                                            fontSize: 11, fontWeight: 700,
+                                                            padding: '2px 9px', borderRadius: 20,
+                                                            backgroundColor: horse.severity === 'HIGH' ? '#f8d7da' : horse.severity === 'MEDIUM' ? '#fff3cd' : '#e3f2fd',
+                                                            color: horse.severity === 'HIGH' ? '#721c24' : horse.severity === 'MEDIUM' ? '#856404' : '#1565c0',
+                                                        }}>
+                                                            {horse.severity}
+                                                        </span>
+                                                    ) : '—'}
                                                 </td>
 
-                                                <td className="max-w-xs p-4">
-                                                    {horse.violation}
+                                                <td className="px-4 py-3 text-sm text-[var(--admin-muted)]" style={{ maxWidth: 200 }}>
+                                                    {horse.violation || '—'}
                                                 </td>
 
-                                                <td className="p-4">
-                                                    <span
-                                                        className={`font-semibold ${horse.outcome ===
-                                                            'ALLOWED'
-                                                            ? 'text-green-600'
-                                                            : horse.outcome ===
-                                                                'PROHIBITED'
-                                                                ? 'text-red-600'
-                                                                : 'text-yellow-600'
-                                                            }`}
-                                                    >
-                                                        {horse.outcome}
+                                                <td className="px-4 py-3">
+                                                    <span style={{
+                                                        fontSize: 11, fontWeight: 700,
+                                                        padding: '3px 10px', borderRadius: 20,
+                                                        backgroundColor: horse.outcome === 'ALLOWED' ? '#d4edda' : horse.outcome === 'PROHIBITED' ? '#f8d7da' : '#fff3cd',
+                                                        color: horse.outcome === 'ALLOWED' ? '#155724' : horse.outcome === 'PROHIBITED' ? '#721c24' : '#856404',
+                                                    }}>
+                                                        {horse.outcome ?? 'PENDING'}
                                                     </span>
                                                 </td>
 
-                                                <td className="w-[320px] p-4">
-                                                    <div className="grid gap-2">
+                                                <td className="px-4 py-3" style={{ minWidth: 230 }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                                         <select
                                                             value={draft.status}
                                                             onChange={(event) =>
-                                                                handleDraftChange(
-                                                                    horse.registrationId,
-                                                                    'status',
-                                                                    event.target
-                                                                        .value
-                                                                )
+                                                                handleDraftChange(horse.registrationId, 'status', event.target.value)
                                                             }
-                                                            className="rounded border border-[#ead3cf] px-3 py-2 outline-none focus:border-[#7d0000]"
+                                                            style={{ fontSize: 13, padding: '6px 10px', borderRadius: 6, border: '1px solid #edcfc9', outline: 'none', width: '100%' }}
                                                         >
-                                                            {statusOptions.map(
-                                                                (option) => (
-                                                                    <option
-                                                                        key={
-                                                                            option.value
-                                                                        }
-                                                                        value={
-                                                                            option.value
-                                                                        }
-                                                                    >
-                                                                        {
-                                                                            option.label
-                                                                        }
-                                                                    </option>
-                                                                )
-                                                            )}
+                                                            {statusOptions.map((option) => (
+                                                                <option key={option.value} value={option.value}>
+                                                                    {option.label}
+                                                                </option>
+                                                            ))}
                                                         </select>
 
                                                         <input
                                                             type="text"
                                                             value={draft.note}
                                                             onChange={(event) =>
-                                                                handleDraftChange(
-                                                                    horse.registrationId,
-                                                                    'note',
-                                                                    event.target
-                                                                        .value
-                                                                )
+                                                                handleDraftChange(horse.registrationId, 'note', event.target.value)
                                                             }
                                                             placeholder="Inspection note"
-                                                            className="rounded border border-[#ead3cf] px-3 py-2 outline-none focus:border-[#7d0000]"
+                                                            style={{ fontSize: 13, padding: '6px 10px', borderRadius: 6, border: '1px solid #edcfc9', outline: 'none', width: '100%' }}
                                                         />
 
                                                         <button
                                                             type="button"
-                                                            onClick={() =>
-                                                                handleSaveInspection(
-                                                                    horse.registrationId
-                                                                )
-                                                            }
-                                                            disabled={
-                                                                savingId ===
-                                                                horse.registrationId
-                                                            }
-                                                            className="rounded bg-[#7d0000] px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                                            onClick={() => handleSaveInspection(horse.registrationId)}
+                                                            disabled={savingId === horse.registrationId}
+                                                            style={{
+                                                                fontSize: 12, fontWeight: 700, padding: '6px 14px',
+                                                                borderRadius: 6, border: 'none', cursor: 'pointer',
+                                                                background: '#7d0000', color: '#fff',
+                                                                alignSelf: 'flex-start',
+                                                                opacity: savingId === horse.registrationId ? 0.6 : 1,
+                                                            }}
                                                         >
-                                                            {savingId ===
-                                                                horse.registrationId
-                                                                ? 'Saving...'
-                                                                : 'Save Inspection'}
+                                                            {savingId === horse.registrationId ? 'Saving...' : 'Save'}
                                                         </button>
                                                     </div>
                                                 </td>
@@ -583,7 +568,7 @@ function PreRaceInspectionRegistry() {
                         </table>
                     </div>
 
-                    <div className="border-t p-4 text-sm text-gray-500">
+                    <div className="border-t px-6 py-3 text-xs font-semibold text-[var(--admin-muted)]">
                         Showing {rows.length} of {counts.all ?? rows.length} entries
                     </div>
                 </div>
