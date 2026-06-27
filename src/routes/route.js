@@ -5,6 +5,7 @@ import {
     Routes,
 } from 'react-router-dom';
 import SpectatorDashboard from '../components/Spectator';
+import SpectatorLeaderboard from '../components/Spectator/SpectatorLeaderboard';
 
 import Login from '../components/Login';
 import Register from '../components/Register';
@@ -227,6 +228,10 @@ const appRoutes = [
     {
         path: '/spectator/tournaments',
         element: createElement(SpectatorTournaments),
+        },
+        {
+        path: '/spectator/leaderboard',
+        element: createElement(SpectatorLeaderboard),
     },
     {
         path: '/spectator/predictions',

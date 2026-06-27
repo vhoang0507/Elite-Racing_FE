@@ -21,6 +21,7 @@ export async function getRaceRegistrations(raceId) {
 }
 
 // ─── Predictions ─────────────────────────────────────────────────────────────
+// payload: { tournamentId, predictedHorseId }  — 1 prediction per tournament
 
 export async function createPrediction(payload) {
     return apiRequest('/spectator/predictions', {
@@ -30,7 +31,36 @@ export async function createPrediction(payload) {
 }
 
 export async function getMyPredictions() {
+    // Returns array of { predictionId, tournamentId, tournamentName, predictedHorseId,
+    //   predictedHorseName, isCorrect, pointsAwarded, status }
     return apiRequest('/spectator/predictions/my');
+}
+
+// ─── Tournament horses (for prediction picker) ────────────────────────────────
+// Returns array of { horseId, horseName, ownerName, jockeyName }
+
+export async function getTournamentHorses(tournamentId) {
+    return apiRequest(`/spectator/tournaments/${tournamentId}/horses`);
+}
+
+// ─── Leaderboard ─────────────────────────────────────────────────────────────
+// Horse leaderboard: [{ rank, horseId, horseName, ownerName, wins, totalRaces, winRate }]
+
+export async function getHorseLeaderboard() {
+    return apiRequest('/spectator/leaderboard/horses');
+}
+
+// Predictor leaderboard (season): [{ rank, spectatorName, points, correctPredictions, accuracy }]
+
+export async function getPredictorLeaderboard() {
+    return apiRequest('/spectator/leaderboard/predictors');
+}
+
+// ─── Season ───────────────────────────────────────────────────────────────────
+// { seasonId, startDate, endDate, daysLeft, totalPredictors, totalPredictions }
+
+export async function getCurrentSeason() {
+    return apiRequest('/spectator/season/current');
 }
 
 // ─── Rewards ─────────────────────────────────────────────────────────────────
@@ -62,6 +92,10 @@ export const spectatorApi = {
     getRaceRegistrations,
     createPrediction,
     getMyPredictions,
+    getTournamentHorses,
+    getHorseLeaderboard,
+    getPredictorLeaderboard,
+    getCurrentSeason,
     getSpectatorRewards,
     getSpectatorNotifications,
     getSpectatorUnreadCount,
