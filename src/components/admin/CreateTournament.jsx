@@ -20,19 +20,19 @@ import { apiRequest } from '../../api/httpClient';
 
 import AdminLayout from './AdminLayout';
 
-const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-[22px] px-11 py-[34px] max-[760px]:px-5 max-[760px]:py-7';
-const wrapClass = 'grid w-[min(960px,100%)] gap-[18px]';
-const formClass = 'grid gap-5';
-const cardClass = 'grid gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-[22px] max-[760px]:p-[18px]';
+const pageShellClass = 'grid min-h-[calc(100vh-64px)] w-full max-w-full content-start gap-[22px] overflow-x-hidden px-11 py-[34px] max-[760px]:px-5 max-[760px]:py-7';
+const wrapClass = 'grid w-full max-w-[960px] min-w-0 gap-[18px]';
+const formClass = 'grid min-w-0 gap-5';
+const cardClass = 'grid w-full min-w-0 max-w-full gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-[22px] max-[760px]:p-[18px]';
 const cardTitleClass = 'm-0 flex items-center gap-2 border-b border-[var(--admin-border)] pb-2.5 text-[0.9rem] font-black text-[var(--admin-ink)]';
-const fieldClass = 'grid gap-[7px]';
+const fieldClass = 'grid min-w-0 gap-[7px]';
 const labelClass = 'text-[0.76rem] font-[750] text-[#5b403c]';
 const controlBaseClass = 'w-full min-w-0 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-ink)] outline-0 transition-all duration-200 placeholder:text-[#9b8580] focus:border-[#c6897e] focus:bg-white focus:shadow-[0_0_0_3px_rgba(134,7,7,0.08)]';
 const inputClass = `${controlBaseClass} h-10 px-3`;
 const selectClass = `${controlBaseClass} h-10 px-3`;
 const textareaClass = `${controlBaseClass} min-h-[88px] resize-y px-3 py-3 leading-[1.45]`;
 const fileControlClass = `${controlBaseClass} flex min-h-10 cursor-pointer items-center gap-3 px-3 py-2`;
-const twoColumnClass = 'grid grid-cols-2 gap-3.5 max-[760px]:grid-cols-1';
+const twoColumnClass = 'grid min-w-0 grid-cols-[repeat(2,minmax(0,1fr))] gap-3.5 max-[760px]:grid-cols-1';
 const iconClass = 'pointer-events-none absolute top-1/2 h-[15px] w-[15px] -translate-y-1/2 text-[#9b7771]';
 const actionButtonClass = 'inline-flex min-h-[38px] cursor-pointer items-center justify-center gap-2 rounded-md px-[18px] text-[0.78rem] font-[850] no-underline max-[760px]:w-full';
 const distanceOptions = [1000, 1500, 2400];
