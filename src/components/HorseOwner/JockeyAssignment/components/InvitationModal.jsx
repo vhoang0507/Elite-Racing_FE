@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ownerApi } from "../../../../api/ownerApi";
+import { resolveFileUrl } from "../../../../api/uploadApi";
 
 export default function InvitationModal({ jockey, registrationId, tournamentName, onClose, onSent }) {
     const [feeAmount, setFeeAmount] = useState(500);
@@ -44,7 +45,7 @@ export default function InvitationModal({ jockey, registrationId, tournamentName
                 </div>
 
                 <div style={styles.jockeyCard}>
-                    <img src={jockey.profileImageUrl || '/Jockey1.jpg'} alt={jockey.fullName} style={styles.jockeyImg} />
+                    <img src={jockey.profileImageUrl ? resolveFileUrl(jockey.profileImageUrl) : '/Jockey1.jpg'} alt={jockey.fullName} style={styles.jockeyImg} />
                     <div style={{ flex: 1 }}>
                         <p style={styles.jockeyName}>{jockey.fullName}</p>
                         <div style={styles.jockeyStats}>

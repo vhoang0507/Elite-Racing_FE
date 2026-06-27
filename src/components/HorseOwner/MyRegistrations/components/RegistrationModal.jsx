@@ -127,7 +127,7 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
 
                 {/* Header */}
                 <div style={styles.imgWrapper}>
-                    <img src={tournament.imageUrl || "/DubaiSprintCup.jpg"} alt={tournament.tournamentName} style={styles.img} />
+                    <img src={tournament.imageUrl ? resolveFileUrl(tournament.imageUrl) : "/DubaiSprintCup.jpg"} alt={tournament.tournamentName} style={styles.img} />
                     <div style={styles.imgOverlay}>
                         <span style={styles.upcomingBadge}>UPCOMING MAJOR EVENT</span>
                         <h2 style={styles.tournamentName}>{tournament.tournamentName}</h2>
