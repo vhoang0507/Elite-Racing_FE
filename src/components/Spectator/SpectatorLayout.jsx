@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
     FaBell,
@@ -12,6 +12,7 @@ import {
     FaListOl,
 } from 'react-icons/fa';
 
+import { spectatorApi } from '../../api/spectatorApi';
 import { clearAuthSession, getAuthUser } from '../../utils/tokenStorage';
 
 const navigation = [
@@ -32,8 +33,17 @@ const iconButtonClasses = 'role-icon-button';
 function SpectatorLayout({ activeKey, children }) {
     const navigate = useNavigate();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
     const user = getAuthUser();
     const initials = user?.fullName?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() ?? 'SP';
+
+    useEffect(() => {
+        let ignore = false;
+        spectatorApi.getSpectatorUnreadCount()
+            .then((data) => { if (!ignore) setUnreadCount(data?.unreadCount ?? 0); })
+            .catch(() => { if (!ignore) setUnreadCount(0); });
+        return () => { ignore = true; };
+    }, []);
 
     const handleLogout = () => {
         clearAuthSession();
@@ -102,9 +112,18 @@ function SpectatorLayout({ activeKey, children }) {
                         <input placeholder="Search records, horses, races..." type="search" />
                     </label>
                     <div className="flex items-center gap-2">
-                        <button className={iconButtonClasses} type="button">
+                        <button
+                            className={iconButtonClasses}
+                            type="button"
+                            aria-label="Open notifications"
+                            onClick={() => navigate('/spectator/notifications')}
+                        >
                             <FaBell />
-                            <span className="absolute right-2.5 top-[9px] h-2 w-2 rounded-full border-2 border-[var(--admin-surface)] bg-[var(--admin-primary)]" />
+                            {unreadCount > 0 && (
+                                <span className="absolute right-1.5 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[var(--admin-primary)] px-1 text-[10px] font-black text-white">
+                                    {unreadCount > 9 ? '9+' : unreadCount}
+                                </span>
+                            )}
                         </button>
                         <div className="relative">
                             <button

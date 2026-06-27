@@ -122,32 +122,47 @@ function RefereeAssignedRace() {
                                     </div>
 
                                     {/* Action buttons */}
-                                    <div style={{ display: 'flex', gap: 8, padding: '0 20px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                                        <button
-                                            type="button"
-                                            onClick={() => navigate(`/referee/races/pre-race/${race.raceId}`, { state: { race } })}
-                                            style={{
-                                                display: 'flex', alignItems: 'center', gap: 6,
-                                                padding: '8px 16px', borderRadius: 8,
-                                                border: '1px solid #edcfc9', background: '#fff8f6',
-                                                color: '#7d0000', fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                                            }}
-                                        >
-                                            <FaClipboardCheck /> Pre-Race Inspect
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => navigate('/referee/races/post-race', { state: { raceId: race.raceId } })}
-                                            style={{
-                                                display: 'flex', alignItems: 'center', gap: 6,
-                                                padding: '8px 16px', borderRadius: 8,
-                                                border: 'none', background: '#7d0000',
-                                                color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer',
-                                            }}
-                                        >
-                                            <FaGavel /> Post-Race
-                                        </button>
-                                    </div>
+                                    {(() => {
+                                        const canPreRace = race.raceStatus === 'Scheduled';
+                                        const canPostRace = ['Ongoing', 'Completed', 'ResultPending'].includes(race.raceStatus);
+                                        return (
+                                            <div style={{ display: 'flex', gap: 8, padding: '0 20px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                                                <button
+                                                    type="button"
+                                                    disabled={!canPreRace}
+                                                    onClick={() => navigate(`/referee/races/pre-race/${race.raceId}`, { state: { race } })}
+                                                    title={canPreRace ? 'Open pre-race inspection' : 'Only available for Scheduled races'}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', gap: 6,
+                                                        padding: '8px 16px', borderRadius: 8,
+                                                        border: '1px solid #edcfc9',
+                                                        background: canPreRace ? '#fff8f6' : '#f5f5f5',
+                                                        color: canPreRace ? '#7d0000' : '#bbb',
+                                                        fontWeight: 700, fontSize: 13,
+                                                        cursor: canPreRace ? 'pointer' : 'not-allowed',
+                                                    }}
+                                                >
+                                                    <FaClipboardCheck /> Pre-Race Inspect
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    disabled={!canPostRace}
+                                                    onClick={() => navigate('/referee/races/post-race', { state: { raceId: race.raceId } })}
+                                                    title={canPostRace ? 'Open post-race workflow' : 'Only available for Ongoing / Completed / ResultPending races'}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', gap: 6,
+                                                        padding: '8px 16px', borderRadius: 8,
+                                                        border: 'none',
+                                                        background: canPostRace ? '#7d0000' : '#e0e0e0',
+                                                        color: '#fff', fontWeight: 700, fontSize: 13,
+                                                        cursor: canPostRace ? 'pointer' : 'not-allowed',
+                                                    }}
+                                                >
+                                                    <FaGavel /> Post-Race
+                                                </button>
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             );
                         })}

@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
     FaBell,
     FaChartLine,
+    FaClipboardCheck,
     FaCog,
     FaFlagCheckered,
+    FaGavel,
     FaQuestionCircle,
     FaSearch,
     FaSignOutAlt,
@@ -25,6 +27,18 @@ const menuItems = [
         label: 'Assigned Races',
         icon: FaFlagCheckered,
         path: '/referee/races',
+    },
+    {
+        key: 'pre-race',
+        label: 'Pre-Race Inspection',
+        icon: FaClipboardCheck,
+        path: '/referee/races/pre-race',
+    },
+    {
+        key: 'post-race',
+        label: 'Post-Race',
+        icon: FaGavel,
+        path: '/referee/races/post-race',
     },
     {
         key: 'notifications',

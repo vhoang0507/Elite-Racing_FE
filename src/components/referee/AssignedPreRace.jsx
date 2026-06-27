@@ -75,7 +75,9 @@ function AssignedPreRace() {
 
             try {
                 const data = await refereeApi.getAssignedRaces();
-                const assignedRaces = data ?? [];
+                const assignedRaces = (data ?? []).filter(
+                    (r) => r.raceStatus === 'Scheduled'
+                );
 
                 if (!ignore) {
                     setRaces(assignedRaces);
@@ -128,7 +130,7 @@ function AssignedPreRace() {
     };
 
     return (
-        <RefereeLayout activeKey="assigned-races">
+        <RefereeLayout activeKey="pre-race">
             <section className="page-shell">
                 <h1 className="page-title">
                     Pre-Race Tournaments
@@ -151,7 +153,7 @@ function AssignedPreRace() {
                         </div>
                     ) : races.length === 0 ? (
                         <div className="soft-card p-6 text-gray-500">
-                            No assigned races from backend.
+                            No scheduled races for pre-race inspection.
                         </div>
                     ) : (
                         races.map((race) => {

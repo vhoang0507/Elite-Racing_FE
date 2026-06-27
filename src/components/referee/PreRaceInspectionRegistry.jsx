@@ -247,7 +247,7 @@ function PreRaceInspectionRegistry() {
     };
 
     return (
-        <RefereeLayout activeKey="assigned-races">
+        <RefereeLayout activeKey="pre-race">
             <section className="page-shell">
                 <button
                     type="button"

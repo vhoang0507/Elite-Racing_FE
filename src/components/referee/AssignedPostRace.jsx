@@ -120,9 +120,13 @@ function AssignedPostRace() {
         setLoadingRaces(true);
         setError('');
         try {
-            const data = await refereeApi.getAssignedRaces({ phase: 'post' });
+            const data = await refereeApi.getAssignedRaces();
             if (ignoreRef.current) return;
-            const nextRaces = data ?? [];
+            const nextRaces = (data ?? []).filter((r) =>
+                r.raceStatus === 'Ongoing' ||
+                r.raceStatus === 'Completed' ||
+                r.raceStatus === 'ResultPending'
+            );
             setRaces(nextRaces);
             setSelectedRaceId((current) => {
                 if (current) return current;
@@ -288,7 +292,7 @@ function AssignedPostRace() {
     };
 
     return (
-        <RefereeLayout activeKey="assigned-races">
+        <RefereeLayout activeKey="post-race">
             <section className="page-shell">
                 {/* Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
