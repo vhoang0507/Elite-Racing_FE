@@ -4,12 +4,18 @@ import {
     Route,
     Routes,
 } from 'react-router-dom';
+
+import HomePage from '../components/Public/HomePage';
+import ExploreTournaments from '../components/Public/ExploreTournaments';
+import GlobalRankings from '../components/Public/GlobalRankings';
+
 import SpectatorDashboard from '../components/Spectator';
 import SpectatorLeaderboard from '../components/Spectator/SpectatorLeaderboard';
 
 import Login from '../components/Login';
 import Register from '../components/Register';
 import VerifyEmail from '../components/VerifyEmail';
+
 import AdminDashboard from '../components/admin/AdminDashboard';
 import CreateRefereeAccount from '../components/admin/CreateRefereeAccount';
 import CreateTournament from '../components/admin/CreateTournament';
@@ -22,38 +28,54 @@ import AdminSystemTime from '../components/admin/AdminSystemTime';
 import UserManagement from '../components/admin/UserManagement';
 import ValidateResultDetail from '../components/admin/ValidateResultDetail';
 import ValidateResults from '../components/admin/ValidateResults';
+
 import JockeyDashboard from '../components/jockey/JockeyDashboard';
 import PendingInvitations from '../components/jockey/PendingInvitations';
 import AcceptedRaces from '../components/jockey/AcceptedRaces';
 import JockeyCalendar from '../components/jockey/JockeyCalendar';
+import JockeyNotifications from '../components/jockey/JockeyNotifications';
+import JockeySetting from '../components/jockey/JockeySetting';
+
 import HorseOwnerDashboard from '../components/HorseOwner/HorseOwnerDashboard';
 import MyHorse from '../components/HorseOwner/MyHorse';
 import RegisterHorse from '../components/HorseOwner/RegisterHorse';
 import MyRegistrations from '../components/HorseOwner/MyRegistrations';
 import JockeyAssignment from '../components/HorseOwner/JockeyAssignment';
 import HorseOwnerNotifications from '../components/HorseOwner/Notifications';
+import ResultReward from '../components/HorseOwner/ResultReward';
+import HorseResultDetail from '../components/HorseOwner/ResultReward/HorseDetail';
+import HorseDetail from '../components/HorseOwner/HorseDetail';
+import HorseEdit from '../components/HorseOwner/HorseEdit';
+
 import SpectatorTournaments from '../components/Spectator/SpectatorTournaments';
 import SpectatorPredictions from '../components/Spectator/SpectatorPredictions';
 import SpectatorResultReward from '../components/Spectator/SpectatorResultReward';
 import SpectatorNotificationsPage from '../components/Spectator/SpectatorNotificationsPage';
-import JockeyNotifications from '../components/jockey/JockeyNotifications';
-import JockeySetting from '../components/jockey/JockeySetting';
+
 import AssignedPostRace from '../components/referee/AssignedPostRace';
 import AssignedPreRace from '../components/referee/AssignedPreRace';
 import RefereeAssignedRace from '../components/referee/RefereeAssignedRace';
 import RefereeDashboard from '../components/referee/RefereeDashboard';
 import RefereeNotifications from '../components/referee/RefereeNotifications';
 import RefereeSetting from '../components/referee/RefereeSetting';
-import ResultReward from '../components/HorseOwner/ResultReward';
-import HorseResultDetail from '../components/HorseOwner/ResultReward/HorseDetail';
-import HorseDetail from '../components/HorseOwner/HorseDetail';
-import HorseEdit from '../components/HorseOwner/HorseEdit';
 import PreRaceInspectionRegistry from '../components/referee/PreRaceInspectionRegistry';
 
 const appRoutes = [
     {
         path: '/',
-        element: createElement(Navigate, { to: '/login' }),
+        element: createElement(HomePage),
+    },
+    {
+        path: '/home',
+        element: createElement(HomePage),
+    },
+    {
+        path: '/explore-tournaments',
+        element: createElement(ExploreTournaments),
+    },
+    {
+        path: '/global-rankings',
+        element: createElement(GlobalRankings),
     },
     {
         path: '/login',
@@ -67,6 +89,7 @@ const appRoutes = [
         path: '/verify-email',
         element: createElement(VerifyEmail),
     },
+
     {
         path: '/admin',
         element: createElement(Navigate, { to: '/admin/dashboard' }),
@@ -119,6 +142,7 @@ const appRoutes = [
         path: '/admin/system-time',
         element: createElement(AdminSystemTime),
     },
+
     {
         path: '/jockey',
         element: createElement(Navigate, { to: '/jockey/dashboard' }),
@@ -138,7 +162,8 @@ const appRoutes = [
     {
         path: '/jockey/schedule',
         element: createElement(JockeyCalendar),
-    }, {
+    },
+    {
         path: '/jockey/notifications',
         element: createElement(JockeyNotifications),
     },
@@ -146,6 +171,7 @@ const appRoutes = [
         path: '/jockey/settings',
         element: createElement(JockeySetting),
     },
+
     {
         path: '/referee',
         element: createElement(Navigate, { to: '/referee/dashboard' }),
@@ -178,6 +204,7 @@ const appRoutes = [
         path: '/referee/settings',
         element: createElement(RefereeSetting),
     },
+
     {
         path: '/owner',
         element: createElement(Navigate, { to: '/owner/my-horse' }),
@@ -222,6 +249,7 @@ const appRoutes = [
         path: '/owner/notifications',
         element: createElement(HorseOwnerNotifications),
     },
+
     {
         path: '/spectator',
         element: createElement(Navigate, { to: '/spectator/dashboard' }),
@@ -233,8 +261,8 @@ const appRoutes = [
     {
         path: '/spectator/tournaments',
         element: createElement(SpectatorTournaments),
-        },
-        {
+    },
+    {
         path: '/spectator/leaderboard',
         element: createElement(SpectatorLeaderboard),
     },
