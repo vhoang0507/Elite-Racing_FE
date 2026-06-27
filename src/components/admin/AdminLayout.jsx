@@ -17,6 +17,7 @@ import {
     FaQuestionCircle,
     FaSearch,
     FaSignOutAlt,
+    FaTools,
     FaUsers,
 } from 'react-icons/fa';
 
@@ -64,6 +65,12 @@ const navigation = [
         label: 'Notifications',
         icon: FaBell,
         path: '/admin/notifications',
+    },
+    {
+        key: 'system-time',
+        label: 'System Time',
+        icon: FaTools,
+        path: '/admin/system-time',
     },
 ];
 
@@ -117,7 +124,7 @@ function AdminLayout({
         <div className={shellClasses}>
             <aside
                 aria-label="Admin navigation"
-                className="role-sidebar"
+                className="role-sidebar admin-sidebar"
             >
                 <div className="role-brand">
                     <span className="role-brand-mark">

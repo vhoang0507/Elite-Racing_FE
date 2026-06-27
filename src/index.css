@@ -318,6 +318,43 @@
     color: var(--admin-primary);
   }
 
+  .admin-sidebar {
+    gap: 12px;
+    max-height: none;
+    overflow: visible;
+    padding: 18px;
+  }
+
+  .admin-sidebar .role-profile-summary {
+    padding: 8px 10px;
+  }
+
+  .admin-sidebar .role-nav {
+    flex: 0 0 auto;
+    gap: 4px;
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .admin-sidebar .role-nav-item {
+    min-height: 36px;
+    gap: 9px;
+    padding: 0 10px;
+  }
+
+  .admin-sidebar .primary-button {
+    min-height: 38px;
+  }
+
+  .admin-sidebar .role-sidebar-actions {
+    gap: 6px;
+    padding-top: 10px;
+  }
+
+  .admin-sidebar .role-sidebar-action {
+    min-height: 34px;
+  }
+
   .role-main {
     display: flex;
     flex-direction: column;
