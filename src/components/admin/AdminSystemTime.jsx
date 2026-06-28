@@ -22,17 +22,6 @@ import { getAuthUser } from '../../utils/tokenStorage';
 
 import AdminLayout from './AdminLayout';
 
-const timezoneOptions = [
-    'Asia/Ho_Chi_Minh',
-    'SE Asia Standard Time',
-];
-
-const initialOverrideForm = {
-    nowLocal: '',
-    timezone: 'Asia/Ho_Chi_Minh',
-    autoSync: true,
-};
-
 const initialAdvanceForm = {
     days: '0',
     hours: '0',
@@ -142,26 +131,6 @@ function buildLiveSystemTime(systemTime, elapsedMs) {
     };
 }
 
-function toDateTimeLocalInput(value) {
-    if (!value) {
-        return '';
-    }
-
-    return String(value).slice(0, 16);
-}
-
-function normalizeDateTimeLocal(value) {
-    const trimmed = String(value || '').trim();
-
-    if (!trimmed) {
-        return '';
-    }
-
-    return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(trimmed)
-        ? `${trimmed}:00`
-        : trimmed;
-}
-
 function toNonNegativeInt(value) {
     const parsed = Number.parseInt(value, 10);
 
@@ -221,7 +190,6 @@ function AdminSystemTime() {
 
     const [systemTime, setSystemTime] = useState(null);
     const [syncResult, setSyncResult] = useState(null);
-    const [overrideForm, setOverrideForm] = useState(initialOverrideForm);
     const [advanceForm, setAdvanceForm] = useState(initialAdvanceForm);
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState('');
@@ -276,15 +244,8 @@ function AdminSystemTime() {
 
         try {
             const payload = await adminSystemApi.getSystemTime();
-            const timezone = readApiField(payload, 'timezone') || initialOverrideForm.timezone;
-            const effectiveLocalNow = readApiField(payload, 'effectiveLocalNow');
 
             setSystemTime(payload);
-            setOverrideForm((current) => ({
-                ...current,
-                timezone,
-                nowLocal: current.nowLocal || toDateTimeLocalInput(effectiveLocalNow),
-            }));
             return true;
         } catch (err) {
             setError(err.message || 'Failed to load system time.');
@@ -317,11 +278,6 @@ function AdminSystemTime() {
 
         if (nextTime) {
             setSystemTime(nextTime);
-            setOverrideForm((current) => ({
-                ...current,
-                timezone: readApiField(nextTime, 'timezone') || current.timezone,
-                nowLocal: toDateTimeLocalInput(readApiField(nextTime, 'effectiveLocalNow')) || current.nowLocal,
-            }));
         }
 
         setSyncResult(nextSyncResult || null);
@@ -333,20 +289,6 @@ function AdminSystemTime() {
         if (loaded) {
             showToast('System time refreshed.');
         }
-    };
-
-    const handleOverrideChange = (event) => {
-        const {
-            checked,
-            name,
-            type,
-            value,
-        } = event.target;
-
-        setOverrideForm((current) => ({
-            ...current,
-            [name]: type === 'checkbox' ? checked : value,
-        }));
     };
 
     const handleAdvanceChange = (event) => {
@@ -361,48 +303,6 @@ function AdminSystemTime() {
             ...current,
             [name]: type === 'checkbox' ? checked : value,
         }));
-    };
-
-    const handleOverrideSubmit = async (event) => {
-        event.preventDefault();
-        setError('');
-
-        if (!allowTimeOverride) {
-            setError('Time override is disabled in this environment.');
-            return;
-        }
-
-        const nowLocal = normalizeDateTimeLocal(overrideForm.nowLocal);
-
-        if (!nowLocal) {
-            setError('Please choose a local date and time to override.');
-            return;
-        }
-
-        const ok = window.confirm(
-            'Are you sure you want to override system time? This can affect invitation, race, and tournament status calculations.'
-        );
-
-        if (!ok) {
-            return;
-        }
-
-        setActionLoading('override');
-
-        try {
-            const payload = await adminSystemApi.overrideSystemTime({
-                nowLocal,
-                timezone: overrideForm.timezone,
-                autoSync: overrideForm.autoSync,
-            });
-
-            applyTimeResponse(payload);
-            showToast(overrideForm.autoSync ? 'Override time set and statuses synced.' : 'Override time set.');
-        } catch (err) {
-            setError(err.message || 'Failed to override system time.');
-        } finally {
-            setActionLoading('');
-        }
     };
 
     const handleAdvanceSubmit = async (event) => {
@@ -484,7 +384,7 @@ function AdminSystemTime() {
         }
 
         const ok = window.confirm(
-            'Clear override and return to real server time? This will not roll back statuses already changed in the database.'
+            'Clear override, return to real server time, and sync statuses using the current real time? This can change real data in the database.'
         );
 
         if (!ok) {
@@ -494,17 +394,15 @@ function AdminSystemTime() {
         setActionLoading('clear');
 
         try {
-            const payload = await adminSystemApi.clearSystemTimeOverride();
-            setSystemTime(payload);
-            setOverrideForm((current) => ({
-                ...current,
-                timezone: readApiField(payload, 'timezone') || initialOverrideForm.timezone,
-                nowLocal: toDateTimeLocalInput(readApiField(payload, 'effectiveLocalNow')),
-            }));
-            setSyncResult(null);
-            showToast('Time override cleared.');
+            const timePayload = await adminSystemApi.clearSystemTimeOverride();
+            setSystemTime(timePayload);
+
+            const syncPayload = await adminSystemApi.syncTimeStatuses();
+            setSyncResult(syncPayload);
+            await loadSystemTime({ silent: true });
+            showToast('Time override cleared and statuses synced.');
         } catch (err) {
-            setError(err.message || 'Failed to clear time override.');
+            setError(err.message || 'Failed to clear time override and sync statuses.');
         } finally {
             setActionLoading('');
         }
@@ -561,7 +459,7 @@ function AdminSystemTime() {
                                 This page is for test/demo use only.
                             </strong>
                             <p className="mb-0 mt-1 text-[0.86rem] font-semibold leading-6">
-                                Syncing statuses can change real database records. Clearing override only returns the clock to real server time; it does not roll back changed statuses.
+                                Syncing statuses can change real database records. Clearing override returns the clock to real server time and immediately syncs statuses using that time.
                             </p>
                         </div>
                     </div>
@@ -601,71 +499,8 @@ function AdminSystemTime() {
                     )}
                 </section>
 
-                <section className="grid grid-cols-2 gap-6 max-[1120px]:grid-cols-1">
-                    <form className={panelClass} onSubmit={handleOverrideSubmit}>
-                        <div className={panelHeaderClass}>
-                            <h2 className={panelTitleClass}>
-                                <FaClock aria-hidden="true" className="text-[var(--admin-primary)]" />
-                                <span>Override Time</span>
-                            </h2>
-                        </div>
-
-                        <div className="grid gap-4 p-5">
-                            <label className={fieldClass}>
-                                <span className={labelClass}>Local Date Time</span>
-                                <input
-                                    className={inputClass}
-                                    disabled={!allowTimeOverride || isBusy}
-                                    name="nowLocal"
-                                    type="datetime-local"
-                                    value={overrideForm.nowLocal}
-                                    onChange={handleOverrideChange}
-                                />
-                            </label>
-
-                            <label className={fieldClass}>
-                                <span className={labelClass}>Timezone</span>
-                                <select
-                                    className={inputClass}
-                                    disabled={!allowTimeOverride || isBusy}
-                                    name="timezone"
-                                    value={overrideForm.timezone}
-                                    onChange={handleOverrideChange}
-                                >
-                                    {timezoneOptions.map((timezone) => (
-                                        <option key={timezone} value={timezone}>
-                                            {timezone}
-                                        </option>
-                                    ))}
-                                </select>
-                            </label>
-
-                            <label className="flex items-center gap-2 text-[0.84rem] font-bold text-[var(--admin-ink)]">
-                                <input
-                                    checked={overrideForm.autoSync}
-                                    className={checkboxClass}
-                                    disabled={!allowTimeOverride || isBusy}
-                                    name="autoSync"
-                                    type="checkbox"
-                                    onChange={handleOverrideChange}
-                                />
-                                <span>Auto sync statuses after override</span>
-                            </label>
-                        </div>
-
-                        <div className="flex justify-end border-t border-[var(--admin-border)] px-5 py-4">
-                            <button
-                                className={primaryButtonClass}
-                                disabled={!allowTimeOverride || isBusy}
-                                type="submit"
-                            >
-                                <FaCheckCircle aria-hidden="true" />
-                                <span>{actionLoading === 'override' ? 'Setting...' : 'Set Override Time'}</span>
-                            </button>
-                        </div>
-                    </form>
-
-                    <form className={panelClass} onSubmit={handleAdvanceSubmit}>
+                <section className="grid gap-6">
+                    <form className={`${panelClass} mx-auto w-full max-w-[920px]`} onSubmit={handleAdvanceSubmit}>
                         <div className={panelHeaderClass}>
                             <h2 className={panelTitleClass}>
                                 <FaForward aria-hidden="true" className="text-[var(--admin-primary)]" />
@@ -673,8 +508,8 @@ function AdminSystemTime() {
                             </h2>
                         </div>
 
-                        <div className="grid gap-4 p-5">
-                            <div className="grid grid-cols-3 gap-3 max-[640px]:grid-cols-1">
+                        <div className="grid gap-5 p-5">
+                            <div className="grid grid-cols-3 gap-4 max-[720px]:grid-cols-1">
                                 {[
                                     ['days', 'Days'],
                                     ['hours', 'Hours'],
@@ -683,7 +518,7 @@ function AdminSystemTime() {
                                     <label className={fieldClass} key={name}>
                                         <span className={labelClass}>{label}</span>
                                         <input
-                                            className={inputClass}
+                                            className={`${inputClass} h-12 text-[1rem]`}
                                             disabled={!allowTimeOverride || isBusy}
                                             min="0"
                                             name={name}
@@ -695,7 +530,7 @@ function AdminSystemTime() {
                                 ))}
                             </div>
 
-                            <label className="flex items-center gap-2 text-[0.84rem] font-bold text-[var(--admin-ink)]">
+                            <label className="flex min-h-12 items-center gap-3 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-4 text-[0.86rem] font-bold text-[var(--admin-ink)]">
                                 <input
                                     checked={advanceForm.autoSync}
                                     className={checkboxClass}
@@ -708,7 +543,7 @@ function AdminSystemTime() {
                             </label>
                         </div>
 
-                        <div className="flex justify-end border-t border-[var(--admin-border)] px-5 py-4">
+                        <div className="flex justify-end border-t border-[var(--admin-border)] bg-[#fffaf8] px-5 py-4">
                             <button
                                 className={primaryButtonClass}
                                 disabled={!allowTimeOverride || isBusy}
