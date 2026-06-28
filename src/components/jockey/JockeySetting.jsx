@@ -176,7 +176,7 @@ function JockeySetting() {
                                 <div className="mt-6 border-t border-[var(--admin-border)] pt-5">
                                     <div className="grid grid-cols-2 gap-6 max-[720px]:grid-cols-1">
                                         <div className="flex items-center gap-3">
-                                            <div className="grid h-10 w-10 place-items-center rounded-md bg-[#ffe8e4] text-[var(--admin-primary)]">
+                                            <div className="grid h-10 w-10 place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
                                                 <FaPhoneAlt />
                                             </div>
                                             <div>
@@ -185,7 +185,7 @@ function JockeySetting() {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <div className="grid h-10 w-10 place-items-center rounded-md bg-[#ffe8e4] text-[var(--admin-primary)]">
+                                            <div className="grid h-10 w-10 place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
                                                 <FaEnvelope />
                                             </div>
                                             <div>
@@ -312,7 +312,7 @@ function JockeySetting() {
                         <div className="rounded-lg border border-[var(--admin-border)] p-4">
                             <p className="mb-3 text-[0.85rem] font-bold">Horse Racing Certificate</p>
                             {(selectedFiles.certificateFileUrl || profile?.certificateFileUrl) && (
-                                <div className="mb-2 flex items-center gap-2 rounded-md bg-[#fff3ef] px-3 py-2 text-[0.82rem]">
+                                <div className="mb-2 flex items-center gap-2 rounded-md bg-[#e8f7ef] px-3 py-2 text-[0.82rem]">
                                     <span>📄</span>
                                     <span className="flex-1 truncate text-[var(--admin-primary)]">
                                         {selectedFiles.certificateFileUrl?.name ?? profile?.certificateFileUrl}
@@ -341,7 +341,7 @@ function JockeySetting() {
                     <div className="mt-4 rounded-lg border border-[var(--admin-border)] p-4">
                         <p className="mb-3 text-[0.85rem] font-bold">Health Examination Certificate</p>
                         {(selectedFiles.healthCertificateUrl || profile?.healthCertificateUrl) && (
-                            <div className="mb-3 flex items-center gap-2 rounded-md bg-[#fff3ef] px-3 py-2 text-[0.82rem]">
+                            <div className="mb-3 flex items-center gap-2 rounded-md bg-[#e8f7ef] px-3 py-2 text-[0.82rem]">
                                 <span>📄</span>
                                 <span className="truncate">{selectedFiles.healthCertificateUrl?.name ?? profile?.healthCertificateUrl}</span>
                             </div>

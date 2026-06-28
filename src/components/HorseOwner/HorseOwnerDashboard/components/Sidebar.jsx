@@ -32,7 +32,7 @@ export default function Sidebar() {
                         to={item.path}
                         style={({ isActive }) => ({
                             ...styles.navItem,
-                            backgroundColor: isActive ? "#8B0000" : "transparent",
+                            backgroundColor: isActive ? "#0b7f5a" : "transparent",
                             color: isActive ? "#fff" : "#333",
                         })}
                     >
@@ -64,7 +64,7 @@ const styles = {
     logo: {
         fontWeight: "bold",
         fontSize: "14px",
-        color: "#8B0000",
+        color: "#0b7f5a",
         padding: "0 16px 20px",
         borderBottom: "1px solid #eee",
     },
@@ -79,7 +79,7 @@ const styles = {
         width: "36px",
         height: "36px",
         borderRadius: "50%",
-        backgroundColor: "#8B0000",
+        backgroundColor: "#0b7f5a",
         color: "#fff",
         display: "flex",
         alignItems: "center",

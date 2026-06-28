@@ -22,8 +22,8 @@ import AdminLayout from './AdminLayout';
 const formatClass = (value) => String(value || '').toLowerCase().replace(/\s+/g, '-');
 
 const pageShellClass = [
-    '[--notifications-soft:#fff4f1]',
-    '[--notifications-line:#edcfc9]',
+    '[--notifications-soft:#f8fbff]',
+    '[--notifications-line:#dce5ef]',
     'grid min-h-[calc(100vh-64px)] content-start gap-[26px] px-[52px] py-11 max-[820px]:px-5 max-[820px]:py-8',
 ].join(' ');
 
@@ -49,7 +49,7 @@ const tagClass = {
     pending: 'bg-[#fff7db] text-[#a17809]',
     active: 'bg-[#e8f7ee] text-[#16864f]',
     inactive: 'bg-[#f3e8e6] text-[#7f645f]',
-    banned: 'bg-[#ffe8e4] text-[var(--admin-primary)]',
+    banned: 'bg-[#e8f7ef] text-[var(--admin-primary)]',
     critical: 'bg-[#b40d0d] text-white',
     'high-priority': 'bg-[#e1bd55] text-[#3f320a]',
     'medium-priority': 'bg-[#bfc2ff] text-[#27236f]',
@@ -63,8 +63,8 @@ const iconByTone = {
     prediction: FaTrophy,
 };
 
-const selectClass = 'h-full w-full min-w-0 cursor-pointer border-0 bg-transparent px-0 pr-6 text-[0.78rem] font-bold text-[#5f4b47] outline-0';
-const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
+const selectClass = 'h-full w-full min-w-0 cursor-pointer border-0 bg-transparent px-0 pr-6 text-[0.78rem] font-bold text-[#475569] outline-0';
+const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]';
 const pageSize = 4;
 
 const matchesQuery = (notification, query) => {
@@ -206,21 +206,21 @@ function Notifications() {
 
                             return (
                                 <article
-                                    className="grid min-h-[148px] content-start gap-2.5 rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-6 pb-5 pt-6 shadow-[0_14px_30px_rgba(91,26,19,0.05)]"
+                                    className="grid min-h-[148px] content-start gap-2.5 rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-6 pb-5 pt-6 shadow-[0_14px_30px_rgba(15,23,42,0.05)]"
                                     key={card.label}
                                 >
                                     <div className="flex items-start justify-between gap-4">
                                         <span className={`grid h-[38px] w-[38px] place-items-center rounded-lg ${summaryIconClass[card.tone]}`}>
                                             <Icon aria-hidden="true" className="h-4 w-4" />
                                         </span>
-                                        <small className="text-[0.58rem] font-black uppercase text-[#5f4b47]">
+                                        <small className="text-[0.58rem] font-black uppercase text-[#475569]">
                                             {card.marker}
                                         </small>
                                     </div>
                                     <strong className="text-[2rem] leading-none text-[var(--admin-primary-dark)]">
                                         {card.value}
                                     </strong>
-                                    <span className="text-[0.82rem] font-bold text-[#5f4b47]">{card.label}</span>
+                                    <span className="text-[0.82rem] font-bold text-[#475569]">{card.label}</span>
                                 </article>
                             );
                         })}
@@ -279,7 +279,7 @@ function Notifications() {
                             return (
                                 <article
                                     className={[
-                                        'relative grid min-h-[146px] cursor-pointer grid-cols-[auto_minmax(0,1fr)] gap-[18px] rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-[22px] py-[22px] shadow-[0_14px_28px_rgba(91,26,19,0.04)] max-[820px]:grid-cols-1',
+                                        'relative grid min-h-[146px] cursor-pointer grid-cols-[auto_minmax(0,1fr)] gap-[18px] rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-[22px] py-[22px] shadow-[0_14px_28px_rgba(15,23,42,0.04)] max-[820px]:grid-cols-1',
                                         notification.tone === 'urgent' && formatClass(notification.status) === 'pending' ? 'before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:rounded-full before:bg-[#e42121] before:content-[""]' : '',
                                         formatClass(notification.status) === 'active' ? 'opacity-75' : '',
                                     ].join(' ')}
@@ -304,7 +304,7 @@ function Notifications() {
                                             </time>
                                         </div>
 
-                                        <p className="mt-1.5 max-w-[680px] text-[0.82rem] font-semibold leading-[1.45] text-[#5f4b47] [&_strong]:text-[var(--admin-primary)]">
+                                        <p className="mt-1.5 max-w-[680px] text-[0.82rem] font-semibold leading-[1.45] text-[#475569] [&_strong]:text-[var(--admin-primary)]">
                                             {highlightMessage(notification.message, notification.highlight)}
                                         </p>
 
@@ -331,7 +331,7 @@ function Notifications() {
                             <button aria-label="Previous page" className={paginationButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">&lt;</button>
                             {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
                                 <button
-                                    className={`${paginationButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]' : ''}`}
+                                    className={`${paginationButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[#e8f7ef] text-[#064e3b] hover:bg-[#d1fae5]' : ''}`}
                                     key={pageNumber}
                                     onClick={() => setPage(pageNumber)}
                                     type="button"

@@ -27,7 +27,7 @@ const cardClass = 'grid w-full min-w-0 max-w-full gap-4 rounded-[var(--admin-rad
 const cardTitleClass = 'm-0 flex items-center gap-2 border-b border-[var(--admin-border)] pb-2.5 text-[0.9rem] font-black text-[var(--admin-ink)]';
 const fieldClass = 'grid min-w-0 gap-[7px]';
 const labelClass = 'text-[0.76rem] font-[750] text-[#5b403c]';
-const controlBaseClass = 'w-full min-w-0 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-ink)] outline-0 transition-all duration-200 placeholder:text-[#9b8580] focus:border-[#c6897e] focus:bg-white focus:shadow-[0_0_0_3px_rgba(134,7,7,0.08)]';
+const controlBaseClass = 'w-full min-w-0 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-ink)] outline-0 transition-all duration-200 placeholder:text-[#94a3b8] focus:border-[#0b7f5a] focus:bg-white focus:shadow-[0_0_0_3px_rgba(16,185,129,0.08)]';
 const inputClass = `${controlBaseClass} h-10 px-3`;
 const selectClass = `${controlBaseClass} h-10 px-3`;
 const textareaClass = `${controlBaseClass} min-h-[88px] resize-y px-3 py-3 leading-[1.45]`;
@@ -368,12 +368,12 @@ function CreateTournament() {
                             )}
 
                             <div className="flex items-center justify-between gap-[18px] pt-0.5 max-[760px]:flex-col max-[760px]:items-stretch">
-                                <Link className={`${actionButtonClass} border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]`} to="/admin/races">
+                                <Link className={`${actionButtonClass} border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} to="/admin/races">
                                     Cancel
                                 </Link>
 
                                 <div className="flex items-center justify-end gap-3.5 max-[760px]:flex-col max-[760px]:items-stretch">
-                                    <button className={`${actionButtonClass} bg-[#fffdfc] border border-[var(--admin-primary)] text-[var(--admin-primary)] hover:bg-[#fff0ed]`} disabled={isSaving} name="submitAction" type="submit" value="draft">
+                                    <button className={`${actionButtonClass} bg-[#fffdfc] border border-[var(--admin-primary)] text-[var(--admin-primary)] hover:bg-[#e8f7ef]`} disabled={isSaving} name="submitAction" type="submit" value="draft">
                                         {isSaving ? 'Saving...' : 'Save Draft'}
                                     </button>
                                     <button className={`${actionButtonClass} bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary-dark)]`} disabled={isSaving} name="submitAction" type="submit" value="publish">

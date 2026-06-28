@@ -111,7 +111,7 @@ function JockeyDashboard() {
                 {/* Summary Cards */}
                 <section className="grid grid-cols-3 gap-5 max-[1280px]:grid-cols-2 max-[720px]:grid-cols-1">
                     <article className="grid min-h-[140px] content-start gap-2 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-[22px]">
-                        <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#ffe8e4] text-[var(--admin-primary)]">
+                        <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#e8f7ef] text-[var(--admin-primary)]">
                             <FaEnvelope />
                         </div>
                         <span className="text-[0.8rem] font-bold uppercase tracking-wide text-[var(--admin-muted)]">Pending Invitations</span>
@@ -149,7 +149,7 @@ function JockeyDashboard() {
                                 <FaEnvelope className="text-[0.9rem]" />
                                 Pending Invitations
                             </h2>
-                            <button className="rounded-full bg-transparent px-2.5 py-1.5 text-[0.78rem] font-black text-[var(--admin-primary)] hover:bg-[#ffe8e4]" onClick={() => setShowAllInvitations(!showAllInvitations)} type="button">
+                            <button className="rounded-full bg-transparent px-2.5 py-1.5 text-[0.78rem] font-black text-[var(--admin-primary)] hover:bg-[#e8f7ef]" onClick={() => setShowAllInvitations(!showAllInvitations)} type="button">
                                 {showAllInvitations ? 'Show Less' : 'View All'}
                             </button>
                         </div>
@@ -201,10 +201,10 @@ function JockeyDashboard() {
                         <div className="flex min-h-[50px] items-center justify-between px-[18px] py-3">
                             <h3 className="m-0 text-[0.95rem] font-bold text-[var(--admin-ink)]">Calendar</h3>
                             <div className="flex items-center gap-1">
-                                <button className="grid h-7 w-7 cursor-pointer place-items-center rounded border-0 bg-transparent text-[var(--admin-muted)] hover:bg-[#f8e5e1]" onClick={handlePrevMonth} type="button">
+                                <button className="grid h-7 w-7 cursor-pointer place-items-center rounded border-0 bg-transparent text-[var(--admin-muted)] hover:bg-[#eef4ff]" onClick={handlePrevMonth} type="button">
                                     <FaChevronLeft className="text-[0.65rem]" />
                                 </button>
-                                <button className="grid h-7 w-7 cursor-pointer place-items-center rounded border-0 bg-transparent text-[var(--admin-muted)] hover:bg-[#f8e5e1]" onClick={handleNextMonth} type="button">
+                                <button className="grid h-7 w-7 cursor-pointer place-items-center rounded border-0 bg-transparent text-[var(--admin-muted)] hover:bg-[#eef4ff]" onClick={handleNextMonth} type="button">
                                     <FaChevronRight className="text-[0.65rem]" />
                                 </button>
                             </div>
@@ -219,14 +219,14 @@ function JockeyDashboard() {
                                     <span key={`lead-${i}`} className="grid h-8 place-items-center text-[#ccc]">{day}</span>
                                 ))}
                                 {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => (
-                                    <span key={day} className="grid h-8 place-items-center rounded-sm bg-[#fce4ec] text-[var(--admin-ink)]">
+                                    <span key={day} className="grid h-8 place-items-center rounded-sm bg-[#e8f7ef] text-[var(--admin-ink)]">
                                         {day}
                                     </span>
                                 ))}
                             </div>
                             <div className="mt-4 flex items-center gap-4 text-[0.72rem] text-[var(--admin-muted)]">
                                 <span className="flex items-center gap-1.5">
-                                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#fce4ec]"></span>
+                                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#e8f7ef]"></span>
                                     Available
                                 </span>
                             </div>

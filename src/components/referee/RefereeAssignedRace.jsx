@@ -22,11 +22,34 @@ function formatDateTime(value) {
 
 const STATUS_STYLE = {
     Scheduled:     { bg: '#e3f2fd', color: '#1565c0' },
+    AssignedReferee: { bg: '#fff3cd', color: '#856404' },
+    ClosedRegistration: { bg: '#fee2e2', color: '#b91c1c' },
     Ongoing:       { bg: '#fff3cd', color: '#856404' },
     Completed:     { bg: '#d4edda', color: '#155724' },
     ResultPending: { bg: '#fff3cd', color: '#856404' },
     Cancelled:     { bg: '#f8d7da', color: '#721c24' },
 };
+
+const STATUS_LABELS = {
+    AssignedReferee: 'Assigned Referee',
+    ClosedRegistration: 'Closed Registration',
+    OpenRegistration: 'Open Registration',
+    ResultPending: 'Result Pending',
+};
+
+function getDisplayStatus(race) {
+    return race?.tournamentStatus === 'ClosedRegistration'
+        ? race.tournamentStatus
+        : race?.raceStatus;
+}
+
+function formatStatus(status) {
+    return STATUS_LABELS[status] || status || 'N/A';
+}
+
+function canOpenPreRace(race) {
+    return race?.tournamentStatus === 'ClosedRegistration' || race?.raceStatus === 'Scheduled';
+}
 
 function RefereeAssignedRace() {
     const navigate = useNavigate();
@@ -79,7 +102,8 @@ function RefereeAssignedRace() {
                 ) : (
                     <div className="grid gap-3">
                         {races.map((race) => {
-                            const s = STATUS_STYLE[race.raceStatus] ?? { bg: '#f7efee', color: '#7d0000' };
+                            const displayStatus = getDisplayStatus(race);
+                            const s = STATUS_STYLE[displayStatus] ?? { bg: '#e8f7ef', color: '#0b7f5a' };
                             return (
                                 <div
                                     key={race.raceId}
@@ -100,11 +124,11 @@ function RefereeAssignedRace() {
                                                 fontSize: 11, fontWeight: 700,
                                                 padding: '2px 10px', borderRadius: 20,
                                             }}>
-                                                {race.raceStatus}
+                                                {formatStatus(displayStatus)}
                                             </span>
                                         </div>
 
-                                        <div style={{ fontSize: 13, color: '#7d0000', fontWeight: 600, marginTop: 2 }}>
+                                        <div style={{ fontSize: 13, color: '#0b7f5a', fontWeight: 600, marginTop: 2 }}>
                                             {race.tournamentName}
                                         </div>
 
@@ -123,7 +147,7 @@ function RefereeAssignedRace() {
 
                                     {/* Action buttons */}
                                     {(() => {
-                                        const canPreRace = race.raceStatus === 'Scheduled';
+                                        const canPreRace = canOpenPreRace(race);
                                         const canPostRace = ['Ongoing', 'Completed', 'ResultPending'].includes(race.raceStatus);
                                         return (
                                             <div style={{ display: 'flex', gap: 8, padding: '0 20px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
@@ -131,13 +155,13 @@ function RefereeAssignedRace() {
                                                     type="button"
                                                     disabled={!canPreRace}
                                                     onClick={() => navigate(`/referee/races/pre-race/${race.raceId}`, { state: { race } })}
-                                                    title={canPreRace ? 'Open pre-race inspection' : 'Only available for Scheduled races'}
+                                                    title={canPreRace ? 'Open pre-race inspection' : 'Only available after registration is closed'}
                                                     style={{
                                                         display: 'flex', alignItems: 'center', gap: 6,
                                                         padding: '8px 16px', borderRadius: 8,
-                                                        border: '1px solid #edcfc9',
+                                                        border: '1px solid #dce5ef',
                                                         background: canPreRace ? '#fff8f6' : '#f5f5f5',
-                                                        color: canPreRace ? '#7d0000' : '#bbb',
+                                                        color: canPreRace ? '#0b7f5a' : '#bbb',
                                                         fontWeight: 700, fontSize: 13,
                                                         cursor: canPreRace ? 'pointer' : 'not-allowed',
                                                     }}
@@ -153,7 +177,7 @@ function RefereeAssignedRace() {
                                                         display: 'flex', alignItems: 'center', gap: 6,
                                                         padding: '8px 16px', borderRadius: 8,
                                                         border: 'none',
-                                                        background: canPostRace ? '#7d0000' : '#e0e0e0',
+                                                        background: canPostRace ? '#0b7f5a' : '#e0e0e0',
                                                         color: '#fff', fontWeight: 700, fontSize: 13,
                                                         cursor: canPostRace ? 'pointer' : 'not-allowed',
                                                     }}

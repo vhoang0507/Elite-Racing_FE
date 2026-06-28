@@ -169,7 +169,7 @@ const styles = {
         padding: "12px 28px",
         borderRadius: "8px",
         border: "none",
-        backgroundColor: "#8B0000",
+        backgroundColor: "#0b7f5a",
         color: "#fff",
         fontWeight: 700,
         fontSize: "1rem",

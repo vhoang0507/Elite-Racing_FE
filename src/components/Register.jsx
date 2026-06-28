@@ -72,7 +72,7 @@ const Register = () => {
 
     return (
         <div className="auth-page flex h-screen max-[1024px]:h-auto max-[1024px]:min-h-screen max-[1024px]:flex-col max-[1024px]:overflow-auto">
-            <div className="flex h-screen w-[58%] items-start justify-center overflow-y-auto bg-[rgba(255,254,253,0.92)] px-[50px] py-[60px] max-[1024px]:min-h-screen max-[1024px]:w-full max-[1024px]:px-6 max-[1024px]:py-[30px] [&::-webkit-scrollbar-thumb]:rounded-[8px] [&::-webkit-scrollbar-thumb]:bg-[#d9c2bd] [&::-webkit-scrollbar]:w-2">
+            <div className="flex h-screen w-[58%] items-start justify-center overflow-y-auto bg-[rgba(255,254,253,0.92)] px-[50px] py-[60px] max-[1024px]:min-h-screen max-[1024px]:w-full max-[1024px]:px-6 max-[1024px]:py-[30px] [&::-webkit-scrollbar-thumb]:rounded-[8px] [&::-webkit-scrollbar-thumb]:bg-[#a7b7ca] [&::-webkit-scrollbar]:w-2">
                 <div className="w-full max-w-[520px]">
                     <div className="mb-8 flex items-center gap-3">
                         <img
@@ -81,7 +81,7 @@ const Register = () => {
                             className="h-12 w-12 object-contain"
                         />
 
-                        <h2 className="text-[2.2rem] font-extrabold italic text-[#8B0000]">
+                        <h2 className="text-[2.2rem] font-extrabold italic text-[#0b7f5a]">
                             Elite Racing League
                         </h2>
                     </div>
@@ -161,7 +161,7 @@ const Register = () => {
                         <Link
                             to="/verify-email"
                             state={{ email }}
-                            className="mb-5 inline-block text-[0.95rem] font-bold text-[#8B0000] no-underline"
+                            className="mb-5 inline-block text-[0.95rem] font-bold text-[#0b7f5a] no-underline"
                         >
                             Verify your email
                         </Link>
@@ -219,13 +219,13 @@ const Register = () => {
 
                             <label htmlFor="terms">
                                 I agree to the{' '}
-                                <a className="text-[#8B0000] no-underline" href="#">Terms of Service</a> and{' '}
-                                <a className="text-[#8B0000] no-underline" href="#">Privacy Policy</a>.
+                                <a className="text-[#0b7f5a] no-underline" href="#">Terms of Service</a> and{' '}
+                                <a className="text-[#0b7f5a] no-underline" href="#">Privacy Policy</a>.
                             </label>
                         </div>
 
                         {error && (
-                            <div className="mb-4 rounded-[10px] border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-sm font-semibold text-[#8B0000]">
+                            <div className="mb-4 rounded-[10px] border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-sm font-semibold text-[#b91c1c]">
                                 {error}
                             </div>
                         )}
@@ -233,20 +233,20 @@ const Register = () => {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="mb-[22px] h-[52px] w-full cursor-pointer rounded-[8px] bg-[#a30000] text-base font-bold text-white shadow-[0_12px_24px_rgba(139,0,0,0.16)]"
+                            className="mb-[22px] h-[52px] w-full cursor-pointer rounded-[8px] bg-[#0b7f5a] text-base font-bold text-white shadow-[0_12px_24px_rgba(16,185,129,0.16)]"
                         >
                             {isSubmitting ? 'Creating account...' : 'Register Account'}
                         </button>
 
                         <div className="flex justify-between gap-5 text-[0.95rem] max-[1024px]:flex-col max-[1024px]:gap-3">
-                            <a className="font-bold text-[#8B0000] no-underline" href="#">
+                            <a className="font-bold text-[#0b7f5a] no-underline" href="#">
                                 &larr; Back to Home
                             </a>
 
                             <span>
                                 Already have an account?{' '}
 
-                                <Link className="font-bold text-[#8B0000] no-underline" to="/">
+                                <Link className="font-bold text-[#0b7f5a] no-underline" to="/">
                                     Log in
                                 </Link>
                             </span>

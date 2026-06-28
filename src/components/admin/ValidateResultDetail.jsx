@@ -22,7 +22,7 @@ import AdminLayout from './AdminLayout';
 const formatClass = (value) => String(value || '').toLowerCase().replace(/\s+/g, '-');
 
 const pageShellClass = [
-    '[--validate-soft-panel:#fff4f1]',
+    '[--validate-soft-panel:#f8fbff]',
     'grid min-h-[calc(100vh-64px)] content-start gap-7 px-[52px] py-[54px] max-[820px]:px-5 max-[820px]:py-8',
 ].join(' ');
 
@@ -33,7 +33,7 @@ const statusClass = {
     draft: 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
     refereeconfirmed: 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
     adminapproved: 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
-    returned: 'border-[#e8897d] bg-[#ffe8e4] text-[var(--admin-primary)]',
+    returned: 'border-[#e8897d] bg-[#e8f7ef] text-[var(--admin-primary)]',
 };
 
 const formatDateTime = (value) => {
@@ -112,7 +112,7 @@ function ValidateResultDetail() {
                 <div className={`${panelWidthClass} flex items-start justify-between gap-4 max-[820px]:flex-col`}>
                     <div>
                         <Link
-                            className="mb-4 inline-flex min-h-9 items-center gap-2 rounded-md border border-[var(--admin-border)] bg-white px-3 text-[0.78rem] font-black text-[var(--admin-primary)] no-underline hover:bg-[#fff0ed]"
+                            className="mb-4 inline-flex min-h-9 items-center gap-2 rounded-md border border-[var(--admin-border)] bg-white px-3 text-[0.78rem] font-black text-[var(--admin-primary)] no-underline hover:bg-[#e8f7ef]"
                             to="/admin/results"
                         >
                             <FaArrowLeft aria-hidden="true" className="h-3 w-3" />
@@ -128,7 +128,7 @@ function ValidateResultDetail() {
 
                     <button
                         aria-label="Refresh referee report"
-                        className="grid h-[38px] w-[38px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[#765d58] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]"
+                        className="grid h-[38px] w-[38px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]"
                         disabled={loading}
                         onClick={loadDetail}
                         type="button"
@@ -142,7 +142,7 @@ function ValidateResultDetail() {
                         <p className="m-0 font-bold text-[var(--admin-muted)]">Loading referee report...</p>
                     </section>
                 ) : error ? (
-                    <section className={`${panelWidthClass} flex items-start gap-3 rounded-[var(--admin-radius)] border border-[#f0b7ae] bg-[#fff4f1] p-6 text-[var(--admin-primary)]`}>
+                    <section className={`${panelWidthClass} flex items-start gap-3 rounded-[var(--admin-radius)] border border-[#f0b7ae] bg-[#f8fbff] p-6 text-[var(--admin-primary)]`}>
                         <FaExclamationCircle aria-hidden="true" className="mt-1 flex-none" />
                         <p className="m-0 text-[0.9rem] font-bold">{error}</p>
                     </section>
@@ -178,7 +178,7 @@ function ValidateResultDetail() {
                         >
                             <div className="flex min-h-[62px] items-center justify-between gap-4 border-b border-[var(--admin-border)] bg-[var(--validate-soft-panel)] px-6 py-3.5 max-[820px]:flex-col max-[820px]:items-stretch">
                                 <h2 className="m-0 text-[1rem] font-black text-[var(--admin-ink)]">Submitted Report</h2>
-                                <span className="text-[0.72rem] font-extrabold text-[#5f4b47]">
+                                <span className="text-[0.72rem] font-extrabold text-[#475569]">
                                     {detail?.reports?.length || 0} report{detail?.reports?.length === 1 ? '' : 's'}
                                 </span>
                             </div>
@@ -195,7 +195,7 @@ function ValidateResultDetail() {
                                         <article className="grid gap-4 px-6 py-5" key={report.id}>
                                             <div className="flex items-start justify-between gap-4 max-[820px]:flex-col">
                                                 <div className="flex items-start gap-3">
-                                                    <span className="grid h-10 w-10 flex-none place-items-center rounded-md bg-[#fff0ed] text-[var(--admin-primary)]">
+                                                    <span className="grid h-10 w-10 flex-none place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
                                                         <FaFileAlt aria-hidden="true" />
                                                     </span>
                                                     <div>

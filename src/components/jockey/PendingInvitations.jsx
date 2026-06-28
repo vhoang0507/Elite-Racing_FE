@@ -69,7 +69,7 @@ function HealthCertificateBadge({ url }) {
     const resolvedUrl = resolveFileUrl(url);
 
     return (
-        <a className="mt-2 inline-flex items-center gap-2 rounded border border-[#e7a49a] bg-[#fff8f6] px-2.5 py-1 text-[0.68rem] font-black uppercase text-[var(--admin-primary)] no-underline hover:bg-[#fff0ed]" href={resolvedUrl} target="_blank" rel="noreferrer">
+        <a className="mt-2 inline-flex items-center gap-2 rounded border border-[#e7a49a] bg-[#fff8f6] px-2.5 py-1 text-[0.68rem] font-black uppercase text-[var(--admin-primary)] no-underline hover:bg-[#e8f7ef]" href={resolvedUrl} target="_blank" rel="noreferrer">
             <img alt="Health certificate" className="h-7 w-9 rounded object-cover" src={resolvedUrl} />
             Health certificate
         </a>
@@ -227,14 +227,14 @@ function PendingInvitations() {
                                         </div>
 
                                         {inv.ownerMessage && (
-                                            <div className="mx-5 mb-3 rounded-md bg-[#fff0ed] px-4 py-3">
+                                            <div className="mx-5 mb-3 rounded-md bg-[#e8f7ef] px-4 py-3">
                                                 <p className="m-0 text-[0.7rem] font-bold uppercase tracking-wide text-[var(--admin-primary)]">Owner Message</p>
                                                 <p className="m-0 mt-1 text-[0.82rem] italic text-[var(--admin-ink)]">"{inv.ownerMessage}"</p>
                                             </div>
                                         )}
 
                                         {inv.matchScore != null && (
-                                            <div className="mx-5 mb-4 flex items-center gap-4 rounded-md bg-[#fff0ed] px-4 py-3">
+                                            <div className="mx-5 mb-4 flex items-center gap-4 rounded-md bg-[#e8f7ef] px-4 py-3">
                                                 <div className="grid h-12 w-12 flex-none place-items-center rounded-full bg-white text-[0.9rem] font-black text-[var(--admin-primary)]">
                                                     {inv.matchScore}%
                                                 </div>
@@ -282,7 +282,7 @@ function PendingInvitations() {
 
                     {/* Stat sidebar */}
                     <aside className="grid content-start gap-4">
-                        <StatCard icon={<FaEnvelope />} bg="#ffe8e4" color="var(--admin-primary)" label="Pending Invitations" value={dashboard?.pendingInvitations} />
+                        <StatCard icon={<FaEnvelope />} bg="#e8f7ef" color="var(--admin-primary)" label="Pending Invitations" value={dashboard?.pendingInvitations} />
                         <StatCard icon={<FaCheckCircle />} bg="#fff3cd" color="#856404" label="Accepted Invitations" value={dashboard?.acceptedInvitations} />
                         <StatCard icon={<FaCalendarAlt />} bg="#e3f2fd" color="#1565c0" label="Upcoming Races" value={dashboard?.upcomingRaces} />
                     </aside>

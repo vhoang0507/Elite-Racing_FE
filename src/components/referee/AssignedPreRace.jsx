@@ -20,6 +20,27 @@ function formatDateTime(value) {
     }).format(new Date(value));
 }
 
+const STATUS_LABELS = {
+    AssignedReferee: 'Assigned Referee',
+    ClosedRegistration: 'Closed Registration',
+    OpenRegistration: 'Open Registration',
+    ResultPending: 'Result Pending',
+};
+
+function getDisplayStatus(race) {
+    return race?.tournamentStatus === 'ClosedRegistration'
+        ? race.tournamentStatus
+        : race?.raceStatus;
+}
+
+function formatStatus(status) {
+    return STATUS_LABELS[status] || status || 'N/A';
+}
+
+function canOpenPreRace(race) {
+    return race?.tournamentStatus === 'ClosedRegistration' || race?.raceStatus === 'Scheduled';
+}
+
 function CertificatePreviewList({ certificates }) {
     if (!certificates?.length) {
         return (
@@ -37,7 +58,7 @@ function CertificatePreviewList({ certificates }) {
                 return (
                     <span
                         key={item.registrationId}
-                        className="inline-flex items-center gap-2 rounded border border-[#ead3cf] bg-white px-2 py-1 text-xs font-bold text-[#7d0000]"
+                        className="inline-flex items-center gap-2 rounded border border-[#dce5ef] bg-white px-2 py-1 text-xs font-bold text-[#0b7f5a]"
                     >
                         <img
                             src={resolvedUrl}
@@ -49,7 +70,7 @@ function CertificatePreviewList({ certificates }) {
                 );
             })}
             {certificates.length > 3 && (
-                <span className="inline-flex items-center rounded bg-[#f7efee] px-2 py-1 text-xs font-bold text-[#7d0000]">
+                <span className="inline-flex items-center rounded bg-[#e8f7ef] px-2 py-1 text-xs font-bold text-[#0b7f5a]">
                     +{certificates.length - 3} more
                 </span>
             )}
@@ -76,7 +97,7 @@ function AssignedPreRace() {
             try {
                 const data = await refereeApi.getAssignedRaces();
                 const assignedRaces = (data ?? []).filter(
-                    (r) => r.raceStatus === 'Scheduled'
+                    (r) => canOpenPreRace(r)
                 );
 
                 if (!ignore) {
@@ -164,11 +185,11 @@ function AssignedPreRace() {
                                 type="button"
                                 key={race.raceId}
                                 onClick={() => openInspectionRegistry(race)}
-                                className="soft-card group cursor-pointer p-6 text-left transition hover:border-[#7d0000] hover:shadow-md"
+                                className="soft-card group cursor-pointer p-6 text-left transition hover:border-[#0b7f5a] hover:shadow-md"
                             >
                                 <div className="flex justify-between">
-                                    <span className="rounded-full bg-[#f7efee] px-3 py-1 text-xs font-semibold">
-                                        {race.raceStatus}
+                                    <span className="rounded-full bg-[#e8f7ef] px-3 py-1 text-xs font-semibold">
+                                        {formatStatus(getDisplayStatus(race))}
                                     </span>
 
                                     <span className="font-bold">
@@ -181,7 +202,7 @@ function AssignedPreRace() {
                                 </h2>
 
                                 {race.tournamentName && (
-                                    <p className="mt-1 text-sm font-semibold text-[#7d0000]">
+                                    <p className="mt-1 text-sm font-semibold text-[#0b7f5a]">
                                         {race.tournamentName}
                                     </p>
                                 )}
@@ -215,14 +236,14 @@ function AssignedPreRace() {
                                     </div>
                                 </div>
 
-                                <div className="mt-4 rounded border border-[#ead3cf] bg-[#fff8f6] p-3">
-                                    <div className="text-xs font-bold uppercase text-[#7d0000]">
+                                <div className="mt-4 rounded border border-[#dce5ef] bg-[#fff8f6] p-3">
+                                    <div className="text-xs font-bold uppercase text-[#0b7f5a]">
                                         Health Certificates ({certificates.length})
                                     </div>
                                     <CertificatePreviewList certificates={certificates} />
                                 </div>
 
-                                <div className="secondary-button mt-6 gap-3 group-hover:bg-[#7d0000] group-hover:text-white">
+                                <div className="secondary-button mt-6 gap-3 group-hover:bg-[#0b7f5a] group-hover:text-white">
                                     Open Inspection Registry
                                     <FaArrowRight />
                                 </div>

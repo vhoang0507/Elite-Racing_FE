@@ -23,8 +23,8 @@ import AdminLayout from './AdminLayout';
 const formatClass = (value) => String(value || '').toLowerCase().replace(/\s+/g, '-');
 
 const pageShellClass = [
-    '[--validate-soft-panel:#fff4f1]',
-    '[--validate-table-head:#fff7f5]',
+    '[--validate-soft-panel:#f8fbff]',
+    '[--validate-table-head:#f1f5ff]',
     'grid min-h-[calc(100vh-64px)] content-start gap-8 px-[52px] py-14 max-[820px]:px-5 max-[820px]:py-8',
 ].join(' ');
 
@@ -32,10 +32,10 @@ const panelWidthClass = 'w-[min(100%,1090px)]';
 
 const raceIconClass = {
     blue: 'bg-[#dfe4ff] text-[#1c33d0]',
-    gray: 'bg-[#f4dcd6] text-[#816b66]',
-    green: 'bg-[#ffe070] text-[#7c6108]',
-    red: 'bg-[#ffd9d4] text-[#8b1515]',
-    orange: 'bg-[#f3dad4] text-[#775049]',
+    gray: 'bg-[#e5e7eb] text-[#475569]',
+    green: 'bg-[#d1fae5] text-[#047857]',
+    red: 'bg-[#e0f2fe] text-[#0369a1]',
+    orange: 'bg-[#fef3c7] text-[#92400e]',
 };
 
 const statusClass = {
@@ -43,10 +43,10 @@ const statusClass = {
     draft: 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
     refereeconfirmed: 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
     adminapproved: 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
-    returned: 'border-[#e8897d] bg-[#ffe8e4] text-[var(--admin-primary)]',
+    returned: 'border-[#93c5fd] bg-[#eff6ff] text-[#075985]',
     active: 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
     inactive: 'border-[#ddd6d3] bg-[#f7f5f4] text-[#6f6360]',
-    banned: 'border-[#da7772] bg-[#ffe8e5] text-[#9d1515]',
+    banned: 'border-[#cbd5e1] bg-[#f1f5f9] text-[#475569]',
 };
 
 const iconByTone = {
@@ -57,7 +57,7 @@ const iconByTone = {
     orange: FaHorseHead,
 };
 
-const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
+const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-white font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]';
 const pageSize = 5;
 
 const sortPendingFirst = (items, getStatus) => [...items].sort((current, next) => {
@@ -134,7 +134,7 @@ function ValidateResults() {
 
                     <section
                         aria-label="Active submissions"
-                        className={`${panelWidthClass} overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_16px_34px_rgba(100,36,28,0.06)]`}
+                        className={`${panelWidthClass} overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_16px_34px_rgba(15,23,42,0.08)]`}
                     >
                         <div className="flex min-h-[58px] items-center border-b border-[var(--admin-border)] bg-[var(--validate-soft-panel)] px-6">
                             <h2 className="m-0 text-[1.04rem] font-black text-[var(--admin-ink)]">
@@ -146,13 +146,13 @@ function ValidateResults() {
                             <table className="w-full border-collapse max-[820px]:min-w-[840px]">
                                 <thead>
                                     <tr>
-                                        <th className="border-b border-[var(--admin-border)] bg-[var(--validate-table-head)] px-6 py-[18px] pl-[78px] text-left text-[0.66rem] font-black uppercase tracking-normal text-[#7a5e59] max-[820px]:pl-6">
+                                        <th className="border-b border-[var(--admin-border)] bg-[var(--validate-table-head)] px-6 py-[18px] pl-[78px] text-left text-[0.66rem] font-black uppercase tracking-normal text-[var(--admin-muted)] max-[820px]:pl-6">
                                             Race Name
                                         </th>
-                                        <th className="w-[260px] border-b border-[var(--admin-border)] bg-[var(--validate-table-head)] px-6 py-[18px] text-left text-[0.66rem] font-black uppercase tracking-normal text-[#7a5e59]">
+                                        <th className="w-[260px] border-b border-[var(--admin-border)] bg-[var(--validate-table-head)] px-6 py-[18px] text-left text-[0.66rem] font-black uppercase tracking-normal text-[var(--admin-muted)]">
                                             Status
                                         </th>
-                                        <th className="w-60 border-b border-[var(--admin-border)] bg-[var(--validate-table-head)] px-6 py-[18px] text-center text-[0.66rem] font-black uppercase tracking-normal text-[#7a5e59]">
+                                        <th className="w-60 border-b border-[var(--admin-border)] bg-[var(--validate-table-head)] px-6 py-[18px] text-center text-[0.66rem] font-black uppercase tracking-normal text-[var(--admin-muted)]">
                                             Action
                                         </th>
                                     </tr>
@@ -172,7 +172,7 @@ function ValidateResults() {
                                                             <strong className="block text-[0.9rem] leading-[1.15] text-[var(--admin-ink)]">
                                                                 {submission.race}
                                                             </strong>
-                                                            <span className="mt-1 block text-[0.72rem] font-bold text-[#5f4b47]">
+                                                            <span className="mt-1 block text-[0.72rem] font-bold text-[#475569]">
                                                                 {submission.detail}
                                                             </span>
                                                         </div>
@@ -185,7 +185,7 @@ function ValidateResults() {
                                                 </td>
                                                 <td className="w-60 whitespace-nowrap border-b border-[var(--admin-border)] px-6 py-[18px] text-center align-middle">
                                                     <Link
-                                                        className="inline-flex min-h-[38px] min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-md border border-[var(--admin-gold)] bg-[#fffdf8] text-[0.82rem] font-extrabold text-[#7a570c] no-underline hover:bg-[var(--admin-gold)] hover:text-white"
+                                                        className="inline-flex min-h-[38px] min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-md border border-[var(--admin-primary)] bg-white text-[0.82rem] font-extrabold text-[var(--admin-primary)] no-underline hover:bg-[var(--admin-primary)] hover:text-white"
                                                         to={`/admin/results/${submission.slug}`}
                                                     >
                                                         <span>View Details</span>
@@ -206,7 +206,7 @@ function ValidateResults() {
                                 <button aria-label="Previous page" className={pageButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">&lt;</button>
                                 {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
                                     <button
-                                        className={`${pageButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]' : ''}`}
+                                        className={`${pageButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[#e8f7ef] text-[#064e3b] hover:bg-[#d1fae5]' : ''}`}
                                         key={pageNumber}
                                         onClick={() => setPage(pageNumber)}
                                         type="button"

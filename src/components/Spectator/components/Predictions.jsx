@@ -30,7 +30,7 @@ function PredictionCard({ prediction }) {
             <div style={{ flex: 1, padding: '16px 18px', display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 28, flexShrink: 0 }}>🐴</span>
                 <div style={{ flex: 1, minWidth: 160 }}>
-                    <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: 700, color: '#7d0000', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: 700, color: '#0b7f5a', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                         {tournamentName ?? 'Tournament'}
                     </p>
                     <p style={{ margin: '3px 0 0', fontWeight: 700, fontSize: '0.95rem', color: '#2b1b1b' }}>
@@ -157,9 +157,9 @@ export default function Predictions() {
                                     onClick={() => setFilter(f.key)}
                                     style={{
                                         padding: '6px 14px', borderRadius: 20, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                                        border: filter === f.key ? 'none' : '1px solid #edcfc9',
-                                        background: filter === f.key ? '#7d0000' : '#fff8f6',
-                                        color: filter === f.key ? '#fff' : '#7d0000',
+                                        border: filter === f.key ? 'none' : '1px solid #dce5ef',
+                                        background: filter === f.key ? '#0b7f5a' : '#fff8f6',
+                                        color: filter === f.key ? '#fff' : '#0b7f5a',
                                     }}
                                 >
                                     {f.label} ({counts[f.key] ?? 0})

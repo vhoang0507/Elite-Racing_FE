@@ -22,7 +22,7 @@ export default function HorseOwnerDashboard() {
     }, []);
 
     const statCards = [
-        { icon: "🐴", label: "Total Horse",        value: stats.totalHorse,        accent: "#8B0000" },
+        { icon: "🐴", label: "Total Horse",        value: stats.totalHorse,        accent: "#0b7f5a" },
         { icon: "📋", label: "Registrations",       value: stats.registrations,     accent: "#1565c0" },
         { icon: "✉️", label: "Pending Invitations", value: stats.pendingInvitations, accent: "#e65100" },
         { icon: "🏆", label: "Approved Races",      value: stats.approvedRaces,     accent: "#2e7d32" },

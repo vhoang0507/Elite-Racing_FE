@@ -31,20 +31,20 @@ const initialForm = {
 const userStatusOptions = ['Active', 'Inactive'];
 
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-5 px-11 py-8 max-[780px]:px-5';
-const breadcrumbClass = 'flex items-center gap-2 text-[0.74rem] font-bold uppercase text-[#765c58]';
-const cardClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_12px_30px_rgba(91,26,19,0.05)]';
+const breadcrumbClass = 'flex items-center gap-2 text-[0.74rem] font-bold uppercase text-[#64748b]';
+const cardClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_12px_30px_rgba(15,23,42,0.05)]';
 const cardHeaderClass = 'flex min-h-[58px] items-center justify-between gap-4 px-5 pt-5 max-[780px]:items-start';
 const sectionTitleClass = 'm-0 flex items-center gap-2 text-[1rem] font-black text-[var(--admin-primary-dark)]';
-const rolePillClass = 'rounded-full bg-[#fff0ed] px-3 py-1.5 text-[0.76rem] font-black text-[var(--admin-primary-dark)]';
+const rolePillClass = 'rounded-full bg-[#e8f7ef] px-3 py-1.5 text-[0.76rem] font-black text-[var(--admin-primary-dark)]';
 const formGridClass = 'grid grid-cols-2 gap-x-5 gap-y-4 px-5 pb-5 pt-3 max-[820px]:grid-cols-1';
 const fieldClass = 'grid gap-1.5';
 const labelClass = 'text-[0.76rem] font-black text-[#5b403c]';
-const inputClass = 'h-10 w-full min-w-0 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.9rem] text-[var(--admin-ink)] outline-0 transition-all duration-200 placeholder:text-[#9b8580] focus:border-[#c6897e] focus:bg-white focus:shadow-[0_0_0_3px_rgba(134,7,7,0.08)]';
+const inputClass = 'h-10 w-full min-w-0 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.9rem] text-[var(--admin-ink)] outline-0 transition-all duration-200 placeholder:text-[#94a3b8] focus:border-[#0b7f5a] focus:bg-white focus:shadow-[0_0_0_3px_rgba(16,185,129,0.08)]';
 const selectClass = `${inputClass} cursor-pointer`;
 const actionsClass = 'flex items-center justify-end gap-3 border-t border-[var(--admin-border)] px-5 py-4 max-[640px]:flex-col max-[640px]:items-stretch';
-const secondaryButtonClass = 'inline-flex min-h-9 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-6 text-[0.82rem] font-bold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
+const secondaryButtonClass = 'inline-flex min-h-9 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-6 text-[0.82rem] font-bold text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]';
 const primaryButtonClass = 'inline-flex min-h-9 cursor-pointer items-center justify-center rounded-md border-0 bg-[var(--admin-primary)] px-6 text-[0.82rem] font-bold text-white hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-70';
-const tableHeadClass = 'border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-5 py-3 text-left text-[0.68rem] uppercase text-[#765c58]';
+const tableHeadClass = 'border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-5 py-3 text-left text-[0.68rem] uppercase text-[#64748b]';
 const tableCellClass = 'border-b border-[var(--admin-border)] px-5 py-3.5 align-middle text-[0.86rem] text-[var(--admin-ink)]';
 const statusBadgeClass = 'inline-flex min-h-6 items-center rounded border border-[#9fdcb9] bg-[#e8f7ee] px-2.5 text-[0.66rem] font-black uppercase text-[#16864f]';
 
@@ -238,7 +238,7 @@ function CreateRefereeAccount() {
                             <FaUsers aria-hidden="true" className="text-[var(--admin-primary)]" />
                             <span>Active Referees</span>
                         </h2>
-                        <span className="rounded-full bg-[#fff0ed] px-3 py-1.5 text-[0.76rem] font-bold text-[#765c58]">
+                        <span className="rounded-full bg-[#e8f7ef] px-3 py-1.5 text-[0.76rem] font-bold text-[#64748b]">
                             {referees.length} referee(s)
                         </span>
                     </div>

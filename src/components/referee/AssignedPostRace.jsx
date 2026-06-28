@@ -74,12 +74,12 @@ function getRegistrationLabel(registration) {
 function getStatusClass(status) {
     if (['RefereeConfirmed', 'AdminApproved', 'Published'].includes(status)) return 'bg-green-100 text-green-700';
     if (status === 'Returned') return 'bg-red-100 text-red-700';
-    return 'bg-[#f7efee] text-[#7d0000]';
+    return 'bg-[#e8f7ef] text-[#0b7f5a]';
 }
 
-const inputClass = "rounded border border-[#ead3cf] px-3 py-2.5 text-sm outline-none focus:border-[#7d0000] w-full";
-const labelClass = "block text-xs font-bold text-[#705f5b] uppercase mb-1.5";
-const primaryBtn = "rounded bg-[#7d0000] px-5 py-2.5 font-semibold text-white text-sm disabled:cursor-not-allowed disabled:opacity-60 w-full";
+const inputClass = "rounded border border-[#dce5ef] px-3 py-2.5 text-sm outline-none focus:border-[#0b7f5a] w-full";
+const labelClass = "block text-xs font-bold text-[#64748b] uppercase mb-1.5";
+const primaryBtn = "rounded bg-[#0b7f5a] px-5 py-2.5 font-semibold text-white text-sm disabled:cursor-not-allowed disabled:opacity-60 w-full";
 
 function AssignedPostRace() {
     const location = useLocation();
@@ -326,7 +326,7 @@ function AssignedPostRace() {
                 {/* ── Race selector ── */}
                 <div className="surface-card" style={{ padding: 0, overflow: 'hidden' }}>
                     <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--admin-border)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontWeight: 700, fontSize: 13, color: '#705f5b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Select Race</span>
+                        <span style={{ fontWeight: 700, fontSize: 13, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Select Race</span>
                         {loadingRaces && <span style={{ fontSize: 12, color: '#999' }}>Loading...</span>}
                     </div>
 
@@ -344,19 +344,19 @@ function AssignedPostRace() {
                                     style={{
                                         display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
                                         padding: '10px 16px', marginRight: 8, borderRadius: 10, cursor: 'pointer',
-                                        border: isSelected ? '2px solid #7d0000' : '1px solid #edcfc9',
-                                        background: isSelected ? '#fff4f1' : '#fff',
+                                        border: isSelected ? '2px solid #0b7f5a' : '1px solid #dce5ef',
+                                        background: isSelected ? '#f8fbff' : '#fff',
                                         flexShrink: 0, minWidth: 180, textAlign: 'left',
                                         transition: 'all 0.15s',
                                     }}
                                 >
-                                    <span style={{ fontWeight: 700, fontSize: 13, color: isSelected ? '#7d0000' : '#2b1b1b', lineHeight: 1.3 }}>
+                                    <span style={{ fontWeight: 700, fontSize: 13, color: isSelected ? '#0b7f5a' : '#2b1b1b', lineHeight: 1.3 }}>
                                         {race.raceName}
                                     </span>
                                     <span style={{ fontSize: 11, color: '#999', marginTop: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
                                         <FaMapMarkerAlt /> {race.location || 'N/A'}
                                     </span>
-                                    <span style={{ fontSize: 11, color: isSelected ? '#7d0000' : '#aaa', marginTop: 2, fontWeight: 600 }}>
+                                    <span style={{ fontSize: 11, color: isSelected ? '#0b7f5a' : '#aaa', marginTop: 2, fontWeight: 600 }}>
                                         {race.raceStatus}
                                     </span>
                                 </button>
@@ -377,7 +377,7 @@ function AssignedPostRace() {
                 )}
 
                 {/* ── Tab bar ── */}
-                <div style={{ display: 'flex', gap: 4, borderBottom: '2px solid #edcfc9' }}>
+                <div style={{ display: 'flex', gap: 4, borderBottom: '2px solid #dce5ef' }}>
                     {TABS.map((tab) => {
                         const Icon = tab.icon;
                         const count = tab.key === 'results' ? results.length
@@ -393,11 +393,11 @@ function AssignedPostRace() {
                                     display: 'flex', alignItems: 'center', gap: 7,
                                     padding: '10px 20px',
                                     border: 'none',
-                                    borderBottom: isActive ? '2px solid #7d0000' : '2px solid transparent',
+                                    borderBottom: isActive ? '2px solid #0b7f5a' : '2px solid transparent',
                                     marginBottom: -2,
                                     background: 'transparent',
                                     fontWeight: isActive ? 800 : 600,
-                                    color: isActive ? '#7d0000' : '#705f5b',
+                                    color: isActive ? '#0b7f5a' : '#64748b',
                                     fontSize: 14,
                                     cursor: 'pointer',
                                     transition: 'all 0.15s',
@@ -407,8 +407,8 @@ function AssignedPostRace() {
                                 {tab.label}
                                 <span style={{
                                     fontSize: 11, fontWeight: 700,
-                                    backgroundColor: isActive ? '#7d0000' : '#edcfc9',
-                                    color: isActive ? '#fff' : '#705f5b',
+                                    backgroundColor: isActive ? '#0b7f5a' : '#dce5ef',
+                                    color: isActive ? '#fff' : '#64748b',
                                     borderRadius: 20, padding: '1px 7px', marginLeft: 2,
                                 }}>
                                     {count}
@@ -430,12 +430,12 @@ function AssignedPostRace() {
                         {/* Form */}
                         <form onSubmit={handleSaveResult} className="surface-card" style={{ padding: 24 }}>
                             <h2 style={{ margin: '0 0 20px', fontSize: '1.1rem', fontWeight: 800, color: '#2b1b1b', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <FaTrophy style={{ color: '#7d0000' }} /> Result Entry
+                                <FaTrophy style={{ color: '#0b7f5a' }} /> Result Entry
                             </h2>
 
                             {selectedRace && (
-                                <div style={{ background: '#faf6f5', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#705f5b' }}>
-                                    Race: <strong style={{ color: '#7d0000' }}>{selectedRace.raceName}</strong>
+                                <div style={{ background: '#faf6f5', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#64748b' }}>
+                                    Race: <strong style={{ color: '#0b7f5a' }}>{selectedRace.raceName}</strong>
                                 </div>
                             )}
 
@@ -461,9 +461,9 @@ function AssignedPostRace() {
                                 </div>
 
                                 {selectedResultRegistration && (
-                                    <div style={{ background: '#fff8f6', border: '1px solid #edcfc9', borderRadius: 8, padding: 12, fontSize: 13 }}>
+                                    <div style={{ background: '#fff8f6', border: '1px solid #dce5ef', borderRadius: 8, padding: 12, fontSize: 13 }}>
                                         <strong style={{ color: '#2b1b1b' }}>{selectedResultRegistration.horseName}</strong>
-                                        <div style={{ color: '#705f5b', marginTop: 2 }}>
+                                        <div style={{ color: '#64748b', marginTop: 2 }}>
                                             Status: {selectedResultRegistration.status || 'N/A'} · Owner #{selectedResultRegistration.ownerId || 'N/A'} · Jockey #{selectedResultRegistration.jockeyId || 'N/A'}
                                         </div>
                                     </div>
@@ -506,9 +506,9 @@ function AssignedPostRace() {
 
                         {/* Results table */}
                         <div className="surface-card" style={{ overflow: 'hidden' }}>
-                            <div style={{ padding: '16px 20px', borderBottom: '1px solid #edcfc9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ padding: '16px 20px', borderBottom: '1px solid #dce5ef', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <FaClipboardList style={{ color: '#7d0000' }} /> Results
+                                    <FaClipboardList style={{ color: '#0b7f5a' }} /> Results
                                 </h2>
                                 <span style={{ fontSize: 12, color: '#999' }}>{selectedRace?.raceName || 'Select a race'}</span>
                             </div>
@@ -517,7 +517,7 @@ function AssignedPostRace() {
                                     <thead>
                                         <tr style={{ background: '#faf6f5' }}>
                                             {['Horse', 'Position', 'Time', 'Score', 'Status', 'Note', 'Action'].map(h => (
-                                                <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#705f5b', textTransform: 'uppercase' }}>{h}</th>
+                                                <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>{h}</th>
                                             ))}
                                         </tr>
                                     </thead>
@@ -536,16 +536,16 @@ function AssignedPostRace() {
                                                 <td style={{ padding: '12px 14px' }}>
                                                     <span className={`rounded px-3 py-1 text-xs font-bold ${getStatusClass(result.status)}`}>{result.status}</span>
                                                 </td>
-                                                <td style={{ padding: '12px 14px', fontSize: 12, color: '#705f5b', maxWidth: 160 }}>{result.note || '-'}</td>
+                                                <td style={{ padding: '12px 14px', fontSize: 12, color: '#64748b', maxWidth: 160 }}>{result.note || '-'}</td>
                                                 <td style={{ padding: '12px 14px' }}>
                                                     <div style={{ display: 'flex', gap: 6 }}>
                                                         <button type="button" onClick={() => handleEditResult(result)}
-                                                            style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #edcfc9', background: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                                                            style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #dce5ef', background: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                                                             Edit
                                                         </button>
                                                         <button type="button" onClick={() => handleConfirmResult(result.resultId)}
                                                             disabled={result.status === 'RefereeConfirmed' || saving === `confirm-${result.resultId}`}
-                                                            style={{ padding: '5px 12px', borderRadius: 6, border: 'none', background: '#7d0000', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+                                                            style={{ padding: '5px 12px', borderRadius: 6, border: 'none', background: '#0b7f5a', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                                                             <FaCheck className="mr-1 inline" />
                                                             {saving === `confirm-${result.resultId}` ? '...' : 'Confirm'}
                                                         </button>
@@ -566,12 +566,12 @@ function AssignedPostRace() {
                         {/* Form */}
                         <form onSubmit={handleCreateViolation} className="surface-card" style={{ padding: 24 }}>
                             <h2 style={{ margin: '0 0 20px', fontSize: '1.1rem', fontWeight: 800, color: '#2b1b1b', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <FaGavel style={{ color: '#7d0000' }} /> Log Violation
+                                <FaGavel style={{ color: '#0b7f5a' }} /> Log Violation
                             </h2>
 
                             {selectedRace && (
-                                <div style={{ background: '#faf6f5', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#705f5b' }}>
-                                    Race: <strong style={{ color: '#7d0000' }}>{selectedRace.raceName}</strong>
+                                <div style={{ background: '#faf6f5', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#64748b' }}>
+                                    Race: <strong style={{ color: '#0b7f5a' }}>{selectedRace.raceName}</strong>
                                 </div>
                             )}
 
@@ -594,9 +594,9 @@ function AssignedPostRace() {
                                 </div>
 
                                 {selectedViolationRegistration && (
-                                    <div style={{ background: '#fff8f6', border: '1px solid #edcfc9', borderRadius: 8, padding: 12, fontSize: 13 }}>
+                                    <div style={{ background: '#fff8f6', border: '1px solid #dce5ef', borderRadius: 8, padding: 12, fontSize: 13 }}>
                                         <strong style={{ color: '#2b1b1b' }}>{selectedViolationRegistration.horseName}</strong>
-                                        <div style={{ color: '#705f5b', marginTop: 2 }}>
+                                        <div style={{ color: '#64748b', marginTop: 2 }}>
                                             Status: {selectedViolationRegistration.status || 'N/A'}
                                         </div>
                                     </div>
@@ -647,9 +647,9 @@ function AssignedPostRace() {
 
                         {/* Violations list */}
                         <div className="surface-card" style={{ overflow: 'hidden' }}>
-                            <div style={{ padding: '16px 20px', borderBottom: '1px solid #edcfc9' }}>
+                            <div style={{ padding: '16px 20px', borderBottom: '1px solid #dce5ef' }}>
                                 <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <FaGavel style={{ color: '#7d0000' }} /> Logged Violations
+                                    <FaGavel style={{ color: '#0b7f5a' }} /> Logged Violations
                                 </h2>
                             </div>
                             <div>
@@ -660,7 +660,7 @@ function AssignedPostRace() {
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                                             <div>
                                                 <div style={{ fontWeight: 700, fontSize: 14, color: '#2b1b1b' }}>{v.violationType}</div>
-                                                <div style={{ fontSize: 13, color: '#705f5b', marginTop: 3 }}>
+                                                <div style={{ fontSize: 13, color: '#64748b', marginTop: 3 }}>
                                                     {v.horseName} — {v.description || 'No description'}
                                                 </div>
                                                 <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
@@ -684,12 +684,12 @@ function AssignedPostRace() {
                         {/* Form */}
                         <form onSubmit={handleCreateReport} className="surface-card" style={{ padding: 24 }}>
                             <h2 style={{ margin: '0 0 20px', fontSize: '1.1rem', fontWeight: 800, color: '#2b1b1b', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <FaFileAlt style={{ color: '#7d0000' }} /> Submit Report
+                                <FaFileAlt style={{ color: '#0b7f5a' }} /> Submit Report
                             </h2>
 
                             {selectedRace && (
-                                <div style={{ background: '#faf6f5', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#705f5b' }}>
-                                    Race: <strong style={{ color: '#7d0000' }}>{selectedRace.raceName}</strong>
+                                <div style={{ background: '#faf6f5', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#64748b' }}>
+                                    Race: <strong style={{ color: '#0b7f5a' }}>{selectedRace.raceName}</strong>
                                 </div>
                             )}
 
@@ -715,9 +715,9 @@ function AssignedPostRace() {
 
                         {/* Reports list */}
                         <div className="surface-card" style={{ overflow: 'hidden' }}>
-                            <div style={{ padding: '16px 20px', borderBottom: '1px solid #edcfc9' }}>
+                            <div style={{ padding: '16px 20px', borderBottom: '1px solid #dce5ef' }}>
                                 <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <FaFileAlt style={{ color: '#7d0000' }} /> Submitted Reports
+                                    <FaFileAlt style={{ color: '#0b7f5a' }} /> Submitted Reports
                                 </h2>
                             </div>
                             <div>
@@ -729,7 +729,7 @@ function AssignedPostRace() {
                                             <span style={{ fontWeight: 700, fontSize: 14, color: '#2b1b1b' }}>Report #{r.reportId}</span>
                                             <span style={{ fontSize: 11, color: '#999' }}>{formatDateTime(r.submittedAt)}</span>
                                         </div>
-                                        <p style={{ margin: 0, fontSize: 13, color: '#705f5b', lineHeight: 1.6 }}>{r.reportContent}</p>
+                                        <p style={{ margin: 0, fontSize: 13, color: '#64748b', lineHeight: 1.6 }}>{r.reportContent}</p>
                                     </div>
                                 ))}
                             </div>

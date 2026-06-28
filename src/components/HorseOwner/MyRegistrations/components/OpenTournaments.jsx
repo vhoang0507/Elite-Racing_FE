@@ -71,7 +71,7 @@ const styles = {
     card: { borderRadius: "10px", overflow: "hidden", border: "1px solid #eee", cursor: "pointer", transition: "box-shadow 0.2s" },
     imgWrapper: { position: "relative" },
     img: { width: "100%", height: "120px", objectFit: "cover" },
-    prizeBadge: { position: "absolute", top: "8px", right: "8px", backgroundColor: "#8B0000", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "10px" },
+    prizeBadge: { position: "absolute", top: "8px", right: "8px", backgroundColor: "#0b7f5a", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "10px" },
     info: { padding: "10px" },
     name: { margin: "0 0 4px", fontWeight: "bold", fontSize: "14px" },
     date: { margin: "2px 0", fontSize: "12px", color: "#999" },

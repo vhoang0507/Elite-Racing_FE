@@ -1,4 +1,4 @@
-export default function StatCard({ icon, label, value, accent = "#8B0000" }) {
+export default function StatCard({ icon, label, value, accent = "#0b7f5a" }) {
     const lightAccent = accent + "18"; // ~10% opacity version of accent
 
     return (
@@ -26,11 +26,11 @@ const styles = {
     card: {
         backgroundColor: "#fff",
         borderRadius: "12px",
-        border: "1px solid #edcfc9",
+        border: "1px solid #dce5ef",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        boxShadow: "0 2px 8px rgba(139,0,0,0.06)",
+        boxShadow: "0 2px 8px rgba(16,185,129,0.06)",
     },
     accentBar: {
         height: "4px",

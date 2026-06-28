@@ -21,7 +21,7 @@ export default function MyHorses() {
             </div>
 
             <div style={styles.list}>
-                {horses.length === 0 && <p style={{ color: '#705f5b', fontSize: '13px' }}>No horses yet</p>}
+                {horses.length === 0 && <p style={{ color: '#64748b', fontSize: '13px' }}>No horses yet</p>}
                 {horses.map((horse) => (
                     <div key={horse.horseId} style={styles.card}>
                         {horse.imageUrl && (
@@ -34,7 +34,7 @@ export default function MyHorses() {
                                 <span style={{
                                     ...styles.statusBadge,
                                     backgroundColor: horse.healthStatus === "Healthy" ? "#dff7e9" : "#f5e1df",
-                                    color: horse.healthStatus === "Healthy" ? "#118548" : "#860707",
+                                    color: horse.healthStatus === "Healthy" ? "#118548" : "#0b7f5a",
                                 }}>
                                     {horse.healthStatus}
                                 </span>
@@ -62,17 +62,17 @@ export default function MyHorses() {
 }
 
 const styles = {
-    section: { backgroundColor: "#fffefd", borderRadius: "8px", padding: "20px", border: "1px solid #edcfc9", boxShadow: "0 12px 28px rgba(91, 26, 19, 0.05)" },
+    section: { backgroundColor: "#fffefd", borderRadius: "8px", padding: "20px", border: "1px solid #dce5ef", boxShadow: "0 12px 28px rgba(91, 26, 19, 0.05)" },
     header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" },
-    viewAll: { background: "none", border: "none", color: "#860707", cursor: "pointer", fontSize: "13px", fontWeight: "bold" },
+    viewAll: { background: "none", border: "none", color: "#0b7f5a", cursor: "pointer", fontSize: "13px", fontWeight: "bold" },
     list: { display: "flex", flexDirection: "column", gap: "12px" },
-    card: { display: "flex", gap: "12px", alignItems: "center", padding: "10px", borderRadius: "8px", border: "1px solid #edcfc9", backgroundColor: "#fffaf8" },
+    card: { display: "flex", gap: "12px", alignItems: "center", padding: "10px", borderRadius: "8px", border: "1px solid #dce5ef", backgroundColor: "#fffaf8" },
     info: { display: "flex", flexDirection: "column", gap: "4px" },
-    breed: { fontSize: "11px", color: "#705f5b", fontWeight: "600", textTransform: "uppercase" },
+    breed: { fontSize: "11px", color: "#64748b", fontWeight: "600", textTransform: "uppercase" },
     name: { margin: 0, fontWeight: "bold", fontSize: "15px", color: "#2d2020" },
     tags: { display: "flex", gap: "6px", flexWrap: "wrap" },
     statusBadge: { fontSize: "11px", padding: "2px 8px", borderRadius: "999px", fontWeight: "700" },
-    tag: { fontSize: "11px", padding: "2px 8px", borderRadius: "999px", backgroundColor: "#fff3ef", color: "#705f5b" },
-    certificateLink: { width: "fit-content", color: "#860707", fontSize: "11px", fontWeight: "700", textDecoration: "none" },
+    tag: { fontSize: "11px", padding: "2px 8px", borderRadius: "999px", backgroundColor: "#e8f7ef", color: "#64748b" },
+    certificateLink: { width: "fit-content", color: "#0b7f5a", fontSize: "11px", fontWeight: "700", textDecoration: "none" },
     certificateMissing: { color: "#9a827d", fontSize: "11px", fontWeight: "700" },
 };

@@ -30,6 +30,38 @@ function formatTime(value) {
     }).format(new Date(value));
 }
 
+const statusLabels = {
+    AssignedReferee: 'Assigned Referee',
+    ClosedRegistration: 'Closed Registration',
+    Completed: 'Completed',
+    Ongoing: 'Ongoing',
+    OpenRegistration: 'Open Registration',
+    ResultPending: 'Result Pending',
+    Scheduled: 'Scheduled',
+};
+
+function getDisplayStatus(race) {
+    return race?.tournamentStatus === 'ClosedRegistration'
+        ? race.tournamentStatus
+        : race?.raceStatus;
+}
+
+function formatStatus(status) {
+    return statusLabels[status] || status || 'N/A';
+}
+
+function getStatusBadgeClass(status) {
+    if (status === 'ClosedRegistration') {
+        return 'status-badge bg-red-100 text-red-700';
+    }
+
+    if (status === 'Ongoing' || status === 'ResultPending') {
+        return 'status-badge bg-blue-100 text-blue-700';
+    }
+
+    return 'status-badge bg-yellow-100 text-yellow-700';
+}
+
 function RefereeDashboard() {
     const navigate = useNavigate();
     const [dashboard, setDashboard] = useState(null);
@@ -44,8 +76,33 @@ function RefereeDashboard() {
             setError('');
 
             try {
-                const data = await refereeApi.getRefereeDashboard();
-                if (!ignore) setDashboard(data);
+                const [data, assignedRaces] = await Promise.all([
+                    refereeApi.getRefereeDashboard(),
+                    refereeApi.getAssignedRaces().catch(() => []),
+                ]);
+
+                const assignedByRaceId = new Map(
+                    (assignedRaces ?? []).map((race) => [Number(race.raceId), race])
+                );
+                const upcomingRaces = (data?.upcomingRaces ?? []).map((race) => {
+                    const assignedRace = assignedByRaceId.get(Number(race.raceId));
+
+                    return assignedRace
+                        ? {
+                            ...race,
+                            raceStatus: assignedRace.raceStatus ?? race.raceStatus,
+                            tournamentStatus: assignedRace.tournamentStatus,
+                            assignmentStatus: assignedRace.assignmentStatus,
+                        }
+                        : race;
+                });
+
+                if (!ignore) {
+                    setDashboard({
+                        ...data,
+                        upcomingRaces,
+                    });
+                }
             } catch (err) {
                 if (!ignore) setError(err.message || 'Failed to load referee dashboard.');
             } finally {
@@ -115,7 +172,7 @@ function RefereeDashboard() {
                         </p>
                     </div>
 
-                    <div className="rounded-full bg-[#f6e6e2] px-4 py-2 text-sm font-bold text-[#8b0000]">
+                    <div className="rounded-full bg-[#e8f7ef] px-4 py-2 text-sm font-bold text-[#0b7f5a]">
                         {new Intl.DateTimeFormat('en-US', {
                             month: 'short',
                             day: '2-digit',
@@ -180,7 +237,7 @@ function RefereeDashboard() {
                                     type="button"
                                     onClick={() => navigate('/referee/races/post-race', { state: { raceId: priorityRace?.raceId } })}
                                     disabled={!priorityRace}
-                                    className="secondary-button mt-6 border-white bg-white text-[#8b0000]"
+                                    className="secondary-button mt-6 border-white bg-white text-[#0b7f5a]"
                                 >
                                     Open Race Workflow
                                 </button>
@@ -244,8 +301,8 @@ function RefereeDashboard() {
                                                         </td>
 
                                                         <td>
-                                                            <span className="status-badge bg-yellow-100 text-yellow-700">
-                                                                {item.raceStatus}
+                                                            <span className={getStatusBadgeClass(getDisplayStatus(item))}>
+                                                                {formatStatus(getDisplayStatus(item))}
                                                             </span>
                                                         </td>
 
@@ -253,7 +310,7 @@ function RefereeDashboard() {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => navigate(`/referee/races/pre-race/${item.raceId}`, { state: { race: item } })}
-                                                                className="font-bold text-[#8b0000]"
+                                                                className="font-bold text-[#0b7f5a]"
                                                             >
                                                                 Inspect
                                                             </button>
@@ -305,7 +362,7 @@ function RefereeDashboard() {
                                 <button
                                     type="button"
                                     onClick={() => navigate('/referee/races/post-race')}
-                                    className="w-full border-t border-[var(--admin-border)] p-4 font-bold text-[#8b0000]"
+                                    className="w-full border-t border-[var(--admin-border)] p-4 font-bold text-[#0b7f5a]"
                                 >
                                     Open Violation Log
                                 </button>

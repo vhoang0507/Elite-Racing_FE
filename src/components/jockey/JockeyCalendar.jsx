@@ -14,8 +14,8 @@ const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
 const statusColor = {
     Available: { bg: '#e8f5e9', color: '#2e7d32', dot: '#2e7d32' },
-    RacingDay: { bg: '#fff3ef', color: '#8B0000', dot: '#8B0000' },
-    Unavailable: { bg: '#fce4ec', color: '#c62828', dot: '#c62828' },
+    RacingDay: { bg: '#e8f7ef', color: '#0b7f5a', dot: '#0b7f5a' },
+    Unavailable: { bg: '#e8f7ef', color: '#c62828', dot: '#c62828' },
 };
 
 function JockeyCalendar() {
@@ -88,7 +88,7 @@ function JockeyCalendar() {
                         </div>
                     </article>
                     <article className="flex items-center gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5">
-                        <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#fce4ec] text-[#c62828]">
+                        <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#e8f7ef] text-[#c62828]">
                             <FaBan />
                         </div>
                         <div>
@@ -108,10 +108,10 @@ function JockeyCalendar() {
                             <div className="flex items-center gap-3">
                                 <h2 className="m-0 text-[1.05rem] font-bold text-[var(--admin-primary)]">{monthName}</h2>
                                 <div className="flex items-center gap-1">
-                                    <button className="grid h-7 w-7 cursor-pointer place-items-center rounded border-0 bg-transparent text-[var(--admin-muted)] hover:bg-[#f8e5e1]" onClick={handlePrevMonth} type="button">
+                                    <button className="grid h-7 w-7 cursor-pointer place-items-center rounded border-0 bg-transparent text-[var(--admin-muted)] hover:bg-[#eef4ff]" onClick={handlePrevMonth} type="button">
                                         <FaChevronLeft className="text-[0.6rem]" />
                                     </button>
-                                    <button className="grid h-7 w-7 cursor-pointer place-items-center rounded border-0 bg-transparent text-[var(--admin-muted)] hover:bg-[#f8e5e1]" onClick={handleNextMonth} type="button">
+                                    <button className="grid h-7 w-7 cursor-pointer place-items-center rounded border-0 bg-transparent text-[var(--admin-muted)] hover:bg-[#eef4ff]" onClick={handleNextMonth} type="button">
                                         <FaChevronRight className="text-[0.6rem]" />
                                     </button>
                                 </div>
@@ -131,7 +131,7 @@ function JockeyCalendar() {
                         ) : (
                             <div className="grid grid-cols-7">
                                 {leadingDays.map((day, i) => (
-                                    <div key={`lead-${i}`} className="min-h-[90px] border-b border-r border-[var(--admin-border)] bg-[#fce4ec20] p-2 last:border-r-0">
+                                    <div key={`lead-${i}`} className="min-h-[90px] border-b border-r border-[var(--admin-border)] bg-[#e8f7ef20] p-2 last:border-r-0">
                                         <span className="text-[0.78rem] text-[#ccc]">{day}</span>
                                     </div>
                                 ))}
@@ -165,7 +165,7 @@ function JockeyCalendar() {
                                 })}
 
                                 {Array.from({ length: trailingDays }, (_, i) => (
-                                    <div key={`trail-${i}`} className="min-h-[90px] border-b border-r border-[var(--admin-border)] bg-[#fce4ec20] p-2 last:border-r-0" />
+                                    <div key={`trail-${i}`} className="min-h-[90px] border-b border-r border-[var(--admin-border)] bg-[#e8f7ef20] p-2 last:border-r-0" />
                                 ))}
                             </div>
                         )}

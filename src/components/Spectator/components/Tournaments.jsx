@@ -19,7 +19,7 @@ const STATUS_BADGE = {
 };
 
 function getStatusStyle(status) {
-    return STATUS_BADGE[status] ?? { bg: '#f7efee', color: '#7d0000', label: status };
+    return STATUS_BADGE[status] ?? { bg: '#e8f7ef', color: '#0b7f5a', label: status };
 }
 
 function canPredict(status) {
@@ -68,7 +68,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                 {/* Header */}
                 <div style={{ padding: '22px 24px 18px', borderBottom: '1px solid #f0e8e6', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexShrink: 0 }}>
                     <div>
-                        <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#7d0000', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Tournament Prediction</p>
+                        <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#0b7f5a', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Tournament Prediction</p>
                         <h3 style={{ margin: '4px 0 0', fontSize: '1.15rem', fontWeight: 800, color: '#2b1b1b', lineHeight: 1.3 }}>{tournament.tournamentName}</h3>
                         {tournament.location && <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: '#999' }}>📍 {tournament.location}</p>}
                     </div>
@@ -105,12 +105,12 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                                         style={{
                                             display: 'flex', alignItems: 'center', gap: 12,
                                             padding: '11px 14px', borderRadius: 10, cursor: 'pointer',
-                                            border: isSel ? '2px solid #7d0000' : '1px solid #edcfc9',
+                                            border: isSel ? '2px solid #0b7f5a' : '1px solid #dce5ef',
                                             background: isSel ? '#fff5f5' : '#fff',
                                             textAlign: 'left', width: '100%',
                                         }}
                                     >
-                                        <span style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: isSel ? '#7d0000' : '#f1e2df', fontSize: 18 }}>
+                                        <span style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: isSel ? '#0b7f5a' : '#dce5ef', fontSize: 18 }}>
                                             🐴
                                         </span>
                                         <div style={{ minWidth: 0, flex: 1 }}>
@@ -121,7 +121,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                                                 </p>
                                             )}
                                         </div>
-                                        {isSel && <FaCheckCircle style={{ color: '#7d0000', flexShrink: 0, fontSize: 18 }} />}
+                                        {isSel && <FaCheckCircle style={{ color: '#0b7f5a', flexShrink: 0, fontSize: 18 }} />}
                                     </button>
                                 );
                             })}
@@ -133,7 +133,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                 <div style={{ padding: '16px 24px', borderTop: '1px solid #f0e8e6', flexShrink: 0 }}>
                     {error && <p style={{ margin: '0 0 10px', fontSize: '0.83rem', color: '#721c24', background: '#f8d7da', padding: '9px 13px', borderRadius: 7 }}>{error}</p>}
                     <div style={{ display: 'flex', gap: 10 }}>
-                        <button type="button" onClick={onClose} style={{ flex: 1, padding: '11px 0', borderRadius: 8, fontWeight: 600, border: '1px solid #edcfc9', background: '#fff', color: '#555', cursor: 'pointer', fontSize: '0.9rem' }}>
+                        <button type="button" onClick={onClose} style={{ flex: 1, padding: '11px 0', borderRadius: 8, fontWeight: 600, border: '1px solid #dce5ef', background: '#fff', color: '#555', cursor: 'pointer', fontSize: '0.9rem' }}>
                             Cancel
                         </button>
                         <button
@@ -143,7 +143,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                             style={{
                                 flex: 2, padding: '11px 0', borderRadius: 8, fontWeight: 700, fontSize: '0.9rem',
                                 border: 'none',
-                                background: selected && !submitting ? '#7d0000' : '#ddd',
+                                background: selected && !submitting ? '#0b7f5a' : '#ddd',
                                 color: selected && !submitting ? '#fff' : '#999',
                                 cursor: selected && !submitting ? 'pointer' : 'not-allowed',
                             }}
@@ -170,7 +170,7 @@ function TournamentCard({ tournament, myPrediction, onPredict }) {
     return (
         <article className="surface-card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             {/* Status stripe */}
-            <div style={{ height: 4, background: hasPredicted ? (isCorrect === true ? '#155724' : isCorrect === false ? '#721c24' : '#856404') : (open ? '#7d0000' : '#ccc') }} />
+            <div style={{ height: 4, background: hasPredicted ? (isCorrect === true ? '#155724' : isCorrect === false ? '#721c24' : '#856404') : (open ? '#0b7f5a' : '#ccc') }} />
 
             <div style={{ padding: '18px 20px', flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {/* Tournament info */}
@@ -217,7 +217,7 @@ function TournamentCard({ tournament, myPrediction, onPredict }) {
                         <button
                             type="button"
                             onClick={() => onPredict(tournament)}
-                            style={{ width: '100%', padding: '10px 0', borderRadius: 8, border: 'none', background: '#7d0000', color: '#fff', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+                            style={{ width: '100%', padding: '10px 0', borderRadius: 8, border: 'none', background: '#0b7f5a', color: '#fff', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
                         >
                             <FaHorseHead /> Make Prediction
                         </button>
@@ -316,9 +316,9 @@ export default function Tournaments() {
                         onClick={() => setFilter(f.key)}
                         style={{
                             padding: '7px 16px', borderRadius: 20, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                            border: filter === f.key ? 'none' : '1px solid #edcfc9',
-                            background: filter === f.key ? '#7d0000' : '#fff8f6',
-                            color: filter === f.key ? '#fff' : '#7d0000',
+                            border: filter === f.key ? 'none' : '1px solid #dce5ef',
+                            background: filter === f.key ? '#0b7f5a' : '#fff8f6',
+                            color: filter === f.key ? '#fff' : '#0b7f5a',
                         }}
                     >
                         {f.label} {counts[f.key] != null ? `(${counts[f.key]})` : ''}

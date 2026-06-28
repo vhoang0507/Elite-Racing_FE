@@ -94,7 +94,7 @@ export default function ResultReward() {
                                                 <span>Season elapsed</span>
                                                 <span>{seasonPct}%</span>
                                             </div>
-                                            <div className="h-2.5 overflow-hidden rounded-full bg-[#f1e2df]">
+                                            <div className="h-2.5 overflow-hidden rounded-full bg-[#dce5ef]">
                                                 <div className="h-full rounded-full bg-[var(--admin-primary)]" style={{ width: `${seasonPct}%` }} />
                                             </div>
                                         </div>
