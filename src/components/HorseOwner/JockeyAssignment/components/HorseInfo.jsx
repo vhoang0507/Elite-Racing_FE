@@ -19,7 +19,7 @@ export default function HorseInfo({ context, loading, horseImageUrl, healthCerti
                 <span>Horse Info</span>
             </div>
             <div style={styles.horseRow}>
-                <img src={horseImageUrl || "/Horse1.jpg"} alt="horse" style={styles.horseImg} />
+                <img src={horseImageUrl ? resolveFileUrl(horseImageUrl) : "/Horse1.jpg"} alt="horse" style={styles.horseImg} />
                 <div>
                     <p style={styles.horseName}>{context.horseName}</p>
                     <p style={styles.horseBreed}>{context.breedName}</p>

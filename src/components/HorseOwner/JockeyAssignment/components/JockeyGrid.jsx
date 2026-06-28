@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ownerApi } from "../../../../api/ownerApi";
+import { resolveFileUrl } from "../../../../api/uploadApi";
 
 const healthColor = {
     Fit: { color: "#155724" },
@@ -63,7 +64,7 @@ export default function JockeyGrid({ registrationId, search = '', healthStatus =
                     return (
                         <div key={jockey.jockeyId} style={styles.cardItem}>
                             <div style={styles.imgWrapper}>
-                                <img src={jockey.profileImageUrl || '/Jockey1.jpg'} alt={jockey.fullName} style={styles.img} />
+                                <img src={jockey.profileImageUrl ? resolveFileUrl(jockey.profileImageUrl) : '/Jockey1.jpg'} alt={jockey.fullName} style={styles.img} />
                             </div>
 
                             <p style={styles.name}>{jockey.fullName}</p>
