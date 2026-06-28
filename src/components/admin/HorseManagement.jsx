@@ -25,7 +25,7 @@ const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-7 px-11 
 
 const summaryClass = {
     total: {
-        icon: 'bg-[#ffe8e4] text-[var(--admin-primary)]',
+        icon: 'bg-[#e8f7ef] text-[var(--admin-primary)]',
         border: 'before:bg-[var(--admin-primary)]',
     },
     pending: {
@@ -42,16 +42,16 @@ const approvalClass = {
     pending: 'border-[#efd06a] bg-[#fff7db] text-[#a17809]',
     active: 'border-[#a7dfbf] bg-[#e8f7ee] text-[#16864f]',
     inactive: 'border-[#dbc3bf] bg-[#f3e8e6] text-[#7f645f]',
-    banned: 'border-[#e7a49a] bg-[#ffe8e4] text-[var(--admin-primary)]',
+    banned: 'border-[#e7a49a] bg-[#e8f7ef] text-[var(--admin-primary)]',
 };
 
 const severityClass = {
-    high: 'border-[#e8897d] bg-[#ffe8e4] text-[var(--admin-primary)]',
+    high: 'border-[#e8897d] bg-[#e8f7ef] text-[var(--admin-primary)]',
     medium: 'border-[#e2cd79] bg-[#fff5d3] text-[#8a6209]',
 };
 
-const selectClass = 'h-[38px] min-w-[142px] cursor-pointer rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.78rem] font-bold text-[#5f4b47] outline-0';
-const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
+const selectClass = 'h-[38px] min-w-[142px] cursor-pointer rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.78rem] font-bold text-[#475569] outline-0';
+const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]';
 const pageSize = 4;
 const horseApprovalStorageKey = 'adminHorseApprovalStatuses';
 
@@ -111,7 +111,7 @@ const formatDetailDate = (value) => {
 function HorseDetailItem({ label, value }) {
     return (
         <div className="rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-3">
-            <span className="block text-[0.68rem] font-black uppercase text-[#765c58]">{label}</span>
+            <span className="block text-[0.68rem] font-black uppercase text-[#64748b]">{label}</span>
             <strong className="mt-1 block text-[0.9rem] text-[var(--admin-ink)]">{value}</strong>
         </div>
     );
@@ -146,7 +146,7 @@ function HealthCertificateLink({ url, compact = false }) {
     }
 
     return (
-        <a className="mt-3 block rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-3 text-[0.86rem] font-black text-[var(--admin-primary)] no-underline hover:bg-[#fff0ed]" href={resolvedUrl} target="_blank" rel="noreferrer">
+        <a className="mt-3 block rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-3 text-[0.86rem] font-black text-[var(--admin-primary)] no-underline hover:bg-[#e8f7ef]" href={resolvedUrl} target="_blank" rel="noreferrer">
             <span className="grid h-[170px] place-items-center overflow-hidden rounded-md border border-[var(--admin-border)] bg-white">
                 <img alt="Health certificate" className="h-full w-full object-contain" src={resolvedUrl} />
             </span>
@@ -349,9 +349,9 @@ function HorseManagement() {
                             const tone = summaryClass[stat.tone];
 
                             return (
-                                <article className={`relative flex min-h-[138px] items-start justify-between overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-6 py-6 shadow-[0_14px_30px_rgba(91,26,19,0.05)] before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:content-[''] ${tone.border}`} key={stat.label}>
+                                <article className={`relative flex min-h-[138px] items-start justify-between overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-6 py-6 shadow-[0_14px_30px_rgba(15,23,42,0.05)] before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:content-[''] ${tone.border}`} key={stat.label}>
                                     <div>
-                                        <span className="block text-[0.78rem] font-black uppercase text-[#765c58]">{stat.label}</span>
+                                        <span className="block text-[0.78rem] font-black uppercase text-[#64748b]">{stat.label}</span>
                                         <strong className="mt-3 block text-[2.4rem] leading-none text-[var(--admin-primary-dark)]">{stat.value}</strong>
                                     </div>
                                     <span className={`grid h-10 w-10 place-items-center rounded-lg ${tone.icon}`}>
@@ -363,7 +363,7 @@ function HorseManagement() {
                     </section>
 
                     <section className="overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]">
-                        <div className="flex flex-wrap items-center gap-3 border-b border-[var(--admin-border)] bg-[#fff4f1] px-5 py-4">
+                        <div className="flex flex-wrap items-center gap-3 border-b border-[var(--admin-border)] bg-[#f8fbff] px-5 py-4">
                             <label className="flex h-[38px] min-w-[220px] flex-1 items-center gap-2 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[#826661]">
                                 <FaSearch aria-hidden="true" />
                                 <input className="h-full w-full min-w-0 border-0 bg-transparent p-0 text-[0.78rem] text-[var(--admin-ink)] outline-0" onChange={(event) => handleQueryChange(event.target.value)} placeholder="Search horses..." type="search" value={query} />
@@ -411,7 +411,7 @@ function HorseManagement() {
                                 <thead>
                                     <tr>
                                         {['Horse & Breed', 'Age/Weight', 'Owner', 'Health Certificate', 'Approval', 'Details'].map((heading) => (
-                                            <th className="whitespace-nowrap border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] py-[18px] text-left text-[0.72rem] uppercase text-[#765c58]" key={heading}>
+                                            <th className="whitespace-nowrap border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] py-[18px] text-left text-[0.72rem] uppercase text-[#64748b]" key={heading}>
                                                 {heading}
                                             </th>
                                         ))}
@@ -444,7 +444,7 @@ function HorseManagement() {
                                                 </span>
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
-                                                <button aria-label={`View details for ${horse.name}`} className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md bg-transparent text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => handleOpenHorseDetail(horse)} type="button">
+                                                <button aria-label={`View details for ${horse.name}`} className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md bg-transparent text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={() => handleOpenHorseDetail(horse)} type="button">
                                                     <FaEye aria-hidden="true" />
                                                 </button>
                                             </td>
@@ -460,7 +460,7 @@ function HorseManagement() {
                                 <button aria-label="Previous page" className={pageButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">&lt;</button>
                                 {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
                                     <button
-                                        className={`${pageButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]' : ''}`}
+                                        className={`${pageButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[#e8f7ef] text-[#064e3b] hover:bg-[#d1fae5]' : ''}`}
                                         key={pageNumber}
                                         onClick={() => setPage(pageNumber)}
                                         type="button"
@@ -479,12 +479,12 @@ function HorseManagement() {
                                 <FaExclamationTriangle aria-hidden="true" />
                                 <span>Reported Horses Requiring Review</span>
                             </h2>
-                            <button className="cursor-pointer rounded-full bg-[#ffe8e4] px-3 py-1.5 text-[0.72rem] font-black uppercase text-[var(--admin-primary)] hover:bg-[#ffd8d2]" type="button">View all</button>
+                            <button className="cursor-pointer rounded-full bg-[#e8f7ef] px-3 py-1.5 text-[0.72rem] font-black uppercase text-[var(--admin-primary)] hover:bg-[#d7f2e4]" type="button">View all</button>
                         </div>
 
                         <div className="grid grid-cols-2 gap-5 max-[1180px]:grid-cols-1">
                             {openReports.map((report) => (
-                                <article className="grid gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5 shadow-[0_14px_30px_rgba(91,26,19,0.05)]" key={report.id}>
+                                <article className="grid gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5 shadow-[0_14px_30px_rgba(15,23,42,0.05)]" key={report.id}>
                                     <div className="flex items-start justify-between gap-4">
                                         <div>
                                             <h3 className="m-0 text-base text-[var(--admin-ink)]">{report.horse}</h3>
@@ -496,14 +496,14 @@ function HorseManagement() {
                                     </div>
 
                                     <div className="rounded-md bg-[#fff8f6] p-4">
-                                        <span className="text-[0.68rem] font-black uppercase text-[#765c58]">Reason for report</span>
-                                        <p className="mt-2 text-[0.84rem] font-semibold leading-[1.5] text-[#5f4b47]">{report.reason}</p>
+                                        <span className="text-[0.68rem] font-black uppercase text-[#64748b]">Reason for report</span>
+                                        <p className="mt-2 text-[0.84rem] font-semibold leading-[1.5] text-[#475569]">{report.reason}</p>
                                     </div>
 
                                     <div className="flex flex-wrap items-center gap-2">
                                         <button className="min-h-[36px] cursor-pointer rounded-md bg-[var(--admin-primary)] px-3 font-black text-white hover:bg-[var(--admin-primary-dark)]" onClick={() => handleReviewReport(report)} type="button">Review Report</button>
-                                        <button className="min-h-[36px] cursor-pointer rounded-md border border-[#d89288] bg-white px-3 font-black text-[var(--admin-primary)] hover:bg-[#fff0ed]" onClick={() => handleSuspendHorse(report)} type="button">Suspend Temporarily</button>
-                                        <button aria-label={`Delete report for ${report.horse}`} className="grid h-9 w-9 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" onClick={() => handleDeleteReport(report.id)} type="button">
+                                        <button className="min-h-[36px] cursor-pointer rounded-md border border-[#d89288] bg-white px-3 font-black text-[var(--admin-primary)] hover:bg-[#e8f7ef]" onClick={() => handleSuspendHorse(report)} type="button">Suspend Temporarily</button>
+                                        <button aria-label={`Delete report for ${report.horse}`} className="grid h-9 w-9 cursor-pointer place-items-center rounded-md bg-transparent text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]" onClick={() => handleDeleteReport(report.id)} type="button">
                                             <FaTrashAlt aria-hidden="true" />
                                         </button>
                                     </div>
@@ -516,18 +516,18 @@ function HorseManagement() {
                 {selectedHorse && (
                     <div className="fixed inset-0 z-50 grid place-items-center bg-[rgba(37,18,14,0.45)] px-4 py-6" role="dialog" aria-modal="true" aria-labelledby="horse-detail-title">
                         <section className="max-h-[92vh] w-full max-w-[860px] overflow-y-auto rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_24px_70px_rgba(37,18,14,0.28)]">
-                            <div className="flex items-start justify-between gap-4 border-b border-[var(--admin-border)] bg-[#fff4f1] px-6 py-5">
+                            <div className="flex items-start justify-between gap-4 border-b border-[var(--admin-border)] bg-[#f8fbff] px-6 py-5">
                                 <div>
                                     <h2 id="horse-detail-title" className="m-0 text-[1.35rem] text-[var(--admin-primary-dark)]">{selectedHorse.name}</h2>
                                     <span className="mt-1 block text-[0.82rem] font-bold text-[var(--admin-muted)]">{selectedHorse.breed}</span>
                                 </div>
-                                <button className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[1.15rem] font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={handleCloseHorseDetail} type="button" aria-label="Close horse details">
+                                <button className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[1.15rem] font-black text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={handleCloseHorseDetail} type="button" aria-label="Close horse details">
                                     ×
                                 </button>
                             </div>
 
                             {(selectedHorseLoading || selectedHorseError) && (
-                                <div className={`mx-6 mt-4 rounded-md border px-4 py-3 text-[0.82rem] font-bold ${selectedHorseError ? 'border-[#e7a49a] bg-[#ffe8e4] text-[var(--admin-primary)]' : 'border-[var(--admin-border)] bg-[#fff8f6] text-[var(--admin-muted)]'}`}>
+                                <div className={`mx-6 mt-4 rounded-md border px-4 py-3 text-[0.82rem] font-bold ${selectedHorseError ? 'border-[#e7a49a] bg-[#e8f7ef] text-[var(--admin-primary)]' : 'border-[var(--admin-border)] bg-[#fff8f6] text-[var(--admin-muted)]'}`}>
                                     {selectedHorseError || 'Loading horse detail...'}
                                 </div>
                             )}
@@ -540,7 +540,7 @@ function HorseManagement() {
                                         src={selectedHorse.imageUrl ? resolveFileUrl(selectedHorse.imageUrl) : horseRacing}
                                     />
                                     <div className="rounded-md border border-[var(--admin-border)] bg-[#fffdfc] p-4">
-                                        <span className="block text-[0.68rem] font-black uppercase text-[#765c58]">Health Certificate</span>
+                                        <span className="block text-[0.68rem] font-black uppercase text-[#64748b]">Health Certificate</span>
                                         <HealthCertificateLink url={selectedHorse.healthCertificateImageUrl} />
                                     </div>
                                 </div>
@@ -560,12 +560,12 @@ function HorseManagement() {
                                     </div>
 
                                     <div className="rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-4">
-                                        <span className="block text-[0.68rem] font-black uppercase text-[#765c58]">Achievement Summary</span>
-                                        <p className="mt-2 text-[0.88rem] font-semibold leading-[1.55] text-[#5f4b47]">{detailValue(selectedHorse.achievementSummary)}</p>
+                                        <span className="block text-[0.68rem] font-black uppercase text-[#64748b]">Achievement Summary</span>
+                                        <p className="mt-2 text-[0.88rem] font-semibold leading-[1.55] text-[#475569]">{detailValue(selectedHorse.achievementSummary)}</p>
                                     </div>
 
                                     <div className="flex flex-wrap justify-end gap-3">
-                                        <button className="min-h-[38px] cursor-pointer rounded-md border border-[#d89288] bg-white px-4 font-black text-[var(--admin-primary)] hover:bg-[#fff0ed]" onClick={() => handleUpdateHorseApproval(selectedHorse, 'Banned')} type="button">Reject</button>
+                                        <button className="min-h-[38px] cursor-pointer rounded-md border border-[#d89288] bg-white px-4 font-black text-[var(--admin-primary)] hover:bg-[#e8f7ef]" onClick={() => handleUpdateHorseApproval(selectedHorse, 'Banned')} type="button">Reject</button>
                                         <button className="min-h-[38px] cursor-pointer rounded-md bg-[var(--admin-primary)] px-4 font-black text-white hover:bg-[var(--admin-primary-dark)]" onClick={() => handleUpdateHorseApproval(selectedHorse, 'Active')} type="button">Confirm</button>
                                     </div>
                                 </div>

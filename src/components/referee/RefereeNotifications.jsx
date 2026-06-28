@@ -122,7 +122,7 @@ function RefereeNotification() {
         >
             <div className="min-h-screen bg-[#faf8f8] p-8">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-[#7d0000]">
+                    <h1 className="text-3xl font-bold text-[#0b7f5a]">
                         Referee Notifications
                     </h1>
 
@@ -138,7 +138,7 @@ function RefereeNotification() {
                 )}
 
                 <div className="mb-8 flex flex-wrap gap-5">
-                    <div className="flex w-56 justify-between rounded-[8px] border border-[#ead3cf] bg-white p-5">
+                    <div className="flex w-56 justify-between rounded-[8px] border border-[#dce5ef] bg-white p-5">
                         <div>
                             <p className="text-sm uppercase text-gray-500">
                                 Total Notifications
@@ -149,10 +149,10 @@ function RefereeNotification() {
                             </h3>
                         </div>
 
-                        <FaBell className="text-[#8b0000]" size={22} />
+                        <FaBell className="text-[#0b7f5a]" size={22} />
                     </div>
 
-                    <div className="flex w-56 justify-between rounded-[8px] border border-[#ead3cf] bg-white p-5">
+                    <div className="flex w-56 justify-between rounded-[8px] border border-[#dce5ef] bg-white p-5">
                         <div>
                             <p className="text-sm uppercase text-gray-500">
                                 Unread Alerts
@@ -166,11 +166,11 @@ function RefereeNotification() {
                         <FaExclamationTriangle className="text-red-500" size={22} />
                     </div>
 
-                    <div className="flex items-center gap-3 rounded-[8px] border border-[#ead3cf] bg-white p-4">
+                    <div className="flex items-center gap-3 rounded-[8px] border border-[#dce5ef] bg-white p-4">
                         <select
                             value={filter}
                             onChange={(event) => setFilter(event.target.value)}
-                            className="rounded border border-[#ead3cf] px-3 py-2 font-semibold outline-none focus:border-[#7d0000]"
+                            className="rounded border border-[#dce5ef] px-3 py-2 font-semibold outline-none focus:border-[#0b7f5a]"
                         >
                             <option value="all">All</option>
                             <option value="unread">Unread</option>
@@ -181,7 +181,7 @@ function RefereeNotification() {
                             type="button"
                             onClick={handleMarkAllRead}
                             disabled={saving || unreadCount === 0}
-                            className="rounded-lg bg-[#8b0000] px-5 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                            className="rounded-lg bg-[#0b7f5a] px-5 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {saving ? 'Updating...' : 'Mark All Read'}
                         </button>
@@ -191,11 +191,11 @@ function RefereeNotification() {
                 <div className="grid gap-8 xl:grid-cols-[360px_1fr]">
                     <div className="space-y-2">
                         {loading ? (
-                            <div className="rounded-[8px] border border-[#ead3cf] bg-white p-5 text-gray-500">
+                            <div className="rounded-[8px] border border-[#dce5ef] bg-white p-5 text-gray-500">
                                 Loading notifications...
                             </div>
                         ) : filteredNotifications.length === 0 ? (
-                            <div className="rounded-[8px] border border-[#ead3cf] bg-white p-5 text-gray-500">
+                            <div className="rounded-[8px] border border-[#dce5ef] bg-white p-5 text-gray-500">
                                 No notifications for this filter.
                             </div>
                         ) : (
@@ -204,7 +204,7 @@ function RefereeNotification() {
                                     type="button"
                                     key={item.notificationId}
                                     onClick={() => handleSelect(item)}
-                                    className={`w-full cursor-pointer rounded-[8px] border border-[#ead3cf] bg-white p-4 text-left hover:bg-[#faf5f4] ${selectedNotification?.notificationId === item.notificationId ? 'ring-2 ring-[#8b0000]' : ''
+                                    className={`w-full cursor-pointer rounded-[8px] border border-[#dce5ef] bg-white p-4 text-left hover:bg-[#faf5f4] ${selectedNotification?.notificationId === item.notificationId ? 'ring-2 ring-[#0b7f5a]' : ''
                                         }`}
                                 >
                                     <div className="flex justify-between gap-3">
@@ -232,7 +232,7 @@ function RefereeNotification() {
                     </div>
 
                     <div className="space-y-4">
-                        <div className="overflow-hidden rounded-[8px] border border-[#ead3cf] bg-white">
+                        <div className="overflow-hidden rounded-[8px] border border-[#dce5ef] bg-white">
                             {selectedNotification ? (
                                 <>
                                     <div className="flex items-center justify-between border-b p-4">
@@ -268,7 +268,7 @@ function RefereeNotification() {
                                                 type="button"
                                                 onClick={() => handleSelect(selectedNotification)}
                                                 disabled={selectedNotification.isRead}
-                                                className="rounded-lg bg-[#8b0000] px-5 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                                className="rounded-lg bg-[#0b7f5a] px-5 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
                                             >
                                                 Mark as Read
                                             </button>
@@ -282,9 +282,9 @@ function RefereeNotification() {
                             )}
                         </div>
 
-                        <div className="rounded-[8px] border border-[#ead3cf] bg-white p-5">
+                        <div className="rounded-[8px] border border-[#dce5ef] bg-white p-5">
                             <h3 className="mb-5 flex items-center gap-2 font-semibold">
-                                <FaInfoCircle className="text-[#8b0000]" />
+                                <FaInfoCircle className="text-[#0b7f5a]" />
                                 Recent Referee Activity
                             </h3>
 

@@ -58,13 +58,13 @@ export default function RegistrationJourney() {
                         {i > 0 && (
                             <div style={{
                                 ...styles.line,
-                                backgroundColor: step.isCompleted ? "#8B0000" : "#ddd",
+                                backgroundColor: step.isCompleted ? "#0b7f5a" : "#ddd",
                             }} />
                         )}
                         <div style={styles.step}>
                             <div style={{
                                 ...styles.circle,
-                                backgroundColor: step.isCompleted ? "#8B0000" : "#fff",
+                                backgroundColor: step.isCompleted ? "#0b7f5a" : "#fff",
                                 color: step.isCompleted ? "#fff" : "#999",
                                 border: step.isCompleted ? "none" : "2px solid #ddd",
                             }}>

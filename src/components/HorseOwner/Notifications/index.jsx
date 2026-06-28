@@ -22,8 +22,8 @@ const emptySummary = {
 const statusColorMap = {
     approved: { bg: "#dff7e9", color: "#118548" },
     confirmed: { bg: "#e3f2fd", color: "#1565c0" },
-    returned: { bg: "#f5e1df", color: "#860707" },
-    rejected: { bg: "#f5e1df", color: "#860707" },
+    returned: { bg: "#f5e1df", color: "#0b7f5a" },
+    rejected: { bg: "#f5e1df", color: "#0b7f5a" },
     pending: { bg: "#fff3cd", color: "#856404" },
 };
 
@@ -36,7 +36,7 @@ const iconByCategory = {
 function getStatusStyle(statusLabel) {
     return statusColorMap[String(statusLabel || "").toLowerCase()] || {
         bg: "#f3e8e6",
-        color: "#765c58",
+        color: "#64748b",
     };
 }
 
@@ -152,7 +152,7 @@ export default function Notifications() {
 
                         return (
                             <div className="flex items-center gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5" key={stat.label}>
-                                <span className="grid h-10 w-10 place-items-center rounded-md bg-[#fff1ef] text-[var(--admin-primary)]">
+                                <span className="grid h-10 w-10 place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
                                     <Icon aria-hidden="true" />
                                 </span>
                                 <div>
@@ -167,7 +167,7 @@ export default function Notifications() {
                 <div className="flex items-center gap-1 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-1 max-[720px]:flex-wrap">
                     {tabs.map((tab) => (
                         <button
-                            className={`cursor-pointer rounded-md border-0 px-4 py-2 text-[0.82rem] font-bold transition-colors ${activeTab === tab ? "bg-[var(--admin-primary)] text-white" : "bg-transparent text-[var(--admin-muted)] hover:bg-[#f8dfda]"}`}
+                            className={`cursor-pointer rounded-md border-0 px-4 py-2 text-[0.82rem] font-bold transition-colors ${activeTab === tab ? "bg-[var(--admin-primary)] text-white" : "bg-transparent text-[var(--admin-muted)] hover:bg-[#e8f7ef]"}`}
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             type="button"
@@ -176,7 +176,7 @@ export default function Notifications() {
                         </button>
                     ))}
                     <button
-                        className="ml-auto cursor-pointer rounded-md border-0 bg-transparent px-3 py-2 text-[0.82rem] font-bold text-[var(--admin-primary)] hover:bg-[#f8dfda] max-[720px]:ml-0"
+                        className="ml-auto cursor-pointer rounded-md border-0 bg-transparent px-3 py-2 text-[0.82rem] font-bold text-[var(--admin-primary)] hover:bg-[#e8f7ef] max-[720px]:ml-0"
                         onClick={() => setReloadKey((current) => current + 1)}
                         type="button"
                     >
@@ -211,7 +211,7 @@ export default function Notifications() {
                                 onClick={() => handleNotificationClick(notification)}
                                 type="button"
                             >
-                                <span className="grid h-10 w-10 flex-none place-items-center rounded-md bg-[#fff1ef] text-[var(--admin-primary)]">
+                                <span className="grid h-10 w-10 flex-none place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
                                     <Icon aria-hidden="true" />
                                 </span>
                                 <div className="min-w-0 flex-1">

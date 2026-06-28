@@ -93,7 +93,7 @@ function AcceptedRaces() {
                 {/* Summary Cards */}
                 <section className="grid grid-cols-2 gap-5 max-[720px]:grid-cols-1">
                     <article className="flex items-center gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5">
-                        <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#ffe8e4] text-[var(--admin-primary)]">
+                        <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#e8f7ef] text-[var(--admin-primary)]">
                             <FaCheckCircle />
                         </div>
                         <div>
@@ -213,7 +213,7 @@ function AcceptedRaces() {
 
                             <div className="grid gap-4 p-6">
                                 {(selectedRaceLoading || selectedRaceError) && (
-                                    <div className={`rounded-md border px-4 py-3 text-[0.82rem] font-bold ${selectedRaceError ? 'border-[#e7a49a] bg-[#ffe8e4] text-[var(--admin-primary)]' : 'border-[var(--admin-border)] bg-[#fff8f6] text-[var(--admin-muted)]'}`}>
+                                    <div className={`rounded-md border px-4 py-3 text-[0.82rem] font-bold ${selectedRaceError ? 'border-[#e7a49a] bg-[#e8f7ef] text-[var(--admin-primary)]' : 'border-[var(--admin-border)] bg-[#fff8f6] text-[var(--admin-muted)]'}`}>
                                         {selectedRaceError || 'Loading race detail...'}
                                     </div>
                                 )}
@@ -238,7 +238,7 @@ function AcceptedRaces() {
                                 </div>
 
                                 <button
-                                    className="inline-flex min-h-[40px] cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-4 font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]"
+                                    className="inline-flex min-h-[40px] cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-4 font-black text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]"
                                     onClick={handleCloseRaceDetail}
                                     type="button"
                                 >

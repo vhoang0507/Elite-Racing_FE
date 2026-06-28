@@ -1,8 +1,4 @@
 import {
-    useState,
-} from 'react';
-
-import {
     Link,
     useNavigate,
 } from 'react-router-dom';
@@ -105,13 +101,9 @@ function AdminLayout({
     searchPlaceholder = 'Search records, horses, races...',
 }) {
     const navigate = useNavigate();
-    const [isProfileOpen, setIsProfileOpen] = useState(false);
     const authUser = getAuthUser();
     const accountName = readUserField(authUser, 'fullName') || 'Admin';
     const accountRole = readUserField(authUser, 'role') || 'Admin';
-    const accountEmail = readUserField(authUser, 'email') || 'No email loaded';
-    const accountStatus = readUserField(authUser, 'status') || 'N/A';
-    const accountId = readUserField(authUser, 'userId') || readUserField(authUser, 'id');
     const accountInitials = getInitials(accountName);
 
     const handleLogout = () => {
@@ -210,69 +202,24 @@ function AdminLayout({
                         />
                     </label>
 
-                    <div className="flex items-center gap-2 max-[720px]:justify-end">
+                    <div className="flex items-center gap-3 max-[720px]:justify-end">
                         <button aria-label="Notifications" className={iconButtonClasses} onClick={() => navigate('/admin/notifications')} type="button">
                             <FaBell aria-hidden="true" />
                             <span className="absolute right-2.5 top-[9px] h-2 w-2 rounded-full border-2 border-[var(--admin-surface)] bg-[var(--admin-primary)]" />
                         </button>
+                        <div className="role-header-identity max-[520px]:hidden">
+                            <span className="role-header-name">{accountName}</span>
+                            <span className="role-header-role">{accountRole}</span>
+                        </div>
                         <div className="relative">
                             <button
-                                aria-expanded={isProfileOpen}
-                                aria-label="Open account profile"
+                                aria-label="Open admin profile"
                                 className={`${iconButtonClasses} role-profile-button`}
-                                onClick={() => setIsProfileOpen((current) => !current)}
+                                onClick={() => navigate('/admin/profile')}
                                 type="button"
                             >
                                 {accountInitials}
                             </button>
-
-                            {isProfileOpen && (
-                                <section
-                                    aria-label="Account profile"
-                                    className="role-popover"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="role-avatar h-14 w-14 text-[0.95rem]">
-                                            {accountInitials}
-                                        </div>
-                                        <div className="min-w-0">
-                                            <strong className="block truncate text-[1.05rem] text-[var(--admin-ink)]">{accountName}</strong>
-                                            <span className="mt-1 inline-flex rounded-full bg-[#ffe8e4] px-2.5 py-1 text-[0.66rem] font-black text-[var(--admin-primary)]">
-                                                {accountRole.toUpperCase()}
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid gap-2 text-[0.84rem]">
-                                        <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                            <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Email</span>
-                                            <strong className="break-words text-[var(--admin-ink)]">{accountEmail}</strong>
-                                        </div>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                                <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Account ID</span>
-                                                <strong>{accountId ? `AD-${String(accountId).padStart(5, '0')}` : 'N/A'}</strong>
-                                            </div>
-                                            <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                                <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Status</span>
-                                                <strong className="text-[#0aa15f]">{accountStatus}</strong>
-                                            </div>
-                                        </div>
-                                        <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                            <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Department</span>
-                                            <strong>League Operations</strong>
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        className="secondary-button min-h-9"
-                                        onClick={() => setIsProfileOpen(false)}
-                                        type="button"
-                                    >
-                                        Close
-                                    </button>
-                                </section>
-                            )}
                         </div>
                     </div>
                 </header>

@@ -184,11 +184,15 @@ function JockeyLayout({
                         />
                     </label>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                         <button className={iconButtonClasses} type="button">
                             <FaBell />
                             <span className="absolute right-2.5 top-[9px] h-2 w-2 rounded-full border-2 border-[var(--admin-surface)] bg-[var(--admin-primary)]" />
                         </button>
+                        <div className="role-header-identity max-[520px]:hidden">
+                            <span className="role-header-name">{profile?.fullName ?? 'Jockey'}</span>
+                            <span className="role-header-role">Jockey</span>
+                        </div>
                         <div className="relative">
                             <button
                                 className={`${iconButtonClasses} role-profile-button`}
@@ -206,7 +210,7 @@ function JockeyLayout({
                                         </div>
                                         <div className="min-w-0">
                                             <strong className="block truncate text-[1.05rem] text-[var(--admin-ink)]">{profile?.fullName}</strong>
-                                            <span className="mt-1 inline-flex rounded-full bg-[#ffe8e4] px-2.5 py-1 text-[0.66rem] font-black text-[var(--admin-primary)]">
+                                            <span className="mt-1 inline-flex rounded-full bg-[#e8f7ef] px-2.5 py-1 text-[0.66rem] font-black text-[var(--admin-primary)]">
                                                 JOCKEY
                                             </span>
                                         </div>
@@ -214,16 +218,16 @@ function JockeyLayout({
 
                                     <div className="grid gap-2 text-[0.84rem]">
                                         <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                            <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Email</span>
+                                            <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Email</span>
                                             <strong className="break-words text-[var(--admin-ink)]">{profile?.email}</strong>
                                         </div>
                                         <div className="grid grid-cols-2 gap-2">
                                             <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                                <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Jockey Code</span>
+                                                <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Jockey Code</span>
                                                 <strong>{profile?.jockeyCode}</strong>
                                             </div>
                                             <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                                <span className="text-[0.66rem] font-black uppercase text-[#765c58]">Status</span>
+                                                <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Status</span>
                                                 <strong style={{ color: badge?.color ?? '#0aa15f' }}>{badge?.label ?? profile?.status}</strong>
                                             </div>
                                         </div>
@@ -257,7 +261,7 @@ function JockeyLayout({
                             boxShadow: '0 24px 60px rgba(37,18,14,0.3)',
                         }}>
                             <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🔒</div>
-                            <h3 style={{ margin: '0 0 10px', fontSize: '1.3rem', color: '#650404' }}>
+                            <h3 style={{ margin: '0 0 10px', fontSize: '1.3rem', color: '#0f172a' }}>
                                 Access Restricted
                             </h3>
                             <p style={{ margin: '0 0 8px', fontSize: '0.95rem', color: '#555', lineHeight: 1.6 }}>
@@ -275,7 +279,7 @@ function JockeyLayout({
                                     onClick={() => setLockedAlert(false)}
                                     style={{
                                         padding: '10px 22px', borderRadius: '8px',
-                                        border: '1px solid #edcfc9', backgroundColor: '#fff',
+                                        border: '1px solid #dce5ef', backgroundColor: '#fff',
                                         color: '#555', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem',
                                     }}
                                 >
@@ -286,7 +290,7 @@ function JockeyLayout({
                                         onClick={() => { setLockedAlert(false); navigate('/jockey/settings'); }}
                                         style={{
                                             padding: '10px 22px', borderRadius: '8px',
-                                            border: 'none', backgroundColor: '#8B0000',
+                                            border: 'none', backgroundColor: '#0b7f5a',
                                             color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem',
                                         }}
                                     >

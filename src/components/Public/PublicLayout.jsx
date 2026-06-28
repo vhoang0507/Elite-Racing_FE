@@ -25,7 +25,7 @@ export function PublicHeader({ showSearch = true }) {
 
                 <Link
                     to="/register"
-                    className="rounded-[6px] bg-[var(--racing-primary)] px-5 py-2.5 text-white no-underline shadow-[0_10px_20px_rgba(134,7,7,0.16)] hover:bg-[var(--racing-primary-dark)]"
+                    className="rounded-[6px] bg-[var(--racing-primary)] px-5 py-2.5 text-white no-underline shadow-[0_10px_20px_rgba(16,185,129,0.16)] hover:bg-[var(--racing-primary-dark)]"
                 >
                     Sign Up
                 </Link>
@@ -36,7 +36,7 @@ export function PublicHeader({ showSearch = true }) {
 
 export function PublicFooter() {
     return (
-        <footer className="flex flex-col gap-4 border-t border-[var(--racing-border)] bg-[#fff3ef] px-6 py-8 md:flex-row md:items-center md:justify-between md:px-11">
+        <footer className="flex flex-col gap-4 border-t border-[var(--racing-border)] bg-[#e8f7ef] px-6 py-8 md:flex-row md:items-center md:justify-between md:px-11">
             <Link to="/" className="text-lg font-black text-[var(--racing-primary)] no-underline">
                 Elite Racing League
             </Link>

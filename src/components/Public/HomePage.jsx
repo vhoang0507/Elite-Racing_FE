@@ -40,7 +40,7 @@ const leaderboardRows = [
         jockey: 'M. Chen',
         owner: 'Oakwood Farms',
         time: '1:59.85',
-        style: 'bg-[#f3dad6]',
+        style: 'bg-[#dbeafe]',
     },
     {
         pos: 3,
@@ -48,7 +48,7 @@ const leaderboardRows = [
         jockey: 'T. Baker',
         owner: 'Highland Syndicate',
         time: '2:00.12',
-        style: 'bg-[#efc7c1]',
+        style: 'bg-[#e8f7ef]',
     },
 ];
 
@@ -66,7 +66,7 @@ export default function HomePage() {
                 <div className="absolute inset-x-0 bottom-0 h-[230px] bg-gradient-to-b from-transparent to-[var(--racing-bg)]" />
 
                 <div className="relative z-10 mx-auto flex min-h-[640px] max-w-5xl flex-col items-center justify-center px-6 text-center text-white">
-                    <span className="mb-6 rounded-full border border-[#d9a19a] bg-[#fff0ed]/90 px-4 py-2 text-xs font-black uppercase tracking-wide text-[var(--racing-primary)]">
+                    <span className="mb-6 rounded-full border border-[#d9a19a] bg-[#e8f7ef]/90 px-4 py-2 text-xs font-black uppercase tracking-wide text-[var(--racing-primary)]">
                         ● The Pinnacle of Equine Competition
                     </span>
 
@@ -81,7 +81,7 @@ export default function HomePage() {
                     <div className="mt-8 flex flex-col gap-4 sm:flex-row">
                         <Link
                             to="/explore-tournaments"
-                            className="rounded-[6px] bg-[var(--racing-primary)] px-7 py-4 text-sm font-black text-white no-underline shadow-[0_14px_28px_rgba(134,7,7,0.25)] hover:bg-[var(--racing-primary-dark)]"
+                            className="rounded-[6px] bg-[var(--racing-primary)] px-7 py-4 text-sm font-black text-white no-underline shadow-[0_14px_28px_rgba(16,185,129,0.25)] hover:bg-[var(--racing-primary-dark)]"
                         >
                             Explore Tournaments
                         </Link>
@@ -188,7 +188,7 @@ export default function HomePage() {
                 </div>
             </section>
 
-            <section className="border-y border-[var(--racing-border)] bg-[#fff0ee] px-6 py-16 md:px-11">
+            <section className="border-y border-[var(--racing-border)] bg-[#eef4ff] px-6 py-16 md:px-11">
                 <div className="mx-auto max-w-7xl">
                     <div className="mb-8 text-center">
                         <h2 className="m-0 text-3xl font-black tracking-[-0.03em]">
@@ -199,7 +199,7 @@ export default function HomePage() {
                         </p>
                     </div>
 
-                    <div className="overflow-hidden rounded-[10px] border border-[var(--racing-border)] bg-[#fffaf8] shadow-[0_20px_46px_rgba(70,32,26,0.08)]">
+                    <div className="overflow-hidden rounded-[10px] border border-[var(--racing-border)] bg-white shadow-[0_20px_46px_rgba(15,23,42,0.08)]">
                         <div className="flex items-center justify-between px-5 py-4">
                             <h3 className="m-0 text-lg font-black">
                                 Kentucky Derby Select - Final
@@ -215,7 +215,7 @@ export default function HomePage() {
 
                         <div className="overflow-x-auto">
                             <table className="w-full min-w-[720px] border-collapse text-left text-sm">
-                                <thead className="bg-[#fff7f5] text-xs uppercase tracking-wide text-[var(--racing-muted)]">
+                                <thead className="bg-[#f1f5ff] text-xs uppercase tracking-wide text-[var(--racing-muted)]">
                                     <tr>
                                         <th className="px-5 py-3">Pos</th>
                                         <th className="px-5 py-3">Horse / Jockey</th>
@@ -226,7 +226,7 @@ export default function HomePage() {
 
                                 <tbody>
                                     {leaderboardRows.map((row) => (
-                                        <tr key={row.pos} className="border-t border-[#f1dcd8]">
+                                        <tr key={row.pos} className="border-t border-[#dce5ef]">
                                             <td className="px-5 py-4">
                                                 <span className={`grid h-8 w-8 place-items-center rounded-full text-sm font-black ${row.style}`}>
                                                     {row.pos}

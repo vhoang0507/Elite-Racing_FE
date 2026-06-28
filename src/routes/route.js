@@ -24,6 +24,7 @@ import Notifications from '../components/admin/Notifications';
 import PredictionManagement from '../components/admin/PredictionManagement';
 import RaceManagement from '../components/admin/RaceManagement';
 import RegistrationManagement from '../components/admin/RegistrationManagement';
+import AdminProfile from '../components/admin/AdminProfile';
 import AdminSystemTime from '../components/admin/AdminSystemTime';
 import UserManagement from '../components/admin/UserManagement';
 import ValidateResultDetail from '../components/admin/ValidateResultDetail';
@@ -141,6 +142,10 @@ const appRoutes = [
     {
         path: '/admin/system-time',
         element: createElement(AdminSystemTime),
+    },
+    {
+        path: '/admin/profile',
+        element: createElement(AdminProfile),
     },
 
     {

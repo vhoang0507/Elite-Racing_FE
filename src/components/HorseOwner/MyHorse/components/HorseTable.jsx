@@ -244,5 +244,5 @@ const styles = {
     pageInfo: { fontSize: "13px", color: "#999" },
     pages: { display: "flex", gap: "6px" },
     pageBtn: { width: "32px", height: "32px", borderRadius: "6px", border: "1px solid #ddd", background: "#fff", cursor: "pointer", fontSize: "13px" },
-    activePage: { backgroundColor: "#8B0000", color: "#fff", border: "none" },
+    activePage: { backgroundColor: "#e8f7ef", color: "#064e3b", border: "1px solid #0b7f5a", fontWeight: "700" },
 };

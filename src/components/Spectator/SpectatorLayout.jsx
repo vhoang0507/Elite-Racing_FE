@@ -111,7 +111,7 @@ function SpectatorLayout({ activeKey, children }) {
                         <FaSearch />
                         <input placeholder="Search records, horses, races..." type="search" />
                     </label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                         <button
                             className={iconButtonClasses}
                             type="button"
@@ -125,6 +125,10 @@ function SpectatorLayout({ activeKey, children }) {
                                 </span>
                             )}
                         </button>
+                        <div className="role-header-identity max-[520px]:hidden">
+                            <span className="role-header-name">{user?.fullName ?? 'Spectator'}</span>
+                            <span className="role-header-role">Spectator</span>
+                        </div>
                         <div className="relative">
                             <button
                                 className={`${iconButtonClasses} role-profile-button`}

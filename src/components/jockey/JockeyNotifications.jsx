@@ -252,7 +252,7 @@ function JockeyNotifications() {
                                     </div>
                                 )}
                                 {detailError && (
-                                    <div className="mb-4 rounded-md border border-[#e7a49a] bg-[#ffe8e4] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-primary)]">
+                                    <div className="mb-4 rounded-md border border-[#e7a49a] bg-[#e8f7ef] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-primary)]">
                                         {detailError}
                                     </div>
                                 )}

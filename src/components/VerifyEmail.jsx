@@ -90,7 +90,7 @@ const VerifyEmail = () => {
                             className="h-12 w-12 object-contain"
                         />
 
-                        <h2 className="text-[2.2rem] font-extrabold italic text-[#8B0000]">
+                        <h2 className="text-[2.2rem] font-extrabold italic text-[#0b7f5a]">
                             Elite Racing League
                         </h2>
                     </div>
@@ -142,7 +142,7 @@ const VerifyEmail = () => {
                         )}
 
                         {error && (
-                            <div className="mb-4 rounded-[10px] border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-sm font-semibold text-[#8B0000]">
+                            <div className="mb-4 rounded-[10px] border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-sm font-semibold text-[#b91c1c]">
                                 {error}
                             </div>
                         )}
@@ -150,7 +150,7 @@ const VerifyEmail = () => {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="mb-4 h-[52px] w-full cursor-pointer rounded-[8px] bg-[#a30000] text-base font-bold text-white shadow-[0_12px_24px_rgba(139,0,0,0.16)]"
+                            className="mb-4 h-[52px] w-full cursor-pointer rounded-[8px] bg-[#0b7f5a] text-base font-bold text-white shadow-[0_12px_24px_rgba(16,185,129,0.16)]"
                         >
                             {isSubmitting ? 'Verifying...' : 'Verify Email'}
                         </button>
@@ -159,13 +159,13 @@ const VerifyEmail = () => {
                             type="button"
                             disabled={isResending || !email}
                             onClick={handleResend}
-                            className="mb-[22px] h-[52px] w-full cursor-pointer rounded-[8px] border border-[#8B0000] bg-white text-base font-bold text-[#8B0000]"
+                            className="mb-[22px] h-[52px] w-full cursor-pointer rounded-[8px] border border-[#0b7f5a] bg-white text-base font-bold text-[#0b7f5a]"
                         >
                             {isResending ? 'Sending...' : 'Resend OTP'}
                         </button>
 
                         <div className="text-center text-[0.95rem]">
-                            <Link className="font-bold text-[#8B0000] no-underline" to="/login">
+                            <Link className="font-bold text-[#0b7f5a] no-underline" to="/login">
                                 Back to Login
                             </Link>
                         </div>

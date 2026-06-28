@@ -280,7 +280,7 @@ function RefereeLayout({
                         />
                     </label>
 
-                    <div className="flex items-center gap-2 max-[720px]:justify-end">
+                    <div className="flex items-center gap-3 max-[720px]:justify-end">
                         <button
                             type="button"
                             onClick={() => navigate('/referee/notifications')}
@@ -294,6 +294,11 @@ function RefereeLayout({
                                 </span>
                             )}
                         </button>
+
+                        <div className="role-header-identity max-[520px]:hidden">
+                            <span className="role-header-name">{fullName}</span>
+                            <span className="role-header-role">Race Referee</span>
+                        </div>
 
                         <div className="relative">
                             <button
@@ -316,7 +321,7 @@ function RefereeLayout({
                                             <strong className="block truncate text-[1.05rem] text-[var(--admin-ink)]">
                                                 {fullName}
                                             </strong>
-                                            <span className="mt-1 inline-flex rounded-full bg-[#ffe8e4] px-2.5 py-1 text-[0.66rem] font-black text-[var(--admin-primary)]">
+                                            <span className="mt-1 inline-flex rounded-full bg-[#e8f7ef] px-2.5 py-1 text-[0.66rem] font-black text-[var(--admin-primary)]">
                                                 RACE REFEREE
                                             </span>
                                         </div>
@@ -324,7 +329,7 @@ function RefereeLayout({
 
                                     <div className="grid gap-2 text-[0.84rem]">
                                         <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                            <span className="text-[0.66rem] font-black uppercase text-[#765c58]">
+                                            <span className="text-[0.66rem] font-black uppercase text-[#64748b]">
                                                 Email
                                             </span>
                                             <strong className="break-words text-[var(--admin-ink)]">
@@ -333,13 +338,13 @@ function RefereeLayout({
                                         </div>
                                         <div className="grid grid-cols-2 gap-2">
                                             <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                                <span className="text-[0.66rem] font-black uppercase text-[#765c58]">
+                                                <span className="text-[0.66rem] font-black uppercase text-[#64748b]">
                                                     Referee ID
                                                 </span>
                                                 <strong>{userId ? `RF-${String(userId).padStart(5, '0')}` : 'N/A'}</strong>
                                             </div>
                                             <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                                <span className="text-[0.66rem] font-black uppercase text-[#765c58]">
+                                                <span className="text-[0.66rem] font-black uppercase text-[#64748b]">
                                                     Status
                                                 </span>
                                                 <strong style={{ color: badge?.color ?? '#0aa15f' }}>

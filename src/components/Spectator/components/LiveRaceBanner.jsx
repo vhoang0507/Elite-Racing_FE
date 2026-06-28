@@ -32,7 +32,7 @@ const styles = {
     img: { width: "100%", height: "200px", objectFit: "cover" },
     overlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, background: "linear-gradient(to right, rgba(0,0,0,0.8) 40%, transparent)", padding: "24px", display: "flex", flexDirection: "column", justifyContent: "center" },
     tags: { display: "flex", gap: "8px", marginBottom: "8px" },
-    liveTag: { backgroundColor: "#8B0000", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "4px" },
+    liveTag: { backgroundColor: "#0b7f5a", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "4px" },
     locationTag: { backgroundColor: "rgba(255,255,255,0.2)", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "4px" },
     title: { color: "#fff", margin: "0 0 12px", fontSize: "28px", fontWeight: "bold" },
     info: { display: "flex", gap: "24px", marginBottom: "16px" },
@@ -40,6 +40,6 @@ const styles = {
     prizeValue: { margin: "2px 0 0", color: "#FFD700", fontWeight: "bold", fontSize: "18px" },
     infoValue: { margin: "2px 0 0", color: "#fff", fontWeight: "bold", fontSize: "16px" },
     buttons: { display: "flex", gap: "12px" },
-    primaryBtn: { backgroundColor: "#8B0000", color: "#fff", border: "none", borderRadius: "8px", padding: "10px 20px", cursor: "pointer", fontSize: "14px", fontWeight: "bold" },
+    primaryBtn: { backgroundColor: "#0b7f5a", color: "#fff", border: "none", borderRadius: "8px", padding: "10px 20px", cursor: "pointer", fontSize: "14px", fontWeight: "bold" },
     secondaryBtn: { backgroundColor: "transparent", color: "#fff", border: "1px solid #fff", borderRadius: "8px", padding: "10px 20px", cursor: "pointer", fontSize: "14px" },
 };

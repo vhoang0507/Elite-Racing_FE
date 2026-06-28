@@ -104,11 +104,15 @@ function HorseOwnerLayout({ activeKey, children }) {
                         <FaSearch />
                         <input placeholder="Search records, horses, races..." type="search" />
                     </label>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                         <button className={iconButtonClasses} type="button">
                             <FaBell />
                             <span className="absolute right-2.5 top-[9px] h-2 w-2 rounded-full border-2 border-[var(--admin-surface)] bg-[var(--admin-primary)]" />
                         </button>
+                        <div className="role-header-identity max-[520px]:hidden">
+                            <span className="role-header-name">{user?.fullName ?? 'Horse Owner'}</span>
+                            <span className="role-header-role">Horse Owner</span>
+                        </div>
                         <div className="relative">
                             <button
                                 className={`${iconButtonClasses} role-profile-button`}

@@ -144,7 +144,7 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                         <div style={styles.infoRow}><span>📍</span><div><small>LOCATION</small><p>{tournament.location}</p></div></div>
                         <div style={styles.infoRow}><span>👥</span><div><small>SLOTS LEFT</small><p>{tournament.availableSlots} / {tournament.maxHorses}</p></div></div>
                         <div style={styles.infoRow}><span>📏</span><div><small>DISTANCE</small><p>{tournament.distanceMeters} m</p></div></div>
-                        <div style={styles.infoRow}><span>💰</span><div><small>PRIZE POOL</small><h3 style={{ margin: 0, color: "#8B0000" }}>${Number(tournament.prizePool).toLocaleString()}</h3></div></div>
+                        <div style={styles.infoRow}><span>💰</span><div><small>PRIZE POOL</small><h3 style={{ margin: 0, color: "#0b7f5a" }}>${Number(tournament.prizePool).toLocaleString()}</h3></div></div>
                         <p style={{ fontSize: "11px", color: "#999", marginTop: "8px" }}>
                             ⚠️ Registrations require admin approval before race participation.
                         </p>
@@ -168,7 +168,7 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                                             ...styles.horseCard,
                                             opacity: horse.isEligible ? 1 : 0.5,
                                             cursor: horse.isEligible ? "pointer" : "not-allowed",
-                                            border: selectedHorse?.horseId === horse.horseId ? "2px solid #8B0000" : "1px solid #eee",
+                                            border: selectedHorse?.horseId === horse.horseId ? "2px solid #0b7f5a" : "1px solid #eee",
                                         }}
                                     >
                                         <div style={{ flex: 1 }}>
@@ -232,7 +232,7 @@ const styles = {
     imgWrapper: { position: "relative" },
     img: { width: "100%", height: "160px", objectFit: "cover", borderRadius: "12px 12px 0 0" },
     imgOverlay: { position: "absolute", bottom: "16px", left: "16px" },
-    upcomingBadge: { backgroundColor: "#8B0000", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "4px" },
+    upcomingBadge: { backgroundColor: "#0b7f5a", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "4px" },
     tournamentName: { color: "#fff", margin: "4px 0 0", fontSize: "22px", textShadow: "0 1px 3px rgba(0,0,0,0.5)" },
     closeBtn: { position: "absolute", top: "12px", right: "12px", background: "rgba(0,0,0,0.4)", color: "#fff", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", fontSize: "14px" },
     body: { display: "grid", gridTemplateColumns: "240px 1fr", gap: "0" },
@@ -242,10 +242,10 @@ const styles = {
     stepTitle: { fontSize: "11px", color: "#999", fontWeight: "700", letterSpacing: "1px", margin: "0 0 10px" },
     input: { width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "13px", boxSizing: "border-box" },
     horseCard: { display: "flex", gap: "12px", padding: "12px", borderRadius: "8px", marginBottom: "4px" },
-    certificateLink: { display: "inline-flex", alignItems: "center", gap: "7px", color: "#8B0000", fontSize: "11px", fontWeight: "700", textDecoration: "none" },
-    certificateThumb: { width: "38px", height: "28px", borderRadius: "6px", border: "1px solid #ead3cf", objectFit: "cover", backgroundColor: "#fff8f6" },
-    certificateMissing: { display: "inline-flex", borderRadius: "999px", backgroundColor: "#f4ecea", color: "#705f5b", fontSize: "11px", fontWeight: "700", padding: "3px 8px" },
+    certificateLink: { display: "inline-flex", alignItems: "center", gap: "7px", color: "#0b7f5a", fontSize: "11px", fontWeight: "700", textDecoration: "none" },
+    certificateThumb: { width: "38px", height: "28px", borderRadius: "6px", border: "1px solid #dce5ef", objectFit: "cover", backgroundColor: "#fff8f6" },
+    certificateMissing: { display: "inline-flex", borderRadius: "999px", backgroundColor: "#f4ecea", color: "#64748b", fontSize: "11px", fontWeight: "700", padding: "3px 8px" },
     closedNotice: { color: "#b91c1c", backgroundColor: "#fee2e2", borderRadius: "8px", fontSize: "13px", fontWeight: 700, marginBottom: "8px", padding: "8px 10px" },
-    submitBtn: { flex: 1, padding: "10px", backgroundColor: "#8B0000", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px", fontWeight: "bold" },
+    submitBtn: { flex: 1, padding: "10px", backgroundColor: "#0b7f5a", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px", fontWeight: "bold" },
     cancelBtn: { padding: "10px 20px", backgroundColor: "#fff", border: "1px solid #ddd", borderRadius: "8px", cursor: "pointer", fontSize: "14px" },
 };

@@ -8,8 +8,8 @@ const MEDAL = { 1: '🥇', 2: '🥈', 3: '🥉' };
 function WinRateBar({ rate = 0 }) {
     return (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 80, height: 6, borderRadius: 99, background: '#f1e2df', overflow: 'hidden' }}>
-                <div style={{ height: '100%', background: '#7d0000', borderRadius: 99, width: `${Math.min(100, rate)}%` }} />
+            <div style={{ width: 80, height: 6, borderRadius: 99, background: '#dce5ef', overflow: 'hidden' }}>
+                <div style={{ height: '100%', background: '#0b7f5a', borderRadius: 99, width: `${Math.min(100, rate)}%` }} />
             </div>
             <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--admin-muted)' }}>{rate}%</span>
         </div>
@@ -102,9 +102,9 @@ export default function Leaderboard() {
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: 6,
                                         padding: '7px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                                        border: activeTab === t.key ? 'none' : '1px solid #edcfc9',
-                                        background: activeTab === t.key ? '#7d0000' : '#fff8f6',
-                                        color: activeTab === t.key ? '#fff' : '#7d0000',
+                                        border: activeTab === t.key ? 'none' : '1px solid #dce5ef',
+                                        background: activeTab === t.key ? '#0b7f5a' : '#fff8f6',
+                                        color: activeTab === t.key ? '#fff' : '#0b7f5a',
                                     }}
                                 >
                                     <Icon /> {t.label}
@@ -142,12 +142,12 @@ export default function Leaderboard() {
                                             </td>
                                             <td>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                    <span style={{ width: 32, height: 32, borderRadius: '50%', background: '#f7efee', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>🐴</span>
+                                                    <span style={{ width: 32, height: 32, borderRadius: '50%', background: '#e8f7ef', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>🐴</span>
                                                     <span style={{ fontWeight: 700 }}>{h.horseName}</span>
                                                 </div>
                                             </td>
                                             <td style={{ color: 'var(--admin-muted)' }}>{h.ownerName ?? '—'}</td>
-                                            <td><span style={{ fontWeight: 900, color: '#7d0000' }}>{h.wins ?? 0}</span></td>
+                                            <td><span style={{ fontWeight: 900, color: '#0b7f5a' }}>{h.wins ?? 0}</span></td>
                                             <td style={{ color: 'var(--admin-muted)' }}>{h.totalRaces ?? 0}</td>
                                             <td><WinRateBar rate={h.winRate ?? 0} /></td>
                                         </tr>
@@ -184,10 +184,10 @@ export default function Leaderboard() {
                                                 <td>
                                                     <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                                         {p.spectatorName}
-                                                        {isMe && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: '#f7efee', color: '#7d0000' }}>You</span>}
+                                                        {isMe && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: '#e8f7ef', color: '#0b7f5a' }}>You</span>}
                                                     </span>
                                                 </td>
-                                                <td><span style={{ fontWeight: 900, color: '#7d0000' }}>{p.points ?? 0} pts</span></td>
+                                                <td><span style={{ fontWeight: 900, color: '#0b7f5a' }}>{p.points ?? 0} pts</span></td>
                                                 <td style={{ color: '#118548', fontWeight: 700 }}>{p.correctPredictions ?? 0}</td>
                                                 <td><WinRateBar rate={p.accuracy ?? 0} /></td>
                                             </tr>

@@ -32,7 +32,7 @@ const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-7 px-11 
 const statClass = {
     total: {
         accent: 'before:bg-[var(--admin-primary)]',
-        soft: 'bg-[#fff1ef]',
+        soft: 'bg-[#e8f7ef]',
         ink: 'text-[var(--admin-primary)]',
     },
     active: {
@@ -167,13 +167,13 @@ const getRefereeNames = (tournament) => {
 };
 
 const filterSelectClass = 'h-full w-full min-w-0 cursor-pointer border-0 bg-transparent p-0 text-[0.8rem] font-extrabold text-[#5b403c] outline-0';
-const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
+const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]';
 const editFieldClass = 'grid gap-1.5';
-const editLabelClass = 'text-[0.72rem] font-black uppercase text-[#765c58]';
-const editControlClass = 'h-10 w-full min-w-0 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.88rem] font-bold text-[var(--admin-ink)] outline-0 focus:border-[#c6897e] focus:bg-white focus:shadow-[0_0_0_3px_rgba(134,7,7,0.08)]';
+const editLabelClass = 'text-[0.72rem] font-black uppercase text-[#64748b]';
+const editControlClass = 'h-10 w-full min-w-0 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.88rem] font-bold text-[var(--admin-ink)] outline-0 focus:border-[#0b7f5a] focus:bg-white focus:shadow-[0_0_0_3px_rgba(16,185,129,0.08)]';
 const editFileControlClass = `${editControlClass} flex min-h-10 cursor-pointer items-center gap-3 py-2`;
 const detailItemClass = 'grid gap-1 rounded-md bg-[#fff8f6] p-3';
-const detailLabelClass = 'text-[0.66rem] font-black uppercase text-[#765c58]';
+const detailLabelClass = 'text-[0.66rem] font-black uppercase text-[#64748b]';
 const detailValueClass = 'break-words text-[0.9rem] font-bold text-[var(--admin-ink)]';
 const pageSize = 4;
 const distanceOptions = [1000, 1500, 2400];
@@ -264,10 +264,10 @@ const buildTournamentRows = async () => {
     return Promise.all((payload || []).map(async (tournament) => {
         try {
             const detail = await adminApi.getTournamentById(tournament.id);
-            
+
             // Extract the race start time directly from detail or tournament to avoid overwrite loss
             let extractedRaceStartTime = readTournamentField(detail, 'raceStartTime', 'RaceStartTime') || readTournamentField(tournament, 'raceStartTime', 'RaceStartTime');
-            
+
             if (!extractedRaceStartTime && detail?.endDate?.includes('T')) {
                 const timePart = detail.endDate.split('T')[1];
                 if (timePart) {
@@ -633,12 +633,12 @@ function RaceManagement() {
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
                                                 <div className="relative inline-flex items-center gap-3.5">
-                                                    <button aria-label={`View ${tournament.name}`} className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" onClick={() => setSelectedTournament(tournament)} type="button">
+                                                    <button aria-label={`View ${tournament.name}`} className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]" onClick={() => setSelectedTournament(tournament)} type="button">
                                                         <FaEye aria-hidden="true" />
                                                     </button>
                                                     <button
                                                         aria-label={`Edit ${tournament.name}`}
-                                                        className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]"
+                                                        className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]"
                                                         onClick={() => {
                                                             setEditTournamentImageName('');
                                                             setEditingTournament(tournament);
@@ -647,13 +647,13 @@ function RaceManagement() {
                                                     >
                                                         <FaEdit aria-hidden="true" />
                                                     </button>
-                                                    <button aria-label={`Delete ${tournament.name}`} className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" onClick={() => handleDelete(tournament.id)} type="button">
+                                                    <button aria-label={`Delete ${tournament.name}`} className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]" onClick={() => handleDelete(tournament.id)} type="button">
                                                         <FaTrashAlt aria-hidden="true" />
                                                     </button>
                                                     <button
                                                         aria-expanded={actionMenuId === tournament.id}
                                                         aria-label={`More actions for ${tournament.name}`}
-                                                        className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#725955] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+                                                        className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)] disabled:cursor-not-allowed disabled:opacity-60"
                                                         disabled={updatingStatusId === tournament.id}
                                                         onClick={() => setActionMenuId((current) => (current === tournament.id ? null : tournament.id))}
                                                         type="button"
@@ -671,7 +671,7 @@ function RaceManagement() {
                                                             {statusActions.length > 0 && <span className="my-1 h-px bg-[var(--admin-border)]" />}
                                                             {statusActions.map((nextStatus) => (
                                                                 <button
-                                                                    className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed] disabled:cursor-not-allowed disabled:opacity-60"
+                                                                    className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef] disabled:cursor-not-allowed disabled:opacity-60"
                                                                     disabled={updatingStatusId === tournament.id}
                                                                     key={nextStatus}
                                                                     onClick={() => handleTournamentStatusChange(tournament, nextStatus)}
@@ -701,7 +701,7 @@ function RaceManagement() {
                                 <button aria-label="Previous page" className={paginationButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">&lt;</button>
                                 {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
                                     <button
-                                        className={`${paginationButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]' : ''}`}
+                                        className={`${paginationButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[#e8f7ef] text-[#064e3b] hover:bg-[#d1fae5]' : ''}`}
                                         key={pageNumber}
                                         onClick={() => setPage(pageNumber)}
                                         type="button"
@@ -729,7 +729,7 @@ function RaceManagement() {
                                             Tournament details and assigned race configuration.
                                         </p>
                                     </div>
-                                    <button aria-label="Close tournament details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => setSelectedTournament(null)} type="button">
+                                    <button aria-label="Close tournament details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={() => setSelectedTournament(null)} type="button">
                                         <FaTimes aria-hidden="true" />
                                     </button>
                                 </div>
@@ -808,7 +808,7 @@ function RaceManagement() {
                                     <div>
                                         <h2 className="m-0 text-[1.35rem] leading-[1.15] text-[var(--admin-primary-dark)]">Edit Tournament</h2>
                                     </div>
-                                    <button aria-label="Close edit tournament" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => setEditingTournament(null)} type="button">
+                                    <button aria-label="Close edit tournament" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={() => setEditingTournament(null)} type="button">
                                         <FaTimes aria-hidden="true" />
                                     </button>
                                 </div>
@@ -910,7 +910,7 @@ function RaceManagement() {
                                 )}
 
                                 <div className="flex justify-end gap-3 max-[720px]:flex-col">
-                                    <button className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-4 font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => { setEditingTournament(null); setEditError(''); }} type="button">
+                                    <button className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-4 font-black text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={() => { setEditingTournament(null); setEditError(''); }} type="button">
                                         Cancel
                                     </button>
                                     <button className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md bg-[var(--admin-primary)] px-4 font-black text-white hover:bg-[var(--admin-primary-dark)]" type="submit">

@@ -20,11 +20,11 @@ const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-7 px-11 
 const statusClass = {
     pending: 'border-[#efd06a] bg-[#fff7db] text-[#a17809]',
     approved: 'border-[#a7dfbf] bg-[#e8f7ee] text-[#16864f]',
-    rejected: 'border-[#e7a49a] bg-[#ffe8e4] text-[var(--admin-primary)]',
+    rejected: 'border-[#e7a49a] bg-[#e8f7ef] text-[var(--admin-primary)]',
     jockeyinvited: 'border-[#b8d4ef] bg-[#e8f2ff] text-[#286a8f]',
     readytorace: 'border-[#a7dfbf] bg-[#e8f7ee] text-[#16864f]',
     completed: 'border-[#d6d6d6] bg-[#f2f2f2] text-[#555]',
-    cancelled: 'border-[#e7a49a] bg-[#ffe8e4] text-[var(--admin-primary)]',
+    cancelled: 'border-[#e7a49a] bg-[#e8f7ef] text-[var(--admin-primary)]',
 };
 
 const statusOptions = [
@@ -68,7 +68,7 @@ function detailValue(value, suffix = '') {
 function DetailItem({ label, value }) {
     return (
         <div className="rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-3">
-            <span className="block text-[0.68rem] font-black uppercase text-[#765c58]">
+            <span className="block text-[0.68rem] font-black uppercase text-[#64748b]">
                 {label}
             </span>
             <strong className="mt-1 block break-words text-[0.9rem] text-[var(--admin-ink)]">
@@ -107,7 +107,7 @@ function HealthCertificatePreview({ url, compact = false }) {
     }
 
     return (
-        <a className="mt-3 block rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-3 text-[0.86rem] font-black text-[var(--admin-primary)] no-underline hover:bg-[#fff0ed]" href={resolvedUrl} target="_blank" rel="noreferrer">
+        <a className="mt-3 block rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-3 text-[0.86rem] font-black text-[var(--admin-primary)] no-underline hover:bg-[#e8f7ef]" href={resolvedUrl} target="_blank" rel="noreferrer">
             <span className="grid h-[170px] place-items-center overflow-hidden rounded-md border border-[var(--admin-border)] bg-white">
                 <img alt="Health certificate" className="h-full w-full object-contain" src={resolvedUrl} />
             </span>
@@ -274,8 +274,8 @@ export default function RegistrationManagement() {
                 </div>
 
                 <section className="grid grid-cols-3 gap-7 max-[1180px]:grid-cols-1">
-                    <article className="relative min-h-[120px] rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-6 py-6 shadow-[0_14px_30px_rgba(91,26,19,0.05)] before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-[#d49a15] before:content-['']">
-                        <span className="block text-[0.78rem] font-black uppercase text-[#765c58]">
+                    <article className="relative min-h-[120px] rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-6 py-6 shadow-[0_14px_30px_rgba(15,23,42,0.05)] before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-[#d49a15] before:content-['']">
+                        <span className="block text-[0.78rem] font-black uppercase text-[#64748b]">
                             Pending Approval
                         </span>
                         <strong className="mt-3 block text-[2.4rem] leading-none text-[var(--admin-primary-dark)]">
@@ -283,8 +283,8 @@ export default function RegistrationManagement() {
                         </strong>
                     </article>
 
-                    <article className="relative min-h-[120px] rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-6 py-6 shadow-[0_14px_30px_rgba(91,26,19,0.05)] before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-[#24715d] before:content-['']">
-                        <span className="block text-[0.78rem] font-black uppercase text-[#765c58]">
+                    <article className="relative min-h-[120px] rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-6 py-6 shadow-[0_14px_30px_rgba(15,23,42,0.05)] before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-[#24715d] before:content-['']">
+                        <span className="block text-[0.78rem] font-black uppercase text-[#64748b]">
                             Approved Entries
                         </span>
                         <strong className="mt-3 block text-[2.4rem] leading-none text-[var(--admin-primary-dark)]">
@@ -292,8 +292,8 @@ export default function RegistrationManagement() {
                         </strong>
                     </article>
 
-                    <article className="relative min-h-[120px] rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-6 py-6 shadow-[0_14px_30px_rgba(91,26,19,0.05)] before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-[var(--admin-primary)] before:content-['']">
-                        <span className="block text-[0.78rem] font-black uppercase text-[#765c58]">
+                    <article className="relative min-h-[120px] rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-6 py-6 shadow-[0_14px_30px_rgba(15,23,42,0.05)] before:absolute before:bottom-0 before:left-0 before:top-0 before:w-1 before:bg-[var(--admin-primary)] before:content-['']">
+                        <span className="block text-[0.78rem] font-black uppercase text-[#64748b]">
                             Rejected Entries
                         </span>
                         <strong className="mt-3 block text-[2.4rem] leading-none text-[var(--admin-primary-dark)]">
@@ -303,13 +303,13 @@ export default function RegistrationManagement() {
                 </section>
 
                 <section className="overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]">
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--admin-border)] bg-[#fff4f1] px-5 py-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--admin-border)] bg-[#f8fbff] px-5 py-4">
                         <h2 className="m-0 text-[1.05rem] font-black text-[var(--admin-ink)]">
                             Horse Race Registration Requests
                         </h2>
 
                         <select
-                            className="h-[38px] min-w-[160px] cursor-pointer rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.78rem] font-bold text-[#5f4b47] outline-0"
+                            className="h-[38px] min-w-[160px] cursor-pointer rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.78rem] font-bold text-[#475569] outline-0"
                             value={statusFilter}
                             onChange={handleStatusFilterChange}
                         >
@@ -322,7 +322,7 @@ export default function RegistrationManagement() {
                     </div>
 
                     {error && (
-                        <div className="m-4 rounded-md border border-[#e7a49a] bg-[#ffe8e4] p-3 font-bold text-[var(--admin-primary)]">
+                        <div className="m-4 rounded-md border border-[#e7a49a] bg-[#e8f7ef] p-3 font-bold text-[var(--admin-primary)]">
                             {error}
                         </div>
                     )}
@@ -347,7 +347,7 @@ export default function RegistrationManagement() {
                                             'Actions',
                                         ].map((heading) => (
                                             <th
-                                                className="whitespace-nowrap border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] py-[18px] text-left text-[0.72rem] uppercase text-[#765c58]"
+                                                className="whitespace-nowrap border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] py-[18px] text-left text-[0.72rem] uppercase text-[#64748b]"
                                                 key={heading}
                                             >
                                                 {heading}
@@ -427,7 +427,7 @@ export default function RegistrationManagement() {
                                                         <div className="flex items-center gap-2">
                                                             <button
                                                                 aria-label={`View race entry ${item.registrationId}`}
-                                                                className="grid h-8 w-8 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary)] hover:bg-[#fff0ed]"
+                                                                className="grid h-8 w-8 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary)] hover:bg-[#e8f7ef]"
                                                                 title="View"
                                                                 type="button"
                                                                 onClick={() => handleOpenRegistrationDetail(item)}
@@ -450,7 +450,7 @@ export default function RegistrationManagement() {
 
                                                                     <button
                                                                         aria-label={`Reject race entry ${item.registrationId}`}
-                                                                        className="grid h-8 w-8 cursor-pointer place-items-center rounded-md border border-[#e7a49a] bg-[#ffe8e4] text-[var(--admin-primary)] hover:bg-[#ffd8d2] disabled:cursor-not-allowed disabled:opacity-50"
+                                                                        className="grid h-8 w-8 cursor-pointer place-items-center rounded-md border border-[#e7a49a] bg-[#e8f7ef] text-[var(--admin-primary)] hover:bg-[#d7f2e4] disabled:cursor-not-allowed disabled:opacity-50"
                                                                         disabled={savingId === item.registrationId}
                                                                         title="Reject"
                                                                         type="button"
@@ -488,7 +488,7 @@ export default function RegistrationManagement() {
 
                             <button
                                 aria-label="Close race entry details"
-                                className="grid h-8 w-8 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-black text-[var(--admin-primary)] hover:bg-[#fff0ed]"
+                                className="grid h-8 w-8 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-black text-[var(--admin-primary)] hover:bg-[#e8f7ef]"
                                 type="button"
                                 onClick={() => setSelected(null)}
                             >
@@ -497,7 +497,7 @@ export default function RegistrationManagement() {
                         </div>
 
                         {(selectedLoading || selectedError) && (
-                            <div className={`mx-5 mt-4 rounded-md border px-4 py-3 text-[0.82rem] font-bold ${selectedError ? 'border-[#e7a49a] bg-[#ffe8e4] text-[var(--admin-primary)]' : 'border-[var(--admin-border)] bg-[#fff8f6] text-[var(--admin-muted)]'}`}>
+                            <div className={`mx-5 mt-4 rounded-md border px-4 py-3 text-[0.82rem] font-bold ${selectedError ? 'border-[#e7a49a] bg-[#e8f7ef] text-[var(--admin-primary)]' : 'border-[var(--admin-border)] bg-[#fff8f6] text-[var(--admin-muted)]'}`}>
                                 {selectedError || 'Loading race entry detail...'}
                             </div>
                         )}
@@ -510,7 +510,7 @@ export default function RegistrationManagement() {
                                     src={selected.horseImageUrl ? resolveFileUrl(selected.horseImageUrl) : horseRacing}
                                 />
                                 <div className="rounded-md border border-[var(--admin-border)] bg-[#fffdfc] p-4">
-                                    <span className="block text-[0.68rem] font-black uppercase text-[#765c58]">
+                                    <span className="block text-[0.68rem] font-black uppercase text-[#64748b]">
                                         Health Certificate
                                     </span>
                                     <HealthCertificatePreview url={selected.healthCertificateImageUrl} />
@@ -538,7 +538,7 @@ export default function RegistrationManagement() {
                         {formatClass(selected.status) === 'pending' && (
                             <div className="flex justify-end gap-3 border-t border-[var(--admin-border)] px-5 py-4">
                                 <button
-                                    className="min-h-[38px] cursor-pointer rounded-md border border-[#e7a49a] bg-white px-4 font-black text-[var(--admin-primary)] hover:bg-[#fff0ed] disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="min-h-[38px] cursor-pointer rounded-md border border-[#e7a49a] bg-white px-4 font-black text-[var(--admin-primary)] hover:bg-[#e8f7ef] disabled:cursor-not-allowed disabled:opacity-50"
                                     disabled={savingId === selected.registrationId}
                                     type="button"
                                     onClick={() => handleReject(selected)}

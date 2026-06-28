@@ -133,7 +133,7 @@ const Login = () => {
                                 className="h-[50px] w-[50px] object-contain"
                             />
 
-                            <h2 className="m-0 text-[2rem] font-extrabold italic text-[#8B0000] max-[1024px]:text-[1.7rem]">
+                            <h2 className="m-0 text-[2rem] font-extrabold italic text-[#0b7f5a] max-[1024px]:text-[1.7rem]">
                                 Elite Racing League
                             </h2>
                         </div>
@@ -189,7 +189,7 @@ const Login = () => {
                                     Password
                                 </label>
 
-                                <a href="#" className="text-[0.85rem] font-bold text-[#8B0000] no-underline transition-opacity duration-200 hover:opacity-80">
+                                <a href="#" className="text-[0.85rem] font-bold text-[#0b7f5a] no-underline transition-opacity duration-200 hover:opacity-80">
                                     Forgot password
                                 </a>
                             </div>
@@ -223,7 +223,7 @@ const Login = () => {
                         </div>
 
                         {error && (
-                            <div className="mb-4 rounded-[10px] border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-sm font-semibold text-[#8B0000]">
+                            <div className="mb-4 rounded-[10px] border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-sm font-semibold text-[#b91c1c]">
                                 {error}
                             </div>
                         )}
@@ -237,7 +237,7 @@ const Login = () => {
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="mb-6 h-[52px] w-full cursor-pointer rounded-[8px] bg-[#8B0000] text-base font-bold text-white shadow-[0_12px_24px_rgba(139,0,0,0.16)] transition-colors duration-200 hover:bg-[#700000]"
+                            className="mb-6 h-[52px] w-full cursor-pointer rounded-[8px] bg-[#0b7f5a] text-base font-bold text-white shadow-[0_12px_24px_rgba(16,185,129,0.16)] transition-colors duration-200 hover:bg-[#065f46]"
                         >
                             {isSubmitting ? 'Logging in...' : 'Login'}
                         </button>
@@ -247,7 +247,7 @@ const Login = () => {
 
                             <Link
                                 to="/register"
-                                className="font-bold text-[#8B0000] no-underline"
+                                className="font-bold text-[#0b7f5a] no-underline"
                             >
                                 Register here
                             </Link>

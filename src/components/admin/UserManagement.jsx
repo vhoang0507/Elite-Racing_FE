@@ -32,7 +32,7 @@ const selectWrapClass = 'relative inline-flex min-w-[86px] items-center';
 const selectClass = 'h-8 min-w-[86px] cursor-pointer appearance-none border-0 bg-transparent py-0 pl-0 pr-6 text-[0.8rem] font-bold text-[var(--admin-ink)] outline-0';
 const selectIconClass = 'pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 text-[0.7rem] text-[var(--admin-ink)]';
 const detailItemClass = 'grid gap-1 rounded-md bg-[#fff8f6] p-3';
-const detailLabelClass = 'text-[0.7rem] font-black uppercase text-[#765c58]';
+const detailLabelClass = 'text-[0.7rem] font-black uppercase text-[#64748b]';
 const documentCardClass = 'grid gap-3 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] p-3';
 
 const summaryIconClass = {
@@ -53,11 +53,11 @@ const statusClass = {
     pending: 'border-[#efd06a] bg-[#fff7db] text-[#a17809]',
     active: 'border-[#9fdcb9] bg-[#e8f7ee] text-[#16864f]',
     inactive: 'border-[#dbc3bf] bg-[#f3e8e6] text-[#7f645f]',
-    banned: 'border-[#e7a49a] bg-[#ffe8e4] text-[var(--admin-primary)]',
+    banned: 'border-[#e7a49a] bg-[#e8f7ef] text-[var(--admin-primary)]',
 };
 
 const badgeClass = 'inline-flex min-h-[22px] items-center rounded border px-2 text-[0.68rem] font-black uppercase';
-const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]';
+const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]';
 const pageSize = 5;
 
 const activeRoleOrder = {
@@ -153,7 +153,7 @@ function DocumentPreview({ label, url }) {
                 <div className="grid gap-2">
                     {isPdfUrl(url) ? (
                         <a
-                            className="grid min-h-[132px] place-items-center rounded-md border border-dashed border-[var(--admin-border)] bg-[#fff8f6] px-3 text-center text-[0.84rem] font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]"
+                            className="grid min-h-[132px] place-items-center rounded-md border border-dashed border-[var(--admin-border)] bg-[#fff8f6] px-3 text-center text-[0.84rem] font-black text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]"
                             href={resolvedUrl}
                             rel="noreferrer"
                             target="_blank"
@@ -465,7 +465,7 @@ function UserManagement() {
                             return (
                                 <article className="flex min-h-[150px] items-start justify-between gap-5 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-7 py-[26px]" key={card.label}>
                                     <div>
-                                        <span className="block text-[0.74rem] font-black uppercase tracking-normal text-[#765c58]">{card.label}</span>
+                                        <span className="block text-[0.74rem] font-black uppercase tracking-normal text-[#64748b]">{card.label}</span>
                                         <strong className="mt-2 block text-[2rem] leading-none text-[var(--admin-primary-dark)]">{card.value}</strong>
                                         <small className={`mt-[18px] block text-[0.74rem] font-black ${card.tone === 'reports' ? 'text-[var(--admin-primary)]' : 'text-inherit'}`}>
                                             {card.detail}
@@ -483,7 +483,7 @@ function UserManagement() {
                                 <thead>
                                     <tr>
                                         {['User ID', 'Full Name', 'Email', 'Role', 'Status', 'Verified', 'Created At', 'Details'].map((heading) => (
-                                            <th className="whitespace-nowrap border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-5 py-[18px] text-left text-[0.72rem] uppercase text-[#765c58]" key={heading}>
+                                            <th className="whitespace-nowrap border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-5 py-[18px] text-left text-[0.72rem] uppercase text-[#64748b]" key={heading}>
                                                 {heading}
                                             </th>
                                         ))}
@@ -514,7 +514,7 @@ function UserManagement() {
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]">{adminApi.formatters.toDateLabel(user.createdAt)}</td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]">
-                                                <button aria-label={`View details for ${user.name}`} className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border-0 bg-transparent text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => handleViewDetails(user)} type="button">
+                                                <button aria-label={`View details for ${user.name}`} className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border-0 bg-transparent text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={() => handleViewDetails(user)} type="button">
                                                     <FaEye aria-hidden="true" />
                                                 </button>
                                             </td>
@@ -531,7 +531,7 @@ function UserManagement() {
                                 <button aria-label="Previous page" className={paginationButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">&lt;</button>
                                 {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
                                     <button
-                                        className={`${paginationButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary)]' : ''}`}
+                                        className={`${paginationButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[#e8f7ef] text-[#064e3b] hover:bg-[#d1fae5]' : ''}`}
                                         key={pageNumber}
                                         onClick={() => setPage(pageNumber)}
                                         type="button"
@@ -557,7 +557,7 @@ function UserManagement() {
                                         <h2 className="m-0 text-[1.35rem] leading-[1.15] text-[var(--admin-primary-dark)]">{selectedUser.name}</h2>
                                         <span className="mt-2 inline-flex text-[0.8rem] font-black text-[var(--admin-muted)]">{selectedUser.id}</span>
                                     </div>
-                                    <button aria-label="Close user details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={handleCloseDetails} type="button">
+                                    <button aria-label="Close user details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={handleCloseDetails} type="button">
                                         <FaTimes aria-hidden="true" />
                                     </button>
                                 </div>
@@ -589,7 +589,7 @@ function UserManagement() {
                                         </div>
 
                                         {detailError && (
-                                            <p className="m-0 rounded-md border border-[#e7a49a] bg-[#ffe8e4] px-3 py-2 text-[0.86rem] font-bold text-[var(--admin-primary)]">
+                                            <p className="m-0 rounded-md border border-[#e7a49a] bg-[#e8f7ef] px-3 py-2 text-[0.86rem] font-bold text-[var(--admin-primary)]">
                                                 {detailError}
                                             </p>
                                         )}
@@ -661,7 +661,7 @@ function UserManagement() {
                                 )}
 
                                 {detailActionError && (
-                                    <p className="m-0 rounded-md border border-[#e7a49a] bg-[#ffe8e4] px-3 py-2 text-[0.86rem] font-bold text-[var(--admin-primary)]">
+                                    <p className="m-0 rounded-md border border-[#e7a49a] bg-[#e8f7ef] px-3 py-2 text-[0.86rem] font-bold text-[var(--admin-primary)]">
                                         {detailActionError}
                                     </p>
                                 )}
@@ -686,7 +686,7 @@ function UserManagement() {
 
                                     {formatClass(selectedUser.status) === 'pending' && (
                                         <button
-                                            className="inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-4 font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed] disabled:cursor-not-allowed disabled:opacity-70"
+                                            className="inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-4 font-black text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef] disabled:cursor-not-allowed disabled:opacity-70"
                                             disabled={Boolean(detailActionLoading)}
                                             onClick={handleRejectSelectedUser}
                                             type="button"
@@ -697,7 +697,7 @@ function UserManagement() {
 
                                     {formatClass(selectedUser.status) !== 'banned' && (
                                         <button
-                                            className="inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-md border border-[#e7a49a] bg-[#ffe8e4] px-4 font-black text-[var(--admin-primary)] hover:bg-[#ffd8d2] disabled:cursor-not-allowed disabled:opacity-70"
+                                            className="inline-flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-md border border-[#e7a49a] bg-[#e8f7ef] px-4 font-black text-[var(--admin-primary)] hover:bg-[#d7f2e4] disabled:cursor-not-allowed disabled:opacity-70"
                                             disabled={Boolean(detailActionLoading)}
                                             onClick={() => handleUpdateSelectedUserStatus({
                                                 apiStatus: 'Banned',

@@ -23,8 +23,8 @@ const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7'
 const headingClass = 'flex items-center justify-between gap-[18px] max-[720px]:flex-col max-[720px]:items-stretch';
 const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]';
 const sectionHeadClass = 'flex min-h-[58px] items-center justify-between gap-[18px] border-b border-[var(--admin-border)] px-[22px] max-[720px]:flex-col max-[720px]:items-stretch';
-const sectionActionClass = 'rounded-full bg-[#ffe8e4] px-2.5 py-1.5 text-[0.72rem] font-black uppercase text-[var(--admin-primary)] transition-colors duration-200 hover:bg-[#ffd8d2]';
-const tableHeadClass = 'border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] py-[18px] text-left text-[0.7rem] uppercase text-[#765c58]';
+const sectionActionClass = 'rounded-full bg-[#e8f7ef] px-2.5 py-1.5 text-[0.72rem] font-black uppercase text-[var(--admin-primary)] transition-colors duration-200 hover:bg-[#d7f2e4]';
+const tableHeadClass = 'border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] py-[18px] text-left text-[0.7rem] uppercase text-[#64748b]';
 const tableCellClass = (isLast = false, align = 'left') => [
     isLast ? 'border-b-0' : 'border-b border-[var(--admin-border)]',
     align === 'right' ? 'text-right' : '',
@@ -55,7 +55,7 @@ const avatarClass = {
     jockey: 'bg-[linear-gradient(145deg,#1d546d,#5cb8a6)]',
     referee: 'bg-[linear-gradient(145deg,#26323b,#9aa8af)]',
     spectator: 'bg-[linear-gradient(145deg,#674861,#d17664)]',
-    admin: 'bg-[linear-gradient(145deg,#650404,#c04733)]',
+    admin: 'bg-[linear-gradient(145deg,#0f172a,#5eead4)]',
 };
 
 const statIconByTone = {
@@ -203,7 +203,7 @@ function AdminDashboard() {
 
                             return (
                                 <article className="grid min-h-[140px] content-start gap-2 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-[22px]" key={stat.label}>
-                                    <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#ffe8e4] text-[var(--admin-primary)]">
+                                    <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#e8f7ef] text-[var(--admin-primary)]">
                                         <Icon aria-hidden="true" />
                                     </div>
                                     <span className="text-[var(--admin-muted)]">{stat.label}</span>
@@ -260,7 +260,7 @@ function AdminDashboard() {
                                                     </span>
                                                 </td>
                                                 <td className={tableCellClass(isLast, 'right')}>
-                                                    <button aria-label={`Actions for ${tournament.name}`} className="inline-grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md bg-transparent text-[var(--admin-muted)] hover:bg-[#fff0ed] hover:text-[var(--admin-primary)]" type="button">
+                                                    <button aria-label={`Actions for ${tournament.name}`} className="inline-grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md bg-transparent text-[var(--admin-muted)] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]" type="button">
                                                         <FaEllipsisV aria-hidden="true" />
                                                     </button>
                                                 </td>
@@ -323,7 +323,7 @@ function AdminDashboard() {
                                                         </span>
                                                     </td>
                                                     <td className={tableCellClass(isLast, 'right')}>
-                                                        <button className="min-h-6 cursor-pointer rounded-full bg-[#ffe8e4] px-[9px] text-[0.68rem] font-[850] text-[var(--admin-primary)]" onClick={() => setSelectedUser(user)} type="button">Details</button>
+                                                        <button className="min-h-6 cursor-pointer rounded-full bg-[#e8f7ef] px-[9px] text-[0.68rem] font-[850] text-[var(--admin-primary)]" onClick={() => setSelectedUser(user)} type="button">Details</button>
                                                     </td>
                                                 </tr>
                                             );
@@ -352,32 +352,32 @@ function AdminDashboard() {
                                             <span className="mt-2 inline-flex text-[0.8rem] font-black text-[var(--admin-muted)]">{selectedUser.id}</span>
                                         </div>
                                     </div>
-                                    <button aria-label="Close user details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#fff0ed]" onClick={() => setSelectedUser(null)} type="button">
+                                    <button aria-label="Close user details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={() => setSelectedUser(null)} type="button">
                                         <FaTimes aria-hidden="true" />
                                     </button>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3 text-[0.9rem] max-[560px]:grid-cols-1">
                                     <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Email</span>
+                                        <span className="text-[0.7rem] font-black uppercase text-[#64748b]">Email</span>
                                         <strong className="break-words text-[var(--admin-ink)]">{selectedUser.email}</strong>
                                     </div>
                                     <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Role</span>
+                                        <span className="text-[0.7rem] font-black uppercase text-[#64748b]">Role</span>
                                         <strong>{selectedUser.role}</strong>
                                     </div>
                                     <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Status</span>
+                                        <span className="text-[0.7rem] font-black uppercase text-[#64748b]">Status</span>
                                         <strong className={statusKey(selectedUser.status) === 'active' ? 'text-[#0aa15f]' : 'text-[var(--admin-primary)]'}>{selectedUser.status}</strong>
                                     </div>
                                     <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Verified</span>
+                                        <span className="text-[0.7rem] font-black uppercase text-[#64748b]">Verified</span>
                                         <strong className={selectedUser.verified ? 'text-[#0aa15f]' : 'text-[#d71920]'}>
                                             {selectedUser.verified ? 'Verified' : 'Not verified'}
                                         </strong>
                                     </div>
                                     <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.7rem] font-black uppercase text-[#765c58]">Created At</span>
+                                        <span className="text-[0.7rem] font-black uppercase text-[#64748b]">Created At</span>
                                         <strong>{adminApi.formatters.toDateLabel(selectedUser.createdAt)}</strong>
                                     </div>
                                 </div>

@@ -55,8 +55,8 @@ function HealthCertificateCell({ url }) {
     const resolvedUrl = resolveFileUrl(url);
 
     return (
-        <a className="inline-flex items-center gap-2 font-bold text-[#7d0000] no-underline hover:underline" href={resolvedUrl} target="_blank" rel="noreferrer">
-            <img alt="Health certificate" className="h-8 w-11 rounded border border-[#ead3cf] object-cover" src={resolvedUrl} />
+        <a className="inline-flex items-center gap-2 font-bold text-[#0b7f5a] no-underline hover:underline" href={resolvedUrl} target="_blank" rel="noreferrer">
+            <img alt="Health certificate" className="h-8 w-11 rounded border border-[#dce5ef] object-cover" src={resolvedUrl} />
             View
         </a>
     );
@@ -252,7 +252,7 @@ function PreRaceInspectionRegistry() {
                 <button
                     type="button"
                     onClick={() => navigate('/referee/races/pre-race')}
-                    className="mb-6 flex items-center gap-2 font-semibold text-[#7d0000]"
+                    className="mb-6 flex items-center gap-2 font-semibold text-[#0b7f5a]"
                 >
                     <FaArrowLeft />
                     Back to Pre-Race Tournaments
@@ -269,7 +269,7 @@ function PreRaceInspectionRegistry() {
                         </p>
                     </div>
 
-                    <span className="rounded-full bg-[#f7efee] px-4 py-2 text-sm font-bold text-[#7d0000]">
+                    <span className="rounded-full bg-[#e8f7ef] px-4 py-2 text-sm font-bold text-[#0b7f5a]">
                         Race #{raceId}
                     </span>
                 </div>
@@ -305,7 +305,7 @@ function PreRaceInspectionRegistry() {
                                 </h2>
 
                                 {selectedRace?.tournamentName && (
-                                    <p className="mt-1 font-semibold text-[#7d0000]">
+                                    <p className="mt-1 font-semibold text-[#0b7f5a]">
                                         {selectedRace.tournamentName}
                                     </p>
                                 )}
@@ -382,9 +382,9 @@ function PreRaceInspectionRegistry() {
                                             fontSize: 13,
                                             fontWeight: 700,
                                             cursor: 'pointer',
-                                            border: filter === option.key ? 'none' : '1px solid #edcfc9',
-                                            background: filter === option.key ? '#7d0000' : '#fff8f6',
-                                            color: filter === option.key ? '#fff' : '#7d0000',
+                                            border: filter === option.key ? 'none' : '1px solid #dce5ef',
+                                            background: filter === option.key ? '#0b7f5a' : '#fff8f6',
+                                            color: filter === option.key ? '#fff' : '#0b7f5a',
                                         }}
                                     >
                                         {option.label} ({count ?? 0})
@@ -525,7 +525,7 @@ function PreRaceInspectionRegistry() {
                                                             onChange={(event) =>
                                                                 handleDraftChange(horse.registrationId, 'status', event.target.value)
                                                             }
-                                                            style={{ fontSize: 13, padding: '6px 10px', borderRadius: 6, border: '1px solid #edcfc9', outline: 'none', width: '100%' }}
+                                                            style={{ fontSize: 13, padding: '6px 10px', borderRadius: 6, border: '1px solid #dce5ef', outline: 'none', width: '100%' }}
                                                         >
                                                             {statusOptions.map((option) => (
                                                                 <option key={option.value} value={option.value}>
@@ -541,7 +541,7 @@ function PreRaceInspectionRegistry() {
                                                                 handleDraftChange(horse.registrationId, 'note', event.target.value)
                                                             }
                                                             placeholder="Inspection note"
-                                                            style={{ fontSize: 13, padding: '6px 10px', borderRadius: 6, border: '1px solid #edcfc9', outline: 'none', width: '100%' }}
+                                                            style={{ fontSize: 13, padding: '6px 10px', borderRadius: 6, border: '1px solid #dce5ef', outline: 'none', width: '100%' }}
                                                         />
 
                                                         <button
@@ -551,7 +551,7 @@ function PreRaceInspectionRegistry() {
                                                             style={{
                                                                 fontSize: 12, fontWeight: 700, padding: '6px 14px',
                                                                 borderRadius: 6, border: 'none', cursor: 'pointer',
-                                                                background: '#7d0000', color: '#fff',
+                                                                background: '#0b7f5a', color: '#fff',
                                                                 alignSelf: 'flex-start',
                                                                 opacity: savingId === horse.registrationId ? 0.6 : 1,
                                                             }}

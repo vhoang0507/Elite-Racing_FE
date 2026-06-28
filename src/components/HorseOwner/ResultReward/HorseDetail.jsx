@@ -173,7 +173,7 @@ const styles = {
     value: { margin: "2px 0 0", fontWeight: 600, fontSize: "13px" },
     certificateBox: { marginTop: "16px", borderTop: "1px solid #f0e3e0", paddingTop: "14px" },
     certificateLink: { display: "flex", alignItems: "center", gap: "10px", marginTop: "8px", color: "#610000", fontSize: "12px", fontWeight: 700, textDecoration: "none" },
-    certificateImg: { width: "76px", height: "54px", borderRadius: "8px", border: "1px solid #ead3cf", objectFit: "cover", backgroundColor: "#fff8f6" },
+    certificateImg: { width: "76px", height: "54px", borderRadius: "8px", border: "1px solid #dce5ef", objectFit: "cover", backgroundColor: "#fff8f6" },
     certificateMissing: { margin: "6px 0 0", color: "#999", fontSize: "12px", fontWeight: 600 },
     achievementRow: { display: "flex", alignItems: "center", gap: "10px" },
     achievementIcon: { width: "32px", height: "32px", borderRadius: "8px", backgroundColor: "#fde2e1", color: "#610000", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px" },

@@ -30,16 +30,16 @@ const initialAdvanceForm = {
 };
 
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-6 px-11 py-9 max-[860px]:px-5 max-[860px]:py-7';
-const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_14px_30px_rgba(91,26,19,0.05)]';
+const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_14px_30px_rgba(15,23,42,0.05)]';
 const panelHeaderClass = 'flex min-h-[58px] items-center justify-between gap-4 border-b border-[var(--admin-border)] bg-[#fff8f6] px-5 py-4 max-[720px]:flex-col max-[720px]:items-stretch';
 const panelTitleClass = 'm-0 flex items-center gap-2 text-[1.05rem] font-black text-[var(--admin-primary-dark)]';
 const fieldClass = 'grid gap-1.5';
-const labelClass = 'text-[0.74rem] font-black uppercase text-[#765c58]';
-const inputClass = 'h-10 w-full min-w-0 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.88rem] font-bold text-[var(--admin-ink)] outline-0 transition-all duration-200 focus:border-[#c6897e] focus:bg-white focus:shadow-[0_0_0_3px_rgba(134,7,7,0.08)] disabled:cursor-not-allowed disabled:bg-[#f4eeee] disabled:text-[#9b8580]';
+const labelClass = 'text-[0.74rem] font-black uppercase text-[#64748b]';
+const inputClass = 'h-10 w-full min-w-0 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.88rem] font-bold text-[var(--admin-ink)] outline-0 transition-all duration-200 focus:border-[#0b7f5a] focus:bg-white focus:shadow-[0_0_0_3px_rgba(16,185,129,0.08)] disabled:cursor-not-allowed disabled:bg-[#f4eeee] disabled:text-[#94a3b8]';
 const checkboxClass = 'h-4 w-4 accent-[var(--admin-primary)]';
 const primaryButtonClass = 'inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border-0 bg-[var(--admin-primary)] px-5 text-[0.82rem] font-black text-white hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60';
-const secondaryButtonClass = 'inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-5 text-[0.82rem] font-black text-[var(--admin-primary-dark)] hover:bg-[#fff0ed] disabled:cursor-not-allowed disabled:opacity-60';
-const dangerButtonClass = 'inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-[#e7a49a] bg-[#ffe8e4] px-5 text-[0.82rem] font-black text-[var(--admin-primary)] hover:bg-[#ffd8d2] disabled:cursor-not-allowed disabled:opacity-60';
+const secondaryButtonClass = 'inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-5 text-[0.82rem] font-black text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef] disabled:cursor-not-allowed disabled:opacity-60';
+const dangerButtonClass = 'inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-[#e7a49a] bg-[#e8f7ef] px-5 text-[0.82rem] font-black text-[var(--admin-primary)] hover:bg-[#d7f2e4] disabled:cursor-not-allowed disabled:opacity-60';
 
 function readApiField(item, camelKey, pascalKey = camelKey[0].toUpperCase() + camelKey.slice(1)) {
     return item?.[camelKey] ?? item?.[pascalKey];
@@ -143,7 +143,7 @@ function StatusBadge({
     inactiveLabel,
 }) {
     return (
-        <span className={`inline-flex min-h-7 items-center rounded border px-3 text-[0.7rem] font-black uppercase ${isActive ? 'border-[#a7dfbf] bg-[#e8f7ee] text-[#16864f]' : 'border-[#e7a49a] bg-[#ffe8e4] text-[var(--admin-primary)]'}`}>
+        <span className={`inline-flex min-h-7 items-center rounded border px-3 text-[0.7rem] font-black uppercase ${isActive ? 'border-[#a7dfbf] bg-[#e8f7ee] text-[#16864f]' : 'border-[#e7a49a] bg-[#e8f7ef] text-[var(--admin-primary)]'}`}>
             {isActive ? activeLabel : inactiveLabel}
         </span>
     );
@@ -155,7 +155,7 @@ function TimeItem({
 }) {
     return (
         <article className="rounded-md border border-[var(--admin-border)] bg-[#fffdfc] p-4">
-            <span className="block text-[0.68rem] font-black uppercase text-[#765c58]">
+            <span className="block text-[0.68rem] font-black uppercase text-[#64748b]">
                 {label}
             </span>
             <strong className="mt-2 block break-words text-[0.95rem] text-[var(--admin-ink)]">
@@ -171,7 +171,7 @@ function SyncStat({
 }) {
     return (
         <article className="rounded-md border border-[var(--admin-border)] bg-[#fffdfc] p-4">
-            <span className="block text-[0.68rem] font-black uppercase text-[#765c58]">
+            <span className="block text-[0.68rem] font-black uppercase text-[#64748b]">
                 {label}
             </span>
             <strong className="mt-2 block text-[1.8rem] leading-none text-[var(--admin-primary-dark)]">
@@ -412,7 +412,7 @@ function AdminSystemTime() {
         return (
             <AdminLayout activeKey="system-time">
                 <section className={pageShellClass}>
-                    <div className="rounded-[var(--admin-radius)] border border-[#e7a49a] bg-[#ffe8e4] p-5 text-[var(--admin-primary)]">
+                    <div className="rounded-[var(--admin-radius)] border border-[#e7a49a] bg-[#e8f7ef] p-5 text-[var(--admin-primary)]">
                         <h1 className="m-0 text-[1.4rem] font-black">Admin access required</h1>
                         <p className="mb-0 mt-2 font-semibold">
                             Only Admin accounts can access System Time tools.
@@ -428,7 +428,7 @@ function AdminSystemTime() {
             <section className={pageShellClass}>
                 <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                        <div className="mb-2 flex items-center gap-2 text-[0.74rem] font-black uppercase text-[#765c58]">
+                        <div className="mb-2 flex items-center gap-2 text-[0.74rem] font-black uppercase text-[#64748b]">
                             <FaShieldAlt aria-hidden="true" className="text-[var(--admin-primary)]" />
                             <span>Admin Tools</span>
                         </div>
@@ -466,7 +466,7 @@ function AdminSystemTime() {
                 </section>
 
                 {error && (
-                    <div className="rounded-md border border-[#e7a49a] bg-[#ffe8e4] px-4 py-3 text-[0.86rem] font-bold text-[var(--admin-primary)]">
+                    <div className="rounded-md border border-[#e7a49a] bg-[#e8f7ef] px-4 py-3 text-[0.86rem] font-bold text-[var(--admin-primary)]">
                         {error}
                     </div>
                 )}

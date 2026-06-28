@@ -49,7 +49,7 @@ function SeasonBanner({ season }) {
                         <span>Season progress</span>
                         <span>{pct}% elapsed</span>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-[#f1e2df]">
+                    <div className="h-2 overflow-hidden rounded-full bg-[#dce5ef]">
                         <div className="h-full rounded-full bg-[var(--admin-primary)]" style={{ width: `${pct}%` }} />
                     </div>
                 </div>
@@ -141,7 +141,7 @@ export default function SpectatorDashboard() {
                                 </div>
                                 {openTournaments.map((t) => (
                                     <div key={t.tournamentId} className="flex items-center gap-4 border-b border-[var(--admin-border)] px-5 py-4 last:border-b-0">
-                                        <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-[#f7efee] text-lg">
+                                        <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-[#e8f7ef] text-lg">
                                             🏆
                                         </div>
                                         <div className="min-w-0 flex-1">
@@ -154,7 +154,7 @@ export default function SpectatorDashboard() {
                                         <button
                                             type="button"
                                             onClick={() => navigate('/spectator/tournaments')}
-                                            style={{ padding: '7px 16px', borderRadius: 8, border: 'none', background: '#7d0000', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                            style={{ padding: '7px 16px', borderRadius: 8, border: 'none', background: '#0b7f5a', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}
                                         >
                                             Predict Now
                                         </button>
@@ -249,7 +249,7 @@ export default function SpectatorDashboard() {
                                     { step: '3', icon: '🪙', title: 'Earn Points & Win', desc: 'Correct predictions earn points. Top predictors at season end win prizes.' },
                                 ].map((item) => (
                                     <div key={item.step} className="flex gap-3">
-                                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#7d0000', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 14, flexShrink: 0 }}>
+                                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#0b7f5a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 14, flexShrink: 0 }}>
                                             {item.step}
                                         </div>
                                         <div>
