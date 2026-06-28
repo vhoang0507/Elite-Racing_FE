@@ -401,7 +401,12 @@ function PreRaceInspectionRegistry() {
                                     <th>Horse</th>
                                     <th>Health Cert</th>
                                     <th>Reg Status</th>
-                                    <th>Checklist</th>
+                                    <th>
+                                        <div>Checklist</div>
+                                        <div style={{ fontSize: 10, fontWeight: 400, color: '#999', marginTop: 4, lineHeight: 1.6 }}>
+                                            ① Docs &nbsp;② Status &nbsp;③ Health &nbsp;④ Cert
+                                        </div>
+                                    </th>
                                     <th>Rule Ref</th>
                                     <th>Severity</th>
                                     <th>Details</th>
@@ -470,18 +475,29 @@ function PreRaceInspectionRegistry() {
                                                 <td className="px-4 py-3">
                                                     <div className="flex gap-1">
                                                         {(horse.checklist ?? []).map(
-                                                            (item, idx) =>
-                                                                item ? (
+                                                            (item, idx) => {
+                                                                const labels = [
+                                                                    'Valid registration documents',
+                                                                    'Registration status (Approved / JockeyInvited / ReadyToRace)',
+                                                                    'Horse health status',
+                                                                    'Health certificate uploaded',
+                                                                ];
+                                                                return item ? (
                                                                     <FaCheckCircle
                                                                         key={idx}
                                                                         className="text-green-600"
+                                                                        title={labels[idx]}
+                                                                        style={{ cursor: 'help' }}
                                                                     />
                                                                 ) : (
                                                                     <FaTimesCircle
                                                                         key={idx}
                                                                         className="text-red-600"
+                                                                        title={`FAILED: ${labels[idx]}`}
+                                                                        style={{ cursor: 'help' }}
                                                                     />
-                                                                )
+                                                                );
+                                                            }
                                                         )}
                                                     </div>
                                                 </td>
