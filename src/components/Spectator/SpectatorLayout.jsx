@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
     FaBell,
@@ -13,6 +13,7 @@ import {
 } from 'react-icons/fa';
 
 import { clearAuthSession, getAuthUser } from '../../utils/tokenStorage';
+import { spectatorApi } from '../../api/spectatorApi';
 
 const navigation = [
     { key: 'dashboard',    label: 'Dashboard',       icon: FaChartLine, path: '/spectator/dashboard' },
@@ -32,7 +33,16 @@ const iconButtonClasses = 'role-icon-button';
 function SpectatorLayout({ activeKey, children }) {
     const navigate = useNavigate();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
     const user = getAuthUser();
+
+    useEffect(() => {
+        let ignore = false;
+        spectatorApi.getSpectatorUnreadCount()
+            .then((data) => { if (!ignore) setUnreadCount(data?.unreadCount ?? 0); })
+            .catch(() => { if (!ignore) setUnreadCount(0); });
+        return () => { ignore = true; };
+    }, []);
     const initials = user?.fullName?.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase() ?? 'SP';
 
     const handleLogout = () => {
@@ -102,9 +112,26 @@ function SpectatorLayout({ activeKey, children }) {
                         <input placeholder="Search records, horses, races..." type="search" />
                     </label>
                     <div className="flex items-center gap-2">
-                        <button className={iconButtonClasses} type="button">
+                        <button
+                            className={iconButtonClasses}
+                            type="button"
+                            onClick={() => navigate('/spectator/notifications')}
+                            style={{ position: 'relative' }}
+                        >
                             <FaBell />
-                            <span className="absolute right-2.5 top-[9px] h-2 w-2 rounded-full border-2 border-[var(--admin-surface)] bg-[var(--admin-primary)]" />
+                            {unreadCount > 0 && (
+                                <span style={{
+                                    position: 'absolute', top: 6, right: 6,
+                                    minWidth: 16, height: 16, borderRadius: 999,
+                                    background: 'var(--admin-primary)',
+                                    border: '2px solid var(--admin-surface)',
+                                    color: '#fff', fontSize: 9, fontWeight: 700,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    lineHeight: 1,
+                                }}>
+                                    {unreadCount > 9 ? '9+' : unreadCount}
+                                </span>
+                            )}
                         </button>
                         <div className="relative">
                             <button

@@ -95,6 +95,7 @@ function AssignedPostRace() {
     const [resultForm, setResultForm] = useState(emptyResultForm);
     const [violationForm, setViolationForm] = useState(emptyViolationForm);
     const [reportContent, setReportContent] = useState('');
+    const [reportType, setReportType] = useState('PostRace');
 
     const [loadingRaces, setLoadingRaces] = useState(true);
     const [loadingRaceData, setLoadingRaceData] = useState(false);
@@ -120,9 +121,14 @@ function AssignedPostRace() {
         setLoadingRaces(true);
         setError('');
         try {
-            const data = await refereeApi.getAssignedRaces({ phase: 'post' });
+            const data = await refereeApi.getAssignedRaces();
             if (ignoreRef.current) return;
-            const nextRaces = data ?? [];
+            const nextRaces = (data ?? []).filter((r) =>
+                r.raceStatus === 'Ongoing' ||
+                r.raceStatus === 'Completed' ||
+                r.raceStatus === 'Finished' ||
+                r.raceStatus === 'ResultPending'
+            );
             setRaces(nextRaces);
             setSelectedRaceId((current) => {
                 if (current) return current;
@@ -278,7 +284,7 @@ function AssignedPostRace() {
         if (!selectedRaceId || !reportContent.trim()) return;
         setSaving('report'); setError(''); setSuccess('');
         try {
-            await refereeApi.createRefereeReport(selectedRaceId, reportContent.trim());
+            await refereeApi.createRefereeReport(selectedRaceId, reportContent.trim(), reportType);
             await refreshReports();
             setReportContent('');
             setSuccess('Report submitted.');
@@ -689,6 +695,14 @@ function AssignedPostRace() {
                             )}
 
                             <div>
+                                <label className={labelClass}>Report Type</label>
+                                <select value={reportType} onChange={(e) => setReportType(e.target.value)} className={inputClass}>
+                                    <option value="PostRace">Post-Race</option>
+                                    <option value="PreRace">Pre-Race</option>
+                                </select>
+                            </div>
+
+                            <div style={{ marginTop: 14 }}>
                                 <label className={labelClass}>Report Content</label>
                                 <textarea value={reportContent} rows={12} required
                                     onChange={(e) => setReportContent(e.target.value)}

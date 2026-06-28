@@ -80,6 +80,8 @@ function RefereeAssignedRace() {
                     <div className="grid gap-3">
                         {races.map((race) => {
                             const s = STATUS_STYLE[race.raceStatus] ?? { bg: '#f7efee', color: '#7d0000' };
+                            const canPreRace = race.raceStatus === 'Scheduled';
+                            const canPostRace = ['Ongoing', 'Completed', 'Finished', 'ResultPending'].includes(race.raceStatus);
                             return (
                                 <div
                                     key={race.raceId}
@@ -126,11 +128,16 @@ function RefereeAssignedRace() {
                                         <button
                                             type="button"
                                             onClick={() => navigate(`/referee/races/pre-race/${race.raceId}`, { state: { race } })}
+                                            disabled={!canPreRace}
+                                            title={!canPreRace ? 'Only available for Scheduled races' : 'Pre-race inspection'}
                                             style={{
                                                 display: 'flex', alignItems: 'center', gap: 6,
                                                 padding: '8px 16px', borderRadius: 8,
-                                                border: '1px solid #edcfc9', background: '#fff8f6',
-                                                color: '#7d0000', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                                                border: '1px solid #edcfc9',
+                                                background: canPreRace ? '#fff8f6' : '#f5f5f5',
+                                                color: canPreRace ? '#7d0000' : '#bbb',
+                                                fontWeight: 700, fontSize: 13,
+                                                cursor: canPreRace ? 'pointer' : 'not-allowed',
                                             }}
                                         >
                                             <FaClipboardCheck /> Pre-Race Inspect
@@ -138,11 +145,16 @@ function RefereeAssignedRace() {
                                         <button
                                             type="button"
                                             onClick={() => navigate('/referee/races/post-race', { state: { raceId: race.raceId } })}
+                                            disabled={!canPostRace}
+                                            title={!canPostRace ? 'Only available for Ongoing / Completed / ResultPending races' : 'Post-race workflow'}
                                             style={{
                                                 display: 'flex', alignItems: 'center', gap: 6,
                                                 padding: '8px 16px', borderRadius: 8,
-                                                border: 'none', background: '#7d0000',
-                                                color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                                                border: 'none',
+                                                background: canPostRace ? '#7d0000' : '#e0e0e0',
+                                                color: canPostRace ? '#fff' : '#bbb',
+                                                fontWeight: 700, fontSize: 13,
+                                                cursor: canPostRace ? 'pointer' : 'not-allowed',
                                             }}
                                         >
                                             <FaGavel /> Post-Race

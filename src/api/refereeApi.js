@@ -70,10 +70,10 @@ export async function getRaceResults(raceId) {
     return apiRequest(`/referee/races/${raceId}/results`);
 }
 
-export async function createRefereeReport(raceId, reportContent) {
+export async function createRefereeReport(raceId, reportContent, reportType = 'PostRace') {
     return apiRequest(`/referee/races/${raceId}/reports`, {
         method: 'POST',
-        body: JSON.stringify({ reportContent }),
+        body: JSON.stringify({ reportContent, reportType }),
     });
 }
 
