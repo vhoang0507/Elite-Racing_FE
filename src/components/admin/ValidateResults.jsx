@@ -11,6 +11,7 @@ import {
 import {
     FaBolt,
     FaChevronRight,
+    FaFileAlt,
     FaFlagCheckered,
     FaHorseHead,
     FaTrophy,
@@ -47,6 +48,12 @@ const statusClass = {
     active: 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
     inactive: 'border-[#ddd6d3] bg-[#f7f5f4] text-[#6f6360]',
     banned: 'border-[#cbd5e1] bg-[#f1f5f9] text-[#475569]',
+    refereereport: 'border-[#9ab8ff] bg-[#e7f0ff] text-[#1747c2]',
+    'referee-report': 'border-[#9ab8ff] bg-[#e7f0ff] text-[#1747c2]',
+    violationreport: 'border-[#f1d59b] bg-[#fff7df] text-[#8a5a00]',
+    'violation-report': 'border-[#f1d59b] bg-[#fff7df] text-[#8a5a00]',
+    warning: 'border-[#f1d59b] bg-[#fff7df] text-[#8a5a00]',
+    disqualified: 'border-[#f0b7ae] bg-[#fff1ef] text-[#a11616]',
 };
 
 const iconByTone = {
@@ -54,7 +61,7 @@ const iconByTone = {
     gray: FaHorseHead,
     green: FaTrophy,
     red: FaBolt,
-    orange: FaHorseHead,
+    orange: FaFileAlt,
 };
 
 const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-white font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]';
@@ -78,6 +85,10 @@ const matchesQuery = (submission, query) => {
         submission.race,
         submission.detail,
         submission.status,
+        submission.reportType,
+        submission.refereeName,
+        submission.horseName,
+        submission.content,
     ].some((value) => String(value).toLowerCase().includes(normalizedQuery));
 };
 
@@ -128,7 +139,7 @@ function ValidateResults() {
                             Validate Results
                         </h1>
                         <p className="mt-2 text-[0.95rem] font-semibold leading-[1.45] text-[var(--admin-muted)]">
-                            Review referee-submitted race results before publishing to the public leaderboard and finalizing owner payouts.
+                            Review referee-submitted race results and reports before publishing official race outcomes.
                         </p>
                     </div>
 
@@ -138,7 +149,7 @@ function ValidateResults() {
                     >
                         <div className="flex min-h-[58px] items-center border-b border-[var(--admin-border)] bg-[var(--validate-soft-panel)] px-6">
                             <h2 className="m-0 text-[1.04rem] font-black text-[var(--admin-ink)]">
-                                Active Submissions
+                                Active Submissions & Reports
                             </h2>
                         </div>
 
@@ -188,7 +199,7 @@ function ValidateResults() {
                                                         className="inline-flex min-h-[38px] min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-md border border-[var(--admin-primary)] bg-white text-[0.82rem] font-extrabold text-[var(--admin-primary)] no-underline hover:bg-[var(--admin-primary)] hover:text-white"
                                                         to={`/admin/results/${submission.slug}`}
                                                     >
-                                                        <span>View Details</span>
+                                                        <span>{submission.kind === 'report' ? 'View Report' : 'View Details'}</span>
                                                         <FaChevronRight aria-hidden="true" className="h-3 w-3" />
                                                     </Link>
                                                 </td>

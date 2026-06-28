@@ -538,8 +538,23 @@ const mapRaceResult = (result) => {
 };
 
 async function getResultSubmissions() {
-    const data = await apiRequest('/admin/results');
-    return data.map(mapRaceResult);
+    const [resultsPayload, reportsPayload] = await Promise.all([
+        apiRequest('/admin/results').catch(() => []),
+        getReports().catch(() => []),
+    ]);
+
+    const resultSubmissions = (Array.isArray(resultsPayload) ? resultsPayload : [])
+        .map(mapRaceResult);
+    const reportSubmissions = normalizeReports(reportsPayload)
+        .map(mapAdminReportSubmission);
+
+    return [...resultSubmissions, ...reportSubmissions]
+        .sort((current, next) => {
+            const currentDate = new Date(current.submittedAt || current.updatedAt || current.createdAt || 0).getTime();
+            const nextDate = new Date(next.submittedAt || next.updatedAt || next.createdAt || 0).getTime();
+
+            return nextDate - currentDate;
+        });
 }
 
 async function getPendingResults() {
@@ -583,27 +598,219 @@ const normalizeReports = (payload) => {
     return [];
 };
 
+const formatReportTypeLabel = (type) => {
+    const labels = {
+        RefereeReport: 'Referee Report',
+        Violation: 'Violation Report',
+    };
+
+    return labels[type] || type || 'Referee Report';
+};
+
+const getAdminReportSlug = (report) => {
+    if (report.type === 'Violation' || report.violationId) {
+        return `violation-${report.violationId}`;
+    }
+
+    return `report-${report.reportId}`;
+};
+
+const parseAdminReportSlug = (idOrSlug) => {
+    const value = String(idOrSlug || '');
+
+    if (value.startsWith('report-')) {
+        return { type: 'RefereeReport', id: value.replace('report-', '') };
+    }
+
+    if (value.startsWith('violation-')) {
+        return { type: 'Violation', id: value.replace('violation-', '') };
+    }
+
+    return null;
+};
+
+const getDirectReportTournamentName = (report) => (
+    report.tournamentName
+    || report.TournamentName
+    || report.race?.tournamentName
+    || report.Race?.TournamentName
+);
+
+const getReportTournamentName = (report) => (
+    getDirectReportTournamentName(report)
+    || report.raceName
+    || report.RaceName
+);
+
+const mapRegistrationRaceContext = (registration) => {
+    if (!registration) {
+        return {};
+    }
+
+    return {
+        registrationId: readApiField(registration, 'registrationId'),
+        raceId: readApiField(registration, 'raceId'),
+        raceName: readApiField(registration, 'raceName'),
+        tournamentId: readApiField(registration, 'tournamentId'),
+        tournamentName: readApiField(registration, 'tournamentName'),
+        horseId: readApiField(registration, 'horseId'),
+        horseName: readApiField(registration, 'horseName'),
+    };
+};
+
+async function getRaceContextForReport({ registrationId, raceId } = {}) {
+    if (registrationId) {
+        try {
+            return mapRegistrationRaceContext(await getRegistrationById(registrationId));
+        } catch {
+            // Fall through to race lookup below.
+        }
+    }
+
+    if (raceId) {
+        try {
+            const registrations = await getRegistrations();
+            const registration = (Array.isArray(registrations) ? registrations : [])
+                .find((item) => Number(readApiField(item, 'raceId')) === Number(raceId));
+
+            return mapRegistrationRaceContext(registration);
+        } catch {
+            return {};
+        }
+    }
+
+    return {};
+}
+
+const mergeReportContext = (report, context = {}) => ({
+    ...report,
+    registrationId: report.registrationId || context.registrationId,
+    raceId: report.raceId || context.raceId,
+    raceName: report.raceName || context.raceName,
+    tournamentId: report.tournamentId || context.tournamentId,
+    tournamentName: getDirectReportTournamentName(report) || context.tournamentName || report.raceName || report.RaceName,
+    horseId: report.horseId || context.horseId,
+    horseName: report.horseName || context.horseName,
+});
+
+const mapAdminReportSubmission = (report) => {
+    const reportType = report.type || (report.violationId ? 'Violation' : 'RefereeReport');
+    const reportLabel = formatReportTypeLabel(reportType);
+    const submittedAt = report.submittedAt || report.createdAt;
+    const tournamentName = getReportTournamentName(report);
+
+    return {
+        id: getAdminReportSlug(report),
+        kind: 'report',
+        slug: getAdminReportSlug(report),
+        reportId: report.reportId,
+        violationId: report.violationId,
+        raceId: report.raceId,
+        tournamentName,
+        race: report.raceName || `Race #${report.raceId || '-'}`,
+        name: report.raceName || `Race #${report.raceId || '-'}`,
+        detail: `${reportLabel}${report.refereeName ? ` by ${report.refereeName}` : ''}`,
+        status: report.action || reportLabel,
+        tone: reportType === 'Violation' ? 'orange' : 'blue',
+        submittedAt,
+        createdAt: report.createdAt,
+        reportType,
+        refereeId: report.refereeId,
+        refereeName: report.refereeName,
+        horseId: report.horseId,
+        horseName: report.horseName,
+        content: report.reportContent || report.description || '',
+    };
+};
+
 const mapRefereeReport = (report) => ({
-    id: report.reportId || report.violationId,
+    id: getAdminReportSlug(report),
     reportId: report.reportId,
     violationId: report.violationId,
+    sourceType: report.type || (report.violationId ? 'Violation' : 'RefereeReport'),
     raceId: report.raceId,
+    tournamentName: getReportTournamentName(report),
+    raceName: report.raceName,
     registrationId: report.registrationId,
+    horseId: report.horseId,
+    horseName: report.horseName,
     refereeId: report.refereeId,
-    title: report.reportContent
-        ? `Report #${report.reportId}`
-        : `${report.violationType || 'Referee Report'} #${report.violationId || report.reportId || '-'}`,
+    refereeName: report.refereeName,
+    title: `${formatReportTypeLabel(report.type || (report.violationId ? 'Violation' : 'RefereeReport'))} #${report.reportId || report.violationId || '-'}`,
     content: report.reportContent || report.description || report.note || 'No report content provided.',
+    description: report.description,
     submittedAt: report.submittedAt || report.createdAt,
     violationType: report.violationType,
     action: report.action,
     penaltyPoints: report.penaltyPoints,
 });
 
+async function getStandaloneReportDetail(idOrSlug) {
+    const parsedReport = parseAdminReportSlug(idOrSlug);
+
+    if (!parsedReport) {
+        return null;
+    }
+
+    const reports = normalizeReports(await getReports());
+    const report = reports.find((item) => {
+        if (parsedReport.type === 'Violation') {
+            return Number(item.violationId) === Number(parsedReport.id);
+        }
+
+        return Number(item.reportId) === Number(parsedReport.id);
+    });
+
+    if (!report) {
+        throw new Error('Report not found.');
+    }
+
+    const reportContext = await getRaceContextForReport({
+        registrationId: report.registrationId,
+        raceId: report.raceId,
+    });
+    const mergedReport = mergeReportContext(report, reportContext);
+    const mappedReport = mapRefereeReport(mergedReport);
+    const reportType = report.type || (report.violationId ? 'Violation' : 'RefereeReport');
+    const tournamentName = getReportTournamentName(mergedReport);
+
+    return {
+        detailType: 'admin-report',
+        reportId: report.reportId,
+        violationId: report.violationId,
+        raceId: mergedReport.raceId,
+        tournamentId: mergedReport.tournamentId,
+        tournamentName,
+        raceName: mergedReport.raceName || `Race #${mergedReport.raceId || '-'}`,
+        registrationId: mergedReport.registrationId,
+        horseId: mergedReport.horseId,
+        horseName: mergedReport.horseName,
+        refereeId: report.refereeId,
+        refereeName: report.refereeName,
+        status: report.action || formatReportTypeLabel(reportType),
+        submittedAt: report.submittedAt || report.createdAt,
+        sourceType: reportType,
+        reports: [mappedReport],
+        reportError: '',
+    };
+}
+
 async function getResultReportDetail(idOrSlug) {
+    const standaloneReport = await getStandaloneReportDetail(idOrSlug);
+
+    if (standaloneReport) {
+        return standaloneReport;
+    }
+
     const id = String(idOrSlug).replace('result-', '');
     const result = await apiRequest(`/admin/results/${id}`);
     const mappedResult = mapRaceResult(result);
+    const raceContext = await getRaceContextForReport({
+        registrationId: result.registrationId,
+        raceId: result.raceId,
+    });
+    const raceName = raceContext.raceName || mappedResult.race;
+    const tournamentName = raceContext.tournamentName || mappedResult.tournamentName || mappedResult.race;
     let reports = [];
     let reportError = '';
 
@@ -618,7 +825,7 @@ async function getResultReportDetail(idOrSlug) {
                     || Number(report.refereeId) === Number(result.enteredByRefereeId)
                 )
             ))
-            .map(mapRefereeReport);
+            .map((report) => mapRefereeReport(mergeReportContext(report, raceContext)));
     } catch (error) {
         reportError = error.message || 'Failed to load referee report.';
     }
@@ -627,8 +834,14 @@ async function getResultReportDetail(idOrSlug) {
         reports = [{
             id: `result-note-${result.resultId}`,
             raceId: result.raceId,
+            raceName,
+            tournamentId: raceContext.tournamentId,
+            tournamentName,
             registrationId: result.registrationId,
+            horseId: raceContext.horseId,
+            horseName: raceContext.horseName,
             refereeId: result.enteredByRefereeId,
+            sourceType: 'RefereeReport',
             title: 'Result Note',
             content: result.note,
             submittedAt: result.updatedAt || result.createdAt,
@@ -638,7 +851,9 @@ async function getResultReportDetail(idOrSlug) {
     return {
         resultId: result.resultId,
         raceId: result.raceId,
-        raceName: mappedResult.race,
+        raceName,
+        tournamentId: raceContext.tournamentId,
+        tournamentName,
         registrationId: result.registrationId,
         refereeId: result.enteredByRefereeId,
         status: result.status,
