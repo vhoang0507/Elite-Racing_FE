@@ -208,7 +208,7 @@ function RefereeLayout({
                     </div>
 
                     <div className="min-w-0">
-                        <strong className="block truncate text-[var(--admin-ink)]">
+                        <strong className="block truncate text-white">
                             {fullName}
                         </strong>
                         <span className="role-profile-role">
