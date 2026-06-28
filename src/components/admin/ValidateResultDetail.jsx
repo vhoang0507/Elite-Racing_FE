@@ -13,6 +13,7 @@ import {
     FaExclamationCircle,
     FaFileAlt,
     FaRedoAlt,
+    FaTrophy,
 } from 'react-icons/fa';
 
 import { adminApi } from '../../api/adminApi';
@@ -67,6 +68,23 @@ const formatReportType = (type) => {
     };
 
     return labels[type] || type || 'Referee Report';
+};
+
+const formatPhase = (phase) => {
+    const labels = {
+        PreRace: 'Pre-Race',
+        PostRace: 'Post-Race',
+    };
+
+    return labels[phase] || phase || 'Post-Race';
+};
+
+const formatScore = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return '-';
+    }
+
+    return String(value);
 };
 
 function ValidateResultDetail() {
@@ -127,6 +145,82 @@ function ValidateResultDetail() {
         ? 'Full referee report information submitted from the referee workflow.'
         : 'Official report content submitted by the race referee for admin review.';
     const tournamentName = detail?.tournamentName || detail?.raceName || '-';
+    const postRaceResults = detail?.postRace?.results || [];
+    const postRaceReports = detail?.postRace?.reports || detail?.reports || [];
+    const isPostRaceReportItem = (report) => report.reportPhase === 'PostRace';
+    const getReportTournament = (report) => report.tournamentName || detail?.tournamentName || detail?.raceName || '-';
+    const getReportSubtitle = (report) => (
+        isPostRaceReportItem(report)
+            ? `${formatPhase(report.reportPhase)} | ${getReportTournament(report)}`
+            : `${formatPhase(report.reportPhase)} | Race #${report.raceId || '-'} | Registration #${report.registrationId || '-'} | Referee ${report.refereeName || detail?.refereeName || `#${report.refereeId || '-'}`}`
+    );
+    const getReportMetaRows = (report) => {
+        if (isPostRaceReportItem(report)) {
+            return [
+                ['Report Phase', formatPhase(report.reportPhase)],
+                ['Tournament', getReportTournament(report)],
+            ];
+        }
+
+        return [
+            ['Report Phase', formatPhase(report.reportPhase)],
+            ['Tournament', getReportTournament(report)],
+            ['Horse', report.horseName || detail?.horseName],
+            ['Referee', report.refereeName || detail?.refereeName],
+            ['Referee ID', report.refereeId || detail?.refereeId],
+        ];
+    };
+    const renderReportCards = (items, emptyText) => (
+        items.length > 0 ? (
+            <div className="divide-y divide-[var(--admin-border)]">
+                {items.map((report) => (
+                    <article className="grid gap-4 px-6 py-5" key={report.id}>
+                        <div className="flex items-start justify-between gap-4 max-[820px]:flex-col">
+                            <div className="flex items-start gap-3">
+                                <span className="grid h-10 w-10 flex-none place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
+                                    <FaFileAlt aria-hidden="true" />
+                                </span>
+                                <div>
+                                    <h3 className="m-0 text-[1rem] font-black text-[var(--admin-primary-dark)]">{report.title}</h3>
+                                    <p className="m-0 mt-1 text-[0.75rem] font-bold text-[var(--admin-muted)]">
+                                        {getReportSubtitle(report)}
+                                    </p>
+                                </div>
+                            </div>
+                            <span className="text-[0.75rem] font-bold text-[#6d5752]">{formatDateTime(report.submittedAt)}</span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 rounded-md border border-[var(--admin-border)] bg-[#f8fbff] p-4 text-[0.78rem] font-bold text-[var(--admin-muted)] max-[720px]:grid-cols-1">
+                            {getReportMetaRows(report)
+                                .filter(([, value]) => value !== undefined && value !== null && value !== '')
+                                .map(([label, value]) => (
+                                    <div className="grid gap-1" key={label}>
+                                        <span className="text-[0.62rem] font-black uppercase tracking-normal text-[#64748b]">{label}</span>
+                                        <strong className="text-[0.88rem] text-[var(--admin-ink)]">{value}</strong>
+                                    </div>
+                                ))}
+                        </div>
+
+                        <p className="m-0 whitespace-pre-wrap rounded-md border border-[#dbe7f3] bg-white px-4 py-3 text-[0.9rem] font-semibold leading-7 text-[#334155]">
+                            {report.content}
+                        </p>
+
+                        {(report.violationType || report.action || report.penaltyPoints !== undefined) ? (
+                            <div className="flex flex-wrap gap-2 text-[0.72rem] font-black text-[#6d5752]">
+                                {report.violationType ? <span className="rounded border border-[#e6d3cf] bg-[#fff7f5] px-2.5 py-1">Type: {report.violationType}</span> : null}
+                                {report.action ? <span className="rounded border border-[#e6d3cf] bg-[#fff7f5] px-2.5 py-1">Action: {report.action}</span> : null}
+                                {report.penaltyPoints !== undefined && report.penaltyPoints !== null ? <span className="rounded border border-[#e6d3cf] bg-[#fff7f5] px-2.5 py-1">Penalty: {report.penaltyPoints}</span> : null}
+                            </div>
+                        ) : null}
+                    </article>
+                ))}
+            </div>
+        ) : (
+            <div className="px-6 py-8 text-[0.9rem] font-bold text-[var(--admin-muted)]">
+                {emptyText}
+            </div>
+        )
+    );
 
     return (
         <AdminLayout activeKey="results" mainClassName="validate-detail-main">
@@ -200,82 +294,90 @@ function ValidateResultDetail() {
                             </article>
                         </section>
 
+                        {detail?.reportError ? (
+                            <section className={`${panelWidthClass} rounded-[var(--admin-radius)] border border-[#f0b7ae] bg-[#fff8f6] px-6 py-4 text-[0.82rem] font-bold text-[var(--admin-primary)]`}>
+                                {detail.reportError}
+                            </section>
+                        ) : null}
+
                         <section
-                            aria-label="Referee reports"
-                            className={`${panelWidthClass} overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_16px_34px_rgba(100,36,28,0.06)]`}
+                            aria-label="Post-race workflow"
+                            className={`${panelWidthClass} overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_16px_34px_rgba(15,23,42,0.06)]`}
                         >
                             <div className="flex min-h-[62px] items-center justify-between gap-4 border-b border-[var(--admin-border)] bg-[var(--validate-soft-panel)] px-6 py-3.5 max-[820px]:flex-col max-[820px]:items-stretch">
-                                <h2 className="m-0 text-[1rem] font-black text-[var(--admin-ink)]">Submitted Report</h2>
+                                <div className="flex items-center gap-3">
+                                    <span className="grid h-9 w-9 place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
+                                        <FaTrophy aria-hidden="true" />
+                                    </span>
+                                    <h2 className="m-0 text-[1rem] font-black text-[var(--admin-ink)]">Post-Race</h2>
+                                </div>
                                 <span className="text-[0.72rem] font-extrabold text-[#475569]">
-                                    {detail?.reports?.length || 0} report{detail?.reports?.length === 1 ? '' : 's'}
+                                    {postRaceResults.length} result{postRaceResults.length === 1 ? '' : 's'} | {postRaceReports.length} report{postRaceReports.length === 1 ? '' : 's'}
                                 </span>
                             </div>
 
-                            {detail?.reportError ? (
-                                <div className="border-b border-[var(--admin-border)] bg-[#fff8f6] px-6 py-4 text-[0.82rem] font-bold text-[var(--admin-primary)]">
-                                    {detail.reportError}
-                                </div>
-                            ) : null}
-
-                            {detail?.reports?.length > 0 ? (
-                                <div className="divide-y divide-[var(--admin-border)]">
-                                    {detail.reports.map((report) => (
-                                        <article className="grid gap-4 px-6 py-5" key={report.id}>
-                                            <div className="flex items-start justify-between gap-4 max-[820px]:flex-col">
-                                                <div className="flex items-start gap-3">
-                                                    <span className="grid h-10 w-10 flex-none place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
-                                                        <FaFileAlt aria-hidden="true" />
-                                                    </span>
-                                                    <div>
-                                                        <h3 className="m-0 text-[1rem] font-black text-[var(--admin-primary-dark)]">{report.title}</h3>
-                                                        <p className="m-0 mt-1 text-[0.75rem] font-bold text-[var(--admin-muted)]">
-                                                            Race #{report.raceId || '-'} | Registration #{report.registrationId || '-'} | Referee {report.refereeName || detail?.refereeName || `#${report.refereeId || '-'}`}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <span className="text-[0.75rem] font-bold text-[#6d5752]">{formatDateTime(report.submittedAt)}</span>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-3 rounded-md border border-[var(--admin-border)] bg-[#f8fbff] p-4 text-[0.78rem] font-bold text-[var(--admin-muted)] max-[720px]:grid-cols-1">
-                                                {[
-                                                    ['Report Type', formatReportType(report.sourceType)],
-                                                    ['Tournament', report.tournamentName || detail?.tournamentName || detail?.raceName],
-                                                    ['Race', report.raceName || detail?.raceName],
-                                                    ['Race ID', report.raceId],
-                                                    ['Registration ID', report.registrationId],
-                                                    ['Horse', report.horseName || detail?.horseName],
-                                                    ['Horse ID', report.horseId || detail?.horseId],
-                                                    ['Referee', report.refereeName || detail?.refereeName],
-                                                    ['Referee ID', report.refereeId || detail?.refereeId],
-                                                ]
-                                                    .filter(([, value]) => value !== undefined && value !== null && value !== '')
-                                                    .map(([label, value]) => (
-                                                        <div className="grid gap-1" key={label}>
-                                                            <span className="text-[0.62rem] font-black uppercase tracking-normal text-[#64748b]">{label}</span>
-                                                            <strong className="text-[0.88rem] text-[var(--admin-ink)]">{value}</strong>
-                                                        </div>
+                            <div className="border-b border-[var(--admin-border)] px-6 py-5">
+                                <h3 className="m-0 mb-4 text-[0.95rem] font-black text-[var(--admin-primary-dark)]">Result Ranking</h3>
+                                {postRaceResults.length > 0 ? (
+                                    <div className="overflow-x-auto rounded-md border border-[var(--admin-border)]">
+                                        <table className="w-full min-w-[760px] border-collapse bg-white">
+                                            <thead>
+                                                <tr>
+                                                    {['Rank', 'Horse', 'Registration', 'Time', 'Score', 'Status', 'Note'].map((label) => (
+                                                        <th className="border-b border-[var(--admin-border)] bg-[#f8fbff] px-4 py-3 text-left text-[0.62rem] font-black uppercase tracking-normal text-[#64748b]" key={label}>
+                                                            {label}
+                                                        </th>
                                                     ))}
-                                            </div>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {postRaceResults.map((result) => (
+                                                    <tr key={result.resultId || result.registrationId}>
+                                                        <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.86rem] font-black text-[var(--admin-primary-dark)]">
+                                                            {result.finishPosition ? `#${result.finishPosition}` : '-'}
+                                                        </td>
+                                                        <td className="border-b border-[var(--admin-border)] px-4 py-3">
+                                                            <strong className="block text-[0.86rem] text-[var(--admin-ink)]">{result.horse}</strong>
+                                                            <span className="text-[0.72rem] font-bold text-[var(--admin-muted)]">Horse #{result.horseId || '-'}</span>
+                                                        </td>
+                                                        <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-muted)]">
+                                                            #{result.registrationId || '-'}
+                                                        </td>
+                                                        <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-ink)]">
+                                                            {result.finishTime}
+                                                        </td>
+                                                        <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-ink)]">
+                                                            {formatScore(result.score)}
+                                                        </td>
+                                                        <td className="border-b border-[var(--admin-border)] px-4 py-3">
+                                                            <span className={`inline-flex min-h-6 items-center rounded-full border px-2.5 text-[0.66rem] font-extrabold ${statusClass[formatClass(result.status)] || statusClass.pending}`}>
+                                                                {result.status || '-'}
+                                                            </span>
+                                                        </td>
+                                                        <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.82rem] font-semibold text-[var(--admin-muted)]">
+                                                            {result.note || '-'}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ) : (
+                                    <div className="rounded-md border border-[var(--admin-border)] bg-[#f8fbff] px-4 py-5 text-[0.9rem] font-bold text-[var(--admin-muted)]">
+                                        No Post-Race result ranking is available for this race.
+                                    </div>
+                                )}
+                            </div>
 
-                                            <p className="m-0 whitespace-pre-wrap rounded-md border border-[#f0d8d3] bg-[#fffdfc] px-4 py-3 text-[0.9rem] font-semibold leading-7 text-[#4f403d]">
-                                                {report.content}
-                                            </p>
-
-                                            {(report.violationType || report.action || report.penaltyPoints !== undefined) ? (
-                                                <div className="flex flex-wrap gap-2 text-[0.72rem] font-black text-[#6d5752]">
-                                                    {report.violationType ? <span className="rounded border border-[#e6d3cf] bg-[#fff7f5] px-2.5 py-1">Type: {report.violationType}</span> : null}
-                                                    {report.action ? <span className="rounded border border-[#e6d3cf] bg-[#fff7f5] px-2.5 py-1">Action: {report.action}</span> : null}
-                                                    {report.penaltyPoints !== undefined && report.penaltyPoints !== null ? <span className="rounded border border-[#e6d3cf] bg-[#fff7f5] px-2.5 py-1">Penalty: {report.penaltyPoints}</span> : null}
-                                                </div>
-                                            ) : null}
-                                        </article>
-                                    ))}
+                            <div>
+                                <div className="border-b border-[var(--admin-border)] px-6 py-4">
+                                    <h3 className="m-0 text-[0.95rem] font-black text-[var(--admin-primary-dark)]">Referee Report</h3>
                                 </div>
-                            ) : (
-                                <div className="px-6 py-8 text-[0.9rem] font-bold text-[var(--admin-muted)]">
-                                    No referee report is available for this race from the current admin API.
-                                </div>
-                            )}
+                                {renderReportCards(
+                                    postRaceReports,
+                                    'No Post-Race report is available for this race.'
+                                )}
+                            </div>
                         </section>
                     </>
                 )}

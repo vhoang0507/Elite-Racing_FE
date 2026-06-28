@@ -525,10 +525,14 @@ const mapRaceResult = (result) => {
         updatedAt: result.updatedAt,
         slug: `result-${result.resultId}`,
         race,
+        raceName: race,
+        tournamentId: result.tournamentId,
+        tournamentName: result.tournamentName,
         name: race,
         detail: `Registration #${result.registrationId || '-'}`,
         tone: result.status === 'Draft' ? 'gold' : 'green',
         position: result.finishPosition ?? '-',
+        horseId: result.horseId,
         horse: result.horseName || `Registration #${result.registrationId || '-'}`,
         jockey: result.jockeyName || '-',
         owner: result.ownerName || '-',
@@ -538,13 +542,30 @@ const mapRaceResult = (result) => {
 };
 
 async function getResultSubmissions() {
-    const [resultsPayload, reportsPayload] = await Promise.all([
+    const [resultsPayload, reportsPayload, registrationsPayload] = await Promise.all([
         apiRequest('/admin/results').catch(() => []),
         getReports().catch(() => []),
+        getRegistrations().catch(() => []),
     ]);
+    const registrationContextById = new Map(
+        (Array.isArray(registrationsPayload) ? registrationsPayload : [])
+            .map(mapRegistrationRaceContext)
+            .map((context) => [String(context.registrationId), context])
+    );
 
     const resultSubmissions = (Array.isArray(resultsPayload) ? resultsPayload : [])
-        .map(mapRaceResult);
+        .map((result) => {
+            const context = registrationContextById.get(String(result.registrationId)) || {};
+
+            return mapRaceResult({
+                ...result,
+                raceName: context.tournamentName || context.raceName,
+                tournamentId: context.tournamentId,
+                tournamentName: context.tournamentName,
+                horseId: context.horseId,
+                horseName: context.horseName,
+            });
+        });
     const reportSubmissions = normalizeReports(reportsPayload)
         .map(mapAdminReportSubmission);
 
@@ -605,6 +626,29 @@ const formatReportTypeLabel = (type) => {
     };
 
     return labels[type] || type || 'Referee Report';
+};
+
+const getReportPhase = (report) => {
+    const rawPhase = String(report.reportType || report.ReportType || report.phase || report.Phase || '').trim();
+
+    if (/^pre[-\s]?race$/i.test(rawPhase) || /^pre/i.test(rawPhase)) {
+        return 'PreRace';
+    }
+
+    if (/^post[-\s]?race$/i.test(rawPhase) || /^post/i.test(rawPhase)) {
+        return 'PostRace';
+    }
+
+    return 'PostRace';
+};
+
+const formatReportPhaseLabel = (phase) => {
+    const labels = {
+        PreRace: 'Pre-Race',
+        PostRace: 'Post-Race',
+    };
+
+    return labels[phase] || phase || 'Post-Race';
 };
 
 const getAdminReportSlug = (report) => {
@@ -682,6 +726,19 @@ async function getRaceContextForReport({ registrationId, raceId } = {}) {
     return {};
 }
 
+async function getRaceRegistrationContextMap(raceId) {
+    try {
+        const registrations = await getRegistrations();
+        const contexts = (Array.isArray(registrations) ? registrations : [])
+            .filter((registration) => Number(readApiField(registration, 'raceId')) === Number(raceId))
+            .map(mapRegistrationRaceContext);
+
+        return new Map(contexts.map((context) => [String(context.registrationId), context]));
+    } catch {
+        return new Map();
+    }
+}
+
 const mergeReportContext = (report, context = {}) => ({
     ...report,
     registrationId: report.registrationId || context.registrationId,
@@ -694,8 +751,9 @@ const mergeReportContext = (report, context = {}) => ({
 });
 
 const mapAdminReportSubmission = (report) => {
-    const reportType = report.type || (report.violationId ? 'Violation' : 'RefereeReport');
-    const reportLabel = formatReportTypeLabel(reportType);
+    const sourceType = report.type || (report.violationId ? 'Violation' : 'RefereeReport');
+    const reportPhase = getReportPhase(report);
+    const reportLabel = formatReportTypeLabel(sourceType);
     const submittedAt = report.submittedAt || report.createdAt;
     const tournamentName = getReportTournamentName(report);
 
@@ -709,12 +767,13 @@ const mapAdminReportSubmission = (report) => {
         tournamentName,
         race: report.raceName || `Race #${report.raceId || '-'}`,
         name: report.raceName || `Race #${report.raceId || '-'}`,
-        detail: `${reportLabel}${report.refereeName ? ` by ${report.refereeName}` : ''}`,
+        detail: `${formatReportPhaseLabel(reportPhase)} ${reportLabel}${report.refereeName ? ` by ${report.refereeName}` : ''}`,
         status: report.action || reportLabel,
-        tone: reportType === 'Violation' ? 'orange' : 'blue',
+        tone: sourceType === 'Violation' ? 'orange' : 'blue',
         submittedAt,
         createdAt: report.createdAt,
-        reportType,
+        reportType: sourceType,
+        reportPhase,
         refereeId: report.refereeId,
         refereeName: report.refereeName,
         horseId: report.horseId,
@@ -728,6 +787,7 @@ const mapRefereeReport = (report) => ({
     reportId: report.reportId,
     violationId: report.violationId,
     sourceType: report.type || (report.violationId ? 'Violation' : 'RefereeReport'),
+    reportPhase: getReportPhase(report),
     raceId: report.raceId,
     tournamentName: getReportTournamentName(report),
     raceName: report.raceName,
@@ -736,7 +796,7 @@ const mapRefereeReport = (report) => ({
     horseName: report.horseName,
     refereeId: report.refereeId,
     refereeName: report.refereeName,
-    title: `${formatReportTypeLabel(report.type || (report.violationId ? 'Violation' : 'RefereeReport'))} #${report.reportId || report.violationId || '-'}`,
+    title: `${formatReportPhaseLabel(getReportPhase(report))} ${formatReportTypeLabel(report.type || (report.violationId ? 'Violation' : 'RefereeReport'))} #${report.reportId || report.violationId || '-'}`,
     content: report.reportContent || report.description || report.note || 'No report content provided.',
     description: report.description,
     submittedAt: report.submittedAt || report.createdAt,
@@ -744,6 +804,74 @@ const mapRefereeReport = (report) => ({
     action: report.action,
     penaltyPoints: report.penaltyPoints,
 });
+
+const splitWorkflowReports = (reports) => ({
+    preRace: reports.filter((report) => report.reportPhase === 'PreRace'),
+    postRace: reports.filter((report) => report.reportPhase !== 'PreRace'),
+});
+
+const sortRaceResults = (results) => [...results].sort((current, next) => {
+    const currentPosition = Number(current.finishPosition);
+    const nextPosition = Number(next.finishPosition);
+
+    if (Number.isFinite(currentPosition) && Number.isFinite(nextPosition)) {
+        return currentPosition - nextPosition;
+    }
+
+    if (Number.isFinite(currentPosition)) {
+        return -1;
+    }
+
+    if (Number.isFinite(nextPosition)) {
+        return 1;
+    }
+
+    return String(current.horse || '').localeCompare(String(next.horse || ''));
+});
+
+async function getRaceWorkflowData(raceId, { refereeId, fallbackReports = [] } = {}) {
+    const [reportsPayload, resultsPayload, contextMap] = await Promise.all([
+        getReports().catch(() => []),
+        apiRequest('/admin/results').catch(() => []),
+        getRaceRegistrationContextMap(raceId),
+    ]);
+    const firstContext = contextMap.values().next().value || {};
+    const reportRows = normalizeReports(reportsPayload)
+        .filter((report) => Number(report.raceId) === Number(raceId))
+        .filter((report) => !refereeId || !report.refereeId || Number(report.refereeId) === Number(refereeId));
+    const fallbackRows = fallbackReports.filter((report) => (
+        Number(report.raceId) === Number(raceId)
+        && !reportRows.some((item) => getAdminReportSlug(item) === getAdminReportSlug(report))
+    ));
+    const reports = [...reportRows, ...fallbackRows]
+        .map((report) => mapRefereeReport(mergeReportContext(
+            report,
+            contextMap.get(String(report.registrationId)) || firstContext
+        )));
+    const results = (Array.isArray(resultsPayload) ? resultsPayload : [])
+        .filter((result) => Number(result.raceId) === Number(raceId))
+        .map((result) => {
+            const context = contextMap.get(String(result.registrationId)) || firstContext;
+
+            return mapRaceResult({
+                ...result,
+                raceName: context.raceName,
+                tournamentId: context.tournamentId,
+                tournamentName: context.tournamentName,
+                horseId: context.horseId,
+                horseName: context.horseName,
+            });
+        });
+    const splitReports = splitWorkflowReports(reports);
+
+    return {
+        raceContext: firstContext,
+        reports,
+        results: sortRaceResults(results),
+        preRaceReports: splitReports.preRace,
+        postRaceReports: splitReports.postRace,
+    };
+}
 
 async function getStandaloneReportDetail(idOrSlug) {
     const parsedReport = parseAdminReportSlug(idOrSlug);
@@ -773,6 +901,10 @@ async function getStandaloneReportDetail(idOrSlug) {
     const mappedReport = mapRefereeReport(mergedReport);
     const reportType = report.type || (report.violationId ? 'Violation' : 'RefereeReport');
     const tournamentName = getReportTournamentName(mergedReport);
+    const workflow = await getRaceWorkflowData(mergedReport.raceId, {
+        refereeId: report.refereeId,
+        fallbackReports: [mergedReport],
+    });
 
     return {
         detailType: 'admin-report',
@@ -790,7 +922,14 @@ async function getStandaloneReportDetail(idOrSlug) {
         status: report.action || formatReportTypeLabel(reportType),
         submittedAt: report.submittedAt || report.createdAt,
         sourceType: reportType,
-        reports: [mappedReport],
+        reports: workflow.reports.length > 0 ? workflow.reports : [mappedReport],
+        preRace: {
+            reports: workflow.preRaceReports,
+        },
+        postRace: {
+            results: workflow.results,
+            reports: workflow.postRaceReports,
+        },
         reportError: '',
     };
 }
@@ -811,6 +950,9 @@ async function getResultReportDetail(idOrSlug) {
     });
     const raceName = raceContext.raceName || mappedResult.race;
     const tournamentName = raceContext.tournamentName || mappedResult.tournamentName || mappedResult.race;
+    const workflow = await getRaceWorkflowData(result.raceId, {
+        refereeId: result.enteredByRefereeId,
+    });
     let reports = [];
     let reportError = '';
 
@@ -842,11 +984,23 @@ async function getResultReportDetail(idOrSlug) {
             horseName: raceContext.horseName,
             refereeId: result.enteredByRefereeId,
             sourceType: 'RefereeReport',
+            reportPhase: 'PostRace',
             title: 'Result Note',
             content: result.note,
             submittedAt: result.updatedAt || result.createdAt,
         }];
     }
+    const workflowReports = reports.length > 0 ? reports : workflow.reports;
+    const splitReports = splitWorkflowReports(workflowReports);
+    const resultContext = raceContext || {};
+    const fallbackResult = mapRaceResult({
+        ...result,
+        raceName,
+        tournamentId: resultContext.tournamentId,
+        tournamentName,
+        horseId: resultContext.horseId,
+        horseName: resultContext.horseName,
+    });
 
     return {
         resultId: result.resultId,
@@ -858,7 +1012,14 @@ async function getResultReportDetail(idOrSlug) {
         refereeId: result.enteredByRefereeId,
         status: result.status,
         submittedAt: result.updatedAt || result.createdAt,
-        reports,
+        reports: workflowReports,
+        preRace: {
+            reports: splitReports.preRace,
+        },
+        postRace: {
+            results: workflow.results.length > 0 ? workflow.results : [fallbackResult],
+            reports: splitReports.postRace,
+        },
         reportError,
     };
 }

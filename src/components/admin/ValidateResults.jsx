@@ -158,7 +158,7 @@ function ValidateResults() {
                                 <thead>
                                     <tr>
                                         <th className="border-b border-[var(--admin-border)] bg-[var(--validate-table-head)] px-6 py-[18px] pl-[78px] text-left text-[0.66rem] font-black uppercase tracking-normal text-[var(--admin-muted)] max-[820px]:pl-6">
-                                            Race Name
+                                            Tournament Name
                                         </th>
                                         <th className="w-[260px] border-b border-[var(--admin-border)] bg-[var(--validate-table-head)] px-6 py-[18px] text-left text-[0.66rem] font-black uppercase tracking-normal text-[var(--admin-muted)]">
                                             Status
