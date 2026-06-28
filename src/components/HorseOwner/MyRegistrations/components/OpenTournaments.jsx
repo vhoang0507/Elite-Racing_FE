@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
+import { resolveFileUrl } from "../../../../api/uploadApi";
 import RegistrationModal from "./RegistrationModal";
 
 export default function OpenTournaments() {
@@ -35,7 +36,7 @@ export default function OpenTournaments() {
                     {tournaments.map((t) => (
                         <div key={t.tournamentId} style={styles.card} onClick={() => setSelected(t)}>
                             <div style={styles.imgWrapper}>
-                                <img src={t.imageUrl || "/DubaiSprintCup.jpg"} alt={t.tournamentName} style={styles.img} />
+                                <img src={t.imageUrl ? resolveFileUrl(t.imageUrl) : "/DubaiSprintCup.jpg"} alt={t.tournamentName} style={styles.img} />
                                 <span style={styles.prizeBadge}>${Number(t.prizePool).toLocaleString()}+</span>
                             </div>
                             <div style={styles.info}>
