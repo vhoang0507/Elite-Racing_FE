@@ -34,6 +34,10 @@ const statusClass = {
     refereeconfirmed: 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
     adminapproved: 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
     returned: 'border-[#e8897d] bg-[#e8f7ef] text-[var(--admin-primary)]',
+    'referee-report': 'border-[#9ab8ff] bg-[#e7f0ff] text-[#1747c2]',
+    'violation-report': 'border-[#f1d59b] bg-[#fff7df] text-[#8a5a00]',
+    warning: 'border-[#f1d59b] bg-[#fff7df] text-[#8a5a00]',
+    disqualified: 'border-[#f0b7ae] bg-[#fff1ef] text-[#a11616]',
 };
 
 const formatDateTime = (value) => {
@@ -54,6 +58,15 @@ const formatDateTime = (value) => {
         hour: '2-digit',
         minute: '2-digit',
     }).format(date);
+};
+
+const formatReportType = (type) => {
+    const labels = {
+        RefereeReport: 'Referee Report',
+        Violation: 'Violation Report',
+    };
+
+    return labels[type] || type || 'Referee Report';
 };
 
 function ValidateResultDetail() {
@@ -106,6 +119,15 @@ function ValidateResultDetail() {
         };
     }, [resultId]);
 
+    const isStandaloneReport = detail?.detailType === 'admin-report';
+    const heading = isStandaloneReport
+        ? `${formatReportType(detail?.sourceType)}: ${detail?.raceName || 'Race report'}`
+        : `Referee Report: ${detail?.raceName || 'Race result'}`;
+    const description = isStandaloneReport
+        ? 'Full referee report information submitted from the referee workflow.'
+        : 'Official report content submitted by the race referee for admin review.';
+    const tournamentName = detail?.tournamentName || detail?.raceName || '-';
+
     return (
         <AdminLayout activeKey="results" mainClassName="validate-detail-main">
             <section className={pageShellClass}>
@@ -119,10 +141,10 @@ function ValidateResultDetail() {
                             Return
                         </Link>
                         <h1 className="m-0 text-[1.9rem] leading-[1.15] text-[var(--admin-primary-dark)] max-[820px]:text-[1.5rem]">
-                            Referee Report: {detail?.raceName || 'Race result'}
+                            {heading}
                         </h1>
                         <p className="mt-2 max-w-[720px] text-[0.92rem] font-semibold leading-[1.45] text-[var(--admin-muted)]">
-                            Official report content submitted by the race referee for admin review.
+                            {description}
                         </p>
                     </div>
 
@@ -150,24 +172,30 @@ function ValidateResultDetail() {
                     <>
                         <section
                             aria-label="Report summary"
-                            className={`${panelWidthClass} grid grid-cols-4 gap-4 max-[980px]:grid-cols-2 max-[640px]:grid-cols-1`}
+                            className={`${panelWidthClass} grid grid-cols-5 gap-4 max-[1160px]:grid-cols-3 max-[820px]:grid-cols-2 max-[640px]:grid-cols-1`}
                         >
+                            <article className="rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-5 py-4">
+                                <span className="text-[0.62rem] font-black uppercase tracking-normal text-[#704b46]">Tournament</span>
+                                <strong className="mt-1 block text-[1rem] leading-[1.15] text-[var(--admin-primary-dark)]">{tournamentName}</strong>
+                            </article>
                             <article className="rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-5 py-4">
                                 <span className="text-[0.62rem] font-black uppercase tracking-normal text-[#704b46]">Race</span>
                                 <strong className="mt-1 block text-[1rem] leading-[1.15] text-[var(--admin-primary-dark)]">{detail?.raceName || '-'}</strong>
                             </article>
                             <article className="rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-5 py-4">
                                 <span className="text-[0.62rem] font-black uppercase tracking-normal text-[#704b46]">Referee</span>
-                                <strong className="mt-1 block text-[1rem] leading-[1.15] text-[var(--admin-primary-dark)]">#{detail?.refereeId || '-'}</strong>
+                                <strong className="mt-1 block text-[1rem] leading-[1.15] text-[var(--admin-primary-dark)]">
+                                    {detail?.refereeName || (detail?.refereeId ? `#${detail.refereeId}` : '-')}
+                                </strong>
                             </article>
                             <article className="rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-5 py-4">
                                 <span className="text-[0.62rem] font-black uppercase tracking-normal text-[#704b46]">Submitted</span>
                                 <strong className="mt-1 block text-[1rem] leading-[1.15] text-[var(--admin-primary-dark)]">{formatDateTime(detail?.submittedAt)}</strong>
                             </article>
                             <article className="rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-5 py-4">
-                                <span className="text-[0.62rem] font-black uppercase tracking-normal text-[#704b46]">Status</span>
+                                <span className="text-[0.62rem] font-black uppercase tracking-normal text-[#704b46]">{isStandaloneReport ? 'Report Type' : 'Status'}</span>
                                 <span className={`mt-2 inline-flex min-h-7 items-center rounded-full border px-3 text-[0.68rem] font-extrabold ${statusClass[formatClass(detail?.status)] || statusClass.pending}`}>
-                                    {detail?.status || '-'}
+                                    {isStandaloneReport ? formatReportType(detail?.sourceType) : (detail?.status || '-')}
                                 </span>
                             </article>
                         </section>
@@ -201,11 +229,32 @@ function ValidateResultDetail() {
                                                     <div>
                                                         <h3 className="m-0 text-[1rem] font-black text-[var(--admin-primary-dark)]">{report.title}</h3>
                                                         <p className="m-0 mt-1 text-[0.75rem] font-bold text-[var(--admin-muted)]">
-                                                            Race #{report.raceId || '-'} | Registration #{report.registrationId || '-'} | Referee #{report.refereeId || '-'}
+                                                            Race #{report.raceId || '-'} | Registration #{report.registrationId || '-'} | Referee {report.refereeName || detail?.refereeName || `#${report.refereeId || '-'}`}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <span className="text-[0.75rem] font-bold text-[#6d5752]">{formatDateTime(report.submittedAt)}</span>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3 rounded-md border border-[var(--admin-border)] bg-[#f8fbff] p-4 text-[0.78rem] font-bold text-[var(--admin-muted)] max-[720px]:grid-cols-1">
+                                                {[
+                                                    ['Report Type', formatReportType(report.sourceType)],
+                                                    ['Tournament', report.tournamentName || detail?.tournamentName || detail?.raceName],
+                                                    ['Race', report.raceName || detail?.raceName],
+                                                    ['Race ID', report.raceId],
+                                                    ['Registration ID', report.registrationId],
+                                                    ['Horse', report.horseName || detail?.horseName],
+                                                    ['Horse ID', report.horseId || detail?.horseId],
+                                                    ['Referee', report.refereeName || detail?.refereeName],
+                                                    ['Referee ID', report.refereeId || detail?.refereeId],
+                                                ]
+                                                    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+                                                    .map(([label, value]) => (
+                                                        <div className="grid gap-1" key={label}>
+                                                            <span className="text-[0.62rem] font-black uppercase tracking-normal text-[#64748b]">{label}</span>
+                                                            <strong className="text-[0.88rem] text-[var(--admin-ink)]">{value}</strong>
+                                                        </div>
+                                                    ))}
                                             </div>
 
                                             <p className="m-0 whitespace-pre-wrap rounded-md border border-[#f0d8d3] bg-[#fffdfc] px-4 py-3 text-[0.9rem] font-semibold leading-7 text-[#4f403d]">
