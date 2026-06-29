@@ -42,14 +42,18 @@ function RefereeNotification() {
 
     const loadNotifications = async () => {
         setError('');
-        const [notificationData, unreadData] = await Promise.all([
-            refereeApi.getNotifications(),
-            refereeApi.getUnreadCount().catch(() => ({ unreadCount: 0 })),
-        ]);
+        try {
+            const [notificationData, unreadData] = await Promise.all([
+                refereeApi.getNotifications(),
+                refereeApi.getUnreadCount().catch(() => ({ unreadCount: 0 })),
+            ]);
 
-        setNotifications(notificationData ?? []);
-        setUnreadCount(unreadData?.unreadCount ?? 0);
-        setSelectedId((current) => current ?? notificationData?.[0]?.notificationId ?? null);
+            setNotifications(notificationData ?? []);
+            setUnreadCount(unreadData?.unreadCount ?? 0);
+            setSelectedId((current) => current ?? notificationData?.[0]?.notificationId ?? null);
+        } catch (err) {
+            setError(err.message || 'Failed to load notifications.');
+        }
     };
 
     useEffect(() => {

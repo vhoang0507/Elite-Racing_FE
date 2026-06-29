@@ -1,3 +1,19 @@
+import { resolveFileUrl } from '../../../../api/uploadApi';
+
+const AVATAR_FALLBACK = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"%3E%3Ccircle cx="14" cy="14" r="14" fill="%23f3e8e6"/%3E%3Ctext x="14" y="19" text-anchor="middle" font-size="14" fill="%23c9a8a0"%3E🏇%3C/text%3E%3C/svg%3E';
+
+function SafeAvatar({ src, alt }) {
+    const resolved = src ? resolveFileUrl(src) : '';
+    return (
+        <img
+            src={resolved || AVATAR_FALLBACK}
+            alt={alt}
+            style={styles.avatar}
+            onError={(e) => { e.currentTarget.src = AVATAR_FALLBACK; }}
+        />
+    );
+}
+
 export default function InvitationResponses({ invitations, loading, onSign }) {
     return (
         <div style={styles.card}>
@@ -26,11 +42,7 @@ export default function InvitationResponses({ invitations, loading, onSign }) {
                             <tr key={inv.invitationId}>
                                 <td style={styles.td}>
                                     <div style={styles.jockeyCell}>
-                                        <img
-                                            src={inv.profileImageUrl || '/Jockey1.jpg'}
-                                            alt={inv.jockeyName}
-                                            style={styles.avatar}
-                                        />
+                                        <SafeAvatar src={inv.profileImageUrl} alt={inv.jockeyName} />
                                         <span>{inv.jockeyName}</span>
                                         {inv.isOfficial && (
                                             <span style={styles.officialBadge}>OFFICIAL</span>

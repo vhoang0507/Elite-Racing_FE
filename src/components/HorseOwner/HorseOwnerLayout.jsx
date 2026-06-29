@@ -8,7 +8,6 @@ import {
     FaHorseHead,
     FaPlusCircle,
     FaQuestionCircle,
-    FaSearch,
     FaSignOutAlt,
     FaTrophy,
     FaUserFriends,
@@ -100,14 +99,15 @@ function HorseOwnerLayout({ activeKey, children }) {
             {/* Main */}
             <main className="role-main">
                 <header className="role-header">
-                    <label className="role-search">
-                        <FaSearch />
-                        <input placeholder="Search records, horses, races..." type="search" />
-                    </label>
+                    <div className="flex-1" />
                     <div className="flex items-center gap-3">
-                        <button className={iconButtonClasses} type="button">
+                        <button
+                            aria-label="Notifications"
+                            className={iconButtonClasses}
+                            onClick={() => navigate('/owner/notifications')}
+                            type="button"
+                        >
                             <FaBell />
-                            <span className="absolute right-2.5 top-[9px] h-2 w-2 rounded-full border-2 border-[var(--admin-surface)] bg-[var(--admin-primary)]" />
                         </button>
                         <div className="role-header-identity max-[520px]:hidden">
                             <span className="role-header-name">{user?.fullName ?? 'Horse Owner'}</span>
@@ -151,10 +151,10 @@ function HorseOwnerLayout({ activeKey, children }) {
                 <footer className="role-footer">
                     <strong className="text-[var(--admin-primary)]">Elite Racing League</strong>
                     <div className="role-footer-links">
-                        <a href="#" className="text-[var(--admin-muted)] no-underline hover:text-[var(--admin-primary)]">Terms of Service</a>
-                        <a href="#" className="text-[var(--admin-muted)] no-underline hover:text-[var(--admin-primary)]">Privacy Policy</a>
-                        <a href="#" className="text-[var(--admin-muted)] no-underline hover:text-[var(--admin-primary)]">Contact Support</a>
-                        <a href="#" className="text-[var(--admin-muted)] no-underline hover:text-[var(--admin-primary)]">Racing Rules</a>
+                        <span className="text-[var(--admin-muted)]">Terms of Service</span>
+                        <span className="text-[var(--admin-muted)]">Privacy Policy</span>
+                        <span className="text-[var(--admin-muted)]">Contact Support</span>
+                        <span className="text-[var(--admin-muted)]">Racing Rules</span>
                     </div>
                 </footer>
             </main>

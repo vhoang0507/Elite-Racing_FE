@@ -7,6 +7,7 @@ import TournamentSelectModal from "./components/TournamentSelectModal";
 import ActivityTimeline from "./components/ActivityTimeline";
 import InvitationResponses from "./components/InvitationResponses";
 import { ownerApi } from "../../../api/ownerApi";
+import Toast, { useToast } from "../../shared/Toast";
 
 export default function JockeyAssignment() {
     const [selectedJockey, setSelectedJockey] = useState(null);
@@ -21,6 +22,7 @@ export default function JockeyAssignment() {
     const [error, setError] = useState('');
     const [search, setSearch] = useState('');
     const [healthStatus, setHealthStatus] = useState('');
+    const { toast, showToast, hideToast } = useToast();
 
     useEffect(() => {
         let mounted = true;
@@ -89,8 +91,11 @@ export default function JockeyAssignment() {
             await ownerApi.selectOfficialJockey(selectedRegistrationId, invitationId);
             refreshDetail();
             ownerApi.getJockeyAssignmentRegistrations().then(setRegistrations).catch(() => { });
+            showToast('🎉 Jockey officially confirmed! Your registration is ready for the race.', 'success', 'Jockey Confirmed');
         } catch (err) {
-            setError(err.message || 'Failed to select official jockey');
+            const msg = err.message || 'Failed to select official jockey';
+            setError(msg);
+            showToast(msg, 'error', 'Failed to Confirm Jockey');
         }
     };
 
@@ -231,6 +236,14 @@ export default function JockeyAssignment() {
                     onClose={() => setIsTournamentModalOpen(false)}
                 />
             )}
+
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                title={toast.title}
+                onClose={hideToast}
+                duration={4000}
+            />
         </HorseOwnerLayout>
     );
 }

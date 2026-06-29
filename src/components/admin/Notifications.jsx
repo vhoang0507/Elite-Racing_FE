@@ -138,12 +138,17 @@ function Notifications() {
         },
     ], [notifications]);
 
-    const filteredNotifications = useMemo(() => notifications.filter((notification) => (
-        matchesQuery(notification, query)
-        && (typeFilter === 'all-types' || formatClass(notification.type) === typeFilter)
-        && (statusFilter === 'all-status' || formatClass(notification.status) === statusFilter)
-        && (priorityFilter === 'all-priority' || formatClass(notification.priority) === priorityFilter)
-    )), [notifications, priorityFilter, query, statusFilter, typeFilter]);
+    const filteredNotifications = useMemo(() => notifications.filter((notification) => {
+        const statusMatch = statusFilter === 'all-status'
+            || (statusFilter === 'unread' && !notification.isRead)
+            || (statusFilter === 'read' && notification.isRead);
+        return (
+            matchesQuery(notification, query)
+            && (typeFilter === 'all-types' || formatClass(notification.type) === typeFilter)
+            && statusMatch
+            && (priorityFilter === 'all-priority' || formatClass(notification.priority) === priorityFilter)
+        );
+    }), [notifications, priorityFilter, query, statusFilter, typeFilter]);
 
     const totalPages = Math.max(1, Math.ceil(filteredNotifications.length / pageSize));
     const visibleNotifications = filteredNotifications.slice((page - 1) * pageSize, page * pageSize);
@@ -166,7 +171,7 @@ function Notifications() {
             notification.id === id
                 ? {
                     ...notification,
-                    status: 'Active',
+                    isRead: true,
                 }
                 : notification
         )));
@@ -254,10 +259,8 @@ function Notifications() {
                         <label className="flex h-[38px] items-center rounded-md border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661]">
                             <select className={selectClass} onChange={handleFilterChange(setStatusFilter)} value={statusFilter}>
                                 <option value="all-status">All Status</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                    <option value="banned">Banned</option>
+                                <option value="unread">Unread</option>
+                                <option value="read">Read</option>
                             </select>
                         </label>
 

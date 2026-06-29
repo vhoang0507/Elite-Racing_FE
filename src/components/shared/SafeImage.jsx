@@ -1,15 +1,15 @@
 import { useState } from 'react';
 
 /**
- * SafeImage — drop-in <img> với onError fallback.
- * Khi ảnh 404/lỗi → hiện placeholder emoji thay vì icon gãy.
+ * SafeImage — drop-in <img> with onError fallback.
+ * On 404 / load error → shows an emoji placeholder instead of a broken image icon.
  *
  * Props:
- *   src        — URL ảnh
- *   fallback   — URL ảnh dự phòng (optional)
- *   emoji      — emoji trong placeholder (default '🐴')
- *   className  — Tailwind / CSS class cho cả img lẫn placeholder
- *   style      — inline style áp dụng cho cả img lẫn placeholder
+ *   src        — image URL
+ *   fallback   — secondary image URL to try on error (optional)
+ *   emoji      — placeholder emoji shown when both src and fallback fail (default '🐴')
+ *   className  — Tailwind / CSS class applied to both img and placeholder
+ *   style      — inline styles applied to both img and placeholder
  */
 export default function SafeImage({
     src,

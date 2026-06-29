@@ -13,6 +13,7 @@ import {
 
 import JockeyLayout from './JockeyLayout';
 import { jockeyApi } from '../../api/jockeyApi';
+import Toast, { useToast } from '../shared/Toast';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]';
@@ -25,6 +26,7 @@ function JockeyDashboard() {
     const [invitations, setInvitations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showAllInvitations, setShowAllInvitations] = useState(false);
+    const { toast, showToast, hideToast } = useToast();
 
     const today = new Date();
     const [calendarMonth, setCalendarMonth] = useState(today.getMonth());
@@ -56,8 +58,9 @@ function JockeyDashboard() {
                 pendingInvitations: (prev.pendingInvitations ?? 1) - 1,
                 acceptedRaces: (prev.acceptedRaces ?? 0) + 1,
             } : prev);
+            showToast('🎉 Invitation accepted successfully!', 'success', 'Accepted');
         } catch (err) {
-            alert(err.message || 'Failed to accept');
+            showToast(err.message || 'Failed to accept invitation. Please try again.', 'error', 'Error');
         }
     };
 
@@ -69,8 +72,9 @@ function JockeyDashboard() {
                 ...prev,
                 pendingInvitations: (prev.pendingInvitations ?? 1) - 1,
             } : prev);
+            showToast('Invitation declined.', 'success', 'Declined');
         } catch (err) {
-            alert(err.message || 'Failed to reject');
+            showToast(err.message || 'Failed to decline invitation. Please try again.', 'error', 'Error');
         }
     };
 
@@ -234,6 +238,14 @@ function JockeyDashboard() {
                     </div>
                 </section>
             </section>
+
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                title={toast.title}
+                onClose={hideToast}
+                duration={3500}
+            />
         </JockeyLayout>
     );
 }

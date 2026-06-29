@@ -53,7 +53,7 @@ export default function JockeyGrid({ registrationId, search = '', healthStatus =
 
             {!loading && candidates.length === 0 && (
                 <p style={{ color: '#999', fontSize: '0.8rem' }}>
-                    {disableInvite ? 'Chọn một giải đấu đã được duyệt để xem danh sách jockey.' : 'No jockey candidates found.'}
+                    {disableInvite ? 'Select an approved tournament to view available jockeys.' : 'No jockey candidates found.'}
                 </p>
             )}
 
@@ -64,7 +64,21 @@ export default function JockeyGrid({ registrationId, search = '', healthStatus =
                     return (
                         <div key={jockey.jockeyId} style={styles.cardItem}>
                             <div style={styles.imgWrapper}>
-                                <img src={jockey.profileImageUrl ? resolveFileUrl(jockey.profileImageUrl) : '/Jockey1.jpg'} alt={jockey.fullName} style={styles.img} />
+                                <img
+                                    src={jockey.profileImageUrl ? resolveFileUrl(jockey.profileImageUrl) : '/Jockey1.jpg'}
+                                    alt={jockey.fullName}
+                                    style={styles.img}
+                                    onError={(e) => {
+                                        e.currentTarget.onerror = null;
+                                        e.currentTarget.style.display = 'none';
+                                        const placeholder = e.currentTarget.parentElement.querySelector('.img-placeholder');
+                                        if (placeholder) placeholder.style.display = 'flex';
+                                    }}
+                                />
+                                <div
+                                    className="img-placeholder"
+                                    style={{ ...styles.img, display: 'none', alignItems: 'center', justifyContent: 'center', background: '#f3eeec', fontSize: '2rem' }}
+                                >🏇</div>
                             </div>
 
                             <p style={styles.name}>{jockey.fullName}</p>
@@ -102,7 +116,7 @@ export default function JockeyGrid({ registrationId, search = '', healthStatus =
                                     cursor: canInvite ? "pointer" : "not-allowed",
                                 }}
                                 disabled={!canInvite}
-                                title={!canInvite ? (jockey.cannotInviteReason || (disableInvite ? "Vui lòng chọn một giải đấu đã được duyệt trước" : undefined)) : undefined}
+                                title={!canInvite ? (jockey.cannotInviteReason || (disableInvite ? "Please select an approved tournament first" : undefined)) : undefined}
                                 onClick={() => canInvite && onInvite(jockey)}
                             >
                                 {isInvited ? "Invited" : "Send Invitation"}

@@ -1,4 +1,4 @@
-import { getAuthToken } from '../utils/tokenStorage';
+import { getAuthToken, clearAuthSession } from '../utils/tokenStorage';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
@@ -46,6 +46,11 @@ export async function apiRequest(endpoint, options = {}) {
     }
 
     if (!response.ok) {
+        if (response.status === 401) {
+            clearAuthSession();
+            window.location.href = '/login';
+            return;
+        }
         const message = data?.message || data?.title || response.statusText;
         const error = new Error(message);
         error.status = response.status;

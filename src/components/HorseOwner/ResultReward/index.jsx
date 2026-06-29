@@ -4,6 +4,7 @@ import RewardStats from "./components/RewardStats";
 import AvailableRewards from "./components/AvailableRewards";
 import MyHorseResults from "./components/MyHorseResults";
 import { ownerApi } from "../../../api/ownerApi";
+import Toast, { useToast } from "../../shared/Toast";
 
 export default function ResultReward() {
     const [summary, setSummary] = useState(null);
@@ -15,6 +16,7 @@ export default function ResultReward() {
     const [loadingResults, setLoadingResults] = useState(true);
     const [claimingId, setClaimingId] = useState(null);
     const [error, setError] = useState('');
+    const { toast, showToast, hideToast } = useToast();
 
     const loadSummary = useCallback(() => {
         setLoadingSummary(true);
@@ -55,8 +57,11 @@ export default function ResultReward() {
             await ownerApi.claimReward(prizeAwardId);
             loadRewards();
             loadSummary();
+            showToast('🏆 Reward claimed successfully!', 'success', 'Claim Reward');
         } catch (err) {
-            setError(err.message || 'Failed to claim reward');
+            const msg = err.message || 'Failed to claim reward. Please try again.';
+            setError(msg);
+            showToast(msg, 'error', 'Error');
         } finally {
             setClaimingId(null);
         }
@@ -94,6 +99,14 @@ export default function ResultReward() {
                     canLoadMore={results.length >= resultsLimit}
                 />
             </section>
+
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                title={toast.title}
+                onClose={hideToast}
+                duration={3500}
+            />
         </HorseOwnerLayout>
     );
 }

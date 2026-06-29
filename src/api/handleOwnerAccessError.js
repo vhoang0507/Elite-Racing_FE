@@ -15,13 +15,13 @@ export function handleOwnerAccessError(error, navigate) {
             return true;
 
         case 'ContactSupport':
-            alert('Tài khoản đang bị vô hiệu hóa. Vui lòng liên hệ support.');
+            alert('Your account has been disabled. Please contact support.');
             return true;
 
         case 'AccountBlocked':
             clearAuthSession();
             navigate('/login');
-            alert('Tài khoản đã bị khóa.');
+            alert('Your account has been blocked.');
             return true;
 
         default:

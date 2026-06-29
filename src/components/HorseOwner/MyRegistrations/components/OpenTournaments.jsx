@@ -36,7 +36,12 @@ export default function OpenTournaments() {
                     {tournaments.map((t) => (
                         <div key={t.tournamentId} style={styles.card} onClick={() => setSelected(t)}>
                             <div style={styles.imgWrapper}>
-                                <img src={t.imageUrl ? resolveFileUrl(t.imageUrl) : "/DubaiSprintCup.jpg"} alt={t.tournamentName} style={styles.img} />
+                                <img
+                                    src={t.imageUrl ? resolveFileUrl(t.imageUrl) : "/DubaiSprintCup.jpg"}
+                                    alt={t.tournamentName}
+                                    style={styles.img}
+                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/DubaiSprintCup.jpg"; }}
+                                />
                                 <span style={styles.prizeBadge}>${Number(t.prizePool).toLocaleString()}+</span>
                             </div>
                             <div style={styles.info}>

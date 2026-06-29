@@ -36,7 +36,7 @@ function HealthCertificateLink({ url }) {
             onClick={(event) => event.stopPropagation()}
             style={styles.certificateLink}
         >
-            <img src={resolvedUrl} alt="Health certificate" style={styles.certificateThumb} />
+            <img src={resolvedUrl} alt="Health certificate" style={styles.certificateThumb} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
             Health certificate
         </a>
     );
@@ -97,7 +97,7 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
         }
 
         if (!selectedHorse) {
-            setError("Vui lòng chọn ngựa trước khi đăng ký.");
+            setError("Please select a horse before registering.");
             return;
         }
         setSubmitting(true);
@@ -108,13 +108,13 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                 horseId: selectedHorse.horseId,
                 notes,
             });
-            setSuccess("Đăng ký thành công! Đơn đang chờ Admin duyệt.");
+            setSuccess("Registration submitted! Pending admin approval.");
             setTimeout(() => {
                 onSuccess?.();
             }, 1500);
         } catch (err) {
             if (!handleOwnerAccessError(err, navigate)) {
-                setError(err.message || "Đăng ký thất bại.");
+                setError(err.message || "Registration failed.");
             }
         } finally {
             setSubmitting(false);
@@ -127,7 +127,12 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
 
                 {/* Header */}
                 <div style={styles.imgWrapper}>
-                    <img src={tournament.imageUrl ? resolveFileUrl(tournament.imageUrl) : "/DubaiSprintCup.jpg"} alt={tournament.tournamentName} style={styles.img} />
+                    <img
+                        src={tournament.imageUrl ? resolveFileUrl(tournament.imageUrl) : "/DubaiSprintCup.jpg"}
+                        alt={tournament.tournamentName}
+                        style={styles.img}
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/DubaiSprintCup.jpg"; }}
+                    />
                     <div style={styles.imgOverlay}>
                         <span style={styles.upcomingBadge}>UPCOMING MAJOR EVENT</span>
                         <h2 style={styles.tournamentName}>{tournament.tournamentName}</h2>
@@ -138,7 +143,7 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                 {/* Body */}
                 <div style={styles.body}>
 
-                    {/* Cột trái - Tournament Info */}
+                    {/* Left column - Tournament Info */}
                     <div style={styles.infoCol}>
                         <div style={styles.infoRow}><span>📅</span><div><small>DATE</small><p>{tournament.raceDate}</p></div></div>
                         <div style={styles.infoRow}><span>📍</span><div><small>LOCATION</small><p>{tournament.location}</p></div></div>
@@ -150,14 +155,14 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                         </p>
                     </div>
 
-                    {/* Cột phải - Form */}
+                    {/* Right column - Form */}
                     <div style={styles.formCol}>
 
-                        <h4 style={styles.stepTitle}>STEP 1: CHỌN NGỰA</h4>
+                        <h4 style={styles.stepTitle}>STEP 1: SELECT HORSE</h4>
                         {loading ? (
                             <p style={{ color: "#999" }}>Loading horses...</p>
                         ) : horses.length === 0 ? (
-                            <p style={{ color: "#999" }}>Không có ngựa nào hợp lệ.</p>
+                            <p style={{ color: "#999" }}>No eligible horses found.</p>
                         ) : (
                             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "16px" }}>
                                 {horses.map(horse => (
@@ -195,7 +200,7 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                             </div>
                         )}
 
-                        <h4 style={styles.stepTitle}>STEP 2: GHI CHÚ (tùy chọn)</h4>
+                        <h4 style={styles.stepTitle}>STEP 2: NOTES (optional)</h4>
                         <textarea
                             value={notes}
                             onChange={e => setNotes(e.target.value)}
@@ -215,7 +220,7 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                                 disabled={submitting || !isRegistrationOpen}
                                 style={{ ...styles.submitBtn, opacity: submitting || !isRegistrationOpen ? 0.7 : 1 }}
                             >
-                                {submitting ? "Đang gửi..." : isRegistrationOpen ? "Submit Registration ➤" : registrationStatusLabel(tournamentStatus)}
+                                {submitting ? "Submitting..." : isRegistrationOpen ? "Submit Registration ➤" : registrationStatusLabel(tournamentStatus)}
                             </button>
                             <button style={styles.cancelBtn} onClick={onClose}>Cancel</button>
                         </div>

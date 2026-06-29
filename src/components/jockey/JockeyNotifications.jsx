@@ -11,6 +11,7 @@ import {
 import JockeyLayout from './JockeyLayout';
 import { jockeyApi } from '../../api/jockeyApi';
 import { resolveFileUrl } from '../../api/uploadApi';
+import Toast, { useToast } from '../shared/Toast';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]';
@@ -40,6 +41,7 @@ function JockeyNotifications() {
     const [status, setStatus] = useState('All');
     const [date, setDate] = useState('');
     const [sort, setSort] = useState('Newest');
+    const { toast, showToast, hideToast } = useToast();
 
     const fetchNotifications = async () => {
         try {
@@ -49,8 +51,9 @@ function JockeyNotifications() {
                 sort,
             });
             setNotifications(data.items ?? []);
-        } catch {
+        } catch (err) {
             setNotifications([]);
+            showToast(err.message || 'Failed to load notifications.', 'error', 'Error');
         }
     };
 
@@ -75,11 +78,20 @@ function JockeyNotifications() {
     }, [status, date, sort]);
 
     const handleMarkAllRead = async () => {
+        // Optimistic update — update UI immediately
+        const prevNotifs = notifications;
+        const prevSummary = summary;
+        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        setSummary(prev => prev ? { ...prev, unread: 0 } : prev);
         try {
             await jockeyApi.markAllNotificationsAsRead();
-            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-            setSummary(prev => prev ? { ...prev, unread: 0 } : prev);
-        } catch { }
+            showToast('All notifications marked as read.', 'success', 'Updated');
+        } catch (err) {
+            // Revert if API fails
+            setNotifications(prevNotifs);
+            setSummary(prevSummary);
+            showToast(err.message || 'Failed to update. Please try again.', 'error', 'Error');
+        }
     };
 
     const handleClickNotif = async (notif) => {
@@ -299,6 +311,14 @@ function JockeyNotifications() {
                     </aside>
                 </section>
             </section>
+
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                title={toast.title}
+                onClose={hideToast}
+                duration={3500}
+            />
         </JockeyLayout>
     );
 }

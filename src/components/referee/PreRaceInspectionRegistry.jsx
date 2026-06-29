@@ -13,6 +13,7 @@ import {
 } from '../../api/refereeApi';
 import { resolveFileUrl } from '../../api/uploadApi';
 import RefereeLayout from './RefereeLayout';
+import Toast, { useToast } from '../shared/Toast';
 
 const filterOptions = [
     { key: 'ALL', apiValue: 'all', label: 'ALL' },
@@ -79,6 +80,7 @@ function PreRaceInspectionRegistry() {
     const [savingId, setSavingId] = useState(null);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const { toast, showToast, hideToast } = useToast();
 
     const selectedRace = useMemo(
         () =>
@@ -239,8 +241,11 @@ function PreRaceInspectionRegistry() {
 
             setReport(reportData);
             setSuccess('Inspection saved successfully.');
+            showToast('✅ Inspection saved successfully!', 'success', 'Inspection Saved');
         } catch (err) {
-            setError(err.message || 'Failed to save inspection.');
+            const msg = err.message || 'Failed to save inspection.';
+            setError(msg);
+            showToast(msg, 'error', 'Save Error');
         } finally {
             setSavingId(null);
         }
@@ -248,6 +253,13 @@ function PreRaceInspectionRegistry() {
 
     return (
         <RefereeLayout activeKey="pre-race">
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                title={toast.title}
+                onClose={hideToast}
+                duration={3500}
+            />
             <section className="page-shell">
                 <button
                     type="button"

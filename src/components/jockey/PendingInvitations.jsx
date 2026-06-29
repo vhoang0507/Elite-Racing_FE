@@ -11,6 +11,7 @@ import {
 import JockeyLayout from './JockeyLayout';
 import { jockeyApi } from '../../api/jockeyApi';
 import { resolveFileUrl } from '../../api/uploadApi';
+import Toast, { useToast } from '../shared/Toast';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 
@@ -83,7 +84,7 @@ function PendingInvitations() {
     const [error, setError] = useState('');
     const [selectedInvitation, setSelectedInvitation] = useState(null);
     const [loadingDetail, setLoadingDetail] = useState(false);
-    const [toast, setToast] = useState(null);
+    const { toast, showToast, hideToast } = useToast();
 
     useEffect(() => {
         setLoading(true);
@@ -100,10 +101,6 @@ function PendingInvitations() {
             .finally(() => setLoading(false));
     }, []);
 
-    const showToast = (message, type = 'success') => {
-        setToast({ message, type });
-        setTimeout(() => setToast(null), 3000);
-    };
 
     const handleAccept = async (invId) => {
         try {
@@ -115,9 +112,9 @@ function PendingInvitations() {
                 acceptedInvitations: (prev.acceptedInvitations ?? 0) + 1,
             } : prev);
             setSelectedInvitation(null);
-            showToast('Đã chấp nhận lời mời', 'success');
+            showToast('Invitation accepted! The horse owner will be in touch soon.', 'success', 'Invitation Accepted');
         } catch (err) {
-            showToast(err.message || 'Failed to accept', 'error');
+            showToast(err.message || 'Failed to accept invitation. Please try again.', 'error', 'Error');
         }
     };
 
@@ -130,9 +127,9 @@ function PendingInvitations() {
                 pendingInvitations: Math.max((prev.pendingInvitations ?? 1) - 1, 0),
             } : prev);
             setSelectedInvitation(null);
-            showToast('Đã từ chối lời mời', 'success');
+            showToast('Invitation declined and removed from your list.', 'info', 'Invitation Declined');
         } catch (err) {
-            showToast(err.message || 'Failed to reject', 'error');
+            showToast(err.message || 'Failed to decline invitation. Please try again.', 'error', 'Error');
         }
     };
 
@@ -143,7 +140,7 @@ function PendingInvitations() {
             const detail = await jockeyApi.getInvitationDetail(inv.invitationId);
             setSelectedInvitation(mapDetailToFlat(detail));
         } catch {
-            // giữ data cũ từ list nếu fetch detail lỗi
+            // keep existing list data if detail fetch fails
         } finally {
             setLoadingDetail(false);
         }
@@ -179,7 +176,7 @@ function PendingInvitations() {
                         {invitations.length === 0 ? (
                             <div className="flex flex-col items-center justify-center rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] py-20">
                                 <FaEnvelope className="mb-4 text-[3rem] text-[#ddd]" />
-                                <p className="text-[1rem] font-bold text-[var(--admin-muted)]">Bạn chưa có lời mời nào đang chờ.</p>
+                                <p className="text-[1rem] font-bold text-[var(--admin-muted)]">No pending invitations.</p>
                                 <p className="mt-1 text-[0.85rem] text-[#bbb]">You will be notified when a horse owner sends you an invitation.</p>
                             </div>
                         ) : (
@@ -188,10 +185,18 @@ function PendingInvitations() {
                                     <article key={inv.invitationId} className="overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]">
                                         <div className="relative h-[140px] overflow-hidden bg-[#3d2c1e]">
                                             {inv.horseImageUrl ? (
-                                                <img src={resolveFileUrl(inv.horseImageUrl)} alt={inv.horseName} className="h-full w-full object-cover" />
-                                            ) : (
-                                                <div className="absolute inset-0 flex items-center justify-center text-white text-[2rem]">🏇</div>
-                                            )}
+                                                <img
+                                                    src={resolveFileUrl(inv.horseImageUrl)}
+                                                    alt={inv.horseName}
+                                                    className="h-full w-full object-cover"
+                                                    onError={(e) => {
+                                                        e.currentTarget.style.display = 'none';
+                                                        const fb = e.currentTarget.nextElementSibling;
+                                                        if (fb) fb.style.display = 'flex';
+                                                    }}
+                                                />
+                                            ) : null}
+                                            <div className="absolute inset-0 flex items-center justify-center text-white text-[2rem]" style={{ display: inv.horseImageUrl ? 'none' : 'flex' }}>🏇</div>
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                                             <span className="absolute right-3 top-3 rounded bg-[var(--admin-primary)] px-2.5 py-1 text-[0.68rem] font-black uppercase text-white">
                                                 {inv.status || 'Pending'}
@@ -294,10 +299,18 @@ function PendingInvitations() {
                         <section className="grid w-[min(600px,100%)] gap-0 overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-xl" onClick={e => e.stopPropagation()}>
                             <div className="relative h-[160px] bg-[#3d2c1e] flex items-center justify-center overflow-hidden">
                                 {selectedInvitation.horseImageUrl ? (
-                                    <img src={resolveFileUrl(selectedInvitation.horseImageUrl)} alt={selectedInvitation.horseName} className="h-full w-full object-cover" />
-                                ) : (
-                                    <div className="text-[3rem]">🏇</div>
-                                )}
+                                    <img
+                                        src={resolveFileUrl(selectedInvitation.horseImageUrl)}
+                                        alt={selectedInvitation.horseName}
+                                        className="h-full w-full object-cover"
+                                        onError={(e) => {
+                                            e.currentTarget.style.display = 'none';
+                                            const fb = e.currentTarget.nextElementSibling;
+                                            if (fb) fb.style.display = 'flex';
+                                        }}
+                                    />
+                                ) : null}
+                                <div className="text-[3rem]" style={{ display: selectedInvitation.horseImageUrl ? 'none' : 'flex' }}>🏇</div>
                                 <div className="absolute inset-0 bg-black/40" />
                                 <button className="absolute right-4 top-4 grid h-8 w-8 cursor-pointer place-items-center rounded-full border-0 bg-[rgba(0,0,0,0.5)] text-white" onClick={() => setSelectedInvitation(null)} type="button">
                                     <FaTimes />
@@ -351,15 +364,13 @@ function PendingInvitations() {
                     </div>
                 )}
 
-                {/* Toast */}
-                {toast && (
-                    <div
-                        className={`fixed bottom-6 right-6 z-50 rounded-md px-5 py-3 text-[0.85rem] font-semibold text-white shadow-lg ${toast.type === 'error' ? 'bg-red-700' : 'bg-[var(--admin-primary-dark)]'
-                            }`}
-                    >
-                        {toast.message}
-                    </div>
-                )}
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    title={toast.title}
+                    onClose={hideToast}
+                    duration={4000}
+                />
             </section>
         </JockeyLayout>
     );

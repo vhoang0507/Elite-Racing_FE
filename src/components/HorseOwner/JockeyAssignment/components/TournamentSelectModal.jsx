@@ -3,13 +3,13 @@ export default function TournamentSelectModal({ registrations, selectedId, onSel
         <div style={styles.overlay} onClick={onClose}>
             <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
                 <div style={styles.header}>
-                    <h3 style={styles.title}>Chọn giải đấu</h3>
+                    <h3 style={styles.title}>Select Tournament</h3>
                     <button style={styles.closeBtn} onClick={onClose} type="button">✕</button>
                 </div>
 
                 {registrations.length === 0 ? (
                     <p style={styles.emptyText}>
-                        Bạn chưa có đăng ký nào được duyệt. Vui lòng đăng ký và chờ Admin duyệt trước.
+                        No approved registrations yet. Please register and wait for admin approval.
                     </p>
                 ) : (
                     <div style={styles.list}>

@@ -132,7 +132,7 @@ function JockeySetting() {
             setProfile(nextProfile);
             setSelectedFiles({});
             setPreviewUrls({});
-            setSuccess('Đã gửi hồ sơ. Vui lòng chờ admin duyệt.');
+            setSuccess('Profile submitted. Please wait for admin approval.');
         } catch (err) {
             setError(err.message || 'Failed to save');
         } finally {
@@ -219,7 +219,7 @@ function JockeySetting() {
                                     onChange={(e) => setProfile(prev => ({ ...prev, healthStatus: e.target.value }))}
                                     className="mt-1 w-full rounded-md border border-[var(--admin-border)] px-2 py-1 text-center text-[1rem] font-bold text-[#12a150] outline-none focus:border-[var(--admin-primary)]"
                                 >
-                                    <option value="">-- Chọn --</option>
+                                    <option value="">-- Select --</option>
                                     {options?.healthStatuses?.map((status) => (
                                         <option key={status} value={status}>{status}</option>
                                     ))}

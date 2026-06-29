@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import HorseOwnerLayout from "../HorseOwnerLayout";
 import { ownerApi } from "../../../api/ownerApi";
 import { uploadFile, resolveFileUrl } from "../../../api/uploadApi";
+import Toast, { useToast } from "../../shared/Toast";
 
 export default function RegisterHorse() {
     const navigate = useNavigate();
@@ -20,6 +21,7 @@ export default function RegisterHorse() {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
+    const { toast, showToast, hideToast } = useToast();
     const [horseImageFile, setHorseImageFile] = useState(null);
     const [horseImagePreview, setHorseImagePreview] = useState('');
     const [healthCertificateFile, setHealthCertificateFile] = useState(null);
@@ -81,7 +83,9 @@ export default function RegisterHorse() {
             });
             navigate('/owner/my-horse');
         } catch (err) {
-            setError(err.message || 'Failed to register horse');
+            const msg = err.message || 'Horse registration failed. Please try again.';
+            setError(msg);
+            showToast(msg, 'error', 'Registration Failed');
         } finally {
             setIsSubmitting(false);
         }
@@ -228,6 +232,14 @@ export default function RegisterHorse() {
                     </button>
                 </div>
             </section>
+
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                title={toast.title}
+                onClose={hideToast}
+                duration={3500}
+            />
         </HorseOwnerLayout>
     );
 }

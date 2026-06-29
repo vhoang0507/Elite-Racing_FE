@@ -32,7 +32,7 @@ const iconButtonClasses = [
     'role-icon-button',
 ].join(' ');
 
-// Pages chỉ Settings mới vào được khi chưa active
+// Only Settings is accessible before the jockey profile is activated
 const SETTINGS_ONLY_STEPS = ['CompleteJockeyProfile', 'WaitForActivation'];
 
 function JockeyLayout({
@@ -47,8 +47,13 @@ function JockeyLayout({
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [profile, setProfile] = useState(null);
     const [lockedAlert, setLockedAlert] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
+        jockeyApi.getNotificationSummary()
+            .then(data => setUnreadCount(data?.unread ?? 0))
+            .catch(() => {});
+
         jockeyApi.getJockeyProfile()
             .then(data => {
                 setProfile(data);
@@ -79,7 +84,7 @@ function JockeyLayout({
         .join('')
         .toUpperCase() ?? 'JK';
 
-    // Disable nav khi chưa active
+    // Disable nav until profile is activated
     const isSettingsOnly = SETTINGS_ONLY_STEPS.includes(profile?.nextStep);
 
     const statusBadge = () => {
@@ -185,9 +190,15 @@ function JockeyLayout({
                     </label>
 
                     <div className="flex items-center gap-3">
-                        <button className={iconButtonClasses} type="button">
+                        <button
+                            className={iconButtonClasses}
+                            type="button"
+                            onClick={() => navigate('/jockey/notifications')}
+                        >
                             <FaBell />
-                            <span className="absolute right-2.5 top-[9px] h-2 w-2 rounded-full border-2 border-[var(--admin-surface)] bg-[var(--admin-primary)]" />
+                            {unreadCount > 0 && (
+                                <span className="absolute right-2.5 top-[9px] h-2 w-2 rounded-full border-2 border-[var(--admin-surface)] bg-[var(--admin-primary)]" />
+                            )}
                         </button>
                         <div className="role-header-identity max-[520px]:hidden">
                             <span className="role-header-name">{profile?.fullName ?? 'Jockey'}</span>

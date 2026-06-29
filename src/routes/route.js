@@ -5,6 +5,8 @@ import {
     Routes,
 } from 'react-router-dom';
 
+import ProtectedRoute from '../components/shared/ProtectedRoute';
+
 import HomePage from '../components/Public/HomePage';
 import ExploreTournaments from '../components/Public/ExploreTournaments';
 import GlobalRankings from '../components/Public/GlobalRankings';
@@ -61,228 +63,77 @@ import RefereeNotifications from '../components/referee/RefereeNotifications';
 import RefereeSetting from '../components/referee/RefereeSetting';
 import PreRaceInspectionRegistry from '../components/referee/PreRaceInspectionRegistry';
 
+// Wrap a component in ProtectedRoute using createElement (no JSX needed in .js file)
+function guard(role, Component) {
+    return createElement(ProtectedRoute, { role }, createElement(Component));
+}
+
 const appRoutes = [
-    {
-        path: '/',
-        element: createElement(HomePage),
-    },
-    {
-        path: '/home',
-        element: createElement(HomePage),
-    },
-    {
-        path: '/explore-tournaments',
-        element: createElement(ExploreTournaments),
-    },
-    {
-        path: '/global-rankings',
-        element: createElement(GlobalRankings),
-    },
-    {
-        path: '/login',
-        element: createElement(Login),
-    },
-    {
-        path: '/register',
-        element: createElement(Register),
-    },
-    {
-        path: '/verify-email',
-        element: createElement(VerifyEmail),
-    },
+    // ── Public ──
+    { path: '/',                    element: createElement(HomePage) },
+    { path: '/home',                element: createElement(HomePage) },
+    { path: '/explore-tournaments', element: createElement(ExploreTournaments) },
+    { path: '/global-rankings',     element: createElement(GlobalRankings) },
+    { path: '/login',               element: createElement(Login) },
+    { path: '/register',            element: createElement(Register) },
+    { path: '/verify-email',        element: createElement(VerifyEmail) },
 
-    {
-        path: '/admin',
-        element: createElement(Navigate, { to: '/admin/dashboard' }),
-    },
-    {
-        path: '/admin/dashboard',
-        element: createElement(AdminDashboard),
-    },
-    {
-        path: '/admin/races',
-        element: createElement(RaceManagement),
-    },
-    {
-        path: '/admin/registrations',
-        element: createElement(RegistrationManagement),
-    },
-    {
-        path: '/admin/predictions',
-        element: createElement(PredictionManagement),
-    },
-    {
-        path: '/admin/tournaments/create',
-        element: createElement(CreateTournament),
-    },
-    {
-        path: '/admin/users',
-        element: createElement(UserManagement),
-    },
-    {
-        path: '/admin/referees/create',
-        element: createElement(CreateRefereeAccount),
-    },
-    {
-        path: '/admin/horses',
-        element: createElement(HorseManagement),
-    },
-    {
-        path: '/admin/results',
-        element: createElement(ValidateResults),
-    },
-    {
-        path: '/admin/results/:resultId',
-        element: createElement(ValidateResultDetail),
-    },
-    {
-        path: '/admin/notifications',
-        element: createElement(Notifications),
-    },
-    {
-        path: '/admin/system-time',
-        element: createElement(AdminSystemTime),
-    },
-    {
-        path: '/admin/profile',
-        element: createElement(AdminProfile),
-    },
+    // ── Admin ──
+    { path: '/admin',                       element: createElement(Navigate, { to: '/admin/dashboard', replace: true }) },
+    { path: '/admin/dashboard',             element: guard('Admin', AdminDashboard) },
+    { path: '/admin/races',                 element: guard('Admin', RaceManagement) },
+    { path: '/admin/registrations',         element: guard('Admin', RegistrationManagement) },
+    { path: '/admin/predictions',           element: guard('Admin', PredictionManagement) },
+    { path: '/admin/tournaments/create',    element: guard('Admin', CreateTournament) },
+    { path: '/admin/users',                 element: guard('Admin', UserManagement) },
+    { path: '/admin/referees/create',       element: guard('Admin', CreateRefereeAccount) },
+    { path: '/admin/horses',                element: guard('Admin', HorseManagement) },
+    { path: '/admin/results',               element: guard('Admin', ValidateResults) },
+    { path: '/admin/results/:resultId',     element: guard('Admin', ValidateResultDetail) },
+    { path: '/admin/notifications',         element: guard('Admin', Notifications) },
+    { path: '/admin/system-time',           element: guard('Admin', AdminSystemTime) },
+    { path: '/admin/profile',               element: guard('Admin', AdminProfile) },
 
-    {
-        path: '/jockey',
-        element: createElement(Navigate, { to: '/jockey/dashboard' }),
-    },
-    {
-        path: '/jockey/dashboard',
-        element: createElement(JockeyDashboard),
-    },
-    {
-        path: '/jockey/invitations',
-        element: createElement(PendingInvitations),
-    },
-    {
-        path: '/jockey/accepted',
-        element: createElement(AcceptedRaces),
-    },
-    {
-        path: '/jockey/schedule',
-        element: createElement(JockeyCalendar),
-    },
-    {
-        path: '/jockey/notifications',
-        element: createElement(JockeyNotifications),
-    },
-    {
-        path: '/jockey/settings',
-        element: createElement(JockeySetting),
-    },
+    // ── Jockey ──
+    { path: '/jockey',              element: createElement(Navigate, { to: '/jockey/dashboard', replace: true }) },
+    { path: '/jockey/dashboard',    element: guard('Jockey', JockeyDashboard) },
+    { path: '/jockey/invitations',  element: guard('Jockey', PendingInvitations) },
+    { path: '/jockey/accepted',     element: guard('Jockey', AcceptedRaces) },
+    { path: '/jockey/schedule',     element: guard('Jockey', JockeyCalendar) },
+    { path: '/jockey/notifications',element: guard('Jockey', JockeyNotifications) },
+    { path: '/jockey/settings',     element: guard('Jockey', JockeySetting) },
 
-    {
-        path: '/referee',
-        element: createElement(Navigate, { to: '/referee/dashboard' }),
-    },
-    {
-        path: '/referee/dashboard',
-        element: createElement(RefereeDashboard),
-    },
-    {
-        path: '/referee/races',
-        element: createElement(RefereeAssignedRace),
-    },
-    {
-        path: '/referee/races/pre-race',
-        element: createElement(AssignedPreRace),
-    },
-    {
-        path: '/referee/races/pre-race/:raceId',
-        element: createElement(PreRaceInspectionRegistry),
-    },
-    {
-        path: '/referee/races/post-race',
-        element: createElement(AssignedPostRace),
-    },
-    {
-        path: '/referee/notifications',
-        element: createElement(RefereeNotifications),
-    },
-    {
-        path: '/referee/settings',
-        element: createElement(RefereeSetting),
-    },
+    // ── Referee ──
+    { path: '/referee',                         element: createElement(Navigate, { to: '/referee/dashboard', replace: true }) },
+    { path: '/referee/dashboard',               element: guard('RaceReferee', RefereeDashboard) },
+    { path: '/referee/races',                   element: guard('RaceReferee', RefereeAssignedRace) },
+    { path: '/referee/races/pre-race',          element: guard('RaceReferee', AssignedPreRace) },
+    { path: '/referee/races/pre-race/:raceId',  element: guard('RaceReferee', PreRaceInspectionRegistry) },
+    { path: '/referee/races/post-race',         element: guard('RaceReferee', AssignedPostRace) },
+    { path: '/referee/notifications',           element: guard('RaceReferee', RefereeNotifications) },
+    { path: '/referee/settings',                element: guard('RaceReferee', RefereeSetting) },
 
-    {
-        path: '/owner',
-        element: createElement(Navigate, { to: '/owner/my-horse' }),
-    },
-    {
-        path: '/owner/dashboard',
-        element: createElement(HorseOwnerDashboard),
-    },
-    {
-        path: '/owner/my-horse',
-        element: createElement(MyHorse),
-    },
-    {
-        path: '/owner/register-horse',
-        element: createElement(RegisterHorse),
-    },
-    {
-        path: '/owner/horses/:horseId',
-        element: createElement(HorseDetail),
-    },
-    {
-        path: '/owner/horses/:horseId/edit',
-        element: createElement(HorseEdit),
-    },
-    {
-        path: '/owner/registrations',
-        element: createElement(MyRegistrations),
-    },
-    {
-        path: '/owner/jockey',
-        element: createElement(JockeyAssignment),
-    },
-    {
-        path: '/owner/rewards',
-        element: createElement(ResultReward),
-    },
-    {
-        path: '/owner/rewards/:resultId',
-        element: createElement(HorseResultDetail),
-    },
-    {
-        path: '/owner/notifications',
-        element: createElement(HorseOwnerNotifications),
-    },
+    // ── Horse Owner ──
+    { path: '/owner',                       element: createElement(Navigate, { to: '/owner/my-horse', replace: true }) },
+    { path: '/owner/dashboard',             element: guard('HorseOwner', HorseOwnerDashboard) },
+    { path: '/owner/my-horse',              element: guard('HorseOwner', MyHorse) },
+    { path: '/owner/register-horse',        element: guard('HorseOwner', RegisterHorse) },
+    { path: '/owner/horses/:horseId',       element: guard('HorseOwner', HorseDetail) },
+    { path: '/owner/horses/:horseId/edit',  element: guard('HorseOwner', HorseEdit) },
+    { path: '/owner/registrations',         element: guard('HorseOwner', MyRegistrations) },
+    { path: '/owner/jockey',                element: guard('HorseOwner', JockeyAssignment) },
+    { path: '/owner/rewards',               element: guard('HorseOwner', ResultReward) },
+    { path: '/owner/rewards/:resultId',     element: guard('HorseOwner', HorseResultDetail) },
+    { path: '/owner/notifications',         element: guard('HorseOwner', HorseOwnerNotifications) },
 
-    {
-        path: '/spectator',
-        element: createElement(Navigate, { to: '/spectator/dashboard' }),
-    },
-    {
-        path: '/spectator/dashboard',
-        element: createElement(SpectatorDashboard),
-    },
-    {
-        path: '/spectator/tournaments',
-        element: createElement(SpectatorTournaments),
-    },
-    {
-        path: '/spectator/leaderboard',
-        element: createElement(SpectatorLeaderboard),
-    },
-    {
-        path: '/spectator/predictions',
-        element: createElement(SpectatorPredictions),
-    },
-    {
-        path: '/spectator/results',
-        element: createElement(SpectatorResultReward),
-    },
-    {
-        path: '/spectator/notifications',
-        element: createElement(SpectatorNotificationsPage),
-    },
+    // ── Spectator ──
+    { path: '/spectator',               element: createElement(Navigate, { to: '/spectator/dashboard', replace: true }) },
+    { path: '/spectator/dashboard',     element: guard('Spectator', SpectatorDashboard) },
+    { path: '/spectator/tournaments',   element: guard('Spectator', SpectatorTournaments) },
+    { path: '/spectator/leaderboard',   element: guard('Spectator', SpectatorLeaderboard) },
+    { path: '/spectator/predictions',   element: guard('Spectator', SpectatorPredictions) },
+    { path: '/spectator/results',       element: guard('Spectator', SpectatorResultReward) },
+    { path: '/spectator/notifications', element: guard('Spectator', SpectatorNotificationsPage) },
 ];
 
 function AppRoutes() {

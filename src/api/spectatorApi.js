@@ -83,6 +83,10 @@ export async function markSpectatorNotificationAsRead(id) {
     return apiRequest(`/spectator/notifications/${id}/read`, { method: 'PUT' });
 }
 
+export async function markAllSpectatorNotificationsAsRead() {
+    return apiRequest('/spectator/notifications/read-all', { method: 'PUT' });
+}
+
 // ─── Export grouped ──────────────────────────────────────────────────────────
 
 export const spectatorApi = {
@@ -100,4 +104,5 @@ export const spectatorApi = {
     getSpectatorNotifications,
     getSpectatorUnreadCount,
     markSpectatorNotificationAsRead,
+    markAllSpectatorNotificationsAsRead,
 };

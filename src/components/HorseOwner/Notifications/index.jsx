@@ -9,8 +9,8 @@ import {
 } from "react-icons/fa";
 
 import { ownerApi } from "../../../api/ownerApi";
-
 import HorseOwnerLayout from "../HorseOwnerLayout";
+import Toast, { useToast } from "../../shared/Toast";
 
 const tabs = ["All", "Registrations", "Jockeys", "Tournaments"];
 const emptySummary = {
@@ -55,6 +55,8 @@ export default function Notifications() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
     const [reloadKey, setReloadKey] = useState(0);
+    const [markingAll, setMarkingAll] = useState(false);
+    const { toast, showToast, hideToast } = useToast();
 
     useEffect(() => {
         let isMounted = true;
@@ -136,6 +138,21 @@ export default function Notifications() {
         }
     };
 
+    const handleMarkAllRead = async () => {
+        if (markingAll) return;
+        setMarkingAll(true);
+        try {
+            await ownerApi.markAllNotificationsAsRead();
+            setNotifications((current) => current.map((item) => ({ ...item, isRead: true })));
+            setSummary((current) => ({ ...current, unread: 0 }));
+            showToast('All notifications marked as read.', 'success', 'Updated');
+        } catch (err) {
+            showToast(err.message || 'Failed to update. Please try again.', 'error', 'Error');
+        } finally {
+            setMarkingAll(false);
+        }
+    };
+
     return (
         <HorseOwnerLayout activeKey="notifications">
             <section className="grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7">
@@ -175,13 +192,23 @@ export default function Notifications() {
                             {tab}
                         </button>
                     ))}
-                    <button
-                        className="ml-auto cursor-pointer rounded-md border-0 bg-transparent px-3 py-2 text-[0.82rem] font-bold text-[var(--admin-primary)] hover:bg-[#e8f7ef] max-[720px]:ml-0"
-                        onClick={() => setReloadKey((current) => current + 1)}
-                        type="button"
-                    >
-                        Refresh
-                    </button>
+                    <div className="ml-auto flex items-center gap-2 max-[720px]:ml-0">
+                        <button
+                            className="cursor-pointer rounded-md border border-[var(--admin-primary)] bg-transparent px-3 py-2 text-[0.82rem] font-bold text-[var(--admin-primary)] hover:bg-[#e8f7ef] disabled:cursor-not-allowed disabled:opacity-50"
+                            onClick={handleMarkAllRead}
+                            disabled={markingAll || summary.unread === 0}
+                            type="button"
+                        >
+                            {markingAll ? 'Updating...' : 'Mark all read'}
+                        </button>
+                        <button
+                            className="cursor-pointer rounded-md border-0 bg-transparent px-3 py-2 text-[0.82rem] font-bold text-[var(--admin-primary)] hover:bg-[#e8f7ef]"
+                            onClick={() => setReloadKey((current) => current + 1)}
+                            type="button"
+                        >
+                            Refresh
+                        </button>
+                    </div>
                 </div>
 
                 {error && (
@@ -237,6 +264,14 @@ export default function Notifications() {
                     })}
                 </div>
             </section>
+
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                title={toast.title}
+                onClose={hideToast}
+                duration={3500}
+            />
         </HorseOwnerLayout>
     );
 }
