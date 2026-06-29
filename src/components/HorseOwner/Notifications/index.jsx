@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     FaBell,
     FaCalendarAlt,
@@ -57,6 +58,7 @@ export default function Notifications() {
     const [reloadKey, setReloadKey] = useState(0);
     const [markingAll, setMarkingAll] = useState(false);
     const { toast, showToast, hideToast } = useToast();
+    const navigate = useNavigate();
 
     useEffect(() => {
         let isMounted = true;
@@ -118,23 +120,27 @@ export default function Notifications() {
     ], [summary]);
 
     const handleNotificationClick = async (notification) => {
-        if (notification.isRead) {
-            return;
+        // Mark as read if unread
+        if (!notification.isRead) {
+            try {
+                await ownerApi.markNotificationAsRead(notification.notificationId);
+                setNotifications((current) => current.map((item) => (
+                    item.notificationId === notification.notificationId
+                        ? { ...item, isRead: true }
+                        : item
+                )));
+                setSummary((current) => ({
+                    ...current,
+                    unread: Math.max(0, current.unread - 1),
+                }));
+            } catch (err) {
+                setError(err.message || "Failed to update notification.");
+            }
         }
 
-        try {
-            await ownerApi.markNotificationAsRead(notification.notificationId);
-            setNotifications((current) => current.map((item) => (
-                item.notificationId === notification.notificationId
-                    ? { ...item, isRead: true }
-                    : item
-            )));
-            setSummary((current) => ({
-                ...current,
-                unread: Math.max(0, current.unread - 1),
-            }));
-        } catch (err) {
-            setError(err.message || "Failed to update notification.");
+        // Navigate to actionUrl if available
+        if (notification.actionUrl) {
+            navigate(notification.actionUrl);
         }
     };
 

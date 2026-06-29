@@ -1,49 +1,39 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FaMapMarkerAlt, FaSearch, FaTrophy } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaSearch, FaTrophy, FaUserTie } from 'react-icons/fa';
 import PublicLayout from './PublicLayout';
 import horseRacing from '../../assets/horse-racing.jpg';
+import { leaderboardApi } from '../../api/leaderboardApi';
 
-const horses = [
-    {
-        rank: '#2',
-        name: 'Midnight Runner',
-        location: 'UK',
-        image: '/Horse1.jpg',
-    },
-    {
-        rank: '#3',
-        name: 'Crimson Tide',
-        location: 'USA',
-        image: '/Horse2.jpg',
-    },
-    {
-        rank: '#4',
-        name: 'Golden Mane',
-        location: 'UAE',
-        image: '/GoldenDerby.jpg',
-    },
-    {
-        rank: '#5',
-        name: 'Storm Dancer',
-        location: 'FR',
-        image: '/RoyalTurfChampionship.jpg',
-    },
-    {
-        rank: '#6',
-        name: 'Royal Eclipse',
-        location: 'AUS',
-        image: '/ticket.jpg',
-    },
-];
+const MEDAL = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
-const performanceRows = [
-    ['Thunderstrike', 'Dubai World Cup', '1st', '2:01.38', 'J. Rosario', '98.5'],
-    ['Midnight Runner', 'Royal Ascot Gold Cup', '2nd', '4:16.12', 'R. Moore', '95.2'],
-    ['Crimson Tide', 'Kentucky Derby', '1st', '2:02.10', 'F. Prat', '96.8'],
-    ['Golden Mane', "Prix de l'Arc de Triomphe", '4th', '2:29.45', 'C. Soumillon', '91.0'],
-];
+function WinRateBar({ rate = 0 }) {
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ width: 64, height: 5, borderRadius: 99, background: '#efd7d2', overflow: 'hidden' }}>
+                <div style={{ height: '100%', background: '#c0392b', borderRadius: 99, width: `${Math.min(100, rate)}%` }} />
+            </div>
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#888' }}>{rate}%</span>
+        </div>
+    );
+}
 
 export default function GlobalRankings() {
+    const [owners, setOwners] = useState([]);
+    const [jockeys, setJockeys] = useState([]);
+    const [activeTab, setActiveTab] = useState('owners');
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        Promise.all([
+            leaderboardApi.getOwnerLeaderboard({ limit: 10 }).catch(() => []),
+            leaderboardApi.getJockeyLeaderboard({ limit: 10 }).catch(() => []),
+        ]).then(([o, j]) => {
+            setOwners(o ?? []);
+            setJockeys(j ?? []);
+        }).finally(() => setLoading(false));
+    }, []);
+
     return (
         <PublicLayout showSearch={false}>
             <section className="relative min-h-[390px] overflow-hidden">
@@ -169,105 +159,85 @@ export default function GlobalRankings() {
                     </div>
                 </article>
 
-                <div className="mb-5 mt-8 flex items-center justify-between border-b border-[var(--racing-border)] pb-3">
-                    <h2 className="m-0 text-2xl font-black tracking-[-0.03em]">
-                        Elite Directory
-                    </h2>
-
-                    <Link
-                        to="/global-rankings"
-                        className="text-sm font-black text-[var(--racing-primary)] no-underline"
-                    >
-                        View All →
-                    </Link>
-                </div>
-
-                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
-                    {horses.map((horse) => (
-                        <article
-                            key={horse.name}
-                            className="overflow-hidden rounded-[8px] bg-[#fffaf8] shadow-[0_12px_30px_rgba(70,32,26,0.08)]"
-                        >
-                            <div className="relative h-[145px]">
-                                <img
-                                    src={horse.image}
-                                    alt={horse.name}
-                                    className="h-full w-full object-cover"
-                                />
-
-                                <span className="absolute left-2 top-2 rounded bg-white/90 px-2 py-1 text-xs font-black">
-                                    {horse.rank}
-                                </span>
-                            </div>
-
-                            <div className="p-4">
-                                <h3 className="text-lg font-black">{horse.name}</h3>
-
-                                <p className="mt-1 text-sm text-[var(--racing-muted)]">
-                                    <FaMapMarkerAlt className="mr-1 inline" />
-                                    {horse.location}
-                                </p>
-
-                                <Link
-                                    to="/login"
-                                    className="mt-4 block border-t border-[#efd7d2] pt-3 text-xs font-black text-[var(--racing-primary)] no-underline"
-                                >
-                                    Profile ›
-                                </Link>
-                            </div>
-                        </article>
-                    ))}
-                </div>
-
                 <div className="mt-10 overflow-hidden rounded-[12px] border border-[var(--racing-border)] bg-[#fffaf8] shadow-[0_16px_40px_rgba(70,32,26,0.07)]">
-                    <h2 className="px-5 py-4 text-xl font-black">
-                        Recent Global Performances
-                    </h2>
+                    <div className="flex items-center justify-between px-5 py-4">
+                        <h2 className="m-0 text-xl font-black">Global Rankings</h2>
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('owners')}
+                                className={`flex items-center gap-2 rounded px-4 py-2 text-xs font-black ${activeTab === 'owners' ? 'bg-[var(--racing-primary)] text-white' : 'border border-[var(--racing-border)] text-[var(--racing-muted)]'}`}
+                            >
+                                <FaTrophy /> Top Owners
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setActiveTab('jockeys')}
+                                className={`flex items-center gap-2 rounded px-4 py-2 text-xs font-black ${activeTab === 'jockeys' ? 'bg-[var(--racing-primary)] text-white' : 'border border-[var(--racing-border)] text-[var(--racing-muted)]'}`}
+                            >
+                                <FaUserTie /> Top Jockeys
+                            </button>
+                        </div>
+                    </div>
 
                     <div className="overflow-x-auto">
-                        <table className="w-full min-w-[820px] border-collapse text-left text-sm">
-                            <thead className="bg-[#fff0ee] text-xs uppercase tracking-wide text-[var(--racing-muted)]">
-                                <tr>
-                                    {['Horse', 'Latest Tournament', 'Position', 'Time', 'Jockey', 'Score'].map((head) => (
-                                        <th key={head} className="px-5 py-4">
-                                            {head}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-
-                            <tbody>
-                                {performanceRows.map((row) => (
-                                    <tr key={`${row[0]}-${row[1]}`} className="border-t border-[#f1dcd8]">
-                                        <td className="px-5 py-4 font-black text-[var(--racing-primary)]">
-                                            {row[0]}
-                                        </td>
-
-                                        <td className="px-5 py-4 text-[var(--racing-muted)]">
-                                            {row[1]}
-                                        </td>
-
-                                        <td className="px-5 py-4">
-                                            <span className="rounded bg-[#fff3c4] px-2 py-1 font-black">
-                                                {row[2]}
-                                            </span>
-                                        </td>
-
-                                        <td className="px-5 py-4 font-mono">
-                                            {row[3]}
-                                        </td>
-
-                                        <td className="px-5 py-4">
-                                            {row[4]}
-                                        </td>
-
-                                        <td className="px-5 py-4 font-black">
-                                            {row[5]}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                        {loading ? (
+                            <p className="px-5 py-8 text-center text-sm text-[var(--racing-muted)]">Loading rankings...</p>
+                        ) : activeTab === 'owners' ? (
+                            owners.length === 0 ? (
+                                <p className="px-5 py-8 text-center text-sm text-[var(--racing-muted)]">No owner data yet.</p>
+                            ) : (
+                                <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+                                    <thead className="bg-[#fff0ee] text-xs uppercase tracking-wide text-[var(--racing-muted)]">
+                                        <tr>
+                                            {['Rank', 'Owner', 'Wins', 'Races', 'Top 3', 'Win Rate', 'Best Time'].map((h) => (
+                                                <th key={h} className="px-5 py-4">{h}</th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {owners.map((o) => (
+                                            <tr key={o.ownerId ?? o.rank} className="border-t border-[#f1dcd8]">
+                                                <td className="px-5 py-4 text-xl font-black">{MEDAL[o.rank] ?? `#${o.rank}`}</td>
+                                                <td className="px-5 py-4 font-black text-[var(--racing-primary)]">{o.ownerName}</td>
+                                                <td className="px-5 py-4 font-black text-[#c0392b]">{o.wins ?? 0}</td>
+                                                <td className="px-5 py-4 text-[var(--racing-muted)]">{o.totalRaces ?? 0}</td>
+                                                <td className="px-5 py-4 font-bold text-[#1565c0]">{o.top3Finishes ?? 0}</td>
+                                                <td className="px-5 py-4"><WinRateBar rate={o.winRate ?? 0} /></td>
+                                                <td className="px-5 py-4 font-mono text-[var(--racing-muted)]">{o.bestFinishTimeSeconds != null ? `${o.bestFinishTimeSeconds}s` : '—'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )
+                        ) : (
+                            jockeys.length === 0 ? (
+                                <p className="px-5 py-8 text-center text-sm text-[var(--racing-muted)]">No jockey data yet.</p>
+                            ) : (
+                                <table className="w-full min-w-[720px] border-collapse text-left text-sm">
+                                    <thead className="bg-[#fff0ee] text-xs uppercase tracking-wide text-[var(--racing-muted)]">
+                                        <tr>
+                                            {['Rank', 'Jockey', 'Wins', 'Races', 'Top 3', 'Win Rate', 'Best Time'].map((h) => (
+                                                <th key={h} className="px-5 py-4">{h}</th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {jockeys.map((j) => (
+                                            <tr key={j.jockeyId ?? j.rank} className="border-t border-[#f1dcd8]">
+                                                <td className="px-5 py-4 text-xl font-black">{MEDAL[j.rank] ?? `#${j.rank}`}</td>
+                                                <td className="px-5 py-4 font-black text-[var(--racing-primary)]">{j.jockeyName}</td>
+                                                <td className="px-5 py-4 font-black text-[#c0392b]">{j.wins ?? 0}</td>
+                                                <td className="px-5 py-4 text-[var(--racing-muted)]">{j.totalRaces ?? 0}</td>
+                                                <td className="px-5 py-4 font-bold text-[#1565c0]">{j.top3Finishes ?? 0}</td>
+                                                <td className="px-5 py-4"><WinRateBar rate={j.winRate ?? 0} /></td>
+                                                <td className="px-5 py-4 font-mono text-[var(--racing-muted)]">{j.bestFinishTimeSeconds != null ? `${j.bestFinishTimeSeconds}s` : '—'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            )
+                        )}
                     </div>
                 </div>
             </section>

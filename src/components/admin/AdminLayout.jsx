@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
     Link,
     useNavigate,
@@ -18,6 +19,7 @@ import {
 } from 'react-icons/fa';
 
 import { clearAuthSession, getAuthUser } from '../../utils/tokenStorage';
+import { adminApi } from '../../api/adminApi';
 
 const navigation = [
     {
@@ -105,6 +107,13 @@ function AdminLayout({
     const accountName = readUserField(authUser, 'fullName') || 'Admin';
     const accountRole = readUserField(authUser, 'role') || 'Admin';
     const accountInitials = getInitials(accountName);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    useEffect(() => {
+        adminApi.getAdminUnreadCount()
+            .then((count) => setUnreadCount(count))
+            .catch(() => {});
+    }, []);
 
     const handleLogout = () => {
         clearAuthSession();
@@ -203,8 +212,11 @@ function AdminLayout({
                     </label>
 
                     <div className="flex items-center gap-3 max-[720px]:justify-end">
-                        <button aria-label="Notifications" className={iconButtonClasses} onClick={() => navigate('/admin/notifications')} type="button">
+                        <button aria-label="Notifications" className={`${iconButtonClasses} relative`} onClick={() => navigate('/admin/notifications')} type="button">
                             <FaBell aria-hidden="true" />
+                            {unreadCount > 0 && (
+                                <span className="absolute right-2.5 top-[9px] h-2 w-2 rounded-full border-2 border-[var(--admin-surface)] bg-[var(--admin-primary)]" />
+                            )}
                         </button>
                         <div className="role-header-identity max-[520px]:hidden">
                             <span className="role-header-name">{accountName}</span>

@@ -1088,16 +1088,67 @@ async function rejectVerification(id, reason) {
     });
 }
 
-// ─── Notifications (no BE endpoint yet - placeholder) ────────────────────────
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+function formatNotificationTime(createdAt) {
+    if (!createdAt) return '';
+    const diff = Date.now() - new Date(createdAt).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days}d ago`;
+    return new Date(createdAt).toLocaleDateString('en-US', { month: 'short', day: '2-digit' });
+}
+
+function deriveNotificationTone(actionType, relatedType) {
+    const s = `${actionType || ''} ${relatedType || ''}`.toLowerCase();
+    if (s.includes('prediction')) return 'prediction';
+    if (s.includes('report') || s.includes('violation')) return 'urgent';
+    if (s.includes('race') || s.includes('result') || s.includes('tournament')) return 'race';
+    return 'registration';
+}
+
+function deriveNotificationType(actionType, relatedType) {
+    const s = `${actionType || ''} ${relatedType || ''}`.toLowerCase();
+    if (s.includes('prediction')) return 'prediction';
+    if (s.includes('report') || s.includes('violation')) return 'report';
+    if (s.includes('race') || s.includes('result') || s.includes('tournament')) return 'race-result';
+    return 'registration';
+}
 
 async function getNotifications() {
-    // No notifications endpoint in BE yet, return empty array
-    return [];
+    const data = await apiRequest('/admin/notifications');
+    return (Array.isArray(data) ? data : []).map((n) => ({
+        id: n.notificationId,
+        title: n.title,
+        message: n.message,
+        isRead: n.isRead,
+        createdAt: n.createdAt,
+        time: formatNotificationTime(n.createdAt),
+        actionUrl: n.actionUrl,
+        relatedType: n.relatedType,
+        actionType: n.actionType,
+        tone: deriveNotificationTone(n.actionType, n.relatedType),
+        type: deriveNotificationType(n.actionType, n.relatedType),
+        priority: 'medium-priority',
+        status: n.isRead ? 'Read' : 'Pending',
+    }));
+}
+
+async function getAdminUnreadCount() {
+    const data = await apiRequest('/admin/notifications/unread-count');
+    return data?.unreadCount ?? 0;
 }
 
 async function markNotificationRead(id) {
-    // Placeholder until BE adds notification endpoints
-    return { message: 'Marked as read', id };
+    return apiRequest(`/admin/notifications/${id}/read`, { method: 'PUT' });
+}
+
+async function markAllNotificationsRead() {
+    return apiRequest('/admin/notifications/read-all', { method: 'PUT' });
 }
 
 // ─── Predictions ─────────────────────────────────────────────────────────────
@@ -1195,7 +1246,9 @@ export const adminApi = {
 
     // Notifications
     getNotifications,
+    getAdminUnreadCount,
     markNotificationRead,
+    markAllNotificationsRead,
 
     // Predictions
     getPredictions,

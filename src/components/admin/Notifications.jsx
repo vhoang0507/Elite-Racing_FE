@@ -7,6 +7,7 @@ import {
 import {
     FaBell,
     FaCalendarCheck,
+    FaCheck,
     FaClock,
     FaExclamationTriangle,
     FaFlagCheckered,
@@ -16,6 +17,7 @@ import {
 } from 'react-icons/fa';
 
 import { adminApi } from '../../api/adminApi';
+import Toast, { useToast } from '../shared/Toast';
 
 import AdminLayout from './AdminLayout';
 
@@ -106,6 +108,7 @@ function Notifications() {
     const [statusFilter, setStatusFilter] = useState('all-status');
     const [priorityFilter, setPriorityFilter] = useState('all-priority');
     const [page, setPage] = useState(1);
+    const { toast, showToast, hideToast } = useToast();
 
     useEffect(() => {
         let isMounted = true;
@@ -114,7 +117,7 @@ function Notifications() {
             if (isMounted) {
                 setNotifications(payload);
             }
-        });
+        }).catch(() => {});
 
         return () => {
             isMounted = false;
@@ -166,15 +169,26 @@ function Notifications() {
     };
 
     const handleMarkRead = async (id) => {
-        await adminApi.markNotificationRead(id);
-        setNotifications((current) => current.map((notification) => (
-            notification.id === id
-                ? {
-                    ...notification,
-                    isRead: true,
-                }
-                : notification
-        )));
+        try {
+            await adminApi.markNotificationRead(id);
+            setNotifications((current) => current.map((notification) => (
+                notification.id === id ? { ...notification, isRead: true, status: 'Read' } : notification
+            )));
+        } catch (err) {
+            showToast(err.message || 'Failed to mark as read.', 'error', 'Error');
+        }
+    };
+
+    const handleMarkAllRead = async () => {
+        const prev = notifications;
+        setNotifications((current) => current.map((n) => ({ ...n, isRead: true, status: 'Read' })));
+        try {
+            await adminApi.markAllNotificationsRead();
+            showToast('All notifications marked as read.', 'success', 'Updated');
+        } catch (err) {
+            setNotifications(prev);
+            showToast(err.message || 'Failed to update. Please try again.', 'error', 'Error');
+        }
     };
 
     const handleKeyDown = (event, id) => {
@@ -273,6 +287,15 @@ function Notifications() {
                                 <option value="low-priority">Low Priority</option>
                             </select>
                         </label>
+
+                        <button
+                            onClick={handleMarkAllRead}
+                            type="button"
+                            className="flex h-[38px] items-center gap-2 rounded-md border border-[var(--admin-primary)] px-4 text-[0.78rem] font-bold text-[var(--admin-primary)] hover:bg-[#e8f7ef]"
+                        >
+                            <FaCheck aria-hidden="true" />
+                            Mark All Read
+                        </button>
                     </section>
 
                     <section aria-label="Notification list" className={`${panelWidthClass} grid gap-[18px]`}>
@@ -346,6 +369,13 @@ function Notifications() {
                         </div>
                     </div>
                 </section>
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                title={toast.title}
+                onClose={hideToast}
+                duration={3500}
+            />
         </AdminLayout>
     );
 }

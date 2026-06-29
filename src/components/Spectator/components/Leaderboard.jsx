@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { FaHorseHead, FaStar, FaUsers } from 'react-icons/fa';
+import { FaHorseHead, FaStar, FaTrophy, FaUserTie, FaUsers } from 'react-icons/fa';
 import { spectatorApi } from '../../../api/spectatorApi';
+import { leaderboardApi } from '../../../api/leaderboardApi';
 import { getAuthUser } from '../../../utils/tokenStorage';
 
 const MEDAL = { 1: '🥇', 2: '🥈', 3: '🥉' };
@@ -19,6 +20,8 @@ function WinRateBar({ rate = 0 }) {
 export default function Leaderboard() {
     const [horses, setHorses] = useState([]);
     const [predictors, setPredictors] = useState([]);
+    const [owners, setOwners] = useState([]);
+    const [jockeys, setJockeys] = useState([]);
     const [season, setSeason] = useState(null);
     const [activeTab, setActiveTab] = useState('horses');
     const [loading, setLoading] = useState(true);
@@ -31,15 +34,21 @@ export default function Leaderboard() {
             spectatorApi.getHorseLeaderboard().catch(() => []),
             spectatorApi.getPredictorLeaderboard().catch(() => []),
             spectatorApi.getCurrentSeason().catch(() => null),
-        ]).then(([h, p, s]) => {
+            leaderboardApi.getOwnerLeaderboard({ limit: 20 }).catch(() => []),
+            leaderboardApi.getJockeyLeaderboard({ limit: 20 }).catch(() => []),
+        ]).then(([h, p, s, o, j]) => {
             setHorses(h ?? []);
             setPredictors(p ?? []);
             setSeason(s);
+            setOwners(o ?? []);
+            setJockeys(j ?? []);
         }).finally(() => setLoading(false));
     }, []);
 
     const tabs = [
         { key: 'horses',     label: 'Horse Rankings',  icon: FaHorseHead },
+        { key: 'owners',     label: 'Top Owners',      icon: FaTrophy },
+        { key: 'jockeys',    label: 'Top Jockeys',     icon: FaUserTie },
         { key: 'predictors', label: 'Top Predictors',  icon: FaUsers },
     ];
 
@@ -116,6 +125,72 @@ export default function Leaderboard() {
 
                 {loading ? (
                     <p className="m-0 p-8 text-center font-semibold text-[var(--admin-muted)]">Loading rankings...</p>
+                ) : activeTab === 'owners' ? (
+                    owners.length === 0 ? (
+                        <p className="m-0 p-8 text-center text-[var(--admin-muted)]">No owner data yet.</p>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="data-table min-w-[680px]">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Owner</th>
+                                        <th>Wins</th>
+                                        <th>Races</th>
+                                        <th>Top 3</th>
+                                        <th>Win Rate</th>
+                                        <th>Best Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {owners.map((o) => (
+                                        <tr key={o.ownerId ?? o.rank}>
+                                            <td><span style={{ fontWeight: 900, fontSize: '1.1rem' }}>{MEDAL[o.rank] ?? `#${o.rank}`}</span></td>
+                                            <td><span style={{ fontWeight: 700 }}>{o.ownerName}</span></td>
+                                            <td><span style={{ fontWeight: 900, color: '#0b7f5a' }}>{o.wins ?? 0}</span></td>
+                                            <td style={{ color: 'var(--admin-muted)' }}>{o.totalRaces ?? 0}</td>
+                                            <td style={{ color: '#1565c0', fontWeight: 700 }}>{o.top3Finishes ?? 0}</td>
+                                            <td><WinRateBar rate={o.winRate ?? 0} /></td>
+                                            <td style={{ color: 'var(--admin-muted)' }}>{o.bestFinishTimeSeconds != null ? `${o.bestFinishTimeSeconds}s` : '—'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )
+                ) : activeTab === 'jockeys' ? (
+                    jockeys.length === 0 ? (
+                        <p className="m-0 p-8 text-center text-[var(--admin-muted)]">No jockey data yet.</p>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="data-table min-w-[680px]">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Jockey</th>
+                                        <th>Wins</th>
+                                        <th>Races</th>
+                                        <th>Top 3</th>
+                                        <th>Win Rate</th>
+                                        <th>Best Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {jockeys.map((j) => (
+                                        <tr key={j.jockeyId ?? j.rank}>
+                                            <td><span style={{ fontWeight: 900, fontSize: '1.1rem' }}>{MEDAL[j.rank] ?? `#${j.rank}`}</span></td>
+                                            <td><span style={{ fontWeight: 700 }}>{j.jockeyName}</span></td>
+                                            <td><span style={{ fontWeight: 900, color: '#0b7f5a' }}>{j.wins ?? 0}</span></td>
+                                            <td style={{ color: 'var(--admin-muted)' }}>{j.totalRaces ?? 0}</td>
+                                            <td style={{ color: '#1565c0', fontWeight: 700 }}>{j.top3Finishes ?? 0}</td>
+                                            <td><WinRateBar rate={j.winRate ?? 0} /></td>
+                                            <td style={{ color: 'var(--admin-muted)' }}>{j.bestFinishTimeSeconds != null ? `${j.bestFinishTimeSeconds}s` : '—'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )
                 ) : activeTab === 'horses' ? (
                     horses.length === 0 ? (
                         <p className="m-0 p-8 text-center text-[var(--admin-muted)]">No horse data yet — waiting for BE endpoint.</p>
