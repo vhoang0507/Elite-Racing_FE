@@ -49,7 +49,7 @@ export async function apiRequest(endpoint, options = {}) {
         if (response.status === 401) {
             clearAuthSession();
             window.location.href = '/login';
-            return;
+            throw new Error('Unauthorized');
         }
         const message = data?.message || data?.title || response.statusText;
         const error = new Error(message);

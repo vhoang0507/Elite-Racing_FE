@@ -19,7 +19,13 @@ export function getAuthToken() {
 
 export function getAuthUser() {
     const userText = sessionStorage.getItem(USER_KEY) || localStorage.getItem(USER_KEY);
-    return userText ? JSON.parse(userText) : null;
+    if (!userText) return null;
+    try {
+        return JSON.parse(userText);
+    } catch {
+        clearAuthSession();
+        return null;
+    }
 }
 
 export function clearAuthSession() {

@@ -12,6 +12,7 @@ import { saveAuthSession } from '../utils/tokenStorage';
 
 import {
     FaEnvelope,
+    FaEye,
     FaEyeSlash,
     FaChevronDown,
 } from 'react-icons/fa';
@@ -36,6 +37,7 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [remember, setRemember] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(location.state?.message || '');
 
@@ -189,22 +191,29 @@ const Login = () => {
                                     Password
                                 </label>
 
-                                <a href="#" className="text-[0.85rem] font-bold text-[#0b7f5a] no-underline transition-opacity duration-200 hover:opacity-80">
+                                <span className="text-[0.85rem] font-bold text-[#0b7f5a] opacity-50 cursor-not-allowed select-none">
                                     Forgot password
-                                </a>
+                                </span>
                             </div>
 
                             <div className="relative">
                                 <input
                                     className={controlClass}
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     placeholder="Enter your password"
                                     value={password}
                                     onChange={(event) => setPassword(event.target.value)}
                                     required
                                 />
 
-                                <FaEyeSlash className={iconClass} />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((v) => !v)}
+                                    className={`${iconClass} border-0 bg-transparent p-0 cursor-pointer`}
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                >
+                                    {showPassword ? <FaEye /> : <FaEyeSlash />}
+                                </button>
                             </div>
                         </div>
 

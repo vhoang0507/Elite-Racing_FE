@@ -194,7 +194,7 @@ function AdminDashboard() {
                     </div>
 
                     {isLoading ? (
-                        <p className="m-0 font-bold text-[var(--admin-muted)]">Loading mock data...</p>
+                        <p className="m-0 font-bold text-[var(--admin-muted)]">Loading...</p>
                     ) : null}
 
                     <section aria-label="Summary statistics" className="grid grid-cols-4 gap-5 max-[1280px]:grid-cols-2 max-[720px]:grid-cols-1">

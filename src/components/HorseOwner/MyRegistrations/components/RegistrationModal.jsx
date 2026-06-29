@@ -43,11 +43,7 @@ function HealthCertificateLink({ url }) {
 }
 
 export default function RegistrationModal({ tournament, onClose, onSuccess }) {
-    if (!tournament) return null;
-
     const navigate = useNavigate();
-    const tournamentStatus = getTournamentStatus(tournament);
-    const isRegistrationOpen = tournamentStatus === "OpenRegistration";
     const [horses, setHorses] = useState([]);
     const [selectedHorse, setSelectedHorse] = useState(null);
     const [notes, setNotes] = useState("");
@@ -57,6 +53,7 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
     const [success, setSuccess] = useState("");
 
     useEffect(() => {
+        if (!tournament) return;
         setLoading(true);
         ownerApi.getEligibleHorses(tournament.raceId)
             .then(async (items) => {
@@ -82,7 +79,12 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                 if (!handleOwnerAccessError(err, navigate)) setHorses([]);
             })
             .finally(() => setLoading(false));
-    }, [tournament.raceId]);
+    }, [tournament?.raceId]);
+
+    if (!tournament) return null;
+
+    const tournamentStatus = getTournamentStatus(tournament);
+    const isRegistrationOpen = tournamentStatus === "OpenRegistration";
 
     const handleSelectHorse = (horse) => {
         if (!horse.isEligible) return;

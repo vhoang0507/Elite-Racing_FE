@@ -10,6 +10,7 @@ import icon from '../assets/icon.png';
 
 import {
     FaChevronDown,
+    FaEye,
     FaEyeSlash,
 } from 'react-icons/fa';
 
@@ -28,6 +29,7 @@ const Register = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
 
     const handleSubmit = async (event) => {
@@ -172,7 +174,7 @@ const Register = () => {
                             <div className="relative">
                                 <input
                                     className={`${controlClass} pr-[46px]`}
-                                    type="password"
+                                    type={showPassword ? 'text' : 'password'}
                                     placeholder="Create a secure password"
                                     value={password}
                                     onChange={(event) => setPassword(event.target.value)}
@@ -180,7 +182,14 @@ const Register = () => {
                                     required
                                 />
 
-                                <FaEyeSlash className={iconClass} />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((v) => !v)}
+                                    className={`${iconClass} border-0 bg-transparent p-0 cursor-pointer`}
+                                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                                >
+                                    {showPassword ? <FaEye /> : <FaEyeSlash />}
+                                </button>
                             </div>
 
                             <div className="mt-2.5 flex gap-1.5">
@@ -239,9 +248,9 @@ const Register = () => {
                         </button>
 
                         <div className="flex justify-between gap-5 text-[0.95rem] max-[1024px]:flex-col max-[1024px]:gap-3">
-                            <a className="font-bold text-[#0b7f5a] no-underline" href="#">
+                            <Link className="font-bold text-[#0b7f5a] no-underline" to="/">
                                 &larr; Back to Home
-                            </a>
+                            </Link>
 
                             <span>
                                 Already have an account?{' '}
