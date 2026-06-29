@@ -15,13 +15,12 @@ export function handleOwnerAccessError(error, navigate) {
             return true;
 
         case 'ContactSupport':
-            alert('Your account has been disabled. Please contact support.');
+            navigate('/login', { state: { message: 'Your account has been disabled. Please contact support.' } });
             return true;
 
         case 'AccountBlocked':
             clearAuthSession();
-            navigate('/login');
-            alert('Your account has been blocked.');
+            navigate('/login', { state: { message: 'Your account has been blocked.' } });
             return true;
 
         default:

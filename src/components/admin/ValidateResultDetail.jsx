@@ -5,15 +5,18 @@ import {
 
 import {
     Link,
+    useNavigate,
     useParams,
 } from 'react-router-dom';
 
 import {
     FaArrowLeft,
+    FaCheck,
     FaExclamationCircle,
     FaFileAlt,
     FaRedoAlt,
     FaTrophy,
+    FaUndo,
 } from 'react-icons/fa';
 
 import { adminApi } from '../../api/adminApi';
@@ -89,9 +92,13 @@ const formatScore = (value) => {
 
 function ValidateResultDetail() {
     const { resultId } = useParams();
+    const navigate = useNavigate();
     const [detail, setDetail] = useState(null);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState(false);
+    const [actionError, setActionError] = useState('');
+    const [actionSuccess, setActionSuccess] = useState('');
 
     const loadDetail = async () => {
         setLoading(true);
@@ -136,6 +143,38 @@ function ValidateResultDetail() {
             isMounted = false;
         };
     }, [resultId]);
+
+    const handleApprove = async () => {
+        if (!window.confirm('Approve this result? This will publish it and award prizes.')) return;
+        setActionLoading(true);
+        setActionError('');
+        setActionSuccess('');
+        try {
+            await adminApi.publishResult(resultId);
+            setActionSuccess('Result approved and published.');
+            setTimeout(() => navigate('/admin/results'), 1500);
+        } catch (err) {
+            setActionError(err.message || 'Failed to approve result.');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const handleReturn = async () => {
+        if (!window.confirm('Return this result to the referee for correction?')) return;
+        setActionLoading(true);
+        setActionError('');
+        setActionSuccess('');
+        try {
+            await adminApi.rejectResult(resultId);
+            setActionSuccess('Result returned to referee.');
+            setTimeout(() => navigate('/admin/results'), 1500);
+        } catch (err) {
+            setActionError(err.message || 'Failed to return result.');
+        } finally {
+            setActionLoading(false);
+        }
+    };
 
     const isStandaloneReport = detail?.detailType === 'admin-report';
     const heading = isStandaloneReport
@@ -242,16 +281,53 @@ function ValidateResultDetail() {
                         </p>
                     </div>
 
-                    <button
-                        aria-label="Refresh referee report"
-                        className="grid h-[38px] w-[38px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]"
-                        disabled={loading}
-                        onClick={loadDetail}
-                        type="button"
-                    >
-                        <FaRedoAlt aria-hidden="true" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                        {!loading && !error && !isStandaloneReport && detail?.status === 'RefereeConfirmed' && (
+                            <>
+                                <button
+                                    type="button"
+                                    disabled={actionLoading}
+                                    onClick={handleReturn}
+                                    className="flex min-h-[38px] cursor-pointer items-center gap-2 rounded-md border border-[#f0b7ae] bg-white px-4 text-[0.78rem] font-black text-[#a11616] hover:bg-[#fff1ef] disabled:opacity-50"
+                                >
+                                    <FaUndo aria-hidden="true" className="h-3 w-3" />
+                                    Return
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={actionLoading}
+                                    onClick={handleApprove}
+                                    className="flex min-h-[38px] cursor-pointer items-center gap-2 rounded-md bg-[var(--admin-primary)] px-4 text-[0.78rem] font-black text-white hover:bg-[var(--admin-primary-dark)] disabled:opacity-50"
+                                >
+                                    <FaCheck aria-hidden="true" className="h-3 w-3" />
+                                    Approve
+                                </button>
+                            </>
+                        )}
+                        <button
+                            aria-label="Refresh referee report"
+                            className="grid h-[38px] w-[38px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]"
+                            disabled={loading}
+                            onClick={loadDetail}
+                            type="button"
+                        >
+                            <FaRedoAlt aria-hidden="true" />
+                        </button>
+                    </div>
                 </div>
+
+                {actionError && (
+                    <section className={`${panelWidthClass} flex items-start gap-3 rounded-[var(--admin-radius)] border border-[#f0b7ae] bg-[#fff1ef] p-4 text-[#a11616]`}>
+                        <FaExclamationCircle aria-hidden="true" className="mt-0.5 flex-none" />
+                        <p className="m-0 text-[0.88rem] font-bold">{actionError}</p>
+                    </section>
+                )}
+
+                {actionSuccess && (
+                    <section className={`${panelWidthClass} rounded-[var(--admin-radius)] border border-[#a7dfbf] bg-[#e8f8ef] p-4 text-[#1a7d49]`}>
+                        <p className="m-0 text-[0.88rem] font-bold">{actionSuccess}</p>
+                    </section>
+                )}
 
                 {loading ? (
                     <section className={`${panelWidthClass} rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6`}>

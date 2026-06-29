@@ -88,6 +88,13 @@ const Login = () => {
                 return;
             }
 
+            // Redirect back to the page the user tried to visit before being sent to login
+            const fromPath = location.state?.from?.pathname;
+            if (fromPath && fromPath !== '/login') {
+                navigate(fromPath, { replace: true });
+                return;
+            }
+
             const dashboardRoute = roleDashboardRoutes[userRole];
 
             if (dashboardRoute) {

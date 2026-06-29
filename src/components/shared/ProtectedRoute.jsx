@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { getAuthToken, getAuthUser } from '../../utils/tokenStorage';
 
 /**
@@ -7,12 +7,13 @@ import { getAuthToken, getAuthUser } from '../../utils/tokenStorage';
  * @param {React.ReactNode} children
  */
 export default function ProtectedRoute({ role, children }) {
+    const location = useLocation();
     const token = getAuthToken();
     const user = getAuthUser();
 
-    // Not logged in → redirect to login
+    // Not logged in → redirect to login, remembering where we came from
     if (!token || !user) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
     // Check role if specified

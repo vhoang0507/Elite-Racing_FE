@@ -13,6 +13,7 @@ export default function JockeyGrid({ registrationId, search = '', healthStatus =
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [showAll, setShowAll] = useState(false);
+    const [imgErrors, setImgErrors] = useState({});
 
     useEffect(() => {
         if (!registrationId) {
@@ -64,21 +65,16 @@ export default function JockeyGrid({ registrationId, search = '', healthStatus =
                     return (
                         <div key={jockey.jockeyId} style={styles.cardItem}>
                             <div style={styles.imgWrapper}>
-                                <img
-                                    src={jockey.profileImageUrl ? resolveFileUrl(jockey.profileImageUrl) : '/Jockey1.jpg'}
-                                    alt={jockey.fullName}
-                                    style={styles.img}
-                                    onError={(e) => {
-                                        e.currentTarget.onerror = null;
-                                        e.currentTarget.style.display = 'none';
-                                        const placeholder = e.currentTarget.parentElement.querySelector('.img-placeholder');
-                                        if (placeholder) placeholder.style.display = 'flex';
-                                    }}
-                                />
-                                <div
-                                    className="img-placeholder"
-                                    style={{ ...styles.img, display: 'none', alignItems: 'center', justifyContent: 'center', background: '#f3eeec', fontSize: '2rem' }}
-                                >🏇</div>
+                                {imgErrors[jockey.jockeyId] ? (
+                                    <div style={{ ...styles.img, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f3eeec', fontSize: '2rem' }}>🏇</div>
+                                ) : (
+                                    <img
+                                        src={jockey.profileImageUrl ? resolveFileUrl(jockey.profileImageUrl) : '/Jockey1.jpg'}
+                                        alt={jockey.fullName}
+                                        style={styles.img}
+                                        onError={() => setImgErrors((prev) => ({ ...prev, [jockey.jockeyId]: true }))}
+                                    />
+                                )}
                             </div>
 
                             <p style={styles.name}>{jockey.fullName}</p>
