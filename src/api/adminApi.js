@@ -323,26 +323,35 @@ async function updateHorseApproval(id, approval) {
 
 async function getTournaments() {
     const data = await apiRequest('/admin/tournaments');
-    return data.map((t) => ({
-        id: t.tournamentId,
-        name: t.tournamentName,
-        description: t.description || '',
-        className: t.description || '',
-        startDate: t.startDate ? t.startDate.split('T')[0] : '',
-        endDate: t.endDate ? t.endDate.split('T')[0] : '',
-        location: t.location,
-        city: t.location,
-        maxHorses: t.maxHorses,
-        distanceMeters: getTournamentDistanceMeters(t),
-        registeredHorses: t.entriesCount || 0,
-        prizePool: t.prizePool,
-        referee: getAssignedReferee(t),
-        status: t.status,
-        rules: t.rules,
-        createdAt: t.createdAt,
-        imageUrl: readApiField(t, 'imageUrl'),
-        imagePosition: '50% center',
-    }));
+    return data.map((t) => {
+        const registrationDeadlineValue = t.registrationDeadline || t.startDate || '';
+        const raceDateValue = t.raceDate || t.endDate || '';
+        const registrationDeadlineDate = registrationDeadlineValue ? String(registrationDeadlineValue).split('T')[0] : '';
+        const raceDateDate = raceDateValue ? String(raceDateValue).split('T')[0] : '';
+
+        return {
+            id: t.tournamentId,
+            name: t.tournamentName,
+            description: t.description || '',
+            className: t.description || '',
+            startDate: registrationDeadlineDate,
+            endDate: raceDateDate,
+            registrationDeadline: registrationDeadlineDate,
+            raceDate: raceDateDate,
+            location: t.location,
+            city: t.location,
+            maxHorses: t.maxHorses,
+            distanceMeters: getTournamentDistanceMeters(t),
+            registeredHorses: t.entriesCount || 0,
+            prizePool: t.prizePool,
+            referee: getAssignedReferee(t),
+            status: t.status,
+            rules: t.rules,
+            createdAt: t.createdAt,
+            imageUrl: readApiField(t, 'imageUrl'),
+            imagePosition: '50% center',
+        };
+    });
 }
 
 function getAssignedReferee(tournament) {
