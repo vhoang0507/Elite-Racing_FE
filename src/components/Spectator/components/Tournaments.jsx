@@ -22,8 +22,17 @@ function getStatusStyle(status) {
     return STATUS_BADGE[status] ?? { bg: '#e8f7ef', color: '#0b7f5a', label: status };
 }
 
-function canPredict(status) {
-    return status === 'OpenRegistration' || status === 'Scheduled';
+// BE blocks prediction when race status is Ongoing/Finished/ResultPending/Published/Cancelled
+// and when tournament is Completed/Cancelled.
+// tournament.race.status is included in the API response, so we check that directly.
+const RACE_CLOSED_FOR_PREDICTION = ['Ongoing', 'Finished', 'ResultPending', 'Published', 'Cancelled'];
+
+function canPredict(tournament) {
+    if (!tournament) return false;
+    if (tournament.status === 'Completed' || tournament.status === 'Cancelled') return false;
+    const raceStatus = tournament.race?.status;
+    if (!raceStatus) return false;
+    return !RACE_CLOSED_FOR_PREDICTION.includes(raceStatus);
 }
 
 // ─── Predict Modal ────────────────────────────────────────────────────────────
@@ -165,7 +174,7 @@ function TournamentCard({ tournament, myPrediction, onPredict }) {
     const horseName = myPrediction?.predictedHorseName ?? tournament.myPrediction?.predictedHorseName;
     const isCorrect = myPrediction?.isCorrect;
     const pts = myPrediction?.pointsAwarded ?? 0;
-    const open = canPredict(tournament.status);
+    const open = canPredict(tournament);
 
     return (
         <article className="surface-card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>

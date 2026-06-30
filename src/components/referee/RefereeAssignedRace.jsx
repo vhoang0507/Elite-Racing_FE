@@ -123,7 +123,7 @@ function RefereeAssignedRace() {
                             <option value="AssignedReferee">Assigned Referee</option>
                             <option value="ClosedRegistration">Closed Registration</option>
                             <option value="Ongoing">Ongoing</option>
-                            <option value="Completed">Completed</option>
+                            <option value="Finished">Finished</option>
                         </select>
                     </div>
                 )}
@@ -185,7 +185,7 @@ function RefereeAssignedRace() {
                                     {/* Action buttons */}
                                     {(() => {
                                         const canPreRace = canOpenPreRace(race);
-                                        const canPostRace = ['Ongoing', 'Completed', 'ResultPending'].includes(race.raceStatus);
+                                        const canPostRace = ['Ongoing', 'Finished', 'ResultPending'].includes(race.raceStatus);
                                         return (
                                             <div style={{ display: 'flex', gap: 8, padding: '0 20px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                                                 <button
@@ -209,7 +209,7 @@ function RefereeAssignedRace() {
                                                     type="button"
                                                     disabled={!canPostRace}
                                                     onClick={() => navigate('/referee/races/post-race', { state: { raceId: race.raceId } })}
-                                                    title={canPostRace ? 'Open post-race workflow' : 'Only available for Ongoing / Completed / ResultPending races'}
+                                                    title={canPostRace ? 'Open post-race workflow' : 'Only available for Ongoing / Finished / ResultPending races'}
                                                     style={{
                                                         display: 'flex', alignItems: 'center', gap: 6,
                                                         padding: '8px 16px', borderRadius: 8,

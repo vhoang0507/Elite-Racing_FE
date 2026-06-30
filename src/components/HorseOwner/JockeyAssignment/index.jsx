@@ -80,9 +80,14 @@ export default function JockeyAssignment() {
     const canSendInvitation = context?.canSendInvitation ?? !hasOfficialJockey;
     const canSignJockey = context?.canSignJockey ?? !hasOfficialJockey;
 
-    const handleInvitationSent = () => {
+    const handleInvitationSent = (jockeyName) => {
         setSelectedJockey(null);
         refreshDetail();
+        showToast(
+            `Invitation sent to ${jockeyName ?? 'the jockey'} successfully. Waiting for their response.`,
+            'success',
+            'Invitation Sent'
+        );
     };
 
     const handleSign = async (invitationId) => {

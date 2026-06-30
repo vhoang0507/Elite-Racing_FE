@@ -22,7 +22,7 @@ export default function InvitationModal({ jockey, registrationId, tournamentName
                 feeAmount: Number(feeAmount) || 0,
                 message: message?.trim() || null,
             });
-            onSent?.();
+            onSent?.(jockey.fullName);
         } catch (err) {
             setError(err.message || 'Failed to send invitation');
         } finally {

@@ -55,6 +55,12 @@ export async function confirmRaceResult(raceId, resultId) {
     });
 }
 
+export async function finishRace(raceId) {
+    return apiRequest(`/referee/races/${raceId}/finish`, {
+        method: 'PUT',
+    });
+}
+
 export async function createViolation(raceId, payload) {
     return apiRequest(`/referee/races/${raceId}/violations`, {
         method: 'POST',
@@ -118,6 +124,7 @@ export const refereeApi = {
     getInspectionReport,
     saveRaceResult,
     confirmRaceResult,
+    finishRace,
     createViolation,
     getViolations,
     getRaceResults,

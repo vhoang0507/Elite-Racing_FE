@@ -117,6 +117,14 @@ function AssignedPostRace() {
     const selectedResultRegistration = registrationById.get(String(resultForm.registrationId));
     const selectedViolationRegistration = registrationById.get(String(violationForm.registrationId));
 
+    const canFinishRace =
+        selectedRace?.allowedActions?.canFinishRace ||
+        selectedRace?.raceStatus === 'Ongoing';
+
+    const canEnterResults =
+        selectedRace?.allowedActions?.canEnterResults ||
+        selectedRace?.raceStatus === 'Finished';
+
     async function loadAssignedRaces(ignoreRef = { current: false }) {
         setLoadingRaces(true);
         setError('');
@@ -125,7 +133,7 @@ function AssignedPostRace() {
             if (ignoreRef.current) return;
             const nextRaces = (data ?? []).filter((r) =>
                 r.raceStatus === 'Ongoing' ||
-                r.raceStatus === 'Completed' ||
+                r.raceStatus === 'Finished' ||
                 r.raceStatus === 'ResultPending'
             );
             setRaces(nextRaces);
@@ -190,6 +198,7 @@ function AssignedPostRace() {
 
     const validateResultForm = () => {
         if (!selectedRaceId) return 'Select a race first.';
+        if (!canEnterResults) return 'Race must be Finished before entering results.';
         if (!resultForm.registrationId) return 'Select a registration.';
         const hasValue = resultForm.finishPosition !== '' || resultForm.finishTimeSeconds !== '' || resultForm.score !== '';
         if (!hasValue) return 'Enter finish position, time, or score.';
@@ -210,6 +219,35 @@ function AssignedPostRace() {
         if (violationForm.penaltyPoints !== '' && (pts === null || pts < 0)) return 'Penalty points must be ≥ 0.';
         if (violationForm.action === VIOLATION_ACTIONS.pointDeduction && (!pts || pts <= 0)) return 'Point deduction requires penalty points > 0.';
         return '';
+    };
+
+    const handleFinishRace = async () => {
+        if (!selectedRaceId) return;
+        setSaving('finish');
+        setError('');
+        setSuccess('');
+        try {
+            const updatedLifecycle = await refereeApi.finishRace(selectedRaceId);
+            setRaces((prev) =>
+                prev.map((race) =>
+                    String(race.raceId) === String(selectedRaceId)
+                        ? {
+                            ...race,
+                            raceStatus: updatedLifecycle?.raceStatus || 'Finished',
+                            currentStage: updatedLifecycle?.currentStage,
+                            nextStage: updatedLifecycle?.nextStage,
+                            allowedActions: updatedLifecycle?.allowedActions,
+                        }
+                        : race
+                )
+            );
+            await loadRaceWorkflowData(selectedRaceId);
+            setSuccess('Race marked as Finished. You can now enter results.');
+        } catch (err) {
+            setError(err.message || 'Failed to finish race.');
+        } finally {
+            setSaving('');
+        }
     };
 
     const handleSaveResult = async (e) => {
@@ -320,6 +358,30 @@ function AssignedPostRace() {
                 {success && (
                     <div className="rounded-[8px] border border-green-200 bg-green-50 px-5 py-4 font-semibold text-green-700">
                         {success}
+                    </div>
+                )}
+
+                {selectedRace?.raceStatus === 'Ongoing' && (
+                    <div className="rounded-[8px] border border-yellow-200 bg-yellow-50 px-5 py-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="font-semibold text-yellow-800">
+                                Race is currently <strong>Ongoing</strong>. Finish the race before entering results.
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleFinishRace}
+                                disabled={!canFinishRace || saving === 'finish'}
+                                className="rounded bg-[#0b7f5a] px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {saving === 'finish' ? 'Finishing...' : 'Finish Race'}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {selectedRace && !canEnterResults && activeTab === 'results' && selectedRace.raceStatus !== 'Ongoing' && (
+                    <div className="rounded-[8px] border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
+                        Race results can only be entered when race status is <strong>Finished</strong>. Current status: <strong>{selectedRace.raceStatus}</strong>
                     </div>
                 )}
 
@@ -498,7 +560,11 @@ function AssignedPostRace() {
                                         placeholder="Result note" className={inputClass} />
                                 </div>
 
-                                <button type="submit" disabled={saving === 'result' || loadingRaceData || registrations.length === 0} className={primaryBtn}>
+                                <button
+                                    type="submit"
+                                    disabled={saving === 'result' || loadingRaceData || registrations.length === 0 || !canEnterResults}
+                                    className={primaryBtn}
+                                >
                                     {saving === 'result' ? 'Saving...' : 'Save Result'}
                                 </button>
                             </div>

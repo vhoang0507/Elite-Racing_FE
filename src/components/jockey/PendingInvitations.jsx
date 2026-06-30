@@ -53,8 +53,6 @@ function mapDetailToFlat(detail) {
         feeAmount: detail.feeAmount,
         status: detail.status,
         sentAt: detail.sentAt,
-        matchScore: detail.matchScore,
-        matchReasons: detail.matchReasons,
     };
 }
 
@@ -111,6 +109,7 @@ function PendingInvitations() {
 
 
     const handleAccept = async (invId) => {
+        const inv = invitations.find(i => i.invitationId === invId);
         try {
             await jockeyApi.acceptInvitation(invId);
             setInvitations(prev => prev.filter(i => i.invitationId !== invId));
@@ -120,13 +119,18 @@ function PendingInvitations() {
                 acceptedInvitations: (prev.acceptedInvitations ?? 0) + 1,
             } : prev);
             setSelectedInvitation(null);
-            showToast('Invitation accepted! The horse owner will be in touch soon.', 'success', 'Invitation Accepted');
+            showToast(
+                `You've accepted the invitation for ${inv?.horseName ?? 'this race'}. The owner will be notified and will confirm soon.`,
+                'success',
+                'Invitation Accepted'
+            );
         } catch (err) {
-            showToast(err.message || 'Failed to accept invitation. Please try again.', 'error', 'Error');
+            showToast(err.message || 'Failed to accept invitation. Please try again.', 'error', 'Accept Failed');
         }
     };
 
     const handleReject = async (invId) => {
+        const inv = invitations.find(i => i.invitationId === invId);
         try {
             await jockeyApi.rejectInvitation(invId);
             setInvitations(prev => prev.filter(i => i.invitationId !== invId));
@@ -135,9 +139,13 @@ function PendingInvitations() {
                 pendingInvitations: Math.max((prev.pendingInvitations ?? 1) - 1, 0),
             } : prev);
             setSelectedInvitation(null);
-            showToast('Invitation declined and removed from your list.', 'info', 'Invitation Declined');
+            showToast(
+                `You've rejected the invitation for ${inv?.horseName ?? 'this race'}. It has been removed from your list.`,
+                'info',
+                'Invitation Rejected'
+            );
         } catch (err) {
-            showToast(err.message || 'Failed to decline invitation. Please try again.', 'error', 'Error');
+            showToast(err.message || 'Failed to reject invitation. Please try again.', 'error', 'Reject Failed');
         }
     };
 
@@ -257,22 +265,6 @@ function PendingInvitations() {
                                             </div>
                                         )}
 
-                                        {inv.matchScore != null && (
-                                            <div className="mx-5 mb-4 flex items-center gap-4 rounded-md bg-[#e8f7ef] px-4 py-3">
-                                                <div className="grid h-12 w-12 flex-none place-items-center rounded-full bg-white text-[0.9rem] font-black text-[var(--admin-primary)]">
-                                                    {inv.matchScore}%
-                                                </div>
-                                                <div>
-                                                    <p className="m-0 text-[0.7rem] font-bold uppercase tracking-wide text-[var(--admin-primary)]">AI Match Score</p>
-                                                    <ul className="m-0 mt-1 list-disc pl-4 text-[0.78rem] text-[var(--admin-ink)]">
-                                                        {(inv.matchReasons ?? []).map((reason, idx) => (
-                                                            <li key={idx}>{reason}</li>
-                                                        ))}
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        )}
-
                                         <div className="border-t border-[var(--admin-border)] px-5 py-4">
                                             <div className="flex gap-3">
                                                 <button
@@ -357,9 +349,6 @@ function PendingInvitations() {
                                         <p className="m-0 mt-1"><strong>Deadline:</strong> {formatDate(selectedInvitation.jockeySelectionDeadline)}</p>
                                     )}
                                     <p className="m-0 mt-1"><strong>Status:</strong> {selectedInvitation.status}</p>
-                                    {selectedInvitation.matchScore != null && (
-                                        <p className="m-0 mt-1"><strong>AI Match Score:</strong> {selectedInvitation.matchScore}%</p>
-                                    )}
                                 </div>
 
                                 <div className="flex gap-3">
