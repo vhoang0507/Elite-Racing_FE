@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ownerApi } from "../../../../api/ownerApi";
 import { resolveFileUrl } from "../../../../api/uploadApi";
 
 export default function MyHorses() {
+    const navigate = useNavigate();
     const [horses, setHorses] = useState([]);
 
     useEffect(() => {
@@ -17,13 +19,13 @@ export default function MyHorses() {
         <section style={styles.section}>
             <div style={styles.header}>
                 <h3 style={{ margin: 0 }}>My Horses</h3>
-                <button style={styles.viewAll}>View All</button>
+                <button style={styles.viewAll} onClick={() => navigate('/owner/my-horse')}>View All</button>
             </div>
 
             <div style={styles.list}>
                 {horses.length === 0 && <p style={{ color: '#64748b', fontSize: '13px' }}>No horses yet</p>}
                 {horses.map((horse) => (
-                    <div key={horse.horseId} style={styles.card}>
+                    <div key={horse.horseId} style={{ ...styles.card, cursor: 'pointer' }} onClick={() => navigate(`/owner/horses/${horse.horseId}`)}>
                         {horse.imageUrl && (
                             <img src={resolveFileUrl(horse.imageUrl)} alt={horse.horseName} style={{ width: "100px", height: "70px", borderRadius: "8px", objectFit: "cover" }} />
                         )}

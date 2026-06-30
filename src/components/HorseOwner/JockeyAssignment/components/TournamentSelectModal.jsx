@@ -1,4 +1,6 @@
 export default function TournamentSelectModal({ registrations, selectedId, onSelect, onClose }) {
+    const openRegistrations = registrations.filter(r => r.tournamentStatus === 'OpenRegistration');
+
     return (
         <div style={styles.overlay} onClick={onClose}>
             <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -7,13 +9,13 @@ export default function TournamentSelectModal({ registrations, selectedId, onSel
                     <button style={styles.closeBtn} onClick={onClose} type="button">✕</button>
                 </div>
 
-                {registrations.length === 0 ? (
+                {openRegistrations.length === 0 ? (
                     <p style={styles.emptyText}>
-                        No approved registrations yet. Please register and wait for admin approval.
+                        No tournaments are currently open for registration.
                     </p>
                 ) : (
                     <div style={styles.list}>
-                        {registrations.map((r) => (
+                        {openRegistrations.map((r) => (
                             <button
                                 key={r.registrationId}
                                 type="button"

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ownerApi } from "../../../../api/ownerApi";
 
 export default function NewTournament() {
+    const navigate = useNavigate();
     const [tournaments, setTournaments] = useState([]);
 
     useEffect(() => {
@@ -18,7 +20,7 @@ export default function NewTournament() {
                 <h3 style={{ margin: 0 }}>New Tournament</h3>
                 <span style={styles.badge}>{tournaments.length} New</span>
             </div>
-            <button style={styles.viewAll}>View All Tournament</button>
+            <button style={styles.viewAll} onClick={() => navigate('/owner/registrations')}>View All Tournament</button>
 
             <div style={styles.list}>
                 {tournaments.length === 0 && <p style={{ color: '#64748b', fontSize: '13px' }}>No upcoming tournaments</p>}
@@ -29,7 +31,7 @@ export default function NewTournament() {
                             <span style={styles.date}>{t.raceDate}</span>
                         </div>
                         <p style={styles.location}>{t.location}</p>
-                        <button style={styles.detailBtn}>View Details</button>
+                        <button style={styles.detailBtn} onClick={() => navigate('/owner/registrations')}>View Details</button>
                     </div>
                 ))}
             </div>

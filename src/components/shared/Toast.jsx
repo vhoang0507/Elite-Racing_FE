@@ -41,10 +41,10 @@ export default function Toast({ message, type = 'success', title, onClose, durat
     const cfg = configs[type] || configs.info;
 
     useEffect(() => {
-        if (!duration || !onClose) return;
+        if (!message || !duration || !onClose) return;
         const t = setTimeout(onClose, duration);
         return () => clearTimeout(t);
-    }, [duration, onClose]);
+    }, [message, duration, onClose]);
 
     if (!message) return null;
 
