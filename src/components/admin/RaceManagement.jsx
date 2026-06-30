@@ -21,6 +21,7 @@ import {
 import { adminApi } from '../../api/adminApi';
 import { resolveFileUrl } from '../../api/uploadApi';
 import horseRacing from '../../assets/horse-racing.jpg';
+import { getCompactPaginationItems } from '../../utils/pagination';
 
 import AdminLayout from './AdminLayout';
 
@@ -230,7 +231,7 @@ const getRaceTimeLabel = (tournament) => {
         return String(explicitTime).slice(0, 5);
     }
 
-    const raceDateTime = readTournamentField(tournament, 'raceDateTime', 'raceDate', 'RaceDate')
+    const raceDateTime = readTournamentField(tournament, 'raceDateTime', 'RaceDateTime')
         ?? tournament?.race?.raceDate
         ?? tournament?.Race?.RaceDate;
 
@@ -244,10 +245,10 @@ const getRaceTimeLabel = (tournament) => {
 };
 
 const getRaceDateLabel = (tournament) => {
-    const raceDate = readTournamentField(tournament, 'raceDateTime', 'raceDate', 'RaceDate')
+    const raceDate = readTournamentField(tournament, 'raceDate', 'RaceDate')
+        ?? readTournamentField(tournament, 'raceDateTime', 'RaceDateTime')
         ?? tournament?.race?.raceDate
-        ?? tournament?.Race?.RaceDate
-        ?? tournament?.endDate;
+        ?? tournament?.Race?.RaceDate;
 
     return raceDate ? adminApi.formatters.toDateLabel(String(raceDate).split('T')[0]) : '-';
 };
@@ -268,8 +269,8 @@ const buildTournamentRows = async () => {
             // Extract the race start time directly from detail or tournament to avoid overwrite loss
             let extractedRaceStartTime = readTournamentField(detail, 'raceStartTime', 'RaceStartTime') || readTournamentField(tournament, 'raceStartTime', 'RaceStartTime');
 
-            if (!extractedRaceStartTime && detail?.endDate?.includes('T')) {
-                const timePart = detail.endDate.split('T')[1];
+            if (!extractedRaceStartTime && detail?.raceDateTime?.includes('T')) {
+                const timePart = detail.raceDateTime.split('T')[1];
                 if (timePart) {
                     extractedRaceStartTime = timePart.slice(0, 5);
                 }
@@ -333,28 +334,24 @@ function RaceManagement() {
         {
             label: 'Total Tournaments',
             value: String(tournaments.length),
-            marker: 'YTD',
             tone: 'total',
             icon: FaClipboardList,
         },
         {
             label: 'Open Registration',
             value: String(tournaments.filter((tournament) => formatClass(tournament.status) === 'openregistration').length),
-            marker: 'Live',
             tone: 'active',
             icon: FaBolt,
         },
         {
             label: 'Draft',
             value: String(tournaments.filter((tournament) => formatClass(tournament.status) === 'draft').length),
-            marker: 'Draft',
             tone: 'pending',
             icon: FaEdit,
         },
         {
             label: 'Completed',
             value: String(tournaments.filter((tournament) => formatClass(tournament.status) === 'completed').length),
-            marker: 'Done',
             tone: 'inactive',
             icon: FaCheckCircle,
         },
@@ -368,14 +365,14 @@ function RaceManagement() {
 
         const sorted = [...filtered].sort((current, next) => {
             if (sortBy === 'oldest') {
-                return new Date(current.startDate) - new Date(next.startDate);
+                return new Date(current.registrationDeadline) - new Date(next.registrationDeadline);
             }
 
             if (sortBy === 'prize') {
                 return next.prizePool - current.prizePool;
             }
 
-            return new Date(next.startDate) - new Date(current.startDate);
+            return new Date(next.registrationDeadline) - new Date(current.registrationDeadline);
         });
 
         return sortPendingFirst(sorted, (tournament) => tournament.status);
@@ -441,8 +438,8 @@ function RaceManagement() {
         const patch = {
             name: formData.get('name').trim(),
             description: formData.get('description').trim(),
-            startDate: formData.get('startDate'),
-            endDate: formData.get('endDate'),
+            registrationDeadline: formData.get('registrationDeadline'),
+            raceDate: formData.get('raceDate'),
             location: formData.get('location').trim(),
             city: formData.get('city').trim(),
             distanceMeters: Number(formData.get('distanceMeters') || 0),
@@ -462,6 +459,21 @@ function RaceManagement() {
 
         if (!patch.raceStartTime) {
             setEditError('Race start time is required and must be in HH:mm format. Example: 14:30');
+            return;
+        }
+
+        if (!patch.raceDate) {
+            setEditError('Race Date is required.');
+            return;
+        }
+
+        if (!patch.registrationDeadline) {
+            setEditError('Registration Deadline is required.');
+            return;
+        }
+
+        if (patch.raceDate <= patch.registrationDeadline) {
+            setEditError('Race Date must be after Registration Deadline.');
             return;
         }
 
@@ -492,7 +504,7 @@ function RaceManagement() {
                 <section className={pageShellClass}>
                     <div>
                         <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)] max-[820px]:text-[1.6rem]">
-                            Race Management
+                            Tournament Management
                         </h1>
                         <p className="mt-2 text-[0.92rem] font-semibold text-[var(--admin-muted)]">
                             Create and manage horse racing tournaments and race conditions.
@@ -513,7 +525,6 @@ function RaceManagement() {
                                         <span className={`grid h-[34px] w-[34px] place-items-center rounded-lg ${tone.soft} ${tone.ink}`}>
                                             <Icon aria-hidden="true" />
                                         </span>
-                                        <small className={`text-[0.66rem] font-black ${tone.ink}`}>{stat.marker}</small>
                                     </div>
                                     <span className="text-[0.82rem] font-extrabold text-[#6e5550]">{stat.label}</span>
                                     <strong className="text-[2rem] leading-none text-[var(--admin-ink)]">{stat.value}</strong>
@@ -596,7 +607,7 @@ function RaceManagement() {
                                                 {getRaceDateLabel(tournament)}
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
-                                                <span className="block">{adminApi.formatters.toDateLabel(tournament.startDate) || '-'}</span>
+                                                <span className="block">{adminApi.formatters.toDateLabel(tournament.registrationDeadline) || '-'}</span>
                                                 {deadlineWarning && (
                                                     <small className={`mt-1 block text-[0.72rem] font-black ${deadlineClass[deadlineWarning.type] || deadlineClass.warning}`}>
                                                         {deadlineWarning.text}
@@ -699,15 +710,19 @@ function RaceManagement() {
 
                             <div className="flex items-center gap-2 max-[820px]:flex-wrap">
                                 <button aria-label="Previous page" className={paginationButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">&lt;</button>
-                                {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
-                                    <button
-                                        className={`${paginationButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[#e8f7ef] text-[#064e3b] hover:bg-[#d1fae5]' : ''}`}
-                                        key={pageNumber}
-                                        onClick={() => setPage(pageNumber)}
-                                        type="button"
-                                    >
-                                        {pageNumber}
-                                    </button>
+                                {getCompactPaginationItems(totalPages, page).map((pageItem) => (
+                                    typeof pageItem === 'number' ? (
+                                        <button
+                                            className={`${paginationButtonClass} ${pageItem === page ? 'border-[var(--admin-primary)] bg-[#e8f7ef] text-[#064e3b] hover:bg-[#d1fae5]' : ''}`}
+                                            key={pageItem}
+                                            onClick={() => setPage(pageItem)}
+                                            type="button"
+                                        >
+                                            {pageItem}
+                                        </button>
+                                    ) : (
+                                        <span className={`${paginationButtonClass} cursor-default text-[var(--admin-muted)] hover:bg-[#fffdfc]`} key={pageItem}>...</span>
+                                    )
                                 ))}
                                 <button aria-label="Next page" className={paginationButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">&gt;</button>
                             </div>
@@ -744,7 +759,7 @@ function RaceManagement() {
                                         </span>
                                     </DetailItem>
                                     <DetailItem label="Registration Deadline">
-                                        <span className="block">{adminApi.formatters.toDateLabel(selectedTournament.startDate)}</span>
+                                        <span className="block">{adminApi.formatters.toDateLabel(selectedTournament.registrationDeadline)}</span>
                                         {adminApi.formatters.getTournamentDeadlineWarning(selectedTournament) && (
                                             <small className={`mt-1 block text-[0.72rem] font-black ${deadlineClass[adminApi.formatters.getTournamentDeadlineWarning(selectedTournament).type] || deadlineClass.warning}`}>
                                                 {adminApi.formatters.getTournamentDeadlineWarning(selectedTournament).text}
@@ -752,7 +767,7 @@ function RaceManagement() {
                                         )}
                                     </DetailItem>
                                     <DetailItem label="Race Date">
-                                        {adminApi.formatters.toDateLabel(selectedTournament.endDate)}
+                                        {adminApi.formatters.toDateLabel(selectedTournament.raceDate)}
                                     </DetailItem>
                                     <DetailItem label="Race Time">
                                         {getRaceTimeLabel(selectedTournament)}
@@ -849,14 +864,14 @@ function RaceManagement() {
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Race Date</span>
                                         <div className="grid grid-cols-[minmax(0,1fr)_132px] gap-3 max-[720px]:grid-cols-1">
-                                            <input className={editControlClass} defaultValue={editingTournament.endDate} name="endDate" required type="date" />
+                                            <input className={editControlClass} defaultValue={editingTournament.raceDate} name="raceDate" required type="date" />
                                             <input aria-label="Race start time" className={editControlClass} defaultValue={getRaceTimeInputValue(editingTournament)} name="raceStartTime" required type="time" />
                                         </div>
                                     </label>
 
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Registration Deadline</span>
-                                        <input className={editControlClass} defaultValue={editingTournament.startDate} name="startDate" required type="date" />
+                                        <input className={editControlClass} defaultValue={editingTournament.registrationDeadline} name="registrationDeadline" required type="date" />
                                     </label>
 
                                     <label className={editFieldClass}>

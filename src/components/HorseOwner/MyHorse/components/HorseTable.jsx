@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
 import { resolveFileUrl } from "../../../../api/uploadApi";
+import { getCompactPaginationItems } from "../../../../utils/pagination";
 
 const healthColor = {
     Healthy: { bg: "#d4edda", color: "#155724" },
@@ -207,14 +208,18 @@ export default function HorseTable() {
                     Showing {Math.min((page - 1) * pageSize + 1, total)}–{Math.min(page * pageSize, total)} of {total} horses
                 </span>
                 <div style={styles.pages}>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
-                        <button
-                            key={n}
-                            onClick={() => setPage(n)}
-                            style={{ ...styles.pageBtn, ...(n === page ? styles.activePage : {}) }}
-                        >
-                            {n}
-                        </button>
+                    {getCompactPaginationItems(totalPages, page).map(pageItem => (
+                        typeof pageItem === "number" ? (
+                            <button
+                                key={pageItem}
+                                onClick={() => setPage(pageItem)}
+                                style={{ ...styles.pageBtn, ...(pageItem === page ? styles.activePage : {}) }}
+                            >
+                                {pageItem}
+                            </button>
+                        ) : (
+                            <span key={pageItem} style={{ ...styles.pageBtn, ...styles.pageEllipsis }}>...</span>
+                        )
                     ))}
                     {page < totalPages && (
                         <button onClick={() => setPage(p => p + 1)} style={styles.pageBtn}>›</button>
@@ -244,5 +249,6 @@ const styles = {
     pageInfo: { fontSize: "13px", color: "#999" },
     pages: { display: "flex", gap: "6px" },
     pageBtn: { width: "32px", height: "32px", borderRadius: "6px", border: "1px solid #ddd", background: "#fff", cursor: "pointer", fontSize: "13px" },
+    pageEllipsis: { color: "#64748b", cursor: "default", display: "inline-flex", alignItems: "center", justifyContent: "center" },
     activePage: { backgroundColor: "#e8f7ef", color: "#064e3b", border: "1px solid #0b7f5a", fontWeight: "700" },
 };

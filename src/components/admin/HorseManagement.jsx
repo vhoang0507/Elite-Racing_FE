@@ -16,6 +16,7 @@ import {
 import { adminApi } from '../../api/adminApi';
 import { resolveFileUrl } from '../../api/uploadApi';
 import horseRacing from '../../assets/horse-racing.jpg';
+import { getCompactPaginationItems } from '../../utils/pagination';
 
 import AdminLayout from './AdminLayout';
 
@@ -458,15 +459,19 @@ function HorseManagement() {
                             <span>Showing {firstShown} - {lastShown} of {filteredHorses.length} horses</span>
                             <div className="flex items-center gap-2 max-[820px]:flex-wrap">
                                 <button aria-label="Previous page" className={pageButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">&lt;</button>
-                                {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
-                                    <button
-                                        className={`${pageButtonClass} ${pageNumber === page ? 'border-[var(--admin-primary)] bg-[#e8f7ef] text-[#064e3b] hover:bg-[#d1fae5]' : ''}`}
-                                        key={pageNumber}
-                                        onClick={() => setPage(pageNumber)}
-                                        type="button"
-                                    >
-                                        {pageNumber}
-                                    </button>
+                                {getCompactPaginationItems(totalPages, page).map((pageItem) => (
+                                    typeof pageItem === 'number' ? (
+                                        <button
+                                            className={`${pageButtonClass} ${pageItem === page ? 'border-[var(--admin-primary)] bg-[#e8f7ef] text-[#064e3b] hover:bg-[#d1fae5]' : ''}`}
+                                            key={pageItem}
+                                            onClick={() => setPage(pageItem)}
+                                            type="button"
+                                        >
+                                            {pageItem}
+                                        </button>
+                                    ) : (
+                                        <span className={`${pageButtonClass} cursor-default text-[var(--admin-muted)] hover:bg-[#fffdfc]`} key={pageItem}>...</span>
+                                    )
                                 ))}
                                 <button aria-label="Next page" className={pageButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">&gt;</button>
                             </div>

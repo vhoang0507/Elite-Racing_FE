@@ -244,9 +244,9 @@ function AdminDashboard() {
                                                     <strong className="block">{tournament.name}</strong>
                                                     <span className="mt-1 block text-[var(--admin-muted)]">{tournament.description}</span>
                                                 </td>
-                                                <td className={tableCellClass(isLast)}>{adminApi.formatters.toDateLabel(tournament.endDate)}</td>
+                                                <td className={tableCellClass(isLast)}>{adminApi.formatters.toDateLabel(tournament.raceDate)}</td>
                                                 <td className={tableCellClass(isLast)}>
-                                                    <span className="block">{adminApi.formatters.toDateLabel(tournament.startDate)}</span>
+                                                    <span className="block">{adminApi.formatters.toDateLabel(tournament.registrationDeadline)}</span>
                                                     {deadlineWarning && (
                                                         <small className={`mt-1 block text-[0.72rem] font-black ${deadlineClass[deadlineWarning.type] || deadlineClass.warning}`}>
                                                             {deadlineWarning.text}

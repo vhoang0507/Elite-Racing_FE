@@ -36,7 +36,7 @@ const navigation = [
     },
     {
         key: 'races',
-        label: 'Race Management',
+        label: 'Tournament Management',
         icon: FaFlagCheckered,
         path: '/admin/races',
     },
