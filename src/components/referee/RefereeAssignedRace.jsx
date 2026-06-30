@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     FaClipboardCheck,
@@ -56,6 +56,20 @@ function RefereeAssignedRace() {
     const [races, setRaces] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+
+    const filteredRaces = useMemo(() => {
+        const q = search.trim().toLowerCase();
+        return races.filter(race => {
+            const displayStatus = getDisplayStatus(race) ?? '';
+            const matchesSearch = !q || [race.raceName, race.tournamentName, race.location]
+                .some(v => String(v || '').toLowerCase().includes(q));
+            const matchesStatus = statusFilter === 'all' ||
+                displayStatus.toLowerCase() === statusFilter.toLowerCase();
+            return matchesSearch && matchesStatus;
+        });
+    }, [races, search, statusFilter]);
 
     useEffect(() => {
         let ignore = false;
@@ -91,17 +105,40 @@ function RefereeAssignedRace() {
                     </div>
                 )}
 
+                {!loading && races.length > 0 && (
+                    <div className="flex flex-wrap gap-3">
+                        <input
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            placeholder="Search race or tournament..."
+                            className="h-9 flex-1 min-w-[200px] rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-white px-3 text-[0.82rem] outline-none focus:border-[var(--admin-primary)]"
+                        />
+                        <select
+                            value={statusFilter}
+                            onChange={e => setStatusFilter(e.target.value)}
+                            className="h-9 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-white px-3 text-[0.82rem]"
+                        >
+                            <option value="all">All Status</option>
+                            <option value="Scheduled">Scheduled</option>
+                            <option value="AssignedReferee">Assigned Referee</option>
+                            <option value="ClosedRegistration">Closed Registration</option>
+                            <option value="Ongoing">Ongoing</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                )}
+
                 {loading ? (
                     <div className="surface-card p-8 text-center font-semibold text-[var(--admin-muted)]">
                         Loading assigned races...
                     </div>
-                ) : races.length === 0 ? (
+                ) : filteredRaces.length === 0 ? (
                     <div className="surface-card p-8 text-center font-semibold text-[var(--admin-muted)]">
-                        No assigned races yet.
+                        {races.length === 0 ? 'No assigned races yet.' : 'No races match your filter.'}
                     </div>
                 ) : (
                     <div className="grid gap-3">
-                        {races.map((race) => {
+                        {filteredRaces.map((race) => {
                             const displayStatus = getDisplayStatus(race);
                             const s = STATUS_STYLE[displayStatus] ?? { bg: '#e8f7ef', color: '#0b7f5a' };
                             return (

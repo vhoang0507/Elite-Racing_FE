@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
@@ -16,6 +16,18 @@ export default function ApprovedRegistrations() {
     const [selectedInfo, setSelectedInfo] = useState(null);
     const [infoLoadingId, setInfoLoadingId] = useState(null);
     const [infoError, setInfoError] = useState("");
+    const [search, setSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState("all");
+
+    const filteredData = useMemo(() => {
+        const q = search.trim().toLowerCase();
+        return data.filter(row => {
+            const matchesSearch = !q || [row.tournamentName, row.horseName, row.jockeyName]
+                .some(v => String(v || '').toLowerCase().includes(q));
+            const matchesStatus = statusFilter === 'all' || row.status === statusFilter;
+            return matchesSearch && matchesStatus;
+        });
+    }, [data, search, statusFilter]);
 
     useEffect(() => {
         setLoading(true);
@@ -59,6 +71,25 @@ export default function ApprovedRegistrations() {
                 <h3 style={{ margin: 0 }}>Approved Registrations</h3>
             </div>
 
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
+                <input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Search tournament or horse..."
+                    style={{ height: 34, flex: 1, minWidth: 180, borderRadius: 8, border: '1px solid #ddd', padding: '0 12px', fontSize: '0.82rem', outline: 'none' }}
+                />
+                <select
+                    value={statusFilter}
+                    onChange={e => setStatusFilter(e.target.value)}
+                    style={{ height: 34, borderRadius: 8, border: '1px solid #ddd', padding: '0 10px', fontSize: '0.82rem' }}
+                >
+                    <option value="all">All Status</option>
+                    <option value="Approved">Approved</option>
+                    <option value="JockeyInvited">Jockey Invited</option>
+                    <option value="ReadyToRace">Ready To Race</option>
+                </select>
+            </div>
+
             <table style={styles.table}>
                 <thead>
                     <tr>
@@ -68,14 +99,14 @@ export default function ApprovedRegistrations() {
                     </tr>
                 </thead>
                 <tbody>
-                    {data.length === 0 ? (
+                    {filteredData.length === 0 ? (
                         <tr>
                             <td colSpan={6} style={{ textAlign: "center", padding: "24px", color: "#999" }}>
-                                No approved registrations
+                                {data.length === 0 ? 'No approved registrations' : 'No registrations match your filter.'}
                             </td>
                         </tr>
                     ) : (
-                        data.map((row) => (
+                        filteredData.map((row) => (
                             <tr key={row.registrationId} style={styles.tr}>
                                 <td style={styles.td}>{row.tournamentName}</td>
                                 <td style={styles.td}>{row.horseName}</td>

@@ -1,5 +1,22 @@
 import { resolveFileUrl } from '../../../../api/uploadApi';
 
+const STATUS_STYLES = {
+    Pending:   { background: '#fff8e1', color: '#b45309', border: '1px solid #fde68a' },
+    Accepted:  { background: '#d1fae5', color: '#065f46', border: '1px solid #6ee7b7' },
+    Rejected:  { background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5' },
+    Confirmed: { background: '#dbeafe', color: '#1e40af', border: '1px solid #93c5fd' },
+    Cancelled: { background: '#f3f4f6', color: '#6b7280', border: '1px solid #d1d5db' },
+};
+
+function StatusBadge({ status, isOfficial }) {
+    const s = STATUS_STYLES[status] ?? STATUS_STYLES.Cancelled;
+    return (
+        <span style={{ ...s, fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '9999px', display: 'inline-block' }}>
+            {isOfficial ? 'OFFICIAL' : (status ?? '').toUpperCase()}
+        </span>
+    );
+}
+
 const AVATAR_FALLBACK = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"%3E%3Ccircle cx="14" cy="14" r="14" fill="%23f3e8e6"/%3E%3Ctext x="14" y="19" text-anchor="middle" font-size="14" fill="%23c9a8a0"%3E🏇%3C/text%3E%3C/svg%3E';
 
 function SafeAvatar({ src, alt }) {
@@ -62,10 +79,10 @@ export default function InvitationResponses({ invitations, loading, onSign }) {
                                             onClick={() => onSign(inv.invitationId)}
                                             className="rounded-md bg-[#610000] px-4 py-1.5 text-[12px] font-bold text-white hover:bg-[#4d0000]"
                                         >
-                                            Sign
+                                            Confirm
                                         </button>
                                     ) : (
-                                        <span style={styles.statusText}>{inv.status}</span>
+                                        <StatusBadge status={inv.status} isOfficial={inv.isOfficial} />
                                     )}
                                 </td>
                             </tr>

@@ -7,6 +7,7 @@ export default function PendingRegistrations() {
     const navigate = useNavigate();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [search, setSearch] = useState("");
 
     useEffect(() => {
         setLoading(true);
@@ -18,6 +19,13 @@ export default function PendingRegistrations() {
             .finally(() => setLoading(false));
     }, []);
 
+    const filteredData = search.trim()
+        ? data.filter(row =>
+            [row.tournamentName, row.horseName]
+                .some(v => String(v || '').toLowerCase().includes(search.trim().toLowerCase()))
+          )
+        : data;
+
     if (loading) return <p style={{ textAlign: "center", color: "#999" }}>Loading...</p>;
 
     return (
@@ -25,6 +33,15 @@ export default function PendingRegistrations() {
             <div style={styles.header}>
                 <h3 style={{ margin: 0 }}>Pending Approval Registrations</h3>
                 <span style={styles.badge}>⏳ Waiting for Admin review</span>
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
+                <input
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Search tournament or horse..."
+                    style={{ height: 34, width: '100%', maxWidth: 320, borderRadius: 8, border: '1px solid #ddd', padding: '0 12px', fontSize: '0.82rem', outline: 'none', boxSizing: 'border-box' }}
+                />
             </div>
 
             <table style={styles.table}>
@@ -36,14 +53,14 @@ export default function PendingRegistrations() {
                     </tr>
                 </thead>
                 <tbody>
-                    {data.length === 0 ? (
+                    {filteredData.length === 0 ? (
                         <tr>
                             <td colSpan={6} style={{ textAlign: "center", padding: "24px", color: "#999" }}>
-                                No pending registrations
+                                {data.length === 0 ? 'No pending registrations' : 'No registrations match your search.'}
                             </td>
                         </tr>
                     ) : (
-                        data.map((row) => (
+                        filteredData.map((row) => (
                             <tr key={row.registrationId} style={styles.tr}>
                                 <td style={styles.td}>{row.tournamentName}</td>
                                 <td style={styles.td}>{row.horseName}</td>

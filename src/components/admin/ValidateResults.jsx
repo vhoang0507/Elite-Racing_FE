@@ -92,9 +92,18 @@ const matchesQuery = (submission, query) => {
     ].some((value) => String(value).toLowerCase().includes(normalizedQuery));
 };
 
+const statusFilterOptions = [
+    { value: 'all', label: 'All Status' },
+    { value: 'pending', label: 'Pending' },
+    { value: 'refereeconfirmed', label: 'Referee Confirmed' },
+    { value: 'adminapproved', label: 'Admin Approved' },
+    { value: 'returned', label: 'Returned' },
+];
+
 function ValidateResults() {
     const [submissions, setSubmissions] = useState([]);
     const [query, setQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
     const [page, setPage] = useState(1);
 
     useEffect(() => {
@@ -112,9 +121,12 @@ function ValidateResults() {
     }, []);
 
     const filteredSubmissions = useMemo(() => sortPendingFirst(
-        submissions.filter((submission) => matchesQuery(submission, query)),
+        submissions.filter((submission) =>
+            matchesQuery(submission, query) &&
+            (statusFilter === 'all' || formatClass(submission.status) === statusFilter)
+        ),
         (submission) => submission.status
-    ), [query, submissions]);
+    ), [query, statusFilter, submissions]);
     const totalPages = Math.max(1, Math.ceil(filteredSubmissions.length / pageSize));
     const visibleSubmissions = filteredSubmissions.slice((page - 1) * pageSize, page * pageSize);
     const firstShown = filteredSubmissions.length === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -147,10 +159,19 @@ function ValidateResults() {
                         aria-label="Active submissions"
                         className={`${panelWidthClass} overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_16px_34px_rgba(15,23,42,0.08)]`}
                     >
-                        <div className="flex min-h-[58px] items-center border-b border-[var(--admin-border)] bg-[var(--validate-soft-panel)] px-6">
+                        <div className="flex min-h-[58px] items-center justify-between gap-4 border-b border-[var(--admin-border)] bg-[var(--validate-soft-panel)] px-6">
                             <h2 className="m-0 text-[1.04rem] font-black text-[var(--admin-ink)]">
                                 Active Submissions & Reports
                             </h2>
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                                className="h-8 rounded-md border border-[var(--admin-border)] bg-white px-2 text-[0.78rem] font-bold text-[#475569] outline-none"
+                            >
+                                {statusFilterOptions.map(opt => (
+                                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                            </select>
                         </div>
 
                         <div className="w-full overflow-x-auto">

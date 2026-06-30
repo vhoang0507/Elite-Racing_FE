@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
     FaCalendarAlt,
     FaCheckCircle,
@@ -41,6 +41,8 @@ function AcceptedRaces() {
     const [selectedRace, setSelectedRace] = useState(null);
     const [selectedRaceLoading, setSelectedRaceLoading] = useState(false);
     const [selectedRaceError, setSelectedRaceError] = useState('');
+    const [search, setSearch] = useState('');
+    const [dateFilter, setDateFilter] = useState('all');
 
     useEffect(() => {
         jockeyApi.getAcceptedRaces()
@@ -50,6 +52,18 @@ function AcceptedRaces() {
     }, []);
 
     const upcomingCount = races.filter(r => new Date(r.raceDate) > new Date()).length;
+
+    const filteredRaces = useMemo(() => {
+        const now = new Date();
+        const q = search.trim().toLowerCase();
+        return races.filter(race => {
+            const matchesSearch = !q || [race.raceName, race.tournamentName, race.location, race.horseName]
+                .some(v => String(v || '').toLowerCase().includes(q));
+            const isUpcoming = new Date(race.raceDate) >= now;
+            const matchesDate = dateFilter === 'all' || (dateFilter === 'upcoming' ? isUpcoming : !isUpcoming);
+            return matchesSearch && matchesDate;
+        });
+    }, [races, search, dateFilter]);
 
     const handleViewRaceDetail = async (race) => {
         setSelectedRace(race);
@@ -112,12 +126,33 @@ function AcceptedRaces() {
                     </article>
                 </section>
 
+                {/* Filters */}
+                <div className="flex flex-wrap gap-3">
+                    <input
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Search race, tournament, location..."
+                        className="h-9 flex-1 min-w-[200px] rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-white px-3 text-[0.82rem] outline-none focus:border-[var(--admin-primary)]"
+                    />
+                    <select
+                        value={dateFilter}
+                        onChange={e => setDateFilter(e.target.value)}
+                        className="h-9 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-white px-3 text-[0.82rem]"
+                    >
+                        <option value="all">All Dates</option>
+                        <option value="upcoming">Upcoming</option>
+                        <option value="past">Past</option>
+                    </select>
+                </div>
+
                 {/* Race Cards */}
                 <div className="grid gap-6">
-                    {races.length === 0 ? (
-                        <p style={{ color: '#999', fontSize: '14px', textAlign: 'center', padding: '24px' }}>No accepted races yet</p>
+                    {filteredRaces.length === 0 ? (
+                        <p style={{ color: '#999', fontSize: '14px', textAlign: 'center', padding: '24px' }}>
+                            {races.length === 0 ? 'No accepted races yet' : 'No races match your filter.'}
+                        </p>
                     ) : (
-                        races.map((race) => (
+                        filteredRaces.map((race) => (
                             <article key={race.raceRegistrationId} className="grid grid-cols-[200px_1fr] overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] max-[800px]:grid-cols-1">
                                 <div className="h-full min-h-[200px] overflow-hidden bg-[#3d2c1e] flex items-center justify-center max-[800px]:h-[160px]">
                                     {race.horseImageUrl ? (

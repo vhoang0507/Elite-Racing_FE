@@ -84,7 +84,15 @@ function PendingInvitations() {
     const [error, setError] = useState('');
     const [selectedInvitation, setSelectedInvitation] = useState(null);
     const [loadingDetail, setLoadingDetail] = useState(false);
+    const [search, setSearch] = useState('');
     const { toast, showToast, hideToast } = useToast();
+
+    const filteredInvitations = search.trim()
+        ? invitations.filter(inv =>
+            [inv.tournamentName, inv.horseName, inv.ownerName, inv.raceName]
+                .some(v => String(v || '').toLowerCase().includes(search.trim().toLowerCase()))
+          )
+        : invitations;
 
     useEffect(() => {
         setLoading(true);
@@ -170,18 +178,29 @@ function PendingInvitations() {
                     </div>
                 )}
 
+                <div>
+                    <input
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Search by tournament, horse or owner..."
+                        className="h-9 w-full max-w-[420px] rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-white px-3 text-[0.82rem] outline-none focus:border-[var(--admin-primary)]"
+                    />
+                </div>
+
                 <div className="grid grid-cols-[1fr_260px] gap-6 max-[1100px]:grid-cols-1">
                     {/* Cards */}
                     <div>
-                        {invitations.length === 0 ? (
+                        {filteredInvitations.length === 0 ? (
                             <div className="flex flex-col items-center justify-center rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] py-20">
                                 <FaEnvelope className="mb-4 text-[3rem] text-[#ddd]" />
-                                <p className="text-[1rem] font-bold text-[var(--admin-muted)]">No pending invitations.</p>
-                                <p className="mt-1 text-[0.85rem] text-[#bbb]">You will be notified when a horse owner sends you an invitation.</p>
+                                <p className="text-[1rem] font-bold text-[var(--admin-muted)]">
+                                    {invitations.length === 0 ? 'No pending invitations.' : 'No invitations match your search.'}
+                                </p>
+                                {invitations.length === 0 && <p className="mt-1 text-[0.85rem] text-[#bbb]">You will be notified when a horse owner sends you an invitation.</p>}
                             </div>
                         ) : (
                             <div className="grid grid-cols-2 gap-6 max-[900px]:grid-cols-1">
-                                {invitations.map((inv) => (
+                                {filteredInvitations.map((inv) => (
                                     <article key={inv.invitationId} className="overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]">
                                         <div className="relative h-[140px] overflow-hidden bg-[#3d2c1e]">
                                             {inv.horseImageUrl ? (

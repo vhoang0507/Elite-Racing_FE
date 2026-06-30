@@ -36,13 +36,14 @@ export default function JockeyGrid({ registrationId, search = '', healthStatus =
         return () => { mounted = false; };
     }, [registrationId, search, healthStatus]);
 
-    const visibleCandidates = showAll ? candidates : candidates.slice(0, 3);
+    const uninvitedCandidates = candidates.filter((j) => !j.alreadyInvited);
+    const visibleCandidates = showAll ? uninvitedCandidates : uninvitedCandidates.slice(0, 3);
 
     return (
         <div style={styles.card}>
             <div style={styles.cardHeader}>
                 <span>Send Jockey Invitations</span>
-                {candidates.length > 3 && (
+                {uninvitedCandidates.length > 3 && (
                     <button type="button" style={styles.viewAllBtn} onClick={() => setShowAll(!showAll)}>
                         {showAll ? 'Show less' : 'View All →'}
                     </button>
@@ -52,16 +53,19 @@ export default function JockeyGrid({ registrationId, search = '', healthStatus =
             {error && <p style={{ color: '#721c24', fontSize: '0.8rem' }}>{error}</p>}
             {loading && <p style={{ color: '#999', fontSize: '0.8rem' }}>Loading candidates...</p>}
 
-            {!loading && candidates.length === 0 && (
+            {!loading && uninvitedCandidates.length === 0 && (
                 <p style={{ color: '#999', fontSize: '0.8rem' }}>
-                    {disableInvite ? 'Select an approved tournament to view available jockeys.' : 'No jockey candidates found.'}
+                    {disableInvite
+                        ? 'Select an approved tournament to view available jockeys.'
+                        : candidates.length > 0
+                        ? 'All available jockeys have already been invited. Check the Responses table below.'
+                        : 'No jockey candidates found.'}
                 </p>
             )}
 
             <div style={styles.grid}>
                 {visibleCandidates.map((jockey) => {
                     const canInvite = jockey.canInvite && !disableInvite;
-                    const isInvited = jockey.alreadyInvited;
                     return (
                         <div key={jockey.jockeyId} style={styles.cardItem}>
                             <div style={styles.imgWrapper}>
@@ -115,7 +119,7 @@ export default function JockeyGrid({ registrationId, search = '', healthStatus =
                                 title={!canInvite ? (jockey.cannotInviteReason || (disableInvite ? "Please select an approved tournament first" : undefined)) : undefined}
                                 onClick={() => canInvite && onInvite(jockey)}
                             >
-                                {isInvited ? "Invited" : "Send Invitation"}
+                                Send Invitation
                             </button>
                         </div>
                     );

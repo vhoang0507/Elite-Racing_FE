@@ -14,7 +14,6 @@ import {
     FaEnvelope,
     FaEye,
     FaEyeSlash,
-    FaChevronDown,
 } from 'react-icons/fa';
 
 const controlClass = 'auth-control h-[52px] w-full rounded-[8px] border bg-white py-0 pl-4 pr-[46px] text-base outline-none transition-all duration-200';
@@ -32,7 +31,6 @@ const roleDashboardRoutes = {
 const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const [role, setRole] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [remember, setRemember] = useState(false);
@@ -59,10 +57,6 @@ const Login = () => {
 
             if (!token || !user) {
                 throw new Error('Login succeeded but the response did not include a token.');
-            }
-
-            if (role && userRole && role !== userRole) {
-                throw new Error('The selected role does not match this account.');
             }
 
             saveAuthSession({
@@ -153,28 +147,6 @@ const Login = () => {
                     </div>
 
                     <form onSubmit={handleSubmit}>
-                        <div className={formGroupClass}>
-                            <div className="relative">
-                                <select
-                                    className={`${controlClass} appearance-none`}
-                                    value={role}
-                                    onChange={(event) => setRole(event.target.value)}
-                                    required
-                                >
-                                    <option value="" disabled>
-                                        Select Role
-                                    </option>
-                                    <option value="Admin">Admin</option>
-                                    <option value="RaceReferee">Referee</option>
-                                    <option value="Jockey">Jockey</option>
-                                    <option value="Spectator">Spectator</option>
-                                    <option value="HorseOwner">Horse Owner</option>
-                                </select>
-
-                                <FaChevronDown className={iconClass} />
-                            </div>
-                        </div>
-
                         <div className={formGroupClass}>
                             <label className={labelClass}>Email Address</label>
 
