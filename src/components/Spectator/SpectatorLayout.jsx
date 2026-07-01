@@ -10,18 +10,20 @@ import {
     FaTrophy,
     FaBullseye,
     FaListOl,
+    FaCog,
 } from 'react-icons/fa';
 
 import { spectatorApi } from '../../api/spectatorApi';
 import { clearAuthSession, getAuthUser } from '../../utils/tokenStorage';
 
 const navigation = [
-    { key: 'dashboard',    label: 'Dashboard',       icon: FaChartLine, path: '/spectator/dashboard' },
-    { key: 'tournaments',  label: 'Tournaments',      icon: FaTrophy,    path: '/spectator/tournaments' },
-    { key: 'leaderboard',  label: 'Leaderboard',      icon: FaListOl,    path: '/spectator/leaderboard' },
-    { key: 'predictions',  label: 'Predictions',      icon: FaBullseye,  path: '/spectator/predictions' },
-    { key: 'results',      label: 'Result & Reward',  icon: FaMedal,     path: '/spectator/results' },
-    { key: 'notifications',label: 'Notifications',    icon: FaBell,      path: '/spectator/notifications' },
+    { key: 'dashboard', label: 'Dashboard', icon: FaChartLine, path: '/spectator/dashboard' },
+    { key: 'tournaments', label: 'Tournaments', icon: FaTrophy, path: '/spectator/tournaments' },
+    { key: 'leaderboard', label: 'Leaderboard', icon: FaListOl, path: '/spectator/leaderboard' },
+    { key: 'predictions', label: 'Predictions', icon: FaBullseye, path: '/spectator/predictions' },
+    { key: 'results', label: 'Result & Reward', icon: FaMedal, path: '/spectator/results' },
+    { key: 'notifications', label: 'Notifications', icon: FaBell, path: '/spectator/notifications' },
+    { key: 'settings', label: 'Settings', icon: FaCog, path: '/spectator/settings' },
 ];
 
 const shellClasses = [

@@ -23,6 +23,7 @@ const navigation = [
     { key: 'jockey', label: 'Jockey Assignment', icon: FaUserFriends, path: '/owner/jockey' },
     { key: 'rewards', label: 'Result & Reward', icon: FaTrophy, path: '/owner/rewards' },
     { key: 'notifications', label: 'Notifications', icon: FaBell, path: '/owner/notifications' },
+    { key: 'settings', label: 'Settings', icon: FaCog, path: '/owner/settings' },
 ];
 
 const shellClasses = [
