@@ -151,8 +151,8 @@ function ValidateResultDetail() {
         setActionSuccess('');
         try {
             await adminApi.publishResult(resultId);
-            await loadDetail();
-            setActionSuccess('Result approved and refreshed.');
+            setActionSuccess('Result approved and published.');
+            setTimeout(() => navigate('/admin/results'), 1500);
         } catch (err) {
             setActionError(err.message || 'Failed to approve result.');
         } finally {
@@ -300,7 +300,7 @@ function ValidateResultDetail() {
                                     className="flex min-h-[38px] cursor-pointer items-center gap-2 rounded-md bg-[var(--admin-primary)] px-4 text-[0.78rem] font-black text-white hover:bg-[var(--admin-primary-dark)] disabled:opacity-50"
                                 >
                                     <FaCheck aria-hidden="true" className="h-3 w-3" />
-                                    {actionLoading ? 'Approving...' : 'Approve'}
+                                    Approve
                                 </button>
                             </>
                         )}

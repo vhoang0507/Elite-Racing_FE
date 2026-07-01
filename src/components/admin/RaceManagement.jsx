@@ -231,7 +231,7 @@ const getRaceTimeLabel = (tournament) => {
         return String(explicitTime).slice(0, 5);
     }
 
-    const raceDateTime = readTournamentField(tournament, 'raceDateTime', 'RaceDateTime')
+    const raceDateTime = readTournamentField(tournament, 'raceDateTime', 'raceDate', 'RaceDate')
         ?? tournament?.race?.raceDate
         ?? tournament?.Race?.RaceDate;
 
@@ -245,10 +245,10 @@ const getRaceTimeLabel = (tournament) => {
 };
 
 const getRaceDateLabel = (tournament) => {
-    const raceDate = readTournamentField(tournament, 'raceDate', 'RaceDate')
-        ?? readTournamentField(tournament, 'raceDateTime', 'RaceDateTime')
+    const raceDate = readTournamentField(tournament, 'raceDateTime', 'raceDate', 'RaceDate')
         ?? tournament?.race?.raceDate
-        ?? tournament?.Race?.RaceDate;
+        ?? tournament?.Race?.RaceDate
+        ?? tournament?.endDate;
 
     return raceDate ? adminApi.formatters.toDateLabel(String(raceDate).split('T')[0]) : '-';
 };
@@ -269,8 +269,8 @@ const buildTournamentRows = async () => {
             // Extract the race start time directly from detail or tournament to avoid overwrite loss
             let extractedRaceStartTime = readTournamentField(detail, 'raceStartTime', 'RaceStartTime') || readTournamentField(tournament, 'raceStartTime', 'RaceStartTime');
 
-            if (!extractedRaceStartTime && detail?.raceDateTime?.includes('T')) {
-                const timePart = detail.raceDateTime.split('T')[1];
+            if (!extractedRaceStartTime && detail?.endDate?.includes('T')) {
+                const timePart = detail.endDate.split('T')[1];
                 if (timePart) {
                     extractedRaceStartTime = timePart.slice(0, 5);
                 }
@@ -365,14 +365,14 @@ function RaceManagement() {
 
         const sorted = [...filtered].sort((current, next) => {
             if (sortBy === 'oldest') {
-                return new Date(current.registrationDeadline) - new Date(next.registrationDeadline);
+                return new Date(current.startDate) - new Date(next.startDate);
             }
 
             if (sortBy === 'prize') {
                 return next.prizePool - current.prizePool;
             }
 
-            return new Date(next.registrationDeadline) - new Date(current.registrationDeadline);
+            return new Date(next.startDate) - new Date(current.startDate);
         });
 
         return sortPendingFirst(sorted, (tournament) => tournament.status);
@@ -438,8 +438,8 @@ function RaceManagement() {
         const patch = {
             name: formData.get('name').trim(),
             description: formData.get('description').trim(),
-            registrationDeadline: formData.get('registrationDeadline'),
-            raceDate: formData.get('raceDate'),
+            startDate: formData.get('startDate'),
+            endDate: formData.get('endDate'),
             location: formData.get('location').trim(),
             city: formData.get('city').trim(),
             distanceMeters: Number(formData.get('distanceMeters') || 0),
@@ -459,21 +459,6 @@ function RaceManagement() {
 
         if (!patch.raceStartTime) {
             setEditError('Race start time is required and must be in HH:mm format. Example: 14:30');
-            return;
-        }
-
-        if (!patch.raceDate) {
-            setEditError('Race Date is required.');
-            return;
-        }
-
-        if (!patch.registrationDeadline) {
-            setEditError('Registration Deadline is required.');
-            return;
-        }
-
-        if (patch.raceDate <= patch.registrationDeadline) {
-            setEditError('Race Date must be after Registration Deadline.');
             return;
         }
 
@@ -607,7 +592,7 @@ function RaceManagement() {
                                                 {getRaceDateLabel(tournament)}
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
-                                                <span className="block">{adminApi.formatters.toDateLabel(tournament.registrationDeadline) || '-'}</span>
+                                                <span className="block">{adminApi.formatters.toDateLabel(tournament.startDate) || '-'}</span>
                                                 {deadlineWarning && (
                                                     <small className={`mt-1 block text-[0.72rem] font-black ${deadlineClass[deadlineWarning.type] || deadlineClass.warning}`}>
                                                         {deadlineWarning.text}
@@ -759,7 +744,7 @@ function RaceManagement() {
                                         </span>
                                     </DetailItem>
                                     <DetailItem label="Registration Deadline">
-                                        <span className="block">{adminApi.formatters.toDateLabel(selectedTournament.registrationDeadline)}</span>
+                                        <span className="block">{adminApi.formatters.toDateLabel(selectedTournament.startDate)}</span>
                                         {adminApi.formatters.getTournamentDeadlineWarning(selectedTournament) && (
                                             <small className={`mt-1 block text-[0.72rem] font-black ${deadlineClass[adminApi.formatters.getTournamentDeadlineWarning(selectedTournament).type] || deadlineClass.warning}`}>
                                                 {adminApi.formatters.getTournamentDeadlineWarning(selectedTournament).text}
@@ -767,7 +752,7 @@ function RaceManagement() {
                                         )}
                                     </DetailItem>
                                     <DetailItem label="Race Date">
-                                        {adminApi.formatters.toDateLabel(selectedTournament.raceDate)}
+                                        {adminApi.formatters.toDateLabel(selectedTournament.endDate)}
                                     </DetailItem>
                                     <DetailItem label="Race Time">
                                         {getRaceTimeLabel(selectedTournament)}
@@ -864,14 +849,14 @@ function RaceManagement() {
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Race Date</span>
                                         <div className="grid grid-cols-[minmax(0,1fr)_132px] gap-3 max-[720px]:grid-cols-1">
-                                            <input className={editControlClass} defaultValue={editingTournament.raceDate} name="raceDate" required type="date" />
+                                            <input className={editControlClass} defaultValue={editingTournament.endDate} name="endDate" required type="date" />
                                             <input aria-label="Race start time" className={editControlClass} defaultValue={getRaceTimeInputValue(editingTournament)} name="raceStartTime" required type="time" />
                                         </div>
                                     </label>
 
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Registration Deadline</span>
-                                        <input className={editControlClass} defaultValue={editingTournament.registrationDeadline} name="registrationDeadline" required type="date" />
+                                        <input className={editControlClass} defaultValue={editingTournament.startDate} name="startDate" required type="date" />
                                     </label>
 
                                     <label className={editFieldClass}>

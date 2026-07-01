@@ -14,11 +14,9 @@ const toDateLabel = (dateValue) => {
     }).format(new Date(d));
 };
 
-const toDateInputValue = (dateValue) => (dateValue ? String(dateValue).split('T')[0] : '');
-
-const toShortDateParts = (registrationDeadline, raceDate) => {
-    const start = new Date(`${registrationDeadline}T00:00:00`);
-    const end = new Date(`${raceDate}T00:00:00`);
+const toShortDateParts = (startDate, endDate) => {
+    const start = new Date(`${startDate}T00:00:00`);
+    const end = new Date(`${endDate}T00:00:00`);
     const startLabel = new Intl.DateTimeFormat('en-US', {
         day: '2-digit',
         month: 'short',
@@ -47,7 +45,9 @@ const getTournamentDeadlineWarning = (tournament) => {
         return null;
     }
 
-    const dateValue = tournament?.registrationDeadline
+    const dateValue = tournament?.startDate
+        ?? tournament?.StartDate
+        ?? tournament?.registrationDeadline
         ?? tournament?.RegistrationDeadline;
 
     if (!dateValue) {
@@ -324,24 +324,22 @@ async function updateHorseApproval(id, approval) {
 async function getTournaments() {
     const data = await apiRequest('/admin/tournaments');
     return data.map((t) => ({
-        id: readApiField(t, 'tournamentId'),
-        name: readApiField(t, 'tournamentName'),
-        description: readApiField(t, 'description') || '',
-        className: readApiField(t, 'description') || '',
-        registrationDeadline: toDateInputValue(readApiField(t, 'registrationDeadline')),
-        raceDate: toDateInputValue(readApiField(t, 'raceDate')),
-        raceDateTime: readApiField(t, 'raceDateTime'),
-        raceStartTime: readApiField(t, 'raceStartTime'),
-        location: readApiField(t, 'location'),
-        city: readApiField(t, 'location'),
-        maxHorses: readApiField(t, 'maxHorses'),
+        id: t.tournamentId,
+        name: t.tournamentName,
+        description: t.description || '',
+        className: t.description || '',
+        startDate: t.startDate ? t.startDate.split('T')[0] : '',
+        endDate: t.endDate ? t.endDate.split('T')[0] : '',
+        location: t.location,
+        city: t.location,
+        maxHorses: t.maxHorses,
         distanceMeters: getTournamentDistanceMeters(t),
-        registeredHorses: readApiField(t, 'entriesCount') || 0,
-        prizePool: readApiField(t, 'prizePool'),
+        registeredHorses: t.entriesCount || 0,
+        prizePool: t.prizePool,
         referee: getAssignedReferee(t),
-        status: readApiField(t, 'status'),
-        rules: readApiField(t, 'rules'),
-        createdAt: readApiField(t, 'createdAt'),
+        status: t.status,
+        rules: t.rules,
+        createdAt: t.createdAt,
         imageUrl: readApiField(t, 'imageUrl'),
         imagePosition: '50% center',
     }));
@@ -367,18 +365,10 @@ async function getTournamentById(id) {
         spectatorDetail = null;
     }
 
-    const raceDateTime = readApiField(detail, 'raceDateTime')
-        ?? spectatorDetail?.race?.raceDate
-        ?? detail?.race?.raceDate
-        ?? null;
-
     return {
         ...detail,
-        registrationDeadline: toDateInputValue(readApiField(detail, 'registrationDeadline')),
-        raceDate: toDateInputValue(readApiField(detail, 'raceDate')),
         race: spectatorDetail?.race ?? detail?.race ?? detail?.Race,
-        raceDateTime,
-        raceStartTime: readApiField(detail, 'raceStartTime'),
+        raceDateTime: spectatorDetail?.race?.raceDate ?? detail?.race?.raceDate ?? detail?.raceDate ?? detail?.RaceDate ?? null,
         distanceMeters: getTournamentDistanceMeters(detail) ?? getTournamentDistanceMeters(spectatorDetail),
     };
 }
@@ -401,9 +391,9 @@ async function createTournament(payload) {
     appendFormValue(formData, 'TournamentName', payload.name || payload.tournamentName || '');
     appendFormValue(formData, 'Description', payload.description || payload.className || '');
     appendFormValue(formData, 'Location', payload.location || '');
-    appendFormValue(formData, 'RaceDate', payload.raceDate || '');
+    appendFormValue(formData, 'RaceDate', payload.endDate || payload.raceDate || '');
     appendFormValue(formData, 'RaceStartTime', payload.raceStartTime || '');
-    appendFormValue(formData, 'RegistrationDeadline', payload.registrationDeadline || '');
+    appendFormValue(formData, 'RegistrationDeadline', payload.startDate || payload.registrationDeadline || '');
     appendFormValue(formData, 'DistanceMeters', Number(payload.distanceMeters || 0));
     appendFormValue(formData, 'MaxHorses', Number(payload.maxHorses || 0));
     appendFormValue(
@@ -449,9 +439,9 @@ async function updateTournament(id, patch) {
     appendFormValue(formData, 'TournamentName', patch.name || patch.tournamentName || '');
     appendFormValue(formData, 'Description', patch.description || patch.className || '');
     appendFormValue(formData, 'Location', patch.location || patch.city || '');
-    appendFormValue(formData, 'RaceDate', patch.raceDate || '');
+    appendFormValue(formData, 'RaceDate', patch.endDate || patch.raceDate || '');
     appendFormValue(formData, 'RaceStartTime', patch.raceStartTime || '');
-    appendFormValue(formData, 'RegistrationDeadline', patch.registrationDeadline || '');
+    appendFormValue(formData, 'RegistrationDeadline', patch.startDate || patch.registrationDeadline || '');
     appendFormValue(formData, 'DistanceMeters', Number(patch.distanceMeters || 0));
     appendFormValue(formData, 'MaxHorses', Number(patch.maxHorses || 0));
     appendFormValue(formData, 'PrizePool', Number(patch.prizePool || 0));
