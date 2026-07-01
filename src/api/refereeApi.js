@@ -115,6 +115,13 @@ export async function markAllNotificationsAsRead() {
     return apiRequest('/referee/notifications/read-all', { method: 'PUT' });
 }
 
+export async function changeRefereePassword(payload) {
+    return apiRequest('/auth/change-password', {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+    });
+}
+
 export const refereeApi = {
     getRefereeDashboard,
     getRefereeProfile,

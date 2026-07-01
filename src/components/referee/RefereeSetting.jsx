@@ -10,6 +10,7 @@ import {
 } from 'react-icons/fa';
 
 import { refereeApi } from '../../api/refereeApi';
+import ChangePasswordCard from '../shared/ChangePasswordCard';
 import RefereeLayout from './RefereeLayout';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
@@ -154,9 +155,7 @@ function RefereeSetting() {
                                 Account Security
                             </h2>
 
-                            <div className="rounded-md border border-[var(--admin-border)] bg-[#faf8f8] p-5 text-sm font-semibold text-[var(--admin-muted)]">
-                                Password update is not available in the current backend API contract.
-                            </div>
+                            <ChangePasswordCard />
                         </div>
                     </div>
                 </div>
