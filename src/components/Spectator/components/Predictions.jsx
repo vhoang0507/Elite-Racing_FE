@@ -11,18 +11,49 @@ import {
 import { spectatorApi } from '../../../api/spectatorApi';
 
 const FILTERS = [
-    { key: 'all',     label: 'All' },
-    { key: 'pending', label: 'Pending' },
-    { key: 'correct', label: 'Correct' },
-    { key: 'wrong',   label: 'Wrong' },
+    { key: 'all',       label: 'All' },
+    { key: 'pending',   label: 'Pending' },
+    { key: 'correct',   label: 'Correct' },
+    { key: 'wrong',     label: 'Wrong' },
+    { key: 'cancelled', label: 'Cancelled' },
 ];
 
-function PredictionCard({ prediction }) {
-    const { isCorrect, pointsAwarded, tournamentName, predictedHorseName, tournamentStatus } = prediction;
+function getOutcome(prediction) {
+    const { isCorrect, status } = prediction;
+    if (status === 'Cancelled') return 'cancelled';
+    if (isCorrect === true)     return 'correct';
+    if (isCorrect === false)    return 'wrong';
+    if (status === 'Locked')    return 'locked';
+    return 'pending';
+}
 
-    const outcome = isCorrect === true ? 'correct' : isCorrect === false ? 'wrong' : 'pending';
-    const accentColor = outcome === 'correct' ? '#155724' : outcome === 'wrong' ? '#721c24' : '#856404';
-    const badgeBg     = outcome === 'correct' ? '#d4edda' : outcome === 'wrong' ? '#f8d7da' : '#fff3cd';
+function PredictionCard({ prediction }) {
+    const { pointsAwarded, tournamentName, predictedHorseName, tournamentStatus } = prediction;
+    const outcome = getOutcome(prediction);
+
+    const accentColor = {
+        correct:   '#155724',
+        wrong:     '#721c24',
+        locked:    '#1e40af',
+        cancelled: '#64748b',
+        pending:   '#856404',
+    }[outcome];
+
+    const badgeBg = {
+        correct:   '#d4edda',
+        wrong:     '#f8d7da',
+        locked:    '#dbeafe',
+        cancelled: '#f1f5f9',
+        pending:   '#fff3cd',
+    }[outcome];
+
+    const badgeLabel = {
+        correct:   `✓ Correct  +${pointsAwarded ?? 0} pts`,
+        wrong:     '✗ Wrong',
+        locked:    '🔒 Locked – Awaiting Evaluation',
+        cancelled: '✕ Cancelled',
+        pending:   '⏳ Awaiting Result',
+    }[outcome];
 
     return (
         <article className="surface-card" style={{ overflow: 'hidden', display: 'flex' }}>
@@ -43,11 +74,7 @@ function PredictionCard({ prediction }) {
                     )}
                 </div>
                 <span style={{ fontSize: 12, fontWeight: 700, padding: '5px 14px', borderRadius: 20, flexShrink: 0, background: badgeBg, color: accentColor }}>
-                    {outcome === 'correct'
-                        ? `✓ Correct  +${pointsAwarded ?? 0} pts`
-                        : outcome === 'wrong'
-                        ? '✗ Wrong'
-                        : '⏳ Awaiting Result'}
+                    {badgeLabel}
                 </span>
             </div>
         </article>
@@ -70,23 +97,25 @@ export default function Predictions() {
     const total     = predictions.length;
     const correct   = predictions.filter(p => p.isCorrect === true).length;
     const wrong     = predictions.filter(p => p.isCorrect === false).length;
-    const pending   = predictions.filter(p => p.isCorrect == null).length;
-    const accuracy  = total === 0 ? 0 : Math.round((correct / total) * 100);
+    const cancelled = predictions.filter(p => p.status === 'Cancelled').length;
+    const pending   = predictions.filter(p => p.isCorrect == null && p.status !== 'Cancelled').length;
+    const accuracy  = (correct + wrong) === 0 ? 0 : Math.round((correct / (correct + wrong)) * 100);
     const totalPts  = predictions.reduce((s, p) => s + (p.pointsAwarded ?? 0), 0);
 
     const stats = [
-        { label: 'Total',    value: total,       icon: FaBullseye,    tone: '' },
-        { label: 'Correct',  value: correct,     icon: FaCheckCircle, tone: 'green' },
-        { label: 'Accuracy', value: `${accuracy}%`, icon: FaPercent,  tone: 'blue' },
-        { label: 'Pts Earned', value: `${totalPts}`, icon: FaCoins,   tone: 'gold', suffix: 'pts' },
+        { label: 'Total',      value: total,          icon: FaBullseye,    tone: '' },
+        { label: 'Correct',    value: correct,         icon: FaCheckCircle, tone: 'green' },
+        { label: 'Accuracy',   value: `${accuracy}%`,  icon: FaPercent,     tone: 'blue' },
+        { label: 'Pts Earned', value: `${totalPts}`,   icon: FaCoins,       tone: 'gold', suffix: 'pts' },
     ];
 
-    const counts = { all: total, pending, correct, wrong };
+    const counts = { all: total, pending, correct, wrong, cancelled };
 
     const filtered = predictions.filter(p => {
-        if (filter === 'pending') return p.isCorrect == null;
-        if (filter === 'correct') return p.isCorrect === true;
-        if (filter === 'wrong')   return p.isCorrect === false;
+        if (filter === 'pending')   return p.isCorrect == null && p.status !== 'Cancelled';
+        if (filter === 'correct')   return p.isCorrect === true;
+        if (filter === 'wrong')     return p.isCorrect === false;
+        if (filter === 'cancelled') return p.status === 'Cancelled';
         return true;
     });
 

@@ -266,7 +266,7 @@ function PredictionManagement() {
                             <select className={selectClass} onChange={handleFilterChange(setAccuracyFilter)} value={accuracyFilter}>
                                 <option value="all-accuracy">Accuracy: Any</option>
                                 <option value="high">High Accuracy</option>
-                                <option value="medium">Medium Accuracy</option>
+                                <option value="low">Low Accuracy</option>
                             </select>
                             <FaChevronDown aria-hidden="true" />
                         </label>
