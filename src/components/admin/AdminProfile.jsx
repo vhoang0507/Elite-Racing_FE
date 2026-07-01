@@ -7,6 +7,8 @@ import {
     FaUserCircle,
 } from 'react-icons/fa';
 
+import ChangePasswordCard from '../shared/ChangePasswordCard';
+
 import { getAuthToken, getAuthUser } from '../../utils/tokenStorage';
 
 import AdminLayout from './AdminLayout';
@@ -162,6 +164,7 @@ function AdminProfile() {
                         ))}
                     </div>
                 </section>
+                <ChangePasswordCard />
             </section>
         </AdminLayout>
     );

@@ -31,3 +31,10 @@ export function resendVerificationOtp(payload) {
 export function getMe() {
     return apiRequest('/auth/me');
 }
+
+export function changePassword(payload) {
+    return apiRequest('/auth/change-password', {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+    });
+}

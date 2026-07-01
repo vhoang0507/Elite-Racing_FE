@@ -10,6 +10,8 @@ import {
     FaSave,
 } from 'react-icons/fa';
 
+import ChangePasswordCard from '../shared/ChangePasswordCard';
+
 import JockeyLayout from './JockeyLayout';
 import { jockeyApi } from '../../api/jockeyApi';
 import { uploadFile, resolveFileUrl } from '../../api/uploadApi';
@@ -533,7 +535,7 @@ function JockeySetting() {
                         </div>
                     </div>
                 </section>
-
+                <ChangePasswordCard />
                 {/* Error/Success */}
                 {error && (
                     <div style={{ backgroundColor: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#991b1b', fontWeight: 600 }}>
