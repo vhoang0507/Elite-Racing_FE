@@ -14,6 +14,10 @@ import {
 } from 'react-icons/fa';
 
 import { adminApi } from '../../api/adminApi';
+import {
+    confirmAdminAction,
+    showAdminSuccess,
+} from '../../utils/adminFeedback';
 
 import AdminLayout from './AdminLayout';
 
@@ -114,6 +118,16 @@ function CreateRefereeAccount() {
             return;
         }
 
+        const confirmed = await confirmAdminAction({
+            title: 'Create referee account',
+            message: `Are you sure you want to create an account for "${form.fullName.trim() || form.email.trim()}"?`,
+            confirmLabel: 'Create',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
         setIsSaving(true);
 
         try {
@@ -131,6 +145,7 @@ function CreateRefereeAccount() {
             setReferees((current) => [created, ...current]);
             setForm(initialForm);
             setSuccess('Referee account created successfully.');
+            showAdminSuccess('Referee account created successfully.', 'Created');
         } catch (err) {
             setError(err.message || 'Failed to create referee account.');
         } finally {

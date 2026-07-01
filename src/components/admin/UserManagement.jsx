@@ -22,6 +22,10 @@ import {
 
 import { adminApi } from '../../api/adminApi';
 import { resolveFileUrl } from '../../api/uploadApi';
+import {
+    confirmAdminAction,
+    showAdminSuccess,
+} from '../../utils/adminFeedback';
 import { getCompactPaginationItems } from '../../utils/pagination';
 
 import AdminLayout from './AdminLayout';
@@ -374,7 +378,24 @@ function UserManagement() {
             return;
         }
 
-        if (confirmMessage && !window.confirm(confirmMessage)) {
+        const actionLabel = {
+            approve: 'Approve',
+            ban: 'Ban',
+            unblock: 'Unblock',
+        }[loadingKey] || 'Update';
+        const successVerb = {
+            approve: 'approved',
+            ban: 'banned',
+            unblock: 'unblocked',
+        }[loadingKey] || 'updated';
+        const confirmed = await confirmAdminAction({
+            title: `${actionLabel} user`,
+            message: confirmMessage || `Are you sure you want to ${actionLabel.toLowerCase()} "${selectedUser.name}"?`,
+            confirmLabel: actionLabel,
+            tone: loadingKey === 'ban' ? 'danger' : 'primary',
+        });
+
+        if (!confirmed) {
             return;
         }
 
@@ -384,6 +405,7 @@ function UserManagement() {
         try {
             await adminApi.updateUserStatus(selectedUser.id, apiStatus);
             updateSelectedUserState(nextStatus, nextVerified);
+            showAdminSuccess(`User ${successVerb} successfully.`, 'Updated');
         } catch (error) {
             setDetailActionError(error.message || errorMessage || 'Failed to update this user.');
         } finally {
@@ -393,6 +415,17 @@ function UserManagement() {
 
     const handleRejectSelectedUser = async () => {
         if (!selectedUser) {
+            return;
+        }
+
+        const confirmed = await confirmAdminAction({
+            title: 'Reject user',
+            message: `Are you sure you want to reject "${selectedUser.name}"?`,
+            confirmLabel: 'Reject',
+            tone: 'danger',
+        });
+
+        if (!confirmed) {
             return;
         }
 
@@ -414,6 +447,7 @@ function UserManagement() {
                     : user
             )));
             handleCloseDetails();
+            showAdminSuccess('User rejected successfully.', 'Rejected');
         } catch (error) {
             setDetailActionError(error.message || 'Failed to reject this user.');
         } finally {

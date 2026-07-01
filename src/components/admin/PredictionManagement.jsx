@@ -17,6 +17,10 @@ import {
 
 import { adminApi } from '../../api/adminApi';
 import horseRacing from '../../assets/horse-racing.jpg';
+import {
+    confirmAdminAction,
+    showAdminSuccess,
+} from '../../utils/adminFeedback';
 import { getCompactPaginationItems } from '../../utils/pagination';
 
 import AdminLayout from './AdminLayout';
@@ -192,16 +196,31 @@ function PredictionManagement() {
     };
 
     const handleStatusChange = async (prediction, status) => {
-        const updatedPrediction = await adminApi.updatePredictionStatus(prediction.id, status);
-        setPredictions((current) => current.map((item) => (
-            item.id === prediction.id
-                ? {
-                    ...item,
-                    status: updatedPrediction?.status || status,
-                }
-                : item
-        )));
-        setActionMenu(null);
+        const confirmed = await confirmAdminAction({
+            title: 'Update prediction status',
+            message: `Are you sure you want to change "${prediction.horse}" to "${status}"?`,
+            confirmLabel: 'Update',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            const updatedPrediction = await adminApi.updatePredictionStatus(prediction.id, status);
+            setPredictions((current) => current.map((item) => (
+                item.id === prediction.id
+                    ? {
+                        ...item,
+                        status: updatedPrediction?.status || status,
+                    }
+                    : item
+            )));
+            setActionMenu(null);
+            showAdminSuccess('Prediction status updated successfully.', 'Updated');
+        } catch (err) {
+            window.alert(err.message || 'Failed to update prediction status.');
+        }
     };
 
     return (

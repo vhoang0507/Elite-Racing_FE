@@ -146,7 +146,7 @@ export default function GlobalRankings() {
                                 <span className="text-xs font-bold uppercase text-[var(--racing-muted)]">
                                     Earnings
                                 </span>
-                                <strong className="block text-2xl">$12.4M</strong>
+                                <strong className="block text-2xl">$12.400.000</strong>
                             </div>
                         </div>
 

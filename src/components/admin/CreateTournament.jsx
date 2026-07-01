@@ -17,6 +17,14 @@ import {
 } from 'react-icons/fa';
 
 import { apiRequest } from '../../api/httpClient';
+import {
+    handleCurrencyInputChange,
+    parseCurrency,
+} from '../../utils/currency';
+import {
+    confirmAdminAction,
+    queueAdminSuccess,
+} from '../../utils/adminFeedback';
 
 import AdminLayout from './AdminLayout';
 
@@ -112,6 +120,9 @@ function CreateTournament() {
         const registrationDeadline = formData.get('registrationDeadline');
         const distanceMeters = Number(formData.get('distanceMeters') || 0);
         const maxHorses = Number(formData.get('maxHorses') || 0);
+        const goldPrize = parseCurrency(formData.get('goldPrize'));
+        const silverPrize = parseCurrency(formData.get('silverPrize'));
+        const bronzePrize = parseCurrency(formData.get('bronzePrize'));
 
         if (!name) {
             setError('Tournament name is required.');
@@ -152,9 +163,7 @@ function CreateTournament() {
             payload.append('DistanceMeters', String(distanceMeters));
             payload.append('MaxHorses', String(maxHorses));
             payload.append('PrizePool', String(
-                Number(formData.get('goldPrize') || 0)
-                + Number(formData.get('silverPrize') || 0)
-                + Number(formData.get('bronzePrize') || 0)
+                goldPrize + silverPrize + bronzePrize
             ));
             payload.append('Rules', formData.get('rules') || '');
 
@@ -185,6 +194,10 @@ function CreateTournament() {
                 });
             }
 
+            queueAdminSuccess(
+                action === 'publish' ? 'Tournament published successfully.' : 'Tournament draft saved successfully.',
+                action === 'publish' ? 'Published' : 'Saved'
+            );
             navigate('/admin/races');
         } catch (err) {
             setError(err.message || 'Failed to create tournament. Please try again.');
@@ -193,11 +206,24 @@ function CreateTournament() {
         }
     };
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
+        const form = event.currentTarget;
         const submitter = event.nativeEvent.submitter;
         const action = submitter ? submitter.value : 'publish';
-        persistTournament(event.currentTarget, action);
+        const confirmed = await confirmAdminAction({
+            title: action === 'publish' ? 'Publish tournament' : 'Save tournament draft',
+            message: action === 'publish'
+                ? 'Are you sure you want to publish this tournament?'
+                : 'Are you sure you want to save this tournament as a draft?',
+            confirmLabel: action === 'publish' ? 'Publish' : 'Save Draft',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        persistTournament(form, action);
     };
 
     return (
@@ -308,19 +334,19 @@ function CreateTournament() {
 
                                         <label className="grid min-h-9 grid-cols-[minmax(110px,auto)_minmax(0,1fr)_28px] items-center overflow-hidden rounded-md border border-[var(--admin-border)] bg-[#fffdfc]">
                                             <span className="pl-3 text-[0.72rem] font-[850] text-[#5b403c]">GOLD PRIZE:</span>
-                                            <input aria-label="Gold prize" className="h-[34px] w-full min-w-0 border-0 bg-transparent px-2 text-[var(--admin-ink)] outline-0 focus:shadow-none" name="goldPrize" type="number" />
+                                            <input aria-label="Gold prize" className="h-[34px] w-full min-w-0 border-0 bg-transparent px-2 text-[var(--admin-ink)] outline-0 focus:shadow-none" inputMode="numeric" name="goldPrize" onChange={handleCurrencyInputChange} type="text" />
                                             <FaDollarSign aria-hidden="true" className="justify-self-center text-[#5b403c]" />
                                         </label>
 
                                         <label className="grid min-h-9 grid-cols-[minmax(110px,auto)_minmax(0,1fr)_28px] items-center overflow-hidden rounded-md border border-[var(--admin-border)] bg-[#fffdfc]">
                                             <span className="pl-3 text-[0.72rem] font-[850] text-[#5b403c]">SILVER PRIZE:</span>
-                                            <input aria-label="Silver prize" className="h-[34px] w-full min-w-0 border-0 bg-transparent px-2 text-[var(--admin-ink)] outline-0 focus:shadow-none" name="silverPrize" type="number" />
+                                            <input aria-label="Silver prize" className="h-[34px] w-full min-w-0 border-0 bg-transparent px-2 text-[var(--admin-ink)] outline-0 focus:shadow-none" inputMode="numeric" name="silverPrize" onChange={handleCurrencyInputChange} type="text" />
                                             <FaDollarSign aria-hidden="true" className="justify-self-center text-[#5b403c]" />
                                         </label>
 
                                         <label className="grid min-h-9 grid-cols-[minmax(110px,auto)_minmax(0,1fr)_28px] items-center overflow-hidden rounded-md border border-[var(--admin-border)] bg-[#fffdfc]">
                                             <span className="pl-3 text-[0.72rem] font-[850] text-[#5b403c]">BRONZE PRIZE:</span>
-                                            <input aria-label="Bronze prize" className="h-[34px] w-full min-w-0 border-0 bg-transparent px-2 text-[var(--admin-ink)] outline-0 focus:shadow-none" name="bronzePrize" type="number" />
+                                            <input aria-label="Bronze prize" className="h-[34px] w-full min-w-0 border-0 bg-transparent px-2 text-[var(--admin-ink)] outline-0 focus:shadow-none" inputMode="numeric" name="bronzePrize" onChange={handleCurrencyInputChange} type="text" />
                                             <FaDollarSign aria-hidden="true" className="justify-self-center text-[#5b403c]" />
                                         </label>
                                     </div>

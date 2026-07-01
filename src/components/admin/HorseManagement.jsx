@@ -17,6 +17,10 @@ import {
 import { adminApi } from '../../api/adminApi';
 import { resolveFileUrl } from '../../api/uploadApi';
 import horseRacing from '../../assets/horse-racing.jpg';
+import {
+    confirmAdminAction,
+    showAdminSuccess,
+} from '../../utils/adminFeedback';
 import { getCompactPaginationItems } from '../../utils/pagination';
 
 import AdminLayout from './AdminLayout';
@@ -313,6 +317,17 @@ function HorseManagement() {
     };
 
     const handleSuspendHorse = async (report) => {
+        const confirmed = await confirmAdminAction({
+            title: 'Suspend horse',
+            message: `Are you sure you want to suspend "${report.horse}"?`,
+            confirmLabel: 'Suspend',
+            tone: 'danger',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
         await adminApi.updateHorseApproval(report.horseId, 'Banned');
         setHorses((current) => current.map((horse) => (
             horse.id === report.horseId
@@ -322,9 +337,23 @@ function HorseManagement() {
                 }
                 : horse
         )));
+        showAdminSuccess('Horse suspended successfully.', 'Updated');
     };
 
     const handleUpdateHorseApproval = async (horse, approval) => {
+        const confirmed = await confirmAdminAction({
+            title: approval === 'Active' ? 'Confirm horse' : 'Reject horse',
+            message: approval === 'Active'
+                ? `Are you sure you want to confirm "${horse.name}"?`
+                : `Are you sure you want to reject "${horse.name}"?`,
+            confirmLabel: approval === 'Active' ? 'Confirm' : 'Reject',
+            tone: approval === 'Active' ? 'primary' : 'danger',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
         await adminApi.updateHorseApproval(horse.id, approval);
         writeStoredHorseApproval(horse.id, approval);
         setHorses((current) => current.map((item) => (
@@ -336,11 +365,24 @@ function HorseManagement() {
                 : item
         )));
         setSelectedHorseId(null);
+        showAdminSuccess(approval === 'Active' ? 'Horse confirmed successfully.' : 'Horse rejected successfully.', approval === 'Active' ? 'Confirmed' : 'Rejected');
     };
 
     const handleDeleteReport = async (id) => {
+        const confirmed = await confirmAdminAction({
+            title: 'Delete report',
+            message: 'Are you sure you want to delete this report?',
+            confirmLabel: 'Delete',
+            tone: 'danger',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
         await adminApi.deleteHorseReport(id);
         setReports((current) => current.filter((report) => report.id !== id));
+        showAdminSuccess('Report deleted successfully.', 'Deleted');
     };
 
     return (

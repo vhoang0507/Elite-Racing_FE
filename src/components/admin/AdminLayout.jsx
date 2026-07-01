@@ -20,6 +20,12 @@ import {
 
 import { clearAuthSession, getAuthUser } from '../../utils/tokenStorage';
 import { adminApi } from '../../api/adminApi';
+import {
+    ADMIN_CONFIRM_EVENT,
+    ADMIN_SUCCESS_EVENT,
+    ADMIN_SUCCESS_STORAGE_KEY,
+} from '../../utils/adminFeedback';
+import Toast, { useToast } from '../shared/Toast';
 
 const navigation = [
     {
@@ -80,6 +86,11 @@ const iconButtonClasses = [
     'role-icon-button',
 ].join(' ');
 
+const confirmToneClass = {
+    primary: 'bg-[var(--admin-primary)] hover:bg-[var(--admin-primary-dark)]',
+    danger: 'bg-[#b91c1c] hover:bg-[#991b1b]',
+};
+
 function readUserField(user, camelKey, pascalKey = camelKey[0].toUpperCase() + camelKey.slice(1)) {
     return user?.[camelKey] ?? user?.[pascalKey];
 }
@@ -108,12 +119,65 @@ function AdminLayout({
     const accountRole = readUserField(authUser, 'role') || 'Admin';
     const accountInitials = getInitials(accountName);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [confirmRequest, setConfirmRequest] = useState(null);
+    const { toast, showToast, hideToast } = useToast();
 
     useEffect(() => {
         adminApi.getAdminUnreadCount()
             .then((count) => setUnreadCount(count))
             .catch(() => {});
     }, []);
+
+    useEffect(() => {
+        const queuedSuccess = window.sessionStorage.getItem(ADMIN_SUCCESS_STORAGE_KEY);
+
+        if (!queuedSuccess) {
+            return;
+        }
+
+        window.sessionStorage.removeItem(ADMIN_SUCCESS_STORAGE_KEY);
+
+        try {
+            const payload = JSON.parse(queuedSuccess);
+            showToast(payload.message, payload.type || 'success', payload.title || 'Success');
+        } catch {
+            showToast(queuedSuccess, 'success', 'Success');
+        }
+    }, [showToast]);
+
+    useEffect(() => {
+        const handleConfirm = (event) => {
+            const detail = event.detail || {};
+            detail.handled = true;
+            setConfirmRequest({
+                title: detail.title || 'Confirm action',
+                message: detail.message || 'Are you sure you want to continue?',
+                confirmLabel: detail.confirmLabel || 'Confirm',
+                cancelLabel: detail.cancelLabel || 'Cancel',
+                tone: detail.tone || 'primary',
+                resolve: detail.resolve,
+            });
+        };
+
+        const handleSuccess = (event) => {
+            const detail = event.detail || {};
+            detail.handled = true;
+            showToast(detail.message || 'Action completed successfully.', detail.type || 'success', detail.title || 'Success');
+        };
+
+        window.addEventListener(ADMIN_CONFIRM_EVENT, handleConfirm);
+        window.addEventListener(ADMIN_SUCCESS_EVENT, handleSuccess);
+
+        return () => {
+            window.removeEventListener(ADMIN_CONFIRM_EVENT, handleConfirm);
+            window.removeEventListener(ADMIN_SUCCESS_EVENT, handleSuccess);
+        };
+    }, [showToast]);
+
+    const resolveConfirmRequest = (value) => {
+        confirmRequest?.resolve?.(value);
+        setConfirmRequest(null);
+    };
 
     const handleLogout = () => {
         clearAuthSession();
@@ -249,6 +313,54 @@ function AdminLayout({
                     </div>
                 </footer>
             </main>
+
+            {confirmRequest && (
+                <div
+                    aria-modal="true"
+                    className="fixed inset-0 z-[10000] grid place-items-center bg-[rgba(15,23,42,0.42)] px-5 py-8"
+                    onClick={() => resolveConfirmRequest(false)}
+                    role="dialog"
+                >
+                    <section
+                        className="grid w-[min(440px,100%)] gap-5 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 shadow-[0_24px_70px_rgba(15,23,42,0.28)]"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <div className="grid gap-2">
+                            <h2 className="m-0 text-[1.15rem] font-black text-[var(--admin-primary-dark)]">
+                                {confirmRequest.title}
+                            </h2>
+                            <p className="m-0 text-[0.92rem] font-semibold leading-6 text-[var(--admin-muted)]">
+                                {confirmRequest.message}
+                            </p>
+                        </div>
+
+                        <div className="flex justify-end gap-3 max-[520px]:flex-col">
+                            <button
+                                className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-4 font-black text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]"
+                                onClick={() => resolveConfirmRequest(false)}
+                                type="button"
+                            >
+                                {confirmRequest.cancelLabel}
+                            </button>
+                            <button
+                                className={`inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md px-4 font-black text-white ${confirmToneClass[confirmRequest.tone] || confirmToneClass.primary}`}
+                                onClick={() => resolveConfirmRequest(true)}
+                                type="button"
+                            >
+                                {confirmRequest.confirmLabel}
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            )}
+
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                title={toast.title}
+                onClose={hideToast}
+                duration={3500}
+            />
         </div>
     );
 }

@@ -17,6 +17,7 @@ import {
 } from 'react-icons/fa';
 
 import { adminApi } from '../../api/adminApi';
+import { confirmAdminAction } from '../../utils/adminFeedback';
 import { getCompactPaginationItems } from '../../utils/pagination';
 import Toast, { useToast } from '../shared/Toast';
 
@@ -181,6 +182,16 @@ function Notifications() {
     };
 
     const handleMarkAllRead = async () => {
+        const confirmed = await confirmAdminAction({
+            title: 'Mark all notifications as read',
+            message: 'Are you sure you want to mark all notifications as read?',
+            confirmLabel: 'Mark All Read',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
         const prev = notifications;
         setNotifications((current) => current.map((n) => ({ ...n, isRead: true, status: 'Read' })));
         try {

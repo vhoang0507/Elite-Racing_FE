@@ -8,6 +8,7 @@ import {
     FaTrophy,
 } from 'react-icons/fa';
 import { spectatorApi } from '../../../api/spectatorApi';
+import { formatCurrency } from '../../../utils/currency';
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
@@ -191,7 +192,7 @@ function TournamentCard({ tournament, myPrediction, onPredict }) {
                         <div style={{ marginTop: 5, display: 'flex', flexWrap: 'wrap', gap: '4px 12px', fontSize: '0.8rem', color: '#999' }}>
                             {tournament.location && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FaMapMarkerAlt /> {tournament.location}</span>}
                             {tournament.race?.raceDate && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FaCalendarAlt /> {tournament.race.raceDate.slice(0, 10)}</span>}
-                            {tournament.prizePool && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FaTrophy /> ${Number(tournament.prizePool).toLocaleString()}</span>}
+                            {tournament.prizePool && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><FaTrophy /> {formatCurrency(tournament.prizePool)}</span>}
                         </div>
                     </div>
                     <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, flexShrink: 0, background: s.bg, color: s.color }}>

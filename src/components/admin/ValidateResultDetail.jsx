@@ -20,6 +20,10 @@ import {
 } from 'react-icons/fa';
 
 import { adminApi } from '../../api/adminApi';
+import {
+    confirmAdminAction,
+    showAdminSuccess,
+} from '../../utils/adminFeedback';
 
 import AdminLayout from './AdminLayout';
 
@@ -178,7 +182,14 @@ function ValidateResultDetail() {
     }, [resultId]);
 
     const handleApprove = async () => {
-        if (!window.confirm('Approve this result report? This will publish all referee-confirmed results and award prizes.')) return;
+        const confirmed = await confirmAdminAction({
+            title: 'Approve result report',
+            message: 'Are you sure you want to approve this result report? This will publish all referee-confirmed results and award prizes.',
+            confirmLabel: 'Approve',
+        });
+
+        if (!confirmed) return;
+
         setActionLoading(true);
         setActionError('');
         setActionSuccess('');
@@ -198,6 +209,7 @@ function ValidateResultDetail() {
             }
 
             setActionSuccess('Results approved and tournament completed.');
+            showAdminSuccess('Results approved and tournament completed.', 'Approved');
             setTimeout(() => navigate('/admin/results'), 1500);
         } catch (err) {
             setActionError(err.message || 'Failed to approve result.');
@@ -207,13 +219,22 @@ function ValidateResultDetail() {
     };
 
     const handleReturn = async () => {
-        if (!window.confirm('Return this result to the referee for correction?')) return;
+        const confirmed = await confirmAdminAction({
+            title: 'Return result report',
+            message: 'Are you sure you want to return this result to the referee for correction?',
+            confirmLabel: 'Return',
+            tone: 'danger',
+        });
+
+        if (!confirmed) return;
+
         setActionLoading(true);
         setActionError('');
         setActionSuccess('');
         try {
             await adminApi.rejectResult(resultId);
             setActionSuccess('Result returned to referee.');
+            showAdminSuccess('Result returned to referee.', 'Returned');
             setTimeout(() => navigate('/admin/results'), 1500);
         } catch (err) {
             setActionError(err.message || 'Failed to return result.');

@@ -1,3 +1,5 @@
+import { formatCurrency } from "../../../../utils/currency";
+
 const statusStyle = {
     ReadyToClaim: { backgroundColor: "#d4edda", color: "#155724" },
     UnderReview: { backgroundColor: "#fff3cd", color: "#856404" },
@@ -50,7 +52,7 @@ export default function AvailableRewards({ rewards, loading, onClaim, claimingId
                                 </td>
                                 <td style={styles.td}>{r.horseName}</td>
                                 <td style={styles.td}>{ordinal(r.rankPosition)}</td>
-                                <td style={styles.td}>${Number(r.prizeAmount).toLocaleString()}</td>
+                                <td style={styles.td}>{formatCurrency(r.prizeAmount)}</td>
                                 <td style={styles.td}>
                                     <span style={{ ...styles.statusBadge, ...(statusStyle[r.status] || {}) }}>
                                         {formatStatus(r.status)}

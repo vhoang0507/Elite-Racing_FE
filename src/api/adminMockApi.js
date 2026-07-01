@@ -1,4 +1,8 @@
 import { adminSeedData } from '../data/adminMockData';
+import {
+    formatCurrency,
+    parseCurrency,
+} from '../utils/currency';
 
 const STORAGE_KEY = 'elite-racing-admin-mock-v2';
 const MOCK_DELAY = 180;
@@ -191,7 +195,7 @@ const countByApproval = (items, approval) => items.filter((item) => normalizeSta
 
 const isPendingResult = (submission) => normalizeStatus(submission.status) === 'pending';
 
-const toMoney = (value) => `$${Number(value || 0).toLocaleString('en-US')}`;
+const toMoney = (value) => formatCurrency(value);
 
 const toDateLabel = (dateValue) => new Intl.DateTimeFormat('en-US', {
     month: 'short',
@@ -300,7 +304,7 @@ export const adminMockApi = {
                 city: payload.city || payload.location || 'TBA',
                 maxHorses: Number(payload.maxHorses || 20),
                 registeredHorses: 0,
-                prizePool: Number(payload.goldPrize || 0) + Number(payload.silverPrize || 0) + Number(payload.bronzePrize || 0),
+                prizePool: parseCurrency(payload.goldPrize) + parseCurrency(payload.silverPrize) + parseCurrency(payload.bronzePrize),
                 status: mapStatus(status, tournamentStatusMap, 'Draft'),
                 imagePosition: '50% center',
                 createdAt: new Date().toISOString().slice(0, 10),

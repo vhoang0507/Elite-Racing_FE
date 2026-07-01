@@ -18,6 +18,7 @@ import {
 } from 'react-icons/fa';
 
 import { adminSystemApi } from '../../api/adminSystemApi';
+import { confirmAdminAction } from '../../utils/adminFeedback';
 import { getAuthUser } from '../../utils/tokenStorage';
 
 import AdminLayout from './AdminLayout';
@@ -323,9 +324,12 @@ function AdminSystemTime() {
             return;
         }
 
-        const ok = window.confirm(
-            'Are you sure you want to advance system time? This can move the system past real deadlines.'
-        );
+        const ok = await confirmAdminAction({
+            title: 'Advance system time',
+            message: 'Are you sure you want to advance system time? This can move the system past real deadlines.',
+            confirmLabel: 'Advance',
+            tone: 'danger',
+        });
 
         if (!ok) {
             return;
@@ -353,9 +357,12 @@ function AdminSystemTime() {
     const handleSyncStatuses = async () => {
         setError('');
 
-        const ok = window.confirm(
-            'Are you sure you want to sync statuses using the current effective time? This can change real data in the database.'
-        );
+        const ok = await confirmAdminAction({
+            title: 'Sync statuses',
+            message: 'Are you sure you want to sync statuses using the current effective time? This can change real data in the database.',
+            confirmLabel: 'Sync',
+            tone: 'danger',
+        });
 
         if (!ok) {
             return;
@@ -383,9 +390,12 @@ function AdminSystemTime() {
             return;
         }
 
-        const ok = window.confirm(
-            'Clear override, return to real server time, and sync statuses using the current real time? This can change real data in the database.'
-        );
+        const ok = await confirmAdminAction({
+            title: 'Clear time override',
+            message: 'Clear override, return to real server time, and sync statuses using the current real time? This can change real data in the database.',
+            confirmLabel: 'Clear Override',
+            tone: 'danger',
+        });
 
         if (!ok) {
             return;
