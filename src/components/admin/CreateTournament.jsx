@@ -35,6 +35,12 @@ const fileControlClass = `${controlBaseClass} flex min-h-10 cursor-pointer items
 const twoColumnClass = 'grid min-w-0 grid-cols-[repeat(2,minmax(0,1fr))] gap-3.5 max-[760px]:grid-cols-1';
 const iconClass = 'pointer-events-none absolute top-1/2 h-[15px] w-[15px] -translate-y-1/2 text-[#9b7771]';
 const actionButtonClass = 'inline-flex min-h-[38px] cursor-pointer items-center justify-center gap-2 rounded-md px-[18px] text-[0.78rem] font-[850] no-underline max-[760px]:w-full';
+const locationOptions = [
+    'Churchill Downs, Louisville, Kentucky',
+    'Pimlico Race Course, Baltimore, Maryland',
+    'Belmont Park, Elmont, New York',
+    'Santa Anita Park, Arcadia, California',
+];
 const distanceOptions = [1000, 1500, 2400];
 
 function CreateTournament() {
@@ -224,7 +230,12 @@ function CreateTournament() {
                                         <span className={labelClass}>Location</span>
                                         <div className="relative flex min-h-10 items-center">
                                             <FaMapMarkerAlt aria-hidden="true" className={`${iconClass} left-3`} />
-                                            <input className={`${controlBaseClass} h-10 py-0 pl-9 pr-3`} name="location" placeholder="Race Track Name, City" type="text" />
+                                            <select className={`${controlBaseClass} h-10 py-0 pl-9 pr-3`} defaultValue="" name="location" required>
+                                                <option value="" disabled>Select Race Track</option>
+                                                {locationOptions.map((location) => (
+                                                    <option key={location} value={location}>{location}</option>
+                                                ))}
+                                            </select>
                                         </div>
                                     </label>
 
