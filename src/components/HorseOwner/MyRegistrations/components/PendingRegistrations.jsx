@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
 
-export default function PendingRegistrations() {
+export default function PendingRegistrations({ onViewStatus }) {
     const navigate = useNavigate();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -70,7 +70,7 @@ export default function PendingRegistrations() {
                                 </td>
                                 <td style={styles.td}>{row.adminNote || "-"}</td>
                                 <td style={styles.td}>
-                                    <button style={styles.viewBtn}>View Status</button>
+                                    <button style={styles.viewBtn} onClick={() => onViewStatus && onViewStatus(row.registrationId)}>View Status</button>
                                 </td>
                             </tr>
                         ))

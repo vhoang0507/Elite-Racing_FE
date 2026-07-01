@@ -3,28 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
 
-export default function RegistrationJourney() {
+export default function RegistrationJourney({ registrationId }) {
     const navigate = useNavigate();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        const fetchLatest = async () => {
+        const fetchJourney = async (id) => {
             setLoading(true);
             try {
-                const [pending, approved] = await Promise.all([
-                    ownerApi.getPendingRegistrations().catch(() => []),
-                    ownerApi.getApprovedRegistrationsList().catch(() => []),
-                ]);
-
-                const all = [...pending, ...approved];
-                if (all.length === 0) {
-                    setData(null);
-                    return;
-                }
-
-                const latest = all[0];
-                const journey = await ownerApi.getRegistrationJourney(latest.registrationId);
+                const journey = await ownerApi.getRegistrationJourney(id);
                 setData(journey);
             } catch (err) {
                 if (!handleOwnerAccessError(err, navigate)) setData(null);
@@ -33,8 +21,30 @@ export default function RegistrationJourney() {
             }
         };
 
-        fetchLatest();
-    }, []);
+        const fetchLatest = async () => {
+            setLoading(true);
+            try {
+                const [pending, approved] = await Promise.all([
+                    ownerApi.getPendingRegistrations().catch(() => []),
+                    ownerApi.getApprovedRegistrationsList().catch(() => []),
+                ]);
+                const all = [...pending, ...approved];
+                if (all.length === 0) { setData(null); return; }
+                const journey = await ownerApi.getRegistrationJourney(all[0].registrationId);
+                setData(journey);
+            } catch (err) {
+                if (!handleOwnerAccessError(err, navigate)) setData(null);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (registrationId) {
+            fetchJourney(registrationId);
+        } else {
+            fetchLatest();
+        }
+    }, [registrationId]);
 
     if (loading) return <p style={{ textAlign: "center", color: "#999" }}>Loading...</p>;
 
