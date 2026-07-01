@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     FaEnvelope,
     FaPhoneAlt,
@@ -16,23 +16,74 @@ import { uploadFile, resolveFileUrl } from '../../api/uploadApi';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]';
+const MAX_FILE_MB = 5;
+
+function validate(profile, distanceExperiences, selectedFiles) {
+    const errs = {};
+
+    // Weight
+    const w = Number(profile?.weightKg);
+    if (!profile?.weightKg && profile?.weightKg !== 0) {
+        errs.weightKg = 'Weight is required.';
+    } else if (isNaN(w) || w < 30 || w > 130) {
+        errs.weightKg = 'Weight must be between 30 – 130 kg.';
+    }
+
+    // Experience
+    const yoe = Number(profile?.yearsOfExperience);
+    if (profile?.yearsOfExperience === '' || profile?.yearsOfExperience === null || profile?.yearsOfExperience === undefined) {
+        errs.yearsOfExperience = 'Years of experience is required.';
+    } else if (isNaN(yoe) || yoe < 0 || yoe > 50 || !Number.isInteger(yoe)) {
+        errs.yearsOfExperience = 'Must be a whole number between 0 – 50.';
+    }
+
+    // Health status
+    if (!profile?.healthStatus) {
+        errs.healthStatus = 'Please select a health status.';
+    }
+
+    // Certificate No
+    if (!profile?.certificateNo?.trim()) {
+        errs.certificateNo = 'Certificate number is required.';
+    } else if (!/^[A-Za-z0-9\-_./]{3,30}$/.test(profile.certificateNo.trim())) {
+        errs.certificateNo = 'Only letters, numbers, hyphens (3–30 chars).';
+    }
+
+    // Distance experiences — each distance must have a level
+    const missing = distanceExperiences.filter(e => !e.skillLevel);
+    if (missing.length > 0) {
+        errs.distanceExperiences = 'Please select a skill level for every distance.';
+    }
+
+    return errs;
+}
+
+function ErrMsg({ msg }) {
+    if (!msg) return null;
+    return <p style={{ margin: '4px 0 0', fontSize: 11, color: '#dc2626', fontWeight: 600 }}>{msg}</p>;
+}
 
 function JockeySetting() {
     const [profile, setProfile] = useState(null);
+    const [originalProfile, setOriginalProfile] = useState(null);
     const [options, setOptions] = useState(null);
     const [breeds, setBreeds] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [fieldErrors, setFieldErrors] = useState({});
 
     const [distanceExperiences, setDistanceExperiences] = useState([]);
+    const [originalDistExp, setOriginalDistExp] = useState([]);
     const [breedExperiences, setBreedExperiences] = useState([]);
+    const [originalBreedExp, setOriginalBreedExp] = useState([]);
     const [selectedBreed, setSelectedBreed] = useState('');
     const [selectedLevel, setSelectedLevel] = useState('');
 
     const [selectedFiles, setSelectedFiles] = useState({});
     const [previewUrls, setPreviewUrls] = useState({});
+    const [fileErrors, setFileErrors] = useState({});
 
     useEffect(() => {
         const fetchAll = async () => {
@@ -44,10 +95,15 @@ function JockeySetting() {
                     jockeyApi.getJockeyHorseBreeds(),
                 ]);
                 setProfile(profileData);
+                setOriginalProfile(profileData);
                 setOptions(optionsData);
                 setBreeds(breedsData);
-                setDistanceExperiences(profileData.distanceExperiences ?? []);
-                setBreedExperiences(profileData.breedExperiences ?? []);
+                const de = profileData.distanceExperiences ?? [];
+                const be = profileData.breedExperiences ?? [];
+                setDistanceExperiences(de);
+                setOriginalDistExp(de);
+                setBreedExperiences(be);
+                setOriginalBreedExp(be);
             } catch (err) {
                 setError(err.message || 'Failed to load profile');
             } finally {
@@ -57,12 +113,25 @@ function JockeySetting() {
         fetchAll();
     }, []);
 
+    const handleCancel = () => {
+        setProfile(originalProfile);
+        setDistanceExperiences(originalDistExp);
+        setBreedExperiences(originalBreedExp);
+        setSelectedFiles({});
+        setPreviewUrls({});
+        setFileErrors({});
+        setFieldErrors({});
+        setError('');
+        setSuccess('');
+    };
+
     const handleDistanceSkill = (distanceMeters, skillLevel) => {
         setDistanceExperiences(prev => {
             const exists = prev.find(e => e.distanceMeters === distanceMeters);
             if (exists) return prev.map(e => e.distanceMeters === distanceMeters ? { ...e, skillLevel } : e);
             return [...prev, { distanceMeters, skillLevel }];
         });
+        setFieldErrors(prev => ({ ...prev, distanceExperiences: undefined }));
     };
 
     const addBreed = () => {
@@ -84,6 +153,13 @@ function JockeySetting() {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        const maxBytes = MAX_FILE_MB * 1024 * 1024;
+        if (file.size > maxBytes) {
+            setFileErrors(prev => ({ ...prev, [field]: `File too large. Max ${MAX_FILE_MB} MB.` }));
+            e.target.value = '';
+            return;
+        }
+        setFileErrors(prev => ({ ...prev, [field]: undefined }));
         setSelectedFiles(prev => ({ ...prev, [field]: file }));
         setPreviewUrls(prev => ({ ...prev, [field]: URL.createObjectURL(file) }));
     };
@@ -98,21 +174,25 @@ function JockeySetting() {
     };
 
     const handleSave = async () => {
-        setSaving(true);
         setError('');
         setSuccess('');
+
+        const errs = validate(profile, distanceExperiences, selectedFiles);
+        setFieldErrors(errs);
+        if (Object.keys(errs).length > 0) {
+            setError('Please fix the errors above before saving.');
+            return;
+        }
+
+        setSaving(true);
         try {
             const uploadedUrls = await uploadSelectedFiles();
-
-            const nextProfile = {
-                ...profile,
-                ...uploadedUrls,
-            };
+            const nextProfile = { ...profile, ...uploadedUrls };
 
             await jockeyApi.updateJockeyVerification({
-                weightKg: Number(nextProfile.weightKg ?? 65),
-                yearsOfExperience: Number(nextProfile.yearsOfExperience ?? 5),
-                healthStatus: nextProfile.healthStatus || 'Injured',
+                weightKg: Number(nextProfile.weightKg),
+                yearsOfExperience: Number(nextProfile.yearsOfExperience),
+                healthStatus: nextProfile.healthStatus,
                 certificateNo: nextProfile.certificateNo,
                 certificateFileUrl: nextProfile.certificateFileUrl,
                 profileImageUrl: nextProfile.profileImageUrl,
@@ -130,8 +210,12 @@ function JockeySetting() {
             });
 
             setProfile(nextProfile);
+            setOriginalProfile(nextProfile);
+            setOriginalDistExp(distanceExperiences);
+            setOriginalBreedExp(breedExperiences);
             setSelectedFiles({});
             setPreviewUrls({});
+            setFieldErrors({});
             setSuccess('Profile submitted. Please wait for admin approval.');
         } catch (err) {
             setError(err.message || 'Failed to save');
@@ -201,40 +285,61 @@ function JockeySetting() {
 
                     <div className="grid gap-4">
                         <div className="grid grid-cols-2 gap-4">
+                            {/* Weight */}
                             <article className={`${panelClass} p-5 text-center`}>
                                 <FaWeight className="mx-auto text-[1.3rem] text-[var(--admin-primary)]" />
                                 <p className="mt-2 text-[0.8rem] text-[var(--admin-muted)]">Weight (kg)</p>
                                 <input
                                     type="number"
+                                    min="30"
+                                    max="130"
                                     value={profile?.weightKg ?? ''}
-                                    onChange={(e) => setProfile(prev => ({ ...prev, weightKg: e.target.value }))}
-                                    className="mt-1 w-full rounded-md border border-[var(--admin-border)] px-2 py-1 text-center text-[1.2rem] font-bold outline-none focus:border-[var(--admin-primary)]"
+                                    onChange={(e) => {
+                                        setProfile(prev => ({ ...prev, weightKg: e.target.value }));
+                                        setFieldErrors(prev => ({ ...prev, weightKg: undefined }));
+                                    }}
+                                    className={`mt-1 w-full rounded-md border px-2 py-1 text-center text-[1.2rem] font-bold outline-none focus:border-[var(--admin-primary)] ${fieldErrors.weightKg ? 'border-red-400 bg-red-50' : 'border-[var(--admin-border)]'}`}
                                 />
+                                <ErrMsg msg={fieldErrors.weightKg} />
                             </article>
+
+                            {/* Health */}
                             <article className={`${panelClass} p-5 text-center`}>
                                 <FaShieldAlt className="mx-auto text-[1.3rem] text-[#12a150]" />
                                 <p className="mt-2 text-[0.8rem] text-[var(--admin-muted)]">Health</p>
                                 <select
                                     value={profile?.healthStatus ?? ''}
-                                    onChange={(e) => setProfile(prev => ({ ...prev, healthStatus: e.target.value }))}
-                                    className="mt-1 w-full rounded-md border border-[var(--admin-border)] px-2 py-1 text-center text-[1rem] font-bold text-[#12a150] outline-none focus:border-[var(--admin-primary)]"
+                                    onChange={(e) => {
+                                        setProfile(prev => ({ ...prev, healthStatus: e.target.value }));
+                                        setFieldErrors(prev => ({ ...prev, healthStatus: undefined }));
+                                    }}
+                                    className={`mt-1 w-full rounded-md border px-2 py-1 text-center text-[1rem] font-bold text-[#12a150] outline-none focus:border-[var(--admin-primary)] ${fieldErrors.healthStatus ? 'border-red-400 bg-red-50' : 'border-[var(--admin-border)]'}`}
                                 >
                                     <option value="">-- Select --</option>
                                     {options?.healthStatuses?.map((status) => (
                                         <option key={status} value={status}>{status}</option>
                                     ))}
                                 </select>
+                                <ErrMsg msg={fieldErrors.healthStatus} />
                             </article>
                         </div>
+
+                        {/* Experience */}
                         <article className={`${panelClass} p-6`}>
                             <p className="text-[0.75rem] font-black uppercase tracking-wide text-[var(--admin-muted)]">Experience (years)</p>
                             <input
                                 type="number"
                                 min="0"
+                                max="50"
+                                step="1"
                                 value={profile?.yearsOfExperience ?? ''}
-                                onChange={(e) => setProfile(prev => ({ ...prev, yearsOfExperience: e.target.value }))}
-                                className="mt-2 w-32 rounded-md border border-[var(--admin-border)] px-3 py-2 text-[1.5rem] font-light text-[var(--admin-primary-dark)] outline-none focus:border-[var(--admin-primary)]"
+                                onChange={(e) => {
+                                    setProfile(prev => ({ ...prev, yearsOfExperience: e.target.value }));
+                                    setFieldErrors(prev => ({ ...prev, yearsOfExperience: undefined }));
+                                }}
+                                className={`mt-2 w-32 rounded-md border px-3 py-2 text-[1.5rem] font-light text-[var(--admin-primary-dark)] outline-none focus:border-[var(--admin-primary)] ${fieldErrors.yearsOfExperience ? 'border-red-400 bg-red-50' : 'border-[var(--admin-border)]'}`}
                             />
+                            <ErrMsg msg={fieldErrors.yearsOfExperience} />
                         </article>
                     </div>
                 </section>
@@ -242,7 +347,7 @@ function JockeySetting() {
                 {/* Verification Documents */}
                 <section className={`${panelClass} p-7`}>
                     <h2 className="text-[1.5rem] font-bold">Verification Documents</h2>
-                    <p className="mt-1 text-[0.85rem] text-[var(--admin-muted)]">Upload and manage required verification documents.</p>
+                    <p className="mt-1 text-[0.85rem] text-[var(--admin-muted)]">Max {MAX_FILE_MB} MB per file. Images: jpg/png/webp. Certificate/Health: image or PDF.</p>
 
                     <div className="mt-6 grid grid-cols-2 gap-4 max-[720px]:grid-cols-1">
                         {/* Profile Avatar */}
@@ -258,15 +363,12 @@ function JockeySetting() {
                                     </div>
                                 )}
                             </div>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleFileChange('profileImageUrl')}
-                                className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none focus:border-[var(--admin-primary)]"
-                            />
+                            <input type="file" accept="image/*" onChange={handleFileChange('profileImageUrl')}
+                                className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none" />
+                            <ErrMsg msg={fileErrors.profileImageUrl} />
                         </div>
 
-                        {/* National ID Front */}
+                        {/* ID Front */}
                         <div className="rounded-lg border border-[var(--admin-border)] p-4">
                             <p className="mb-3 text-[0.85rem] font-bold">National ID - Front</p>
                             <div className="mb-3 flex min-h-[140px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-[var(--admin-border)] bg-[#faf8f8] p-4">
@@ -279,15 +381,12 @@ function JockeySetting() {
                                     </div>
                                 )}
                             </div>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleFileChange('idCardFrontUrl')}
-                                className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none focus:border-[var(--admin-primary)]"
-                            />
+                            <input type="file" accept="image/*" onChange={handleFileChange('idCardFrontUrl')}
+                                className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none" />
+                            <ErrMsg msg={fileErrors.idCardFrontUrl} />
                         </div>
 
-                        {/* National ID Back */}
+                        {/* ID Back */}
                         <div className="rounded-lg border border-[var(--admin-border)] p-4">
                             <p className="mb-3 text-[0.85rem] font-bold">National ID - Back</p>
                             <div className="mb-3 flex min-h-[140px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-[var(--admin-border)] bg-[#faf8f8] p-4">
@@ -300,15 +399,12 @@ function JockeySetting() {
                                     </div>
                                 )}
                             </div>
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={handleFileChange('idCardBackUrl')}
-                                className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none focus:border-[var(--admin-primary)]"
-                            />
+                            <input type="file" accept="image/*" onChange={handleFileChange('idCardBackUrl')}
+                                className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none" />
+                            <ErrMsg msg={fileErrors.idCardBackUrl} />
                         </div>
 
-                        {/* Horse Racing Certificate */}
+                        {/* Certificate */}
                         <div className="rounded-lg border border-[var(--admin-border)] p-4">
                             <p className="mb-3 text-[0.85rem] font-bold">Horse Racing Certificate</p>
                             {(selectedFiles.certificateFileUrl || profile?.certificateFileUrl) && (
@@ -320,24 +416,25 @@ function JockeySetting() {
                                 </div>
                             )}
                             <div className="mb-2">
-                                <label className="mb-1 block text-[0.72rem] font-bold uppercase text-[var(--admin-muted)]">Certificate No</label>
+                                <label className="mb-1 block text-[0.72rem] font-bold uppercase text-[var(--admin-muted)]">Certificate No <span className="text-red-500">*</span></label>
                                 <input
                                     value={profile?.certificateNo ?? ''}
-                                    onChange={e => setProfile(prev => ({ ...prev, certificateNo: e.target.value }))}
+                                    onChange={e => {
+                                        setProfile(prev => ({ ...prev, certificateNo: e.target.value }));
+                                        setFieldErrors(prev => ({ ...prev, certificateNo: undefined }));
+                                    }}
                                     placeholder="e.g. CERT-2024-001"
-                                    className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none focus:border-[var(--admin-primary)]"
+                                    className={`w-full rounded-md border px-3 py-2 text-[0.82rem] outline-none focus:border-[var(--admin-primary)] ${fieldErrors.certificateNo ? 'border-red-400 bg-red-50' : 'border-[var(--admin-border)]'}`}
                                 />
+                                <ErrMsg msg={fieldErrors.certificateNo} />
                             </div>
-                            <input
-                                type="file"
-                                accept="image/*,application/pdf"
-                                onChange={handleFileChange('certificateFileUrl')}
-                                className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none focus:border-[var(--admin-primary)]"
-                            />
+                            <input type="file" accept="image/*,application/pdf" onChange={handleFileChange('certificateFileUrl')}
+                                className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none" />
+                            <ErrMsg msg={fileErrors.certificateFileUrl} />
                         </div>
                     </div>
 
-                    {/* Health Certificate - full width */}
+                    {/* Health Certificate */}
                     <div className="mt-4 rounded-lg border border-[var(--admin-border)] p-4">
                         <p className="mb-3 text-[0.85rem] font-bold">Health Examination Certificate</p>
                         {(selectedFiles.healthCertificateUrl || profile?.healthCertificateUrl) && (
@@ -346,19 +443,16 @@ function JockeySetting() {
                                 <span className="truncate">{selectedFiles.healthCertificateUrl?.name ?? profile?.healthCertificateUrl}</span>
                             </div>
                         )}
-                        <input
-                            type="file"
-                            accept="image/*,application/pdf"
-                            onChange={handleFileChange('healthCertificateUrl')}
-                            className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none focus:border-[var(--admin-primary)]"
-                        />
+                        <input type="file" accept="image/*,application/pdf" onChange={handleFileChange('healthCertificateUrl')}
+                            className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none" />
+                        <ErrMsg msg={fileErrors.healthCertificateUrl} />
                     </div>
                 </section>
 
                 {/* Distance Experience */}
                 <section className={`${panelClass} p-7`}>
                     <h2 className="text-[1.5rem] font-bold">Distance Experience</h2>
-                    <p className="mt-1 text-[0.85rem] text-[var(--admin-muted)]">3 fixed race distances • each row = 1 jockey_distance_experiences record</p>
+                    <p className="mt-1 text-[0.85rem] text-[var(--admin-muted)]">3 fixed race distances • select a skill level for each.</p>
                     <div className="mt-7 grid gap-7">
                         {options?.distanceOptions?.map((item) => {
                             const current = distanceExperiences.find(e => e.distanceMeters === item.distanceMeters);
@@ -384,12 +478,13 @@ function JockeySetting() {
                             );
                         })}
                     </div>
+                    <ErrMsg msg={fieldErrors.distanceExperiences} />
                 </section>
 
                 {/* Breed Experience */}
                 <section className={`${panelClass} p-7`}>
                     <h2 className="text-[1.5rem] font-bold">Breed Experience</h2>
-                    <p className="mt-1 text-[0.85rem] text-[var(--admin-muted)]">Only 8 horse breeds available • each row = 1 jockey_breed_experiences record</p>
+                    <p className="mt-1 text-[0.85rem] text-[var(--admin-muted)]">Only 8 horse breeds available • each row = 1 breed record</p>
                     <div className="mt-6 grid gap-4">
                         {breedExperiences.map((breed) => (
                             <article key={breed.breedId} className="flex items-center justify-between rounded-lg border border-[var(--admin-border)] bg-[#fff8f6] p-4 max-[720px]:flex-col max-[720px]:items-start max-[720px]:gap-3">
@@ -397,9 +492,7 @@ function JockeySetting() {
                                     <div className="grid h-10 w-10 place-items-center rounded-md bg-white text-[var(--admin-primary)]">
                                         <FaPaw />
                                     </div>
-                                    <div>
-                                        <strong>{breed.breedName}</strong>
-                                    </div>
+                                    <strong>{breed.breedName}</strong>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <span className="rounded-full bg-[var(--admin-primary)] px-4 py-1 text-[0.8rem] font-bold text-white">
@@ -417,9 +510,11 @@ function JockeySetting() {
                         <div className="grid grid-cols-[1fr_1fr_auto] gap-4 max-[980px]:grid-cols-1">
                             <select value={selectedBreed} onChange={(e) => setSelectedBreed(e.target.value)} className="rounded-md border border-[var(--admin-border)] px-4 py-3">
                                 <option value="">Choose a breed...</option>
-                                {breeds.map((b) => (
-                                    <option key={b.breedId} value={b.breedId}>{b.breedName}</option>
-                                ))}
+                                {breeds
+                                    .filter(b => !breedExperiences.find(e => e.breedId === b.breedId))
+                                    .map((b) => (
+                                        <option key={b.breedId} value={b.breedId}>{b.breedName}</option>
+                                    ))}
                             </select>
                             <select value={selectedLevel} onChange={(e) => setSelectedLevel(e.target.value)} className="rounded-md border border-[var(--admin-border)] px-4 py-3">
                                 <option value="">Choose level...</option>
@@ -427,7 +522,12 @@ function JockeySetting() {
                                     <option key={level} value={level}>{level}</option>
                                 ))}
                             </select>
-                            <button onClick={addBreed} type="button" className="inline-flex items-center justify-center gap-2 rounded-md border border-blue-700 px-5 py-3 font-bold text-blue-700">
+                            <button
+                                onClick={addBreed}
+                                disabled={!selectedBreed || !selectedLevel}
+                                type="button"
+                                className="inline-flex items-center justify-center gap-2 rounded-md border border-blue-700 px-5 py-3 font-bold text-blue-700 disabled:opacity-40"
+                            >
                                 <FaPlus /> Add Breed
                             </button>
                         </div>
@@ -435,12 +535,20 @@ function JockeySetting() {
                 </section>
 
                 {/* Error/Success */}
-                {error && <p style={{ color: '#721c24', fontSize: '13px' }}>{error}</p>}
-                {success && <p style={{ color: '#155724', fontSize: '13px' }}>{success}</p>}
+                {error && (
+                    <div style={{ backgroundColor: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#991b1b', fontWeight: 600 }}>
+                        ⚠️ {error}
+                    </div>
+                )}
+                {success && (
+                    <div style={{ backgroundColor: '#dcfce7', border: '1px solid #86efac', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#15803d', fontWeight: 600 }}>
+                        ✅ {success}
+                    </div>
+                )}
 
                 {/* Actions */}
                 <div className="flex justify-end gap-4">
-                    <button type="button" className="rounded-md border border-[#b89d36] px-8 py-3 font-bold text-[#8b7515]">
+                    <button type="button" onClick={handleCancel} className="rounded-md border border-[#b89d36] px-8 py-3 font-bold text-[#8b7515]">
                         Cancel Changes
                     </button>
                     <button

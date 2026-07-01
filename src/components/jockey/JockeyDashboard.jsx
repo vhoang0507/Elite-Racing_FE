@@ -31,6 +31,8 @@ function JockeyDashboard() {
     const today = new Date();
     const [calendarMonth, setCalendarMonth] = useState(today.getMonth());
     const [calendarYear, setCalendarYear] = useState(today.getFullYear());
+    const [calendarData, setCalendarData] = useState(null);
+    const [calLoading, setCalLoading] = useState(false);
 
     useEffect(() => {
         const fetchAll = async () => {
@@ -48,6 +50,17 @@ function JockeyDashboard() {
         };
         fetchAll();
     }, []);
+
+    useEffect(() => {
+        setCalLoading(true);
+        const monthStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}`;
+        jockeyApi.getJockeyCalendar(monthStr)
+            .then(setCalendarData)
+            .catch(() => setCalendarData(null))
+            .finally(() => setCalLoading(false));
+    }, [calendarYear, calendarMonth]);
+
+    const getDayStatus = (day) => calendarData?.days?.find(d => d.dayNumber === day) ?? null;
 
     const handleAccept = async (invId) => {
         try {
@@ -218,20 +231,56 @@ function JockeyDashboard() {
                             <div className="grid grid-cols-7 gap-0 text-center text-[0.7rem] font-bold uppercase text-[var(--admin-muted)]">
                                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <span key={i} className="py-1">{d}</span>)}
                             </div>
-                            <div className="grid grid-cols-7 gap-0 text-center text-[0.82rem]">
-                                {leadingDays.map((day, i) => (
-                                    <span key={`lead-${i}`} className="grid h-8 place-items-center text-[#ccc]">{day}</span>
-                                ))}
-                                {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => (
-                                    <span key={day} className="grid h-8 place-items-center rounded-sm bg-[#e8f7ef] text-[var(--admin-ink)]">
-                                        {day}
-                                    </span>
-                                ))}
-                            </div>
-                            <div className="mt-4 flex items-center gap-4 text-[0.72rem] text-[var(--admin-muted)]">
+                            {calLoading ? (
+                                <p style={{ textAlign: 'center', padding: '16px 0', fontSize: 12, color: '#94a3b8' }}>Loading...</p>
+                            ) : (
+                                <div className="grid grid-cols-7 gap-0 text-center text-[0.82rem]">
+                                    {leadingDays.map((day, i) => (
+                                        <span key={`lead-${i}`} className="grid h-8 place-items-center text-[#ccc]">{day}</span>
+                                    ))}
+                                    {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
+                                        const dayData = getDayStatus(day);
+                                        const isRace = dayData?.status === 'RacingDay' || (dayData?.races?.length > 0);
+                                        const isUnavail = dayData?.status === 'Unavailable';
+                                        const isTod = day === today.getDate()
+                                            && calendarMonth === today.getMonth()
+                                            && calendarYear === today.getFullYear();
+                                        return (
+                                            <span
+                                                key={day}
+                                                style={{
+                                                    display: 'grid',
+                                                    height: 32,
+                                                    placeItems: 'center',
+                                                    borderRadius: isTod ? '50%' : 4,
+                                                    backgroundColor: isTod ? '#3b82f6' : isRace ? '#dcfce7' : isUnavail ? '#fee2e2' : 'transparent',
+                                                    color: isTod ? '#fff' : isRace ? '#15803d' : isUnavail ? '#dc2626' : 'inherit',
+                                                    fontWeight: isTod || isRace ? 700 : 400,
+                                                    position: 'relative',
+                                                }}
+                                                title={isRace ? (dayData?.races?.map(r => r.raceName).join(', ') ?? 'Race day') : undefined}
+                                            >
+                                                {day}
+                                                {isRace && !isTod && (
+                                                    <span style={{ position: 'absolute', bottom: 2, width: 4, height: 4, borderRadius: '50%', backgroundColor: '#16a34a' }} />
+                                                )}
+                                            </span>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                            <div className="mt-4 flex items-center gap-3 text-[0.72rem] text-[var(--admin-muted)]">
                                 <span className="flex items-center gap-1.5">
-                                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#e8f7ef]"></span>
-                                    Available
+                                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#3b82f6]"></span>
+                                    Today
+                                </span>
+                                <span className="flex items-center gap-1.5">
+                                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#dcfce7] border border-[#86efac]"></span>
+                                    Race Day
+                                </span>
+                                <span className="flex items-center gap-1.5">
+                                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#fee2e2] border border-[#fca5a5]"></span>
+                                    Unavailable
                                 </span>
                             </div>
                         </div>

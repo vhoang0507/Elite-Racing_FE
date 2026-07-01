@@ -98,15 +98,7 @@ function NotificationDetailModal({ notification, onClose, onNavigate }) {
                 </div>
 
                 {/* Footer */}
-                <div style={{ padding: '14px 20px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
-                    {notification.actionUrl && (
-                        <button
-                            onClick={() => onNavigate(notification.actionUrl)}
-                            style={{ backgroundColor: '#0b7f5a', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}
-                        >
-                            View Details →
-                        </button>
-                    )}
+                <div style={{ padding: '14px 20px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end' }}>
                     <button
                         onClick={onClose}
                         style={{ backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #dce5ef', borderRadius: 8, padding: '9px 18px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}

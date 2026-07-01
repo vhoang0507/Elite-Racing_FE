@@ -3,6 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
 
+const STATUS_CFG = {
+    Pending:   { bg: '#fef9c3', color: '#92400e', border: '#fde68a' },
+    Rejected:  { bg: '#fee2e2', color: '#991b1b', border: '#fca5a5' },
+    Cancelled: { bg: '#f1f5f9', color: '#64748b', border: '#cbd5e1' },
+};
+
 export default function PendingRegistrations({ onViewStatus }) {
     const navigate = useNavigate();
     const [data, setData] = useState([]);
@@ -26,12 +32,13 @@ export default function PendingRegistrations({ onViewStatus }) {
           )
         : data;
 
-    if (loading) return <p style={{ textAlign: "center", color: "#999" }}>Loading...</p>;
-
     return (
         <section style={styles.section}>
             <div style={styles.header}>
-                <h3 style={{ margin: 0 }}>Pending Approval Registrations</h3>
+                <div>
+                    <p style={styles.title}>Pending Approval Registrations</p>
+                    <p style={styles.sub}>{data.length} registration{data.length !== 1 ? 's' : ''} awaiting review</p>
+                </div>
                 <span style={styles.badge}>⏳ Waiting for Admin review</span>
             </div>
 
@@ -40,55 +47,82 @@ export default function PendingRegistrations({ onViewStatus }) {
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     placeholder="Search tournament or horse..."
-                    style={{ height: 34, width: '100%', maxWidth: 320, borderRadius: 8, border: '1px solid #ddd', padding: '0 12px', fontSize: '0.82rem', outline: 'none', boxSizing: 'border-box' }}
+                    style={styles.searchInput}
                 />
             </div>
 
-            <table style={styles.table}>
-                <thead>
-                    <tr>
-                        {["Tournament", "Horse", "Reg Date", "Status", "Note", "Action"].map(h => (
-                            <th key={h} style={styles.th}>{h}</th>
-                        ))}
-                    </tr>
-                </thead>
-                <tbody>
-                    {filteredData.length === 0 ? (
-                        <tr>
-                            <td colSpan={6} style={{ textAlign: "center", padding: "24px", color: "#999" }}>
-                                {data.length === 0 ? 'No pending registrations' : 'No registrations match your search.'}
-                            </td>
-                        </tr>
-                    ) : (
-                        filteredData.map((row) => (
-                            <tr key={row.registrationId} style={styles.tr}>
-                                <td style={styles.td}>{row.tournamentName}</td>
-                                <td style={styles.td}>{row.horseName}</td>
-                                <td style={styles.td}>{row.regDate}</td>
-                                <td style={styles.td}>
-                                    <span style={styles.pendingBadge}>{row.status}</span>
-                                </td>
-                                <td style={styles.td}>{row.adminNote || "-"}</td>
-                                <td style={styles.td}>
-                                    <button style={styles.viewBtn} onClick={() => onViewStatus && onViewStatus(row.registrationId)}>View Status</button>
-                                </td>
+            {loading ? (
+                <p style={styles.center}>Loading...</p>
+            ) : (
+                <div style={styles.tableWrap}>
+                    <table style={styles.table}>
+                        <thead>
+                            <tr style={styles.headRow}>
+                                {["Tournament", "Horse", "Reg Date", "Status", "Note", "Action"].map(h => (
+                                    <th key={h} style={styles.th}>{h}</th>
+                                ))}
                             </tr>
-                        ))
-                    )}
-                </tbody>
-            </table>
+                        </thead>
+                        <tbody>
+                            {filteredData.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} style={styles.emptyCell}>
+                                        {data.length === 0 ? 'No pending registrations' : 'No registrations match your search.'}
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredData.map((row, i) => {
+                                    const cfg = STATUS_CFG[row.status] ?? { bg: '#f1f5f9', color: '#64748b', border: '#cbd5e1' };
+                                    return (
+                                        <tr key={row.registrationId} style={{ ...styles.row, backgroundColor: i % 2 === 0 ? '#fff' : '#faf7f5' }}>
+                                            <td style={styles.td}><span style={styles.bold}>{row.tournamentName}</span></td>
+                                            <td style={styles.td}>{row.horseName}</td>
+                                            <td style={styles.td}><span style={styles.date}>{row.regDate}</span></td>
+                                            <td style={styles.td}>
+                                                <span style={{ ...styles.statusBadge, backgroundColor: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>
+                                                    {row.status}
+                                                </span>
+                                            </td>
+                                            <td style={styles.td}><span style={styles.note}>{row.adminNote || "—"}</span></td>
+                                            <td style={styles.td}>
+                                                <button
+                                                    style={styles.viewBtn}
+                                                    onClick={() => onViewStatus && onViewStatus(row.registrationId)}
+                                                    type="button"
+                                                >
+                                                    View Status
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            )}
         </section>
     );
 }
 
 const styles = {
-    section: { backgroundColor: "#fff", borderRadius: "12px", padding: "20px", border: "1px solid #eee", marginBottom: "24px" },
-    header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" },
-    badge: { fontSize: "12px", backgroundColor: "#fff3cd", color: "#856404", padding: "4px 10px", borderRadius: "10px" },
+    section: { backgroundColor: "#fff", borderRadius: 14, border: "1px solid #e8ddd9", overflow: "hidden", marginBottom: 24 },
+    header: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", backgroundColor: "#faf7f5", borderBottom: "1px solid #f0ebe8" },
+    title: { margin: 0, fontSize: 15, fontWeight: 700, color: "#1e293b" },
+    sub: { margin: "2px 0 0", fontSize: 12, color: "#94a3b8" },
+    badge: { fontSize: 12, backgroundColor: "#fef9c3", color: "#856404", padding: "4px 10px", borderRadius: 10, fontWeight: 600 },
+    searchInput: { height: 34, width: "100%", maxWidth: 320, borderRadius: 8, border: "1px solid #e8ddd9", padding: "0 12px", fontSize: "0.82rem", outline: "none", boxSizing: "border-box", margin: "12px 20px 0" },
+    center: { textAlign: "center", color: "#999", padding: "24px 0" },
+    tableWrap: { overflowX: "auto" },
     table: { width: "100%", borderCollapse: "collapse" },
-    th: { textAlign: "left", padding: "10px 12px", fontSize: "12px", color: "#999", fontWeight: "600", textTransform: "uppercase", borderBottom: "1px solid #eee" },
-    tr: { borderBottom: "1px solid #f5f5f5" },
-    td: { padding: "12px", fontSize: "14px" },
-    pendingBadge: { backgroundColor: "#fff3cd", color: "#856404", padding: "3px 10px", borderRadius: "20px", fontSize: "12px" },
-    viewBtn: { background: "none", border: "1px solid #ddd", borderRadius: "6px", padding: "5px 12px", cursor: "pointer", fontSize: "13px" },
+    headRow: { backgroundColor: "#f8f4f2" },
+    th: { textAlign: "left", padding: "10px 16px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#64748b", borderBottom: "1px solid #e8ddd9" },
+    row: { borderBottom: "1px solid #f0ebe8" },
+    td: { padding: "12px 16px", fontSize: 13, verticalAlign: "middle" },
+    bold: { fontWeight: 600, color: "#1e293b" },
+    date: { fontSize: 12, color: "#64748b" },
+    note: { fontSize: 12, color: "#94a3b8", fontStyle: "italic" },
+    statusBadge: { fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "3px 10px", display: "inline-block" },
+    emptyCell: { textAlign: "center", padding: "28px", color: "#94a3b8", fontSize: 13 },
+    viewBtn: { border: "1px solid #e8ddd9", borderRadius: 8, backgroundColor: "#fff", padding: "5px 14px", cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#374151" },
 };

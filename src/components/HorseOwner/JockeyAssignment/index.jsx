@@ -212,6 +212,7 @@ export default function JockeyAssignment() {
                                         healthStatus={healthStatus}
                                         disableInvite={!canSendInvitation}
                                         onInvite={setSelectedJockey}
+                                        refreshKey={gridKey}
                                     />
                                 ) : (
                                     <div style={styles.noInviteBox}>

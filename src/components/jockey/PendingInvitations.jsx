@@ -106,12 +106,15 @@ function PendingInvitations() {
     const [search, setSearch] = useState('');
     const { toast, showToast, hideToast } = useToast();
 
+    // Hide cancelled invitations — owner confirmed another jockey, nothing for jockey to act on
+    const activeInvitations = invitations.filter(inv => inv.status !== 'Cancelled');
+
     const filteredInvitations = search.trim()
-        ? invitations.filter(inv =>
+        ? activeInvitations.filter(inv =>
             [inv.tournamentName, inv.horseName, inv.ownerName, inv.raceName]
                 .some(v => String(v || '').toLowerCase().includes(search.trim().toLowerCase()))
           )
-        : invitations;
+        : activeInvitations;
 
     useEffect(() => {
         setLoading(true);
