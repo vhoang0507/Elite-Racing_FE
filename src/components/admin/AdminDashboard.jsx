@@ -8,7 +8,7 @@ import {
     FaChartLine,
     FaCheck,
     FaClipboardCheck,
-    FaEllipsisV,
+    FaEye,
     FaFlagCheckered,
     FaTimes,
     FaTrophy,
@@ -104,6 +104,7 @@ function AdminDashboard() {
     });
     const [isLoading, setIsLoading] = useState(true);
     const [query, setQuery] = useState('');
+    const [selectedTournament, setSelectedTournament] = useState(null);
     const [selectedUser, setSelectedUser] = useState(null);
 
     const todayLabel = useMemo(() => new Intl.DateTimeFormat('en-US', {
@@ -230,7 +231,7 @@ function AdminDashboard() {
                                             <th className={tableHeadClass}>Registration Deadline</th>
                                             <th className={tableHeadClass}>Entries</th>
                                             <th className={tableHeadClass}>Status</th>
-                                            <th className={`${tableHeadClass} text-right`}>Actions</th>
+                                            <th className={`${tableHeadClass} text-right`}>Details</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -244,9 +245,9 @@ function AdminDashboard() {
                                                     <strong className="block">{tournament.name}</strong>
                                                     <span className="mt-1 block text-[var(--admin-muted)]">{tournament.description}</span>
                                                 </td>
-                                                <td className={tableCellClass(isLast)}>{adminApi.formatters.toDateLabel(tournament.raceDate)}</td>
+                                                <td className={tableCellClass(isLast)}>{adminApi.formatters.toDateLabel(tournament.endDate)}</td>
                                                 <td className={tableCellClass(isLast)}>
-                                                    <span className="block">{adminApi.formatters.toDateLabel(tournament.registrationDeadline)}</span>
+                                                    <span className="block">{adminApi.formatters.toDateLabel(tournament.startDate)}</span>
                                                     {deadlineWarning && (
                                                         <small className={`mt-1 block text-[0.72rem] font-black ${deadlineClass[deadlineWarning.type] || deadlineClass.warning}`}>
                                                             {deadlineWarning.text}
@@ -260,8 +261,8 @@ function AdminDashboard() {
                                                     </span>
                                                 </td>
                                                 <td className={tableCellClass(isLast, 'right')}>
-                                                    <button aria-label={`Actions for ${tournament.name}`} className="inline-grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md bg-transparent text-[var(--admin-muted)] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]" type="button">
-                                                        <FaEllipsisV aria-hidden="true" />
+                                                    <button aria-label={`View details for ${tournament.name}`} className="inline-grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-full bg-[#e8f7ef] text-[var(--admin-primary)] hover:bg-[#d7f2e4]" onClick={() => setSelectedTournament(tournament)} type="button">
+                                                        <FaEye aria-hidden="true" />
                                                     </button>
                                                 </td>
                                             </tr>
@@ -272,6 +273,58 @@ function AdminDashboard() {
                             </div>
                         </div>
                     </section>
+
+                    {selectedTournament && (
+                        <div className="fixed inset-0 z-20 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={() => setSelectedTournament(null)} role="presentation">
+                            <section
+                                aria-label={`Details for ${selectedTournament.name}`}
+                                className="grid w-[min(560px,100%)] gap-5 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 shadow-[0_20px_48px_rgba(45,32,32,0.22)]"
+                                onClick={(event) => event.stopPropagation()}
+                                role="dialog"
+                            >
+                                <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                        <h2 className="m-0 text-[1.35rem] leading-[1.15] text-[var(--admin-primary-dark)]">{selectedTournament.name}</h2>
+                                        <span className="mt-2 inline-flex text-[0.8rem] font-black text-[var(--admin-muted)]">{selectedTournament.description || 'No description'}</span>
+                                    </div>
+                                    <button aria-label="Close tournament details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={() => setSelectedTournament(null)} type="button">
+                                        <FaTimes aria-hidden="true" />
+                                    </button>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3 text-[0.9rem] max-[560px]:grid-cols-1">
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.7rem] font-black uppercase text-[#64748b]">Race Date</span>
+                                        <strong className="text-[var(--admin-ink)]">{adminApi.formatters.toDateLabel(selectedTournament.endDate) || '-'}</strong>
+                                    </div>
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.7rem] font-black uppercase text-[#64748b]">Registration Deadline</span>
+                                        <strong>{adminApi.formatters.toDateLabel(selectedTournament.startDate) || '-'}</strong>
+                                    </div>
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.7rem] font-black uppercase text-[#64748b]">Entries</span>
+                                        <strong>{selectedTournament.registeredHorses}/{selectedTournament.maxHorses}</strong>
+                                    </div>
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.7rem] font-black uppercase text-[#64748b]">Status</span>
+                                        <strong className="text-[var(--admin-primary)]">{adminApi.formatters.formatTournamentStatus(selectedTournament.status)}</strong>
+                                    </div>
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.7rem] font-black uppercase text-[#64748b]">Location</span>
+                                        <strong>{selectedTournament.location || selectedTournament.city || '-'}</strong>
+                                    </div>
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.7rem] font-black uppercase text-[#64748b]">Prize Pool</span>
+                                        <strong>{adminApi.formatters.toMoney(selectedTournament.prizePool)}</strong>
+                                    </div>
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.7rem] font-black uppercase text-[#64748b]">Referee</span>
+                                        <strong>{selectedTournament.referee || 'Unassigned'}</strong>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    )}
 
                     <section className="grid grid-cols-1 gap-7">
                         <div className={panelClass}>
@@ -289,7 +342,7 @@ function AdminDashboard() {
                                             <th className={tableHeadClass}>Role</th>
                                             <th className={tableHeadClass}>Status</th>
                                             <th className={tableHeadClass}>Verified</th>
-                                            <th className={`${tableHeadClass} text-right`}>Actions</th>
+                                            <th className={`${tableHeadClass} text-right`}>Details</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -323,7 +376,9 @@ function AdminDashboard() {
                                                         </span>
                                                     </td>
                                                     <td className={tableCellClass(isLast, 'right')}>
-                                                        <button className="min-h-6 cursor-pointer rounded-full bg-[#e8f7ef] px-[9px] text-[0.68rem] font-[850] text-[var(--admin-primary)]" onClick={() => setSelectedUser(user)} type="button">Details</button>
+                                                        <button aria-label={`View details for ${user.name}`} className="inline-grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-full bg-[#e8f7ef] text-[var(--admin-primary)] hover:bg-[#d7f2e4]" onClick={() => setSelectedUser(user)} type="button">
+                                                            <FaEye aria-hidden="true" />
+                                                        </button>
                                                     </td>
                                                 </tr>
                                             );

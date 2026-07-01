@@ -455,7 +455,7 @@ function UserManagement() {
                                 </span>
                             </label>
 
-                            <button className="h-[38px] min-w-[92px] cursor-pointer rounded-md border-0 bg-[var(--admin-primary)] font-normal text-white hover:bg-[var(--admin-primary-dark)] max-[780px]:w-full" onClick={() => navigate('/admin/referees/create')} type="button">Create Referee Account</button>
+                            <button className="h-[38px] min-w-[132px] cursor-pointer rounded-md border-0 bg-[var(--admin-primary)] px-4 font-normal text-white hover:bg-[var(--admin-primary-dark)] max-[780px]:w-full" onClick={() => navigate('/admin/referees/create')} type="button">Create Referee</button>
                         </div>
                     </div>
 
@@ -483,7 +483,7 @@ function UserManagement() {
                             <table className="w-full border-collapse max-[780px]:min-w-[920px]">
                                 <thead>
                                     <tr>
-                                        {['User ID', 'Full Name', 'Email', 'Role', 'Status', 'Verified', 'Created At', 'Details'].map((heading) => (
+                                        {['Full Name', 'Email', 'Role', 'Status', 'Verified', 'Created At', 'Details'].map((heading) => (
                                             <th className="whitespace-nowrap border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-5 py-[18px] text-left text-[0.72rem] uppercase text-[#64748b]" key={heading}>
                                                 {heading}
                                             </th>
@@ -493,7 +493,6 @@ function UserManagement() {
                                 <tbody>
                                     {visibleUsers.map((user) => (
                                         <tr key={user.id}>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]">{user.id}</td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]">
                                                 <strong>{user.name}</strong>
                                             </td>
