@@ -4,6 +4,7 @@ import {
     useRef,
     useState,
 } from 'react';
+import ImageLightbox from '../shared/ImageLightbox';
 
 import {
     useNavigate,
@@ -162,17 +163,26 @@ function DocumentPreview({ label, url }) {
                             Open PDF document
                         </a>
                     ) : (
-                        <a href={resolvedUrl} rel="noreferrer" target="_blank">
+                        <button
+                            className="block w-full cursor-pointer border-0 bg-transparent p-0"
+                            onClick={() => setLightboxSrc(resolvedUrl)}
+                            type="button"
+                        >
                             <img
                                 alt={label}
                                 className="h-[132px] w-full rounded-md border border-[var(--admin-border)] object-contain"
                                 src={resolvedUrl}
                             />
-                        </a>
+                        </button>
                     )}
-                    <a className="truncate text-[0.78rem] font-bold text-[var(--admin-primary)]" href={resolvedUrl} rel="noreferrer" target="_blank">
+                    <button
+                        className="truncate border-0 bg-transparent p-0 text-[0.78rem] font-bold text-[var(--admin-primary)] cursor-pointer hover:underline"
+                        onClick={() => !isPdfUrl(url) ? setLightboxSrc(resolvedUrl) : window.open(resolvedUrl, '_blank')}
+                        type="button"
+                    >
                         {fileName || 'Open document'}
-                    </a>
+                    </button>
+                    <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
                 </div>
             ) : (
                 <span className="grid min-h-[132px] place-items-center rounded-md border border-dashed border-[var(--admin-border)] bg-[#fff8f6] text-[0.82rem] font-bold text-[var(--admin-muted)]">

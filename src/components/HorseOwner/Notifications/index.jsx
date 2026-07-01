@@ -49,6 +49,76 @@ function normalizeSummary(summary) {
     };
 }
 
+function NotificationDetailModal({ notification, onClose, onNavigate }) {
+    const Icon = iconByCategory[notification.category] || FaBell;
+    const statusStyle = getStatusStyle(notification.statusLabel);
+    const tag = notification.statusLabel || notification.category;
+
+    return (
+        <div
+            style={{
+                position: 'fixed', inset: 0, zIndex: 200,
+                backgroundColor: 'rgba(0,0,0,0.45)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                padding: '20px',
+            }}
+            onClick={onClose}
+        >
+            <div
+                style={{
+                    backgroundColor: '#fff', borderRadius: '14px',
+                    boxShadow: '0 24px 70px rgba(0,0,0,0.28)',
+                    width: '100%', maxWidth: '480px', overflow: 'hidden',
+                }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '20px', borderBottom: '1px solid #eee' }}>
+                    <span style={{ display: 'grid', placeItems: 'center', width: 42, height: 42, borderRadius: '10px', backgroundColor: '#e8f7ef', color: '#0b7f5a', flexShrink: 0 }}>
+                        <Icon />
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, fontWeight: 700, fontSize: '15px', color: '#0f172a' }}>{notification.title}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                            <FaClock style={{ color: '#64748b', fontSize: '11px' }} />
+                            <span style={{ fontSize: '12px', color: '#64748b' }}>{notification.displayTime}</span>
+                            {tag && (
+                                <span style={{ borderRadius: '999px', padding: '2px 8px', fontSize: '11px', fontWeight: 700, backgroundColor: statusStyle.bg, color: statusStyle.color }}>
+                                    {tag}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                    <button onClick={onClose} style={{ border: '1px solid #dce5ef', borderRadius: 8, background: '#fff8f6', color: '#0b7f5a', fontSize: 16, fontWeight: 800, cursor: 'pointer', width: 32, height: 32 }}>✕</button>
+                </div>
+
+                {/* Body */}
+                <div style={{ padding: '20px' }}>
+                    <p style={{ margin: 0, fontSize: '14px', color: '#374151', lineHeight: 1.6 }}>{notification.message}</p>
+                </div>
+
+                {/* Footer */}
+                <div style={{ padding: '14px 20px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                    {notification.actionUrl && (
+                        <button
+                            onClick={() => onNavigate(notification.actionUrl)}
+                            style={{ backgroundColor: '#0b7f5a', color: '#fff', border: 'none', borderRadius: 8, padding: '9px 18px', cursor: 'pointer', fontSize: '13px', fontWeight: 700 }}
+                        >
+                            View Details →
+                        </button>
+                    )}
+                    <button
+                        onClick={onClose}
+                        style={{ backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #dce5ef', borderRadius: 8, padding: '9px 18px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+                    >
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function Notifications() {
     const [activeTab, setActiveTab] = useState("All");
     const [summary, setSummary] = useState(emptySummary);
@@ -57,6 +127,7 @@ export default function Notifications() {
     const [error, setError] = useState("");
     const [reloadKey, setReloadKey] = useState(0);
     const [markingAll, setMarkingAll] = useState(false);
+    const [selectedNotification, setSelectedNotification] = useState(null);
     const { toast, showToast, hideToast } = useToast();
     const navigate = useNavigate();
 
@@ -138,10 +209,8 @@ export default function Notifications() {
             }
         }
 
-        // Navigate to actionUrl if available
-        if (notification.actionUrl) {
-            navigate(notification.actionUrl);
-        }
+        // Show detail modal
+        setSelectedNotification(notification);
     };
 
     const handleMarkAllRead = async () => {
@@ -270,6 +339,14 @@ export default function Notifications() {
                     })}
                 </div>
             </section>
+
+            {selectedNotification && (
+                <NotificationDetailModal
+                    notification={selectedNotification}
+                    onClose={() => setSelectedNotification(null)}
+                    onNavigate={(url) => { setSelectedNotification(null); navigate(url); }}
+                />
+            )}
 
             <Toast
                 message={toast.message}

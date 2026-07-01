@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
+import ImageLightbox from "../../../shared/ImageLightbox";
 import { resolveFileUrl } from "../../../../api/uploadApi";
 
 const getTournamentStatus = (tournament) => tournament.status ?? tournament.Status ?? "OpenRegistration";
@@ -22,6 +23,7 @@ const registrationStatusLabel = (status) => {
 };
 
 function HealthCertificateLink({ url }) {
+    const [lightboxSrc, setLightboxSrc] = useState(null);
     if (!url) {
         return <span style={styles.certificateMissing}>Health certificate not uploaded</span>;
     }
@@ -29,16 +31,17 @@ function HealthCertificateLink({ url }) {
     const resolvedUrl = resolveFileUrl(url);
 
     return (
-        <a
-            href={resolvedUrl}
-            target="_blank"
-            rel="noreferrer"
-            onClick={(event) => event.stopPropagation()}
-            style={styles.certificateLink}
-        >
-            <img src={resolvedUrl} alt="Health certificate" style={styles.certificateThumb} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-            Health certificate
-        </a>
+        <>
+            <button
+                onClick={(event) => { event.stopPropagation(); setLightboxSrc(resolvedUrl); }}
+                style={{ ...styles.certificateLink, background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: '8px' }}
+                type="button"
+            >
+                <img src={resolvedUrl} alt="Health certificate" style={styles.certificateThumb} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+                Health certificate
+            </button>
+            <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+        </>
     );
 }
 

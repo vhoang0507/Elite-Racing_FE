@@ -12,6 +12,7 @@ import {
     refereeApi,
 } from '../../api/refereeApi';
 import { resolveFileUrl } from '../../api/uploadApi';
+import ImageLightbox from '../shared/ImageLightbox';
 import RefereeLayout from './RefereeLayout';
 import Toast, { useToast } from '../shared/Toast';
 
@@ -53,13 +54,17 @@ function HealthCertificateCell({ url }) {
         );
     }
 
+    const [lightboxSrc, setLightboxSrc] = useState(null);
     const resolvedUrl = resolveFileUrl(url);
 
     return (
-        <a className="inline-flex items-center gap-2 font-bold text-[#0b7f5a] no-underline hover:underline" href={resolvedUrl} target="_blank" rel="noreferrer">
-            <img alt="Health certificate" className="h-8 w-11 rounded border border-[#dce5ef] object-cover" src={resolvedUrl} />
-            View
-        </a>
+        <>
+            <button type="button" className="inline-flex cursor-zoom-in items-center gap-2 border-0 bg-transparent p-0 font-bold text-[#0b7f5a] hover:underline" onClick={() => setLightboxSrc(resolvedUrl)}>
+                <img alt="Health certificate" className="h-8 w-11 rounded border border-[#dce5ef] object-cover" src={resolvedUrl} />
+                View
+            </button>
+            <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+        </>
     );
 }
 
@@ -555,11 +560,6 @@ function PreRaceInspectionRegistry() {
                                                             }
                                                             style={{ fontSize: 13, padding: '6px 10px', borderRadius: 6, border: '1px solid #dce5ef', outline: 'none', width: '100%' }}
                                                         >
-                                                            {statusOptions.map((option) => (
-                                                                <option key={option.value} value={option.value}>
-                                                                    {option.label}
-                                                                </option>
-                                                            ))}
                                                         </select>
 
                                                         <input

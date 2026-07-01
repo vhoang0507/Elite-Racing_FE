@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ownerApi } from "../../../../api/ownerApi";
 import { resolveFileUrl } from "../../../../api/uploadApi";
+import ImageLightbox from "../../../shared/ImageLightbox";
 
 export default function MyHorses() {
     const navigate = useNavigate();
     const [horses, setHorses] = useState([]);
+    const [lightboxSrc, setLightboxSrc] = useState(null);
 
     useEffect(() => {
         let mounted = true;
@@ -16,6 +18,7 @@ export default function MyHorses() {
     }, []);
 
     return (
+        <>
         <section style={styles.section}>
             <div style={styles.header}>
                 <h3 style={{ margin: 0 }}>My Horses</h3>
@@ -44,14 +47,12 @@ export default function MyHorses() {
                                 <span style={styles.tag}>{horse.weightKg}kg</span>
                             </div>
                             {horse.healthCertificateImageUrl ? (
-                                <a
-                                    href={resolveFileUrl(horse.healthCertificateImageUrl)}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    style={styles.certificateLink}
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setLightboxSrc(resolveFileUrl(horse.healthCertificateImageUrl)); }}
+                                    style={{ ...styles.certificateLink, background: 'none', border: 'none', cursor: 'pointer', padding: 0, textAlign: 'left' }}
                                 >
                                     Health certificate uploaded
-                                </a>
+                                </button>
                             ) : (
                                 <span style={styles.certificateMissing}>Health certificate not uploaded</span>
                             )}
@@ -60,6 +61,8 @@ export default function MyHorses() {
                 ))}
             </div>
         </section>
+        <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+        </>
     );
 }
 

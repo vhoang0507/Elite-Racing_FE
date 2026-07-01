@@ -11,6 +11,7 @@ import {
 import JockeyLayout from './JockeyLayout';
 import { jockeyApi } from '../../api/jockeyApi';
 import { resolveFileUrl } from '../../api/uploadApi';
+import ImageLightbox from '../shared/ImageLightbox';
 import Toast, { useToast } from '../shared/Toast';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
@@ -21,13 +22,21 @@ function HealthCertificateLink({ url }) {
         return <span className="text-[var(--admin-muted)]">Not uploaded</span>;
     }
 
+    const [lightboxSrc, setLightboxSrc] = useState(null);
     const resolvedUrl = resolveFileUrl(url);
 
     return (
-        <a className="inline-flex items-center gap-2 font-bold text-[var(--admin-primary)] no-underline hover:underline" href={resolvedUrl} target="_blank" rel="noreferrer">
-            <img alt="Health certificate" className="h-8 w-11 rounded border border-[var(--admin-border)] object-cover" src={resolvedUrl} />
-            Open certificate
-        </a>
+        <>
+            <button
+                className="inline-flex cursor-pointer items-center gap-2 border-0 bg-transparent p-0 font-bold text-[var(--admin-primary)] hover:underline"
+                onClick={() => setLightboxSrc(resolvedUrl)}
+                type="button"
+            >
+                <img alt="Health certificate" className="h-8 w-11 rounded border border-[var(--admin-border)] object-cover" src={resolvedUrl} />
+                Open certificate
+            </button>
+            <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+        </>
     );
 }
 

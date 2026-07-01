@@ -11,6 +11,7 @@ import {
 import JockeyLayout from './JockeyLayout';
 import { jockeyApi } from '../../api/jockeyApi';
 import { resolveFileUrl } from '../../api/uploadApi';
+import ImageLightbox from '../shared/ImageLightbox';
 import Toast, { useToast } from '../shared/Toast';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
@@ -65,14 +66,34 @@ function HealthCertificateBadge({ url }) {
         );
     }
 
+    const [lightboxSrc, setLightboxSrc] = useState(null);
     const resolvedUrl = resolveFileUrl(url);
 
     return (
-        <a className="mt-2 inline-flex items-center gap-2 rounded border border-[#e7a49a] bg-[#fff8f6] px-2.5 py-1 text-[0.68rem] font-black uppercase text-[var(--admin-primary)] no-underline hover:bg-[#e8f7ef]" href={resolvedUrl} target="_blank" rel="noreferrer">
-            <img alt="Health certificate" className="h-7 w-9 rounded object-cover" src={resolvedUrl} />
-            Health certificate
-        </a>
+        <>
+            <button
+                className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded border border-[#e7a49a] bg-[#fff8f6] px-2.5 py-1 text-[0.68rem] font-black uppercase text-[var(--admin-primary)] hover:bg-[#e8f7ef]"
+                style={{ background: undefined, border: undefined }}
+                onClick={() => setLightboxSrc(resolvedUrl)}
+                type="button"
+            >
+                <img alt="Health certificate" className="h-7 w-9 rounded object-cover" src={resolvedUrl} />
+                Health certificate
+            </button>
+            <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+        </>
     );
+}
+
+function getStatusBadgeStyle(status) {
+    const map = {
+        Pending:   { background: '#fef9c3', color: '#92400e' },
+        Accepted:  { background: '#dcfce7', color: '#15803d' },
+        Confirmed: { background: '#dbeafe', color: '#1e40af' },
+        Rejected:  { background: '#fee2e2', color: '#991b1b' },
+        Cancelled: { background: '#f1f5f9', color: '#64748b' },
+    };
+    return map[status] ?? { background: 'rgba(0,0,0,0.55)', color: '#fff' };
 }
 
 function PendingInvitations() {
@@ -225,7 +246,7 @@ function PendingInvitations() {
                                             ) : null}
                                             <div className="absolute inset-0 flex items-center justify-center text-white text-[2rem]" style={{ display: inv.horseImageUrl ? 'none' : 'flex' }}>🏇</div>
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                                            <span className="absolute right-3 top-3 rounded bg-[var(--admin-primary)] px-2.5 py-1 text-[0.68rem] font-black uppercase text-white">
+                                            <span className="absolute right-3 top-3 rounded px-2.5 py-1 text-[0.68rem] font-black uppercase" style={getStatusBadgeStyle(inv.status)}>
                                                 {inv.status || 'Pending'}
                                             </span>
                                             <div className="absolute bottom-3 left-4 right-4">
@@ -266,22 +287,44 @@ function PendingInvitations() {
                                         )}
 
                                         <div className="border-t border-[var(--admin-border)] px-5 py-4">
-                                            <div className="flex gap-3">
-                                                <button
-                                                    className="inline-flex min-h-[40px] flex-1 cursor-pointer items-center justify-center rounded-md bg-[var(--admin-primary)] text-[0.85rem] font-[850] text-white hover:bg-[var(--admin-primary-dark)]"
-                                                    onClick={() => handleAccept(inv.invitationId)}
-                                                    type="button"
-                                                >
-                                                    Accept Invitation
-                                                </button>
-                                                <button
-                                                    className="inline-flex min-h-[40px] flex-1 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-white text-[0.85rem] font-[850] text-[var(--admin-ink)] hover:bg-[#f5f5f5]"
-                                                    onClick={() => handleReject(inv.invitationId)}
-                                                    type="button"
-                                                >
-                                                    Reject
-                                                </button>
-                                            </div>
+                                            {inv.status === 'Pending' || !inv.status ? (
+                                                <div className="flex gap-3">
+                                                    <button
+                                                        className="inline-flex min-h-[40px] flex-1 cursor-pointer items-center justify-center rounded-md bg-[var(--admin-primary)] text-[0.85rem] font-[850] text-white hover:bg-[var(--admin-primary-dark)]"
+                                                        onClick={() => handleAccept(inv.invitationId)}
+                                                        type="button"
+                                                    >
+                                                        Accept Invitation
+                                                    </button>
+                                                    <button
+                                                        className="inline-flex min-h-[40px] flex-1 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-white text-[0.85rem] font-[850] text-[var(--admin-ink)] hover:bg-[#f5f5f5]"
+                                                        onClick={() => handleReject(inv.invitationId)}
+                                                        type="button"
+                                                    >
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                            ) : inv.status === 'Cancelled' ? (
+                                                <div className="flex items-center gap-2 rounded-md bg-[#f1f5f9] px-4 py-3 text-[0.82rem] font-semibold text-[#64748b]">
+                                                    <span>🔒</span>
+                                                    <span>This invitation has been closed — the owner selected another jockey.</span>
+                                                </div>
+                                            ) : inv.status === 'Accepted' ? (
+                                                <div className="flex items-center gap-2 rounded-md bg-[#dcfce7] px-4 py-3 text-[0.82rem] font-semibold text-[#15803d]">
+                                                    <span>✅</span>
+                                                    <span>You accepted this invitation. Waiting for owner to confirm.</span>
+                                                </div>
+                                            ) : inv.status === 'Confirmed' ? (
+                                                <div className="flex items-center gap-2 rounded-md bg-[#dbeafe] px-4 py-3 text-[0.82rem] font-semibold text-[#1e40af]">
+                                                    <span>🏆</span>
+                                                    <span>You are the official jockey for this race!</span>
+                                                </div>
+                                            ) : inv.status === 'Rejected' ? (
+                                                <div className="flex items-center gap-2 rounded-md bg-[#fee2e2] px-4 py-3 text-[0.82rem] font-semibold text-[#991b1b]">
+                                                    <span>✕</span>
+                                                    <span>You declined this invitation.</span>
+                                                </div>
+                                            ) : null}
                                             <button
                                                 className="mt-2 w-full cursor-pointer border-0 bg-transparent text-[0.82rem] font-bold text-[var(--admin-primary)] underline"
                                                 onClick={() => handleViewDetails(inv)}

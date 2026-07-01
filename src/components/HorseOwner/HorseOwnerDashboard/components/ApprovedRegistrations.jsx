@@ -127,8 +127,8 @@ function InfoItem({ label, value }) {
 function RaceInfoModal({ data, onClose }) {
     const race = data.race || {};
     return (
-        <div style={styles.overlay}>
-            <section style={styles.modal}>
+        <div style={styles.overlay} onClick={onClose}>
+            <section style={styles.modal} onClick={(e) => e.stopPropagation()}>
                 <div style={styles.modalHeader}>
                     <div>
                         <h3 style={styles.modalTitle}>{race.tournamentName || data.tournamentName}</h3>

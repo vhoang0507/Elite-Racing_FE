@@ -3,6 +3,7 @@ import {
     useMemo,
     useState,
 } from 'react';
+import ImageLightbox from '../shared/ImageLightbox';
 
 import {
     FaCheck,
@@ -95,24 +96,40 @@ function HealthCertificatePreview({ url, compact = false }) {
         );
     }
 
+    const [lightboxSrc, setLightboxSrc] = useState(null);
     const resolvedUrl = resolveFileUrl(url);
 
     if (compact) {
         return (
-            <a className="inline-flex items-center gap-2 text-[0.78rem] font-black text-[var(--admin-primary)] no-underline hover:underline" href={resolvedUrl} target="_blank" rel="noreferrer">
-                <img alt="Health certificate" className="h-8 w-11 rounded border border-[var(--admin-border)] object-cover" src={resolvedUrl} />
-                View
-            </a>
+            <>
+                <button
+                    className="inline-flex cursor-pointer items-center gap-2 border-0 bg-transparent p-0 text-[0.78rem] font-black text-[var(--admin-primary)] hover:underline"
+                    onClick={() => setLightboxSrc(resolvedUrl)}
+                    type="button"
+                >
+                    <img alt="Health certificate" className="h-8 w-11 rounded border border-[var(--admin-border)] object-cover" src={resolvedUrl} />
+                    View
+                </button>
+                <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+            </>
         );
     }
 
     return (
-        <a className="mt-3 block rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-3 text-[0.86rem] font-black text-[var(--admin-primary)] no-underline hover:bg-[#e8f7ef]" href={resolvedUrl} target="_blank" rel="noreferrer">
-            <span className="grid h-[170px] place-items-center overflow-hidden rounded-md border border-[var(--admin-border)] bg-white">
-                <img alt="Health certificate" className="h-full w-full object-contain" src={resolvedUrl} />
-            </span>
-            <span className="mt-2 block text-center">Open health certificate</span>
-        </a>
+        <>
+            <button
+                className="mt-3 block w-full cursor-pointer rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-3 text-[0.86rem] font-black text-[var(--admin-primary)] hover:bg-[#e8f7ef]"
+                style={{ border: undefined, background: undefined }}
+                onClick={() => setLightboxSrc(resolvedUrl)}
+                type="button"
+            >
+                <span className="grid h-[170px] place-items-center overflow-hidden rounded-md border border-[var(--admin-border)] bg-white">
+                    <img alt="Health certificate" className="h-full w-full object-contain" src={resolvedUrl} />
+                </span>
+                <span className="mt-2 block text-center">Open health certificate</span>
+            </button>
+            <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+        </>
     );
 }
 

@@ -22,6 +22,7 @@ export default function JockeyAssignment() {
     const [error, setError] = useState('');
     const [search, setSearch] = useState('');
     const [healthStatus, setHealthStatus] = useState('');
+    const [gridKey, setGridKey] = useState(0);
     const { toast, showToast, hideToast } = useToast();
 
     useEffect(() => {
@@ -31,22 +32,14 @@ export default function JockeyAssignment() {
                 if (!mounted) return;
                 const list = data ?? [];
                 setRegistrations(list);
-                if (list.length > 0) {
-                    setSelectedRegistrationId(list[0].registrationId);
-                }
+                if (list.length > 0) setSelectedRegistrationId(list[0].registrationId);
             })
-            .catch((err) => {
-                if (mounted) setError(err.message || 'Failed to load registrations');
-            })
-            .finally(() => {
-                if (mounted) setLoading(false);
-            });
+            .catch((err) => { if (mounted) setError(err.message || 'Failed to load registrations'); })
+            .finally(() => { if (mounted) setLoading(false); });
         return () => { mounted = false; };
     }, []);
 
-    const selectedRegistration = registrations.find(
-        (r) => r.registrationId === selectedRegistrationId
-    ) ?? null;
+    const selectedRegistration = registrations.find(r => r.registrationId === selectedRegistrationId) ?? null;
 
     const refreshDetail = useCallback(() => {
         if (!selectedRegistrationId) return;
@@ -83,19 +76,23 @@ export default function JockeyAssignment() {
     const handleInvitationSent = (jockeyName) => {
         setSelectedJockey(null);
         refreshDetail();
-        showToast(
-            `Invitation sent to ${jockeyName ?? 'the jockey'} successfully. Waiting for their response.`,
-            'success',
-            'Invitation Sent'
-        );
+        setGridKey(k => k + 1);
+        showToast(`Invitation sent to ${jockeyName ?? 'the jockey'} successfully.`, 'success', 'Invitation Sent');
     };
 
     const handleSign = async (invitationId) => {
         if (!selectedRegistrationId) return;
         try {
             await ownerApi.selectOfficialJockey(selectedRegistrationId, invitationId);
+            // Optimistically close all invitations: confirmed one → Confirmed, rest → Cancelled
+            setInvitations(prev => prev.map(inv => ({
+                ...inv,
+                status: inv.invitationId === invitationId ? 'Confirmed' : 'Cancelled',
+                isOfficial: inv.invitationId === invitationId,
+                canSign: false,
+            })));
             refreshDetail();
-            ownerApi.getJockeyAssignmentRegistrations().then(setRegistrations).catch(() => { });
+            ownerApi.getJockeyAssignmentRegistrations().then(setRegistrations).catch(() => {});
             showToast('🎉 Jockey officially confirmed! Your registration is ready for the race.', 'success', 'Jockey Confirmed');
         } catch (err) {
             const msg = err.message || 'Failed to select official jockey';
@@ -111,83 +108,92 @@ export default function JockeyAssignment() {
 
     return (
         <HorseOwnerLayout activeKey="jockey">
-            <section className="grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7">
-                <div className="flex items-center justify-between max-[720px]:flex-col max-[720px]:items-start max-[720px]:gap-3">
+            <div style={styles.page}>
+                {/* ── Page Header ──────────────────────────────────── */}
+                <div style={styles.pageHeader}>
                     <div>
-                        <h2 className="m-0 text-[1.8rem] text-[var(--admin-primary-dark)]">Jockey Assignment</h2>
-                        {hasTournament && (
-                            <p className="m-0 mt-1 text-[0.85rem] text-[var(--admin-muted)]">
-                                Find the perfect match for your thoroughbred for {selectedRegistration.tournamentName}.
-                            </p>
-                        )}
+                        <h2 style={styles.pageTitle}>Jockey Assignment</h2>
+                        <p style={styles.pageSubtitle}>
+                            {hasTournament
+                                ? `Find the perfect jockey for ${selectedRegistration.horseName} · ${selectedRegistration.tournamentName}`
+                                : 'Assign jockeys to your approved race registrations'}
+                        </p>
                     </div>
                     {registrations.length > 0 && (
-                        <button
-                            onClick={() => setIsTournamentModalOpen(true)}
-                            className="inline-flex min-h-[38px] cursor-pointer items-center rounded-md bg-[var(--admin-primary)] px-5 font-bold text-white hover:bg-[var(--admin-primary-dark)]"
-                        >
-                            Change tournament
+                        <button onClick={() => setIsTournamentModalOpen(true)} style={styles.changeTournBtn}>
+                            🏆 Change Tournament
                         </button>
                     )}
                 </div>
 
-                {error && <p className="text-[0.82rem] text-red-700">{error}</p>}
+                {error && (
+                    <div style={styles.errorBar}>{error}</div>
+                )}
 
                 {loading ? (
-                    <p className="text-[0.82rem] text-[var(--admin-muted)]">Loading...</p>
+                    <div style={styles.emptyBox}>
+                        <span style={styles.emptyIcon}>⏳</span>
+                        <p style={styles.emptyText}>Loading registrations...</p>
+                    </div>
                 ) : !hasTournament ? (
-                    <div className="flex flex-col items-center justify-center rounded-[var(--admin-radius)] border border-dashed border-[var(--admin-border)] bg-[#fff8f6] px-6 py-16 text-center">
-                        <p className="m-0 max-w-[480px] text-[0.9rem] text-[var(--admin-muted)]">
-                            No approved tournaments available for jockey assignment. Please register for a tournament and wait for admin approval.
-                        </p>
+                    <div style={styles.emptyBox}>
+                        <span style={styles.emptyIcon}>🏟️</span>
+                        <p style={styles.emptyTitle}>No approved registrations</p>
+                        <p style={styles.emptyText}>Register for a tournament and wait for admin approval to start assigning jockeys.</p>
                     </div>
                 ) : (
                     <>
-                        <div className="flex flex-wrap gap-4 text-[0.82rem] text-[var(--admin-muted)]">
-                            <span>🏆 {selectedRegistration.tournamentName}</span>
-                            <span>📅 {selectedRegistration.raceDate}</span>
-                            <span>🐴 {selectedRegistration.horseName}</span>
+                        {/* ── Meta info strip ────────────────────────────── */}
+                        <div style={styles.metaStrip}>
+                            <MetaTag icon="🏆" label={selectedRegistration.tournamentName} />
+                            <MetaTag icon="📅" label={selectedRegistration.raceDate} />
+                            <MetaTag icon="🐴" label={selectedRegistration.horseName} />
                         </div>
 
-                        <div className="grid grid-cols-3 gap-4 max-[720px]:grid-cols-1">
-                            <StatCard icon="✉️" label="INVITED" value={summary.invitedCount} />
-                            <StatCard icon="⏳" label="PENDING" value={summary.pendingCount} />
-                            <StatCard icon="✅" label="ACCEPTED" value={summary.acceptedCount} />
+                        {/* ── Stat cards ─────────────────────────────────── */}
+                        <div style={styles.statGrid}>
+                            <StatCard icon="✉️" label="Invited" value={summary.invitedCount} accent="#e3f2fd" iconBg="#1565c0" />
+                            <StatCard icon="⏳" label="Pending" value={summary.pendingCount} accent="#fff8e1" iconBg="#b45309" />
+                            <StatCard icon="✅" label="Accepted" value={summary.acceptedCount} accent="#e8f5e9" iconBg="#2e7d32" />
                         </div>
 
+                        {/* ── Official jockey banner ─────────────────────── */}
                         {hasOfficialJockey && (
-                            <div className="flex items-center gap-3 rounded-[var(--admin-radius)] border border-[#afe2c4] bg-[#dff7e9] px-5 py-4">
-                                <span className="rounded-full bg-[#118548] px-3 py-1 text-[0.7rem] font-bold uppercase text-white">
-                                    Official / Signed
-                                </span>
-                                <span className="text-[0.85rem] text-[#118548]">
-                                    Official jockey selected: <strong>{context?.officialJockeyName ?? context?.assignedJockeyName}</strong>
+                            <div style={styles.officialBanner}>
+                                <span style={styles.officialBadge}>✅ Official</span>
+                                <span style={styles.officialText}>
+                                    Official jockey confirmed: <strong>{context?.officialJockeyName ?? context?.assignedJockeyName}</strong>
                                 </span>
                             </div>
                         )}
 
-                        <div className="flex flex-wrap gap-2.5">
-                            <input
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search jockey name..."
-                                className="h-9 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-white px-3 text-[0.82rem] outline-none focus:border-[var(--admin-primary)]"
-                                style={{ width: '220px' }}
-                            />
+                        {/* ── Search / filter row ────────────────────────── */}
+                        <div style={styles.filterRow}>
+                            <div style={styles.searchWrap}>
+                                <span style={styles.searchIcon}>🔍</span>
+                                <input
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    placeholder="Search jockey name..."
+                                    style={styles.searchInput}
+                                />
+                            </div>
                             <select
                                 value={healthStatus}
                                 onChange={(e) => setHealthStatus(e.target.value)}
-                                className="h-9 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-white px-3 text-[0.82rem]"
+                                style={styles.filterSelect}
                             >
-                                <option value="">Health Status</option>
+                                <option value="">All Health Status</option>
                                 <option value="Fit">Fit</option>
                                 <option value="Injured">Injured</option>
                                 <option value="Suspended">Suspended</option>
                             </select>
                         </div>
 
-                        <div className="grid grid-cols-[280px_1fr] gap-5 max-[900px]:grid-cols-1">
-                            <div className="flex flex-col gap-5">
+                        {/* ── Main 2-col layout ──────────────────────────── */}
+                        <div style={styles.mainGrid}>
+                            {/* Sidebar */}
+                            <div style={styles.sidebar}>
                                 <HorseInfo
                                     context={context}
                                     loading={loadingDetail}
@@ -197,7 +203,8 @@ export default function JockeyAssignment() {
                                 <ActivityTimeline summary={summary} hasOfficialJockey={hasOfficialJockey} />
                             </div>
 
-                            <div className="flex flex-col gap-5">
+                            {/* Main panel */}
+                            <div style={styles.mainPanel}>
                                 {canSendInvitation ? (
                                     <JockeyGrid
                                         registrationId={selectedRegistrationId}
@@ -207,11 +214,13 @@ export default function JockeyAssignment() {
                                         onInvite={setSelectedJockey}
                                     />
                                 ) : (
-                                    <div className="rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-white px-5 py-4 text-[0.85rem] text-[var(--admin-muted)]">
-                                        An official jockey has already been selected for this race. No further invitations can be sent.
+                                    <div style={styles.noInviteBox}>
+                                        <span style={{ fontSize: '2rem' }}>🔒</span>
+                                        <p style={styles.noInviteText}>
+                                            An official jockey has already been selected. No further invitations can be sent.
+                                        </p>
                                     </div>
                                 )}
-
                                 <InvitationResponses
                                     invitations={invitations}
                                     loading={loadingDetail}
@@ -221,7 +230,7 @@ export default function JockeyAssignment() {
                         </div>
                     </>
                 )}
-            </section>
+            </div>
 
             {selectedJockey && (
                 <InvitationModal
@@ -253,14 +262,52 @@ export default function JockeyAssignment() {
     );
 }
 
-function StatCard({ icon, label, value }) {
+function MetaTag({ icon, label }) {
     return (
-        <div className="flex items-center gap-3 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-white px-5 py-4">
-            <span className="text-xl">{icon}</span>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, backgroundColor: '#f0ebe8', border: '1px solid #ddd0cb', borderRadius: 20, padding: '4px 12px', fontSize: 13, color: '#4a2020', fontWeight: 600 }}>
+            {icon} {label}
+        </span>
+    );
+}
+
+function StatCard({ icon, label, value, accent, iconBg }) {
+    return (
+        <div style={{ backgroundColor: accent, borderRadius: 12, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 14, border: `1px solid ${accent}` }}>
+            <div style={{ width: 44, height: 44, borderRadius: 10, backgroundColor: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
+                {icon}
+            </div>
             <div>
-                <p className="m-0 text-[0.7rem] font-bold tracking-wide text-[var(--admin-muted)]">{label}</p>
-                <p className="m-0 text-[1.4rem] font-bold text-[var(--admin-primary-dark)]">{value}</p>
+                <p style={{ margin: 0, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b' }}>{label}</p>
+                <p style={{ margin: 0, fontSize: 28, fontWeight: 800, color: '#0f172a', lineHeight: 1.1 }}>{value}</p>
             </div>
         </div>
     );
 }
+
+const styles = {
+    page: { padding: '36px 44px', display: 'grid', gap: 24, maxWidth: '100%' },
+    pageHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' },
+    pageTitle: { margin: 0, fontSize: '1.9rem', fontWeight: 800, color: '#610000' },
+    pageSubtitle: { margin: '4px 0 0', fontSize: '0.88rem', color: '#64748b' },
+    changeTournBtn: { backgroundColor: '#610000', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 20px', fontWeight: 700, fontSize: 14, cursor: 'pointer', whiteSpace: 'nowrap' },
+    errorBar: { backgroundColor: '#fff3f3', border: '1px solid #f0b4b4', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#c62828', fontWeight: 600 },
+    emptyBox: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#faf7f5', border: '2px dashed #ddd0cb', borderRadius: 14, padding: '60px 24px', textAlign: 'center', gap: 8 },
+    emptyIcon: { fontSize: '2.5rem' },
+    emptyTitle: { margin: 0, fontSize: 16, fontWeight: 700, color: '#2d2020' },
+    emptyText: { margin: 0, fontSize: 13, color: '#64748b', maxWidth: 440 },
+    metaStrip: { display: 'flex', flexWrap: 'wrap', gap: 8 },
+    statGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 },
+    officialBanner: { display: 'flex', alignItems: 'center', gap: 12, backgroundColor: '#ecfdf5', border: '1px solid #6ee7b7', borderRadius: 10, padding: '12px 18px' },
+    officialBadge: { backgroundColor: '#065f46', color: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: 12, fontWeight: 700 },
+    officialText: { fontSize: 14, color: '#065f46' },
+    filterRow: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' },
+    searchWrap: { position: 'relative', display: 'flex', alignItems: 'center' },
+    searchIcon: { position: 'absolute', left: 10, fontSize: 14, pointerEvents: 'none' },
+    searchInput: { paddingLeft: 32, paddingRight: 12, height: 38, border: '1px solid #ddd0cb', borderRadius: 8, fontSize: 13, outline: 'none', width: 230, backgroundColor: '#fff' },
+    filterSelect: { height: 38, border: '1px solid #ddd0cb', borderRadius: 8, fontSize: 13, padding: '0 10px', backgroundColor: '#fff', color: '#2d2020' },
+    mainGrid: { display: 'grid', gridTemplateColumns: '290px 1fr', gap: 20 },
+    sidebar: { display: 'flex', flexDirection: 'column', gap: 16 },
+    mainPanel: { display: 'flex', flexDirection: 'column', gap: 16 },
+    noInviteBox: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, backgroundColor: '#faf7f5', border: '1px solid #e8ddd9', borderRadius: 12, padding: '32px 20px', textAlign: 'center' },
+    noInviteText: { margin: 0, fontSize: 13, color: '#64748b', maxWidth: 400 },
+};

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import HorseOwnerLayout from "../HorseOwnerLayout";
 import { ownerApi } from "../../../api/ownerApi";
 import { resolveFileUrl } from "../../../api/uploadApi";
+import ImageLightbox from "../../shared/ImageLightbox";
 
 function formatTime(seconds) {
     if (seconds == null) return "—";
@@ -78,10 +79,13 @@ function HorseProfileCard({ horse }) {
             <div style={styles.certificateBox}>
                 <small style={styles.label}>HEALTH CERTIFICATE</small>
                 {horse.healthCertificateImageUrl ? (
-                    <a href={resolveFileUrl(horse.healthCertificateImageUrl)} target="_blank" rel="noreferrer" style={styles.certificateLink}>
-                        <img src={resolveFileUrl(horse.healthCertificateImageUrl)} alt="Health certificate" style={styles.certificateImg} />
-                        <span>Open certificate</span>
-                    </a>
+                    <>
+                        <button type="button" onClick={() => setLightboxSrc(resolveFileUrl(horse.healthCertificateImageUrl))} style={{ ...styles.certificateLink, background: 'none', border: 'none', cursor: 'zoom-in' }}>
+                            <img src={resolveFileUrl(horse.healthCertificateImageUrl)} alt="Health certificate" style={styles.certificateImg} />
+                            <span>Open certificate</span>
+                        </button>
+                        <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+                    </>
                 ) : (
                     <p style={styles.certificateMissing}>Not uploaded</p>
                 )}
@@ -171,9 +175,6 @@ const styles = {
     infoGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" },
     label: { color: "#999", fontSize: "11px" },
     value: { margin: "2px 0 0", fontWeight: 600, fontSize: "13px" },
-    certificateBox: { marginTop: "16px", borderTop: "1px solid #f0e3e0", paddingTop: "14px" },
-    certificateLink: { display: "flex", alignItems: "center", gap: "10px", marginTop: "8px", color: "#610000", fontSize: "12px", fontWeight: 700, textDecoration: "none" },
-    certificateImg: { width: "76px", height: "54px", borderRadius: "8px", border: "1px solid #dce5ef", objectFit: "cover", backgroundColor: "#fff8f6" },
     certificateMissing: { margin: "6px 0 0", color: "#999", fontSize: "12px", fontWeight: 600 },
     achievementRow: { display: "flex", alignItems: "center", gap: "10px" },
     achievementIcon: { width: "32px", height: "32px", borderRadius: "8px", backgroundColor: "#fde2e1", color: "#610000", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px" },
