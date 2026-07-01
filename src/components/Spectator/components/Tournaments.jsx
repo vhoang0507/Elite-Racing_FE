@@ -271,7 +271,7 @@ export default function Tournaments() {
     const predMap = Object.fromEntries(predictions.map(p => [p.tournamentId, p]));
 
     const filtered = tournaments.filter(t => {
-        if (filter === 'open') return canPredict(t.status) && !predMap[t.tournamentId];
+        if (filter === 'open') return canPredict(t) && !predMap[t.tournamentId];
         if (filter === 'predicted') return !!predMap[t.tournamentId];
         if (filter === 'completed') return t.status === 'Completed';
         return true;
@@ -279,7 +279,7 @@ export default function Tournaments() {
 
     const counts = {
         all: tournaments.length,
-        open: tournaments.filter(t => canPredict(t.status) && !predMap[t.tournamentId]).length,
+        open: tournaments.filter(t => canPredict(t) && !predMap[t.tournamentId]).length,
         predicted: Object.keys(predMap).length,
         completed: tournaments.filter(t => t.status === 'Completed').length,
     };
