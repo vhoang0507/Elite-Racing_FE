@@ -130,15 +130,7 @@ export default function ApprovedRegistrations({ onViewStatus }) {
                                                     >
                                                         {infoLoadingId === row.registrationId ? "Loading..." : "Race Info"}
                                                     </button>
-                                                    {onViewStatus && (
-                                                        <button
-                                                            onClick={() => onViewStatus(row.registrationId)}
-                                                            style={{ ...styles.actionBtn, ...styles.ghostBtn }}
-                                                            type="button"
-                                                        >
-                                                            Journey
-                                                        </button>
-                                                    )}
+
                                                 </div>
                                             </td>
                                         </tr>

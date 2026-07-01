@@ -9,22 +9,86 @@ const STATUS_CONFIG = {
 };
 
 const AVATAR_FALLBACK = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"%3E%3Ccircle cx="18" cy="18" r="18" fill="%23f0ebe8"/%3E%3Ctext x="18" y="24" text-anchor="middle" font-size="18" fill="%23c9a8a0"%3E🏇%3C/text%3E%3C/svg%3E';
+const AVATAR_FALLBACK_LG = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 96 96"%3E%3Ccircle cx="48" cy="48" r="48" fill="%23f0ebe8"/%3E%3Ctext x="48" y="64" text-anchor="middle" font-size="48" fill="%23c9a8a0"%3E🏇%3C/text%3E%3C/svg%3E';
 
-function SafeAvatar({ src, alt }) {
+function SafeAvatar({ src, alt, large }) {
     return (
         <img
-            src={src ? resolveFileUrl(src) : AVATAR_FALLBACK}
+            src={src ? resolveFileUrl(src) : (large ? AVATAR_FALLBACK_LG : AVATAR_FALLBACK)}
             alt={alt}
-            style={styles.avatar}
-            onError={(e) => { e.currentTarget.src = AVATAR_FALLBACK; }}
+            style={large ? styles.avatarLg : styles.avatar}
+            onError={(e) => { e.currentTarget.src = large ? AVATAR_FALLBACK_LG : AVATAR_FALLBACK; }}
         />
     );
 }
 
+function OfficialJockeyCard({ jockey }) {
+    const confirmedDate = jockey.respondedAt
+        ? new Date(jockey.respondedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '—';
+
+    return (
+        <div style={styles.cardWrap}>
+            <div style={styles.cardHeader}>
+                <div style={styles.cardHeaderLeft}>
+                    <span style={styles.checkIcon}>✓</span>
+                    <div>
+                        <p style={styles.cardHeaderTitle}>Official Jockey Confirmed</p>
+                        <p style={styles.cardHeaderSub}>A jockey has been officially assigned to this registration</p>
+                    </div>
+                </div>
+                <span style={styles.officialBadge}>★ Official</span>
+            </div>
+
+            <div style={styles.profileBody}>
+                <div style={styles.profileLeft}>
+                    <div style={styles.avatarWrap}>
+                        <SafeAvatar src={jockey.profileImageUrl} alt={jockey.jockeyName} large />
+                        <span style={styles.avatarBadge}>✓</span>
+                    </div>
+                    <div style={styles.profileInfo}>
+                        <h3 style={styles.profileName}>{jockey.jockeyName}</h3>
+                        <span style={styles.officialPill}>★ Official Jockey</span>
+                    </div>
+                </div>
+
+                <div style={styles.profileStats}>
+                    <div style={styles.statItem}>
+                        <span style={styles.statIcon}>🏆</span>
+                        <div>
+                            <p style={styles.statLabel}>Experience</p>
+                            <p style={styles.statValue}>{jockey.experienceYears ?? '—'} years</p>
+                        </div>
+                    </div>
+                    <div style={styles.statItem}>
+                        <span style={styles.statIcon}>📅</span>
+                        <div>
+                            <p style={styles.statLabel}>Confirmed On</p>
+                            <p style={styles.statValue}>{confirmedDate}</p>
+                        </div>
+                    </div>
+                    <div style={styles.statItem}>
+                        <span style={styles.statIcon}>✉️</span>
+                        <div>
+                            <p style={styles.statLabel}>Invitation Sent</p>
+                            <p style={styles.statValue}>
+                                {jockey.sentAt
+                                    ? new Date(jockey.sentAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                                    : '—'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function InvitationResponses({ invitations, loading, onSign }) {
+    const officialJockey = invitations.find(inv => inv.isOfficial);
+
     return (
         <div style={styles.wrap}>
-            {/* Header */}
             <div style={styles.header}>
                 <div>
                     <p style={styles.headerTitle}>Jockey Invitation Responses</p>
@@ -46,7 +110,13 @@ export default function InvitationResponses({ invitations, loading, onSign }) {
                 </div>
             )}
 
-            {!loading && invitations.length > 0 && (
+            {!loading && officialJockey && (
+                <div style={{ padding: '20px' }}>
+                    <OfficialJockeyCard jockey={officialJockey} />
+                </div>
+            )}
+
+            {!loading && invitations.length > 0 && !officialJockey && (
                 <div style={styles.tableWrap}>
                     <table style={styles.table}>
                         <thead>
@@ -66,12 +136,7 @@ export default function InvitationResponses({ invitations, loading, onSign }) {
                                         <td style={styles.td}>
                                             <div style={styles.jockeyCell}>
                                                 <SafeAvatar src={inv.profileImageUrl} alt={inv.jockeyName} />
-                                                <div>
-                                                    <p style={styles.jockeyName}>{inv.jockeyName}</p>
-                                                    {inv.isOfficial && (
-                                                        <span style={styles.officialTag}>★ Official</span>
-                                                    )}
-                                                </div>
+                                                <p style={styles.jockeyName}>{inv.jockeyName}</p>
                                             </div>
                                         </td>
                                         <td style={styles.td}>
@@ -86,7 +151,7 @@ export default function InvitationResponses({ invitations, loading, onSign }) {
                                         </td>
                                         <td style={styles.td}>
                                             <span style={{ ...styles.statusBadge, backgroundColor: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>
-                                                {inv.isOfficial ? '★ Official' : cfg.label}
+                                                {cfg.label}
                                             </span>
                                         </td>
                                         <td style={styles.td}>
@@ -129,10 +194,29 @@ const styles = {
     jockeyCell: { display: 'flex', alignItems: 'center', gap: 10 },
     avatar: { width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', border: '2px solid #e8ddd9', flexShrink: 0 },
     jockeyName: { margin: 0, fontWeight: 600, fontSize: 13, color: '#1e293b' },
-    officialTag: { fontSize: 10, fontWeight: 700, color: '#15803d', backgroundColor: '#dcfce7', borderRadius: 4, padding: '1px 6px' },
     chip: { backgroundColor: '#f0ebe8', color: '#5b3a3a', borderRadius: 6, padding: '3px 8px', fontSize: 12, fontWeight: 600 },
     dateText: { fontSize: 12, color: '#64748b' },
     statusBadge: { fontSize: 11, fontWeight: 700, borderRadius: 20, padding: '3px 10px', display: 'inline-block' },
     confirmBtn: { backgroundColor: '#15803d', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer' },
     noop: { color: '#cbd5e1', fontSize: 14 },
+    cardWrap: { borderRadius: 12, border: '1.5px solid #86efac', backgroundColor: '#f0fdf4', overflow: 'hidden' },
+    cardHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', backgroundColor: '#dcfce7', borderBottom: '1px solid #bbf7d0' },
+    cardHeaderLeft: { display: 'flex', alignItems: 'center', gap: 12 },
+    checkIcon: { display: 'grid', placeItems: 'center', width: 32, height: 32, borderRadius: '50%', backgroundColor: '#15803d', color: '#fff', fontSize: 14, fontWeight: 800, flexShrink: 0 },
+    cardHeaderTitle: { margin: 0, fontSize: 14, fontWeight: 700, color: '#14532d' },
+    cardHeaderSub: { margin: '2px 0 0', fontSize: 12, color: '#166534' },
+    officialBadge: { backgroundColor: '#15803d', color: '#fff', fontSize: 11, fontWeight: 700, borderRadius: 20, padding: '4px 12px' },
+    profileBody: { display: 'flex', alignItems: 'center', gap: 32, padding: '24px 20px', flexWrap: 'wrap' },
+    profileLeft: { display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 },
+    avatarWrap: { position: 'relative', flexShrink: 0 },
+    avatarLg: { width: 96, height: 96, borderRadius: '50%', objectFit: 'cover', border: '3px solid #15803d' },
+    avatarBadge: { position: 'absolute', bottom: 2, right: 2, width: 22, height: 22, borderRadius: '50%', backgroundColor: '#15803d', color: '#fff', fontSize: 11, fontWeight: 800, display: 'grid', placeItems: 'center', border: '2px solid #fff' },
+    profileInfo: { display: 'flex', flexDirection: 'column', gap: 6 },
+    profileName: { margin: 0, fontSize: 18, fontWeight: 800, color: '#14532d' },
+    officialPill: { display: 'inline-block', backgroundColor: '#15803d', color: '#fff', fontSize: 11, fontWeight: 700, borderRadius: 20, padding: '3px 10px' },
+    profileStats: { display: 'flex', gap: 28, flexWrap: 'wrap', flex: 1 },
+    statItem: { display: 'flex', alignItems: 'center', gap: 10 },
+    statIcon: { fontSize: 22, flexShrink: 0 },
+    statLabel: { margin: 0, fontSize: 11, fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' },
+    statValue: { margin: '2px 0 0', fontSize: 14, fontWeight: 700, color: '#1e293b' },
 };
