@@ -67,8 +67,8 @@ function formatSeconds(value) {
 function getRegistrationLabel(registration) {
     if (!registration) return 'Unknown registration';
     const horseName = registration.horseName || 'Unnamed horse';
-    const jockeyLabel = registration.jockeyId ? `Jockey #${registration.jockeyId}` : 'No jockey';
-    return `${horseName} — REG #${registration.registrationId} — ${jockeyLabel}`;
+    const jockeyLabel = registration.jockeyId ? `Jockey ${registration.jockeyId}` : 'No jockey';
+    return `${horseName} — ${jockeyLabel}`;
 }
 
 function getStatusClass(status) {

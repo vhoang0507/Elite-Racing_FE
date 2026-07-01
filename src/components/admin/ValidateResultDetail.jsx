@@ -90,6 +90,39 @@ const formatScore = (value) => {
     return String(value);
 };
 
+const isViolationReport = (report) => (
+    report?.sourceType === 'Violation'
+    || Boolean(report?.violationId)
+    || Boolean(report?.violationType)
+);
+
+const formatPenaltyPoints = (value) => {
+    if (value === null || value === undefined || value === '') {
+        return 'Optional';
+    }
+
+    return String(value);
+};
+
+const formatRegistrationSelection = (report) => {
+    const horseName = report?.horseName || '';
+    const jockeyLabel = report?.jockeyName || (report?.jockeyId ? `Jockey ${report.jockeyId}` : '');
+
+    if (horseName && jockeyLabel) {
+        return `${horseName} - ${jockeyLabel}`;
+    }
+
+    if (horseName) {
+        return horseName;
+    }
+
+    if (jockeyLabel) {
+        return jockeyLabel;
+    }
+
+    return report?.registrationId ? `Registration ${report.registrationId}` : '';
+};
+
 function ValidateResultDetail() {
     const { resultId } = useParams();
     const navigate = useNavigate();
@@ -145,13 +178,26 @@ function ValidateResultDetail() {
     }, [resultId]);
 
     const handleApprove = async () => {
-        if (!window.confirm('Approve this result? This will publish it and award prizes.')) return;
+        if (!window.confirm('Approve this result report? This will publish all referee-confirmed results and award prizes.')) return;
         setActionLoading(true);
         setActionError('');
         setActionSuccess('');
         try {
-            await adminApi.publishResult(resultId);
-            setActionSuccess('Result approved and published.');
+            const currentResultId = String(resultId || '').replace('result-', '');
+            const resultIds = [
+                ...new Set([
+                    ...postRaceResults
+                        .filter((result) => result?.resultId && result.status === 'RefereeConfirmed')
+                        .map((result) => String(result.resultId)),
+                    currentResultId,
+                ].filter(Boolean)),
+            ];
+
+            for (const id of resultIds) {
+                await adminApi.publishResult(id);
+            }
+
+            setActionSuccess('Results approved and tournament completed.');
             setTimeout(() => navigate('/admin/results'), 1500);
         } catch (err) {
             setActionError(err.message || 'Failed to approve result.');
@@ -194,6 +240,20 @@ function ValidateResultDetail() {
             : `${formatPhase(report.reportPhase)} | Race #${report.raceId || '-'} | Registration #${report.registrationId || '-'} | Referee ${report.refereeName || detail?.refereeName || `#${report.refereeId || '-'}`}`
     );
     const getReportMetaRows = (report) => {
+        if (isViolationReport(report)) {
+            return [
+                ['Report Phase', formatPhase(report.reportPhase)],
+                ['Tournament', getReportTournament(report)],
+                ['Race', report.raceName || detail?.raceName],
+                ['Registration', formatRegistrationSelection(report)],
+                ['Registration Status', report.registrationStatus],
+                ['Violation Type', report.violationType],
+                ['Action', report.action],
+                ['Penalty Points', formatPenaltyPoints(report.penaltyPoints)],
+                ['Referee', report.refereeName || detail?.refereeName],
+            ];
+        }
+
         if (isPostRaceReportItem(report)) {
             return [
                 ['Report Phase', formatPhase(report.reportPhase)],
@@ -244,7 +304,7 @@ function ValidateResultDetail() {
                             {report.content}
                         </p>
 
-                        {(report.violationType || report.action || report.penaltyPoints !== undefined) ? (
+                        {(!isViolationReport(report) && (report.violationType || report.action || report.penaltyPoints !== undefined)) ? (
                             <div className="flex flex-wrap gap-2 text-[0.72rem] font-black text-[#6d5752]">
                                 {report.violationType ? <span className="rounded border border-[#e6d3cf] bg-[#fff7f5] px-2.5 py-1">Type: {report.violationType}</span> : null}
                                 {report.action ? <span className="rounded border border-[#e6d3cf] bg-[#fff7f5] px-2.5 py-1">Action: {report.action}</span> : null}

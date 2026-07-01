@@ -699,6 +699,9 @@ const mapRegistrationRaceContext = (registration) => {
         tournamentName: readApiField(registration, 'tournamentName'),
         horseId: readApiField(registration, 'horseId'),
         horseName: readApiField(registration, 'horseName'),
+        registrationStatus: readApiField(registration, 'status'),
+        jockeyId: readApiField(registration, 'jockeyId'),
+        jockeyName: readApiField(registration, 'jockeyName'),
     };
 };
 
@@ -748,6 +751,9 @@ const mergeReportContext = (report, context = {}) => ({
     tournamentName: getDirectReportTournamentName(report) || context.tournamentName || report.raceName || report.RaceName,
     horseId: report.horseId || context.horseId,
     horseName: report.horseName || context.horseName,
+    registrationStatus: report.registrationStatus || context.registrationStatus,
+    jockeyId: report.jockeyId || context.jockeyId,
+    jockeyName: report.jockeyName || context.jockeyName,
 });
 
 const mapAdminReportSubmission = (report) => {
@@ -792,8 +798,11 @@ const mapRefereeReport = (report) => ({
     tournamentName: getReportTournamentName(report),
     raceName: report.raceName,
     registrationId: report.registrationId,
+    registrationStatus: report.registrationStatus,
     horseId: report.horseId,
     horseName: report.horseName,
+    jockeyId: report.jockeyId,
+    jockeyName: report.jockeyName,
     refereeId: report.refereeId,
     refereeName: report.refereeName,
     title: `${formatReportPhaseLabel(getReportPhase(report))} ${formatReportTypeLabel(report.type || (report.violationId ? 'Violation' : 'RefereeReport'))} #${report.reportId || report.violationId || '-'}`,
