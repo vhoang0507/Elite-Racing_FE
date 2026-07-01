@@ -560,6 +560,11 @@ function PreRaceInspectionRegistry() {
                                                             }
                                                             style={{ fontSize: 13, padding: '6px 10px', borderRadius: 6, border: '1px solid #dce5ef', outline: 'none', width: '100%' }}
                                                         >
+                                                            {statusOptions.map((option) => (
+                                                                <option key={option.value} value={option.value}>
+                                                                    {option.label}
+                                                                </option>
+                                                            ))}
                                                         </select>
 
                                                         <input
