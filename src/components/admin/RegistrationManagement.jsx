@@ -14,6 +14,10 @@ import {
 import { adminApi } from '../../api/adminApi';
 import { resolveFileUrl } from '../../api/uploadApi';
 import horseRacing from '../../assets/horse-racing.jpg';
+import {
+    confirmAdminAction,
+    showAdminSuccess,
+} from '../../utils/adminFeedback';
 import AdminLayout from './AdminLayout';
 
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-7 px-11 py-10 max-[860px]:px-5 max-[860px]:py-7';
@@ -215,9 +219,11 @@ export default function RegistrationManagement() {
     const rejectedCount = registrationStats.rejected;
 
     const handleApprove = async (registration) => {
-        const ok = window.confirm(
-            `Confirm "${registration.horseName}" for "${registration.tournamentName}"?`
-        );
+        const ok = await confirmAdminAction({
+            title: 'Confirm race entry',
+            message: `Are you sure you want to confirm "${registration.horseName}" for "${registration.tournamentName}"?`,
+            confirmLabel: 'Confirm',
+        });
 
         if (!ok) {
             return;
@@ -228,6 +234,7 @@ export default function RegistrationManagement() {
             await adminApi.approveRegistration(registration.registrationId);
             await loadRegistrations(statusFilter);
             setSelected(null);
+            showAdminSuccess('Race entry confirmed successfully.', 'Confirmed');
         } catch (err) {
             window.alert(err.message || 'Approve failed.');
         } finally {
@@ -236,6 +243,17 @@ export default function RegistrationManagement() {
     };
 
     const handleReject = async (registration) => {
+        const ok = await confirmAdminAction({
+            title: 'Reject race entry',
+            message: `Are you sure you want to reject "${registration.horseName}" in "${registration.tournamentName}"?`,
+            confirmLabel: 'Reject',
+            tone: 'danger',
+        });
+
+        if (!ok) {
+            return;
+        }
+
         const note = window.prompt(
             `Reject reason for "${registration.horseName}" in "${registration.tournamentName}":`,
             'Rejected by admin'
@@ -250,6 +268,7 @@ export default function RegistrationManagement() {
             await adminApi.rejectRegistration(registration.registrationId, note);
             await loadRegistrations(statusFilter);
             setSelected(null);
+            showAdminSuccess('Race entry rejected successfully.', 'Rejected');
         } catch (err) {
             window.alert(err.message || 'Reject failed.');
         } finally {

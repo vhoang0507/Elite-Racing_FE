@@ -19,7 +19,7 @@ const tournaments = [
         statusClass: 'bg-[#e7f7e8] text-[#28733a]',
         date: 'Oct 15, 2024',
         distance: '1600m',
-        prize: '$2.5M',
+        prize: '$2.500.000',
         registered: '18/24 slots',
     },
     {
@@ -30,7 +30,7 @@ const tournaments = [
         statusClass: 'bg-[#e7f7e8] text-[#28733a]',
         date: 'Nov 05, 2024',
         distance: '2000m',
-        prize: '$8.0M',
+        prize: '$8.000.000',
         registered: '12/16 slots',
     },
     {
@@ -41,7 +41,7 @@ const tournaments = [
         statusClass: 'bg-[#f5e1dd] text-[#7b4340]',
         date: 'Dec 12, 2024',
         distance: '1200m',
-        prize: '$1.5M',
+        prize: '$1.500.000',
         registered: '14 Days',
     },
 ];
@@ -75,7 +75,7 @@ export default function ExploreTournaments() {
                     {[
                         ['12', 'Total Tournaments'],
                         ['5', 'Open Registrations'],
-                        ['$25M+', 'Total Prize Pool'],
+                        ['$25.000.000+', 'Total Prize Pool'],
                         ['8', 'Upcoming Races This Month'],
                     ].map(([value, label]) => (
                         <div
@@ -127,7 +127,7 @@ export default function ExploreTournaments() {
                                 <span className="text-xs text-[var(--racing-muted)]">
                                     Prize Pool
                                 </span>
-                                <strong className="block text-xl">$5,000,000</strong>
+                                <strong className="block text-xl">$5.000.000</strong>
                             </div>
 
                             <div>

@@ -11,7 +11,7 @@ export default function LiveRaceBanner() {
                 <div style={styles.info}>
                     <div>
                         <small style={styles.infoLabel}>PRIZE POOL</small>
-                        <p style={styles.prizeValue}>$2,000,000</p>
+                        <p style={styles.prizeValue}>$2.000.000</p>
                     </div>
                     <div>
                         <small style={styles.infoLabel}>DISTANCE</small>

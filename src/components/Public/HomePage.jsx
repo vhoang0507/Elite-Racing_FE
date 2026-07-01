@@ -14,14 +14,14 @@ const sideEvents = [
         title: 'Melbourne Sprint Cup',
         location: 'Flemington, AUS',
         date: 'Nov 04, 2024',
-        purse: '$1.2M',
+        purse: '$1.200.000',
     },
     {
         tag: 'Invitational',
         title: 'Dubai Desert Dash',
         location: 'Meydan, UAE',
         date: 'Dec 15, 2024',
-        purse: '$5.0M',
+        purse: '$5.000.000',
     },
 ];
 
@@ -145,7 +145,7 @@ export default function HomePage() {
                                     <FaMapMarkerAlt className="mr-1 inline" /> Ascot, UK
                                 </span>
                                 <span>
-                                    <FaMoneyBillWave className="mr-1 inline" /> $2.5M Purse
+                                    <FaMoneyBillWave className="mr-1 inline" /> $2.500.000 Purse
                                 </span>
                             </p>
                         </div>

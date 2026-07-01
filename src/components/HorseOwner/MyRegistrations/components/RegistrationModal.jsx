@@ -4,6 +4,7 @@ import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
 import ImageLightbox from "../../../shared/ImageLightbox";
 import { resolveFileUrl } from "../../../../api/uploadApi";
+import { formatCurrency } from "../../../../utils/currency";
 
 const getTournamentStatus = (tournament) => tournament.status ?? tournament.Status ?? "OpenRegistration";
 
@@ -154,7 +155,7 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                         <div style={styles.infoRow}><span>📍</span><div><small>LOCATION</small><p>{tournament.location}</p></div></div>
                         <div style={styles.infoRow}><span>👥</span><div><small>SLOTS LEFT</small><p>{tournament.availableSlots} / {tournament.maxHorses}</p></div></div>
                         <div style={styles.infoRow}><span>📏</span><div><small>DISTANCE</small><p>{tournament.distanceMeters} m</p></div></div>
-                        <div style={styles.infoRow}><span>💰</span><div><small>PRIZE POOL</small><h3 style={{ margin: 0, color: "#0b7f5a" }}>${Number(tournament.prizePool).toLocaleString()}</h3></div></div>
+                        <div style={styles.infoRow}><span>💰</span><div><small>PRIZE POOL</small><h3 style={{ margin: 0, color: "#0b7f5a" }}>{formatCurrency(tournament.prizePool)}</h3></div></div>
                         <p style={{ fontSize: "11px", color: "#999", marginTop: "8px" }}>
                             ⚠️ Registrations require admin approval before race participation.
                         </p>

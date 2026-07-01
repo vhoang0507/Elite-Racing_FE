@@ -67,8 +67,13 @@ function formatSeconds(value) {
 function getRegistrationLabel(registration) {
     if (!registration) return 'Unknown registration';
     const horseName = registration.horseName || 'Unnamed horse';
-    const jockeyLabel = registration.jockeyId ? `Jockey ${registration.jockeyId}` : 'No jockey';
+    const jockeyLabel = registration.jockeyName ? `Jockey ${registration.jockeyName}` : 'No jockey';
     return `${horseName} — ${jockeyLabel}`;
+}
+
+function getOwnerLabel(registration) {
+    if (registration?.ownerName) return registration.ownerName;
+    return registration?.ownerId ? `#${registration.ownerId}` : 'N/A';
 }
 
 function getStatusClass(status) {
@@ -526,7 +531,7 @@ function AssignedPostRace() {
                                     <div style={{ background: '#fff8f6', border: '1px solid #dce5ef', borderRadius: 8, padding: 12, fontSize: 13 }}>
                                         <strong style={{ color: '#2b1b1b' }}>{selectedResultRegistration.horseName}</strong>
                                         <div style={{ color: '#64748b', marginTop: 2 }}>
-                                            Status: {selectedResultRegistration.status || 'N/A'} · Owner #{selectedResultRegistration.ownerId || 'N/A'} · Jockey #{selectedResultRegistration.jockeyId || 'N/A'}
+                                            Status: {selectedResultRegistration.status || 'N/A'} · Owner {getOwnerLabel(selectedResultRegistration)} · Jockey {selectedResultRegistration.jockeyName || 'N/A'}
                                         </div>
                                     </div>
                                 )}

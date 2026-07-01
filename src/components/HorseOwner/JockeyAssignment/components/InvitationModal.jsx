@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { ownerApi } from "../../../../api/ownerApi";
 import { resolveFileUrl } from "../../../../api/uploadApi";
+import {
+    formatCurrencyAmount,
+    parseCurrency,
+} from "../../../../utils/currency";
 
 export default function InvitationModal({ jockey, registrationId, tournamentName, onClose, onSent }) {
-    const [feeAmount, setFeeAmount] = useState(500);
+    const [feeAmount, setFeeAmount] = useState(formatCurrencyAmount(500));
     const [message, setMessage] = useState(
         `Dear ${jockey?.fullName ?? ''},\n\nWe would love for you to ride our horse in the upcoming race...`
     );
@@ -19,7 +23,7 @@ export default function InvitationModal({ jockey, registrationId, tournamentName
         try {
             await ownerApi.sendJockeyInvitation(registrationId, {
                 jockeyId: jockey.jockeyId,
-                feeAmount: Number(feeAmount) || 0,
+                feeAmount: parseCurrency(feeAmount),
                 message: message?.trim() || null,
             });
             onSent?.(jockey.fullName);
@@ -65,8 +69,9 @@ export default function InvitationModal({ jockey, registrationId, tournamentName
                         <label style={styles.label}>PROPOSED APPEARANCE FEE ($)</label>
                         <input
                             value={feeAmount}
-                            onChange={(e) => setFeeAmount(e.target.value)}
-                            type="number"
+                            inputMode="numeric"
+                            onChange={(e) => setFeeAmount(formatCurrencyAmount(e.target.value))}
+                            type="text"
                             style={styles.input}
                         />
                     </div>

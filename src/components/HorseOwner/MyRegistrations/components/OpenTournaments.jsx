@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
 import { resolveFileUrl } from "../../../../api/uploadApi";
+import { formatCurrency } from "../../../../utils/currency";
 import RegistrationModal from "./RegistrationModal";
 
 export default function OpenTournaments() {
@@ -42,7 +43,7 @@ export default function OpenTournaments() {
                                     style={styles.img}
                                     onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/DubaiSprintCup.jpg"; }}
                                 />
-                                <span style={styles.prizeBadge}>${Number(t.prizePool).toLocaleString()}+</span>
+                                <span style={styles.prizeBadge}>{formatCurrency(t.prizePool)}+</span>
                             </div>
                             <div style={styles.info}>
                                 <p style={styles.name}>{t.tournamentName}</p>

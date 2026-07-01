@@ -1,8 +1,12 @@
 import { apiRequest } from './httpClient';
+import {
+    formatCurrency,
+    parseCurrency,
+} from '../utils/currency';
 
 // ─── Formatters (kept for FE display) ────────────────────────────────────────
 
-const toMoney = (value) => `$${Number(value || 0).toLocaleString('en-US')}`;
+const toMoney = (value) => formatCurrency(value);
 
 const toDateLabel = (dateValue) => {
     if (!dateValue) return '';
@@ -399,11 +403,9 @@ async function createTournament(payload) {
     appendFormValue(
         formData,
         'PrizePool',
-        payload.prizePool ?? (
-            Number(payload.goldPrize || 0) +
-            Number(payload.silverPrize || 0) +
-            Number(payload.bronzePrize || 0)
-        )
+        payload.prizePool === undefined || payload.prizePool === null
+            ? parseCurrency(payload.goldPrize) + parseCurrency(payload.silverPrize) + parseCurrency(payload.bronzePrize)
+            : parseCurrency(payload.prizePool)
     );
     appendFormValue(formData, 'Rules', payload.rules || '');
     appendFormValue(formData, 'Status', payload.status || '');
@@ -444,7 +446,7 @@ async function updateTournament(id, patch) {
     appendFormValue(formData, 'RegistrationDeadline', patch.startDate || patch.registrationDeadline || '');
     appendFormValue(formData, 'DistanceMeters', Number(patch.distanceMeters || 0));
     appendFormValue(formData, 'MaxHorses', Number(patch.maxHorses || 0));
-    appendFormValue(formData, 'PrizePool', Number(patch.prizePool || 0));
+    appendFormValue(formData, 'PrizePool', parseCurrency(patch.prizePool));
     appendFormValue(formData, 'Rules', patch.rules || '');
     appendFormValue(formData, 'Status', patch.status || '');
 

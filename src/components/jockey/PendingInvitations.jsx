@@ -11,6 +11,7 @@ import {
 import JockeyLayout from './JockeyLayout';
 import { jockeyApi } from '../../api/jockeyApi';
 import { resolveFileUrl } from '../../api/uploadApi';
+import { formatCurrency } from '../../utils/currency';
 import ImageLightbox from '../shared/ImageLightbox';
 import Toast, { useToast } from '../shared/Toast';
 
@@ -23,7 +24,7 @@ function formatDate(dateStr) {
 
 function formatFee(amount) {
     if (amount == null) return '—';
-    return `$${Number(amount).toLocaleString()}`;
+    return formatCurrency(amount);
 }
 
 function formatAge(age) {

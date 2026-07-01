@@ -21,6 +21,15 @@ import {
 import { adminApi } from '../../api/adminApi';
 import { resolveFileUrl } from '../../api/uploadApi';
 import horseRacing from '../../assets/horse-racing.jpg';
+import {
+    formatCurrencyAmount,
+    handleCurrencyInputChange,
+    parseCurrency,
+} from '../../utils/currency';
+import {
+    confirmAdminAction,
+    showAdminSuccess,
+} from '../../utils/adminFeedback';
 import { getCompactPaginationItems } from '../../utils/pagination';
 
 import AdminLayout from './AdminLayout';
@@ -388,10 +397,26 @@ function RaceManagement() {
         setPage(1);
     };
 
-    const handleDelete = async (id) => {
-        await adminApi.deleteTournament(id);
-        setTournaments((current) => current.filter((tournament) => tournament.id !== id));
-        setPage(1);
+    const handleDelete = async (tournament) => {
+        const confirmed = await confirmAdminAction({
+            title: 'Delete tournament',
+            message: `Are you sure you want to delete "${tournament.name}"?`,
+            confirmLabel: 'Delete',
+            tone: 'danger',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            await adminApi.deleteTournament(tournament.id);
+            setTournaments((current) => current.filter((item) => item.id !== tournament.id));
+            setPage(1);
+            showAdminSuccess('Tournament deleted successfully.', 'Deleted');
+        } catch (err) {
+            setStatusActionError(err.message || 'Failed to delete tournament.');
+        }
     };
 
     const refreshTournamentRows = async () => {
@@ -402,6 +427,19 @@ function RaceManagement() {
     };
 
     const handleTournamentStatusChange = async (tournament, action) => {
+        const confirmed = await confirmAdminAction({
+            title: action === 'approve' ? 'Publish tournament' : 'Cancel tournament',
+            message: action === 'approve'
+                ? `Are you sure you want to publish "${tournament.name}"?`
+                : `Are you sure you want to cancel "${tournament.name}"?`,
+            confirmLabel: action === 'approve' ? 'Publish' : 'Cancel tournament',
+            tone: action === 'approve' ? 'primary' : 'danger',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
         setUpdatingStatusId(tournament.id);
         setStatusActionError('');
         setStatusActionMessage('');
@@ -413,7 +451,9 @@ function RaceManagement() {
             } else if (action === 'cancel') {
                 response = await adminApi.cancelTournament(tournament.id);
             }
-            setStatusActionMessage(response?.message || response?.Message || `Tournament ${action}d successfully.`);
+            const successMessage = response?.message || response?.Message || `Tournament ${action}d successfully.`;
+            setStatusActionMessage(successMessage);
+            showAdminSuccess(successMessage, 'Updated');
             setActionMenuId(null);
             await refreshTournamentRows();
         } catch (err) {
@@ -445,7 +485,7 @@ function RaceManagement() {
             distanceMeters: Number(formData.get('distanceMeters') || 0),
             maxHorses: Number(formData.get('maxHorses') || 0),
             registeredHorses: Number(formData.get('registeredHorses') || 0),
-            prizePool: Number(formData.get('prizePool') || 0),
+            prizePool: parseCurrency(formData.get('prizePool')),
             raceStartTime: String(formData.get('raceStartTime') || '').trim(),
             rules: formData.get('rules'),
             status: formData.get('status'),
@@ -462,6 +502,16 @@ function RaceManagement() {
             return;
         }
 
+        const confirmed = await confirmAdminAction({
+            title: 'Save tournament changes',
+            message: `Are you sure you want to save changes for "${editingTournament.name}"?`,
+            confirmLabel: 'Save Changes',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
         try {
             // Update tournament data (now includes status)
             await adminApi.updateTournament(editingTournament.id, patch);
@@ -470,6 +520,7 @@ function RaceManagement() {
             await refreshTournamentRows();
             setEditingTournament(null);
             setEditTournamentImageName('');
+            showAdminSuccess('Tournament changes saved successfully.', 'Saved');
         } catch (err) {
             setEditError(err.message || 'Failed to update tournament.');
         }
@@ -643,7 +694,7 @@ function RaceManagement() {
                                                     >
                                                         <FaEdit aria-hidden="true" />
                                                     </button>
-                                                    <button aria-label={`Delete ${tournament.name}`} className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]" onClick={() => handleDelete(tournament.id)} type="button">
+                                                    <button aria-label={`Delete ${tournament.name}`} className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]" onClick={() => handleDelete(tournament)} type="button">
                                                         <FaTrashAlt aria-hidden="true" />
                                                     </button>
                                                     <button
@@ -775,19 +826,16 @@ function RaceManagement() {
                                     <DetailItem label="Referee">
                                         {getRefereeNames(selectedTournament).length > 0 ? getRefereeNames(selectedTournament).join(', ') : 'Unassigned'}
                                     </DetailItem>
-                                    <DetailItem label="Created By">
-                                        {detailValue(readTournamentField(selectedTournament, 'createdBy', 'CreatedBy'))}
-                                    </DetailItem>
                                     <DetailItem label="Created At">
                                         {readTournamentField(selectedTournament, 'createdAt', 'CreatedAt')
                                             ? adminApi.formatters.toDateLabel(String(readTournamentField(selectedTournament, 'createdAt', 'CreatedAt')).split('T')[0])
                                             : '-'}
                                     </DetailItem>
-                                    <div className={`${detailItemClass} col-span-2 max-[720px]:col-span-1`}>
+                                    <div className={detailItemClass}>
                                         <span className={detailLabelClass}>Description</span>
                                         <div className={detailValueClass}>{detailValue(selectedTournament.description || selectedTournament.className)}</div>
                                     </div>
-                                    <div className={`${detailItemClass} col-span-2 max-[720px]:col-span-1`}>
+                                    <div className={detailItemClass}>
                                         <span className={detailLabelClass}>Rules</span>
                                         <div className={`${detailValueClass} whitespace-pre-wrap leading-relaxed`}>{detailValue(selectedTournament.rules)}</div>
                                     </div>
@@ -881,7 +929,7 @@ function RaceManagement() {
 
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Prize Pool</span>
-                                        <input className={editControlClass} defaultValue={editingTournament.prizePool} min="0" name="prizePool" step="any" type="number" />
+                                        <input className={editControlClass} defaultValue={formatCurrencyAmount(editingTournament.prizePool)} inputMode="numeric" name="prizePool" onChange={handleCurrencyInputChange} type="text" />
                                     </label>
 
                                     <label className={`${editFieldClass} col-span-2 max-[720px]:col-span-1`}>

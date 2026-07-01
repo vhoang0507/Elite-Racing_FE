@@ -1,8 +1,10 @@
+import { formatCurrency } from "../../../../utils/currency";
+
 export default function RewardStats({ summary, loading }) {
     return (
         <div className="grid grid-cols-3 gap-4 max-[720px]:grid-cols-1">
-            <StatCard icon="🏅" label="TOTAL PRIZE EARNED" value={loading ? "..." : `$${Number(summary?.totalPrizeEarned ?? 0).toLocaleString()}`} />
-            <StatCard icon="✅" label="CLAIMED REWARDS" value={loading ? "..." : `$${Number(summary?.claimedRewards ?? 0).toLocaleString()}`} />
+            <StatCard icon="🏅" label="TOTAL PRIZE EARNED" value={loading ? "..." : formatCurrency(summary?.totalPrizeEarned ?? 0)} />
+            <StatCard icon="✅" label="CLAIMED REWARDS" value={loading ? "..." : formatCurrency(summary?.claimedRewards ?? 0)} />
             <StatCard icon="🏆" label="TOURNAMENT WINS" value={loading ? "..." : (summary?.tournamentWins ?? 0)} />
         </div>
     );

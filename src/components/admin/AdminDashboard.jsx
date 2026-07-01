@@ -18,6 +18,10 @@ import { useNavigate } from 'react-router-dom';
 
 import AdminLayout from './AdminLayout';
 import { adminApi } from '../../api/adminApi';
+import {
+    confirmAdminAction,
+    showAdminSuccess,
+} from '../../utils/adminFeedback';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 const headingClass = 'flex items-center justify-between gap-[18px] max-[720px]:flex-col max-[720px]:items-stretch';
@@ -160,8 +164,20 @@ function AdminDashboard() {
     };
 
     const handleApproval = async (approval, nextStatus) => {
+        const isApproving = nextStatus === 'Active' || nextStatus === 'Approved';
+        const confirmed = await confirmAdminAction({
+            title: isApproving ? 'Approve request' : 'Reject request',
+            message: `Are you sure you want to ${isApproving ? 'approve' : 'reject'} "${approval.name}"?`,
+            confirmLabel: isApproving ? 'Approve' : 'Reject',
+            tone: isApproving ? 'primary' : 'danger',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
         if (approval.source === 'user' && approval.role === 'Jockey') {
-            if (nextStatus === 'Active' || nextStatus === 'Approved') {
+            if (isApproving) {
                 await adminApi.approveVerification(approval.id);
             } else {
                 await adminApi.rejectVerification(approval.id);
@@ -173,6 +189,7 @@ function AdminDashboard() {
         }
 
         await refreshDashboard();
+        showAdminSuccess(isApproving ? 'Request approved successfully.' : 'Request rejected successfully.', isApproving ? 'Approved' : 'Rejected');
     };
 
     return (
