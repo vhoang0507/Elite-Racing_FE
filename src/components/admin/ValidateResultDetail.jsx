@@ -200,9 +200,13 @@ function ValidateResultDetail() {
                     ...postRaceResults
                         .filter((result) => result?.resultId && result.status === 'RefereeConfirmed')
                         .map((result) => String(result.resultId)),
-                    currentResultId,
+                    /^\d+$/.test(currentResultId) ? currentResultId : '',
                 ].filter(Boolean)),
             ];
+
+            if (resultIds.length === 0) {
+                throw new Error('No referee-confirmed results to approve.');
+            }
 
             for (const id of resultIds) {
                 await adminApi.publishResult(id);
@@ -232,9 +236,26 @@ function ValidateResultDetail() {
         setActionError('');
         setActionSuccess('');
         try {
-            await adminApi.rejectResult(resultId);
-            setActionSuccess('Result returned to referee.');
-            showAdminSuccess('Result returned to referee.', 'Returned');
+            const currentResultId = String(resultId || '').replace('result-', '');
+            const resultIds = [
+                ...new Set([
+                    ...postRaceResults
+                        .filter((result) => result?.resultId && result.status === 'RefereeConfirmed')
+                        .map((result) => String(result.resultId)),
+                    /^\d+$/.test(currentResultId) ? currentResultId : '',
+                ].filter(Boolean)),
+            ];
+
+            if (resultIds.length === 0) {
+                throw new Error('No referee-confirmed results to return.');
+            }
+
+            for (const id of resultIds) {
+                await adminApi.rejectResult(id);
+            }
+
+            setActionSuccess('Results returned to referee.');
+            showAdminSuccess('Results returned to referee.', 'Returned');
             setTimeout(() => navigate('/admin/results'), 1500);
         } catch (err) {
             setActionError(err.message || 'Failed to return result.');
@@ -246,13 +267,14 @@ function ValidateResultDetail() {
     const isStandaloneReport = detail?.detailType === 'admin-report';
     const heading = isStandaloneReport
         ? `${formatReportType(detail?.sourceType)}: ${detail?.raceName || 'Race report'}`
-        : `Referee Report: ${detail?.raceName || 'Race result'}`;
+        : `Post-Race Submission: ${detail?.raceName || 'Race result'}`;
     const description = isStandaloneReport
         ? 'Full referee report information submitted from the referee workflow.'
-        : 'Official report content submitted by the race referee for admin review.';
+        : 'Official race results and logged violations submitted by the race referee for admin review.';
     const tournamentName = detail?.tournamentName || detail?.raceName || '-';
     const postRaceResults = detail?.postRace?.results || [];
     const postRaceReports = detail?.postRace?.reports || detail?.reports || [];
+    const postRaceViolations = postRaceReports.filter(isViolationReport);
     const isPostRaceReportItem = (report) => report.reportPhase === 'PostRace';
     const getReportTournament = (report) => report.tournamentName || detail?.tournamentName || detail?.raceName || '-';
     const getReportSubtitle = (report) => (
@@ -469,7 +491,7 @@ function ValidateResultDetail() {
                                     <h2 className="m-0 text-[1rem] font-black text-[var(--admin-ink)]">Post-Race</h2>
                                 </div>
                                 <span className="text-[0.72rem] font-extrabold text-[#475569]">
-                                    {postRaceResults.length} result{postRaceResults.length === 1 ? '' : 's'} | {postRaceReports.length} report{postRaceReports.length === 1 ? '' : 's'}
+                                    {postRaceResults.length} result{postRaceResults.length === 1 ? '' : 's'} | {postRaceViolations.length} violation{postRaceViolations.length === 1 ? '' : 's'}
                                 </span>
                             </div>
 
@@ -528,11 +550,11 @@ function ValidateResultDetail() {
 
                             <div>
                                 <div className="border-b border-[var(--admin-border)] px-6 py-4">
-                                    <h3 className="m-0 text-[0.95rem] font-black text-[var(--admin-primary-dark)]">Referee Report</h3>
+                                    <h3 className="m-0 text-[0.95rem] font-black text-[var(--admin-primary-dark)]">Violations</h3>
                                 </div>
                                 {renderReportCards(
-                                    postRaceReports,
-                                    'No Post-Race report is available for this race.'
+                                    postRaceViolations,
+                                    'No violations were reported for this race.'
                                 )}
                             </div>
                         </section>

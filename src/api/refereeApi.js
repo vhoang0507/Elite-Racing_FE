@@ -55,6 +55,12 @@ export async function confirmRaceResult(raceId, resultId) {
     });
 }
 
+export async function confirmAllRaceResults(raceId) {
+    return apiRequest(`/referee/races/${raceId}/results/confirm-all`, {
+        method: 'PUT',
+    });
+}
+
 export async function finishRace(raceId) {
     return apiRequest(`/referee/races/${raceId}/finish`, {
         method: 'PUT',
@@ -65,6 +71,19 @@ export async function createViolation(raceId, payload) {
     return apiRequest(`/referee/races/${raceId}/violations`, {
         method: 'POST',
         body: JSON.stringify(payload),
+    });
+}
+
+export async function updateViolation(raceId, violationId, payload) {
+    return apiRequest(`/referee/races/${raceId}/violations/${violationId}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload),
+    });
+}
+
+export async function deleteViolation(raceId, violationId) {
+    return apiRequest(`/referee/races/${raceId}/violations/${violationId}`, {
+        method: 'DELETE',
     });
 }
 
@@ -124,8 +143,11 @@ export const refereeApi = {
     getInspectionReport,
     saveRaceResult,
     confirmRaceResult,
+    confirmAllRaceResults,
     finishRace,
     createViolation,
+    updateViolation,
+    deleteViolation,
     getViolations,
     getRaceResults,
     createRefereeReport,

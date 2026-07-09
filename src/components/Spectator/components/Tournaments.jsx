@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useNavigate as useNav } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
     FaCalendarAlt,
     FaCheckCircle,
     FaHorseHead,
     FaMapMarkerAlt,
+    FaPlay,
     FaTimes,
     FaTrophy,
 } from 'react-icons/fa';
@@ -35,6 +36,12 @@ function canPredict(tournament) {
     const raceStatus = tournament.race?.status;
     if (!raceStatus) return false;
     return !RACE_CLOSED_FOR_PREDICTION.includes(raceStatus);
+}
+
+function canWatchReplay(tournament) {
+    return tournament?.status === 'Completed'
+        && tournament.race?.status === 'Published'
+        && !!tournament.race?.raceId;
 }
 
 // ─── Predict Modal ────────────────────────────────────────────────────────────
@@ -274,14 +281,14 @@ function PredictModal({ tournament, onClose, onSuccess }) {
 
 // ─── Tournament card ──────────────────────────────────────────────────────────
 
-function TournamentCard({ tournament, myPrediction, onPredict }) {
-    const navTo = useNav();
+function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
     const s = getStatusStyle(tournament.status);
     const hasPredicted = !!myPrediction || tournament.hasPredicted;
     const horseName = myPrediction?.predictedHorseName ?? tournament.myPrediction?.predictedHorseName;
     const isCorrect = myPrediction?.isCorrect;
     const pts = myPrediction?.pointsAwarded ?? 0;
     const open = canPredict(tournament);
+    const replayOpen = canWatchReplay(tournament);
 
     return (
         <article className="surface-card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -337,21 +344,18 @@ function TournamentCard({ tournament, myPrediction, onPredict }) {
                         >
                             <FaHorseHead /> Make Prediction
                         </button>
+                    ) : replayOpen ? (
+                        <button
+                            type="button"
+                            onClick={() => onReplay(tournament.race.raceId)}
+                            style={{ width: '100%', padding: '10px 0', borderRadius: 8, border: '1px solid #0b7f5a', background: '#fff', color: '#0b7f5a', fontWeight: 800, fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+                        >
+                            <FaPlay /> Watch Official Replay
+                        </button>
                     ) : (
-                        // Closed — show replay button if completed + has raceId, else plain text
-                        tournament.status === 'Completed' && tournament.race?.raceId ? (
-                            <button
-                                type="button"
-                                onClick={() => navTo(`/spectator/races/${tournament.race.raceId}/replay`)}
-                                style={{ width: '100%', padding: '10px 0', borderRadius: 8, border: '1.5px solid #0b7f5a', background: '#fff', color: '#0b7f5a', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer' }}
-                            >
-                                🏁 Watch Replay
-                            </button>
-                        ) : (
-                            <p style={{ margin: 0, fontSize: '0.83rem', color: '#bbb', textAlign: 'center' }}>
-                                Prediction period has ended
-                            </p>
-                        )
+                        <p style={{ margin: 0, fontSize: '0.83rem', color: '#bbb', textAlign: 'center' }}>
+                            Prediction period has ended
+                        </p>
                     )}
                 </div>
             </div>
@@ -369,6 +373,7 @@ const FILTERS = [
 ];
 
 export default function Tournaments() {
+    const navigate = useNavigate();
     const [tournaments, setTournaments] = useState([]);
     const [predictions, setPredictions] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -469,6 +474,7 @@ export default function Tournaments() {
                             tournament={t}
                             myPrediction={predMap[t.tournamentId]}
                             onPredict={setModal}
+                            onReplay={(raceId) => navigate(`/spectator/races/${raceId}/replay`)}
                         />
                     ))}
                 </div>
