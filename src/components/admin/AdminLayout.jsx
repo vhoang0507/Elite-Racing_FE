@@ -15,6 +15,7 @@ import {
     FaSearch,
     FaSignOutAlt,
     FaTools,
+    FaTrophy,
     FaUsers,
 } from 'react-icons/fa';
 
@@ -51,6 +52,12 @@ const navigation = [
         label: 'Race Entry Approval',
         icon: FaClipboardCheck,
         path: '/admin/registrations',
+    },
+    {
+        key: 'seasons',
+        label: 'Season Management',
+        icon: FaTrophy,
+        path: '/admin/seasons',
     },
     {
         key: 'predictions',

@@ -464,6 +464,46 @@ async function deleteTournament(id) {
     return apiRequest(`/admin/tournaments/${id}`, { method: 'DELETE' });
 }
 
+// Seasons
+
+async function getSeasons() {
+    return apiRequest('/admin/seasons');
+}
+
+async function createSeason(payload) {
+    return apiRequest('/admin/seasons', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+    });
+}
+
+async function activateSeason(id) {
+    return apiRequest(`/admin/seasons/${id}/activate`, {
+        method: 'PUT',
+    });
+}
+
+async function closeSeason(id) {
+    return apiRequest(`/admin/seasons/${id}/close`, {
+        method: 'PUT',
+    });
+}
+
+async function getSeasonLeaderboard(id) {
+    return apiRequest(`/admin/seasons/${id}/leaderboard`);
+}
+
+async function getSeasonRewards(id) {
+    return apiRequest(`/admin/seasons/${id}/rewards`);
+}
+
+async function updateSeasonRewardRules(id, rules) {
+    return apiRequest(`/admin/seasons/${id}/reward-rules`, {
+        method: 'PUT',
+        body: JSON.stringify({ rules }),
+    });
+}
+
 // ─── Race Registrations ──────────────────────────────────────────────────────
 
 async function getRegistrations() {
@@ -1223,6 +1263,15 @@ export const adminApi = {
     cancelTournament,
     updateTournament,
     deleteTournament,
+
+    // Seasons
+    getSeasons,
+    createSeason,
+    activateSeason,
+    closeSeason,
+    getSeasonLeaderboard,
+    getSeasonRewards,
+    updateSeasonRewardRules,
 
     // Race Registrations
     getRegistrations,
