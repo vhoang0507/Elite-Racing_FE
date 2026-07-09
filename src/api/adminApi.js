@@ -543,10 +543,57 @@ const mapRaceResult = (result) => {
     };
 };
 
+const adminVisibleResultStatuses = new Set([
+    'RefereeConfirmed',
+    'AdminApproved',
+    'Returned',
+    'Published',
+]);
+
+const isAdminVisibleResult = (result) => adminVisibleResultStatuses.has(result?.status);
+
+const getResultTimestamp = (result) => {
+    const value = result?.submittedAt || result?.updatedAt || result?.createdAt;
+    const timestamp = new Date(value || 0).getTime();
+
+    return Number.isFinite(timestamp) ? timestamp : 0;
+};
+
+const getLatestResult = (results) => [...results].sort((current, next) => (
+    getResultTimestamp(next) - getResultTimestamp(current)
+))[0];
+
+const getResultSubmissionSlug = (raceId, refereeId) => (
+    `submission-${raceId || 'race'}-${refereeId || 'referee'}`
+);
+
+const parseResultSubmissionSlug = (idOrSlug) => {
+    const match = /^submission-(\d+)-(\d+)$/.exec(String(idOrSlug || ''));
+
+    if (!match) {
+        return null;
+    }
+
+    return {
+        raceId: Number(match[1]),
+        refereeId: Number(match[2]),
+    };
+};
+
+const getResultSubmissionStatus = (results) => {
+    const statuses = results.map((result) => result.status).filter(Boolean);
+
+    if (statuses.includes('RefereeConfirmed')) return 'RefereeConfirmed';
+    if (statuses.includes('Returned')) return 'Returned';
+    if (statuses.length > 0 && statuses.every((status) => status === 'Published')) return 'Published';
+    if (statuses.length > 0 && statuses.every((status) => status === 'AdminApproved' || status === 'Published')) return 'AdminApproved';
+
+    return statuses[0] || 'Pending';
+};
+
 async function getResultSubmissions() {
-    const [resultsPayload, reportsPayload, registrationsPayload] = await Promise.all([
+    const [resultsPayload, registrationsPayload] = await Promise.all([
         apiRequest('/admin/results').catch(() => []),
-        getReports().catch(() => []),
         getRegistrations().catch(() => []),
     ]);
     const registrationContextById = new Map(
@@ -555,7 +602,9 @@ async function getResultSubmissions() {
             .map((context) => [String(context.registrationId), context])
     );
 
-    const resultSubmissions = (Array.isArray(resultsPayload) ? resultsPayload : [])
+    const groupedResults = new Map();
+    (Array.isArray(resultsPayload) ? resultsPayload : [])
+        .filter(isAdminVisibleResult)
         .map((result) => {
             const context = registrationContextById.get(String(result.registrationId)) || {};
 
@@ -567,11 +616,38 @@ async function getResultSubmissions() {
                 horseId: context.horseId,
                 horseName: context.horseName,
             });
-        });
-    const reportSubmissions = normalizeReports(reportsPayload)
-        .map(mapAdminReportSubmission);
+        })
+        .forEach((result) => {
+            const key = `${result.raceId || 'race'}-${result.enteredByRefereeId || 'referee'}`;
+            const current = groupedResults.get(key) || [];
 
-    return [...resultSubmissions, ...reportSubmissions]
+            groupedResults.set(key, [...current, result]);
+        });
+
+    const resultSubmissions = [...groupedResults.values()].map((results) => {
+        const sortedResults = sortRaceResults(results);
+        const latestResult = getLatestResult(sortedResults) || sortedResults[0];
+        const status = getResultSubmissionStatus(sortedResults);
+        const slug = getResultSubmissionSlug(latestResult.raceId, latestResult.enteredByRefereeId);
+
+        return {
+            ...latestResult,
+            id: slug,
+            slug,
+            resultIds: sortedResults.map((result) => result.resultId).filter(Boolean),
+            resultCount: sortedResults.length,
+            status,
+            submittedAt: latestResult.updatedAt || latestResult.createdAt,
+            updatedAt: latestResult.updatedAt,
+            createdAt: latestResult.createdAt,
+            detail: `${sortedResults.length} result${sortedResults.length === 1 ? '' : 's'} submitted`,
+            position: `${sortedResults.length} entries`,
+            tone: status === 'Returned' ? 'orange' : latestResult.tone,
+            results: sortedResults,
+        };
+    });
+
+    return resultSubmissions
         .sort((current, next) => {
             const currentDate = new Date(current.submittedAt || current.updatedAt || current.createdAt || 0).getTime();
             const nextDate = new Date(next.submittedAt || next.updatedAt || next.createdAt || 0).getTime();
@@ -587,6 +663,11 @@ async function getPendingResults() {
 async function getResultDetail(idOrSlug) {
     const id = String(idOrSlug).replace('result-', '');
     const result = await apiRequest(`/admin/results/${id}`);
+
+    if (!isAdminVisibleResult(result)) {
+        throw new Error('This result has not been submitted to admin yet.');
+    }
+
     const mappedResult = mapRaceResult(result);
 
     return {
@@ -758,38 +839,6 @@ const mergeReportContext = (report, context = {}) => ({
     jockeyName: report.jockeyName || context.jockeyName,
 });
 
-const mapAdminReportSubmission = (report) => {
-    const sourceType = report.type || (report.violationId ? 'Violation' : 'RefereeReport');
-    const reportPhase = getReportPhase(report);
-    const reportLabel = formatReportTypeLabel(sourceType);
-    const submittedAt = report.submittedAt || report.createdAt;
-    const tournamentName = getReportTournamentName(report);
-
-    return {
-        id: getAdminReportSlug(report),
-        kind: 'report',
-        slug: getAdminReportSlug(report),
-        reportId: report.reportId,
-        violationId: report.violationId,
-        raceId: report.raceId,
-        tournamentName,
-        race: report.raceName || `Race #${report.raceId || '-'}`,
-        name: report.raceName || `Race #${report.raceId || '-'}`,
-        detail: `${formatReportPhaseLabel(reportPhase)} ${reportLabel}${report.refereeName ? ` by ${report.refereeName}` : ''}`,
-        status: report.action || reportLabel,
-        tone: sourceType === 'Violation' ? 'orange' : 'blue',
-        submittedAt,
-        createdAt: report.createdAt,
-        reportType: sourceType,
-        reportPhase,
-        refereeId: report.refereeId,
-        refereeName: report.refereeName,
-        horseId: report.horseId,
-        horseName: report.horseName,
-        content: report.reportContent || report.description || '',
-    };
-};
-
 const mapRefereeReport = (report) => ({
     id: getAdminReportSlug(report),
     reportId: report.reportId,
@@ -861,6 +910,8 @@ async function getRaceWorkflowData(raceId, { refereeId, fallbackReports = [] } =
         )));
     const results = (Array.isArray(resultsPayload) ? resultsPayload : [])
         .filter((result) => Number(result.raceId) === Number(raceId))
+        .filter((result) => !refereeId || !result.enteredByRefereeId || Number(result.enteredByRefereeId) === Number(refereeId))
+        .filter(isAdminVisibleResult)
         .map((result) => {
             const context = contextMap.get(String(result.registrationId)) || firstContext;
 
@@ -945,6 +996,54 @@ async function getStandaloneReportDetail(idOrSlug) {
     };
 }
 
+async function getGroupedResultReportDetail(idOrSlug) {
+    const parsedSubmission = parseResultSubmissionSlug(idOrSlug);
+
+    if (!parsedSubmission) {
+        return null;
+    }
+
+    const workflow = await getRaceWorkflowData(parsedSubmission.raceId, {
+        refereeId: parsedSubmission.refereeId,
+    });
+    const results = workflow.results;
+
+    if (results.length === 0) {
+        throw new Error('This result has not been submitted to admin yet.');
+    }
+
+    const firstResult = results[0];
+    const latestResult = getLatestResult(results) || firstResult;
+    const raceContext = workflow.raceContext || {};
+    const workflowReports = workflow.reports;
+    const splitReports = splitWorkflowReports(workflowReports);
+    const raceName = raceContext.raceName || firstResult.raceName || firstResult.race;
+    const tournamentName = raceContext.tournamentName || firstResult.tournamentName || firstResult.race;
+
+    return {
+        detailType: 'result-submission',
+        resultId: firstResult.resultId,
+        resultIds: results.map((result) => result.resultId).filter(Boolean),
+        raceId: parsedSubmission.raceId,
+        raceName,
+        tournamentId: raceContext.tournamentId || firstResult.tournamentId,
+        tournamentName,
+        registrationId: firstResult.registrationId,
+        refereeId: parsedSubmission.refereeId,
+        status: getResultSubmissionStatus(results),
+        submittedAt: latestResult.updatedAt || latestResult.createdAt,
+        reports: workflowReports,
+        preRace: {
+            reports: splitReports.preRace,
+        },
+        postRace: {
+            results,
+            reports: splitReports.postRace,
+        },
+        reportError: '',
+    };
+}
+
 async function getResultReportDetail(idOrSlug) {
     const standaloneReport = await getStandaloneReportDetail(idOrSlug);
 
@@ -952,8 +1051,19 @@ async function getResultReportDetail(idOrSlug) {
         return standaloneReport;
     }
 
+    const groupedSubmission = await getGroupedResultReportDetail(idOrSlug);
+
+    if (groupedSubmission) {
+        return groupedSubmission;
+    }
+
     const id = String(idOrSlug).replace('result-', '');
     const result = await apiRequest(`/admin/results/${id}`);
+
+    if (!isAdminVisibleResult(result)) {
+        throw new Error('This result has not been submitted to admin yet.');
+    }
+
     const mappedResult = mapRaceResult(result);
     const raceContext = await getRaceContextForReport({
         registrationId: result.registrationId,
@@ -1042,6 +1152,11 @@ async function publishResult(idOrSlug) {
 
 async function rejectResult(id) {
     return apiRequest(`/admin/results/${id}/reject`, { method: 'PUT' });
+}
+
+async function deleteResult(idOrSlug) {
+    const id = String(idOrSlug).replace('result-', '');
+    return apiRequest(`/admin/results/${id}`, { method: 'DELETE' });
 }
 
 // ─── Reports (Violations) ────────────────────────────────────────────────────
@@ -1238,6 +1353,7 @@ export const adminApi = {
     getResultReportDetail,
     publishResult,
     rejectResult,
+    deleteResult,
 
     // Reports
     getReports,

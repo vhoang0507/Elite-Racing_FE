@@ -3,11 +3,13 @@ import { useLocation } from 'react-router-dom';
 import {
     FaCheck,
     FaClipboardList,
+    FaEdit,
     FaExclamationTriangle,
-    FaFileAlt,
     FaGavel,
     FaMapMarkerAlt,
     FaRedo,
+    FaTimes,
+    FaTrash,
     FaTrophy,
 } from 'react-icons/fa';
 
@@ -16,6 +18,7 @@ import {
     refereeApi,
 } from '../../api/refereeApi';
 import RefereeLayout from './RefereeLayout';
+import Toast, { useToast } from '../shared/Toast';
 
 const emptyResultForm = {
     registrationId: '',
@@ -42,7 +45,6 @@ const violationTypes = [
 const TABS = [
     { key: 'results',    icon: FaTrophy,      label: 'Results' },
     { key: 'violations', icon: FaGavel,        label: 'Violations' },
-    { key: 'reports',    icon: FaFileAlt,      label: 'Reports' },
 ];
 
 function formatDateTime(value) {
@@ -85,6 +87,10 @@ function getStatusClass(status) {
 const inputClass = "rounded border border-[#dce5ef] px-3 py-2.5 text-sm outline-none focus:border-[#0b7f5a] w-full";
 const labelClass = "block text-xs font-bold text-[#64748b] uppercase mb-1.5";
 const primaryBtn = "rounded bg-[#0b7f5a] px-5 py-2.5 font-semibold text-white text-sm disabled:cursor-not-allowed disabled:opacity-60 w-full";
+const confirmToneClass = {
+    primary: 'bg-[#0b7f5a] hover:bg-[#09664a]',
+    danger: 'bg-[#b91c1c] hover:bg-[#991b1b]',
+};
 
 function AssignedPostRace() {
     const location = useLocation();
@@ -94,19 +100,20 @@ function AssignedPostRace() {
     const [registrations, setRegistrations] = useState([]);
     const [results, setResults] = useState([]);
     const [violations, setViolations] = useState([]);
-    const [reports, setReports] = useState([]);
     const [activeTab, setActiveTab] = useState('results');
 
     const [resultForm, setResultForm] = useState(emptyResultForm);
+    const [editingResultId, setEditingResultId] = useState('');
     const [violationForm, setViolationForm] = useState(emptyViolationForm);
-    const [reportContent, setReportContent] = useState('');
-    const [reportType, setReportType] = useState('PostRace');
+    const [editingViolationId, setEditingViolationId] = useState('');
 
     const [loadingRaces, setLoadingRaces] = useState(true);
     const [loadingRaceData, setLoadingRaceData] = useState(false);
     const [saving, setSaving] = useState('');
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [confirmRequest, setConfirmRequest] = useState(null);
+    const { toast, showToast, hideToast } = useToast();
 
     const selectedRace = useMemo(
         () => races.find((race) => String(race.raceId) === String(selectedRaceId)) ?? null,
@@ -121,6 +128,8 @@ function AssignedPostRace() {
 
     const selectedResultRegistration = registrationById.get(String(resultForm.registrationId));
     const selectedViolationRegistration = registrationById.get(String(violationForm.registrationId));
+    const isEditingResult = Boolean(editingResultId);
+    const isEditingViolation = Boolean(editingViolationId);
 
     const canFinishRace =
         selectedRace?.allowedActions?.canFinishRace ||
@@ -129,6 +138,28 @@ function AssignedPostRace() {
     const canEnterResults =
         selectedRace?.allowedActions?.canEnterResults ||
         selectedRace?.raceStatus === 'Finished';
+
+    const draftResultCount = results.filter((result) => result.status === 'Draft').length;
+    const confirmedResultCount = results.filter((result) => result.status === 'RefereeConfirmed').length;
+    const submitReportDisabled =
+        saving === 'submit-report' ||
+        loadingRaceData ||
+        !selectedRaceId ||
+        !canEnterResults ||
+        results.length === 0 ||
+        draftResultCount === 0;
+
+    const submitReportHint = !selectedRaceId
+        ? 'Select a race before submitting.'
+        : selectedRace?.raceStatus === 'ResultPending'
+            ? 'Post-race report has already been sent to admin.'
+            : !canEnterResults
+                ? `Race must be Finished before submission. Current status: ${selectedRace?.raceStatus || 'N/A'}.`
+                : results.length === 0
+                    ? 'Save race results before submitting.'
+                    : draftResultCount === 0
+                        ? 'No draft results waiting for submission.'
+                        : `${draftResultCount} draft result${draftResultCount === 1 ? '' : 's'} ready to submit.`;
 
     async function loadAssignedRaces(ignoreRef = { current: false }) {
         setLoadingRaces(true);
@@ -161,11 +192,10 @@ function AssignedPostRace() {
         setError('');
         setSuccess('');
         try {
-            const [registrationData, resultData, violationData, reportData] = await Promise.all([
+            const [registrationData, resultData, violationData] = await Promise.all([
                 refereeApi.getRaceRegistrations(raceId),
                 refereeApi.getRaceResults(raceId),
                 refereeApi.getViolations(raceId),
-                refereeApi.getRefereeReports(raceId),
             ]);
             if (ignoreRef.current) return;
             const nextRegistrations = registrationData ?? [];
@@ -173,10 +203,10 @@ function AssignedPostRace() {
             setRegistrations(nextRegistrations);
             setResults(resultData ?? []);
             setViolations(violationData ?? []);
-            setReports(reportData ?? []);
             setResultForm({ ...emptyResultForm, registrationId: firstId });
+            setEditingResultId('');
             setViolationForm({ ...emptyViolationForm, registrationId: firstId });
-            setReportContent('');
+            setEditingViolationId('');
         } catch (err) {
             if (!ignoreRef.current) setError(err.message || 'Failed to load race data.');
         } finally {
@@ -199,7 +229,22 @@ function AssignedPostRace() {
 
     const refreshResults = async () => { if (selectedRaceId) setResults(await refereeApi.getRaceResults(selectedRaceId) ?? []); };
     const refreshViolations = async () => { if (selectedRaceId) setViolations(await refereeApi.getViolations(selectedRaceId) ?? []); };
-    const refreshReports = async () => { if (selectedRaceId) setReports(await refereeApi.getRefereeReports(selectedRaceId) ?? []); };
+
+    const requestViolationConfirm = (options) => new Promise((resolve) => {
+        setConfirmRequest({
+            title: options.title,
+            message: options.message,
+            confirmLabel: options.confirmLabel,
+            cancelLabel: options.cancelLabel || 'Cancel',
+            tone: options.tone || 'primary',
+            resolve,
+        });
+    });
+
+    const resolveConfirmRequest = (value) => {
+        confirmRequest?.resolve?.(value);
+        setConfirmRequest(null);
+    };
 
     const validateResultForm = () => {
         if (!selectedRaceId) return 'Select a race first.';
@@ -270,13 +315,18 @@ function AssignedPostRace() {
             });
             await refreshResults();
             setResultForm((p) => ({ ...emptyResultForm, registrationId: p.registrationId }));
-            setSuccess('Result saved.');
+            setEditingResultId('');
+            setSuccess(isEditingResult
+                ? 'Result draft changes saved. Submit the post-race report to send it to admin.'
+                : 'Result saved as draft. Submit the post-race report to send it to admin.'
+            );
         } catch (err) {
             setError(err.message || 'Failed to save result.');
         } finally { setSaving(''); }
     };
 
     const handleEditResult = (result) => {
+        setEditingResultId(String(result.resultId || result.registrationId || ''));
         setResultForm({
             registrationId: String(result.registrationId),
             finishTimeSeconds: result.finishTimeSeconds ?? '',
@@ -288,50 +338,128 @@ function AssignedPostRace() {
         setError('');
     };
 
-    const handleConfirmResult = async (resultId) => {
-        if (!selectedRaceId) return;
-        setSaving(`confirm-${resultId}`); setError(''); setSuccess('');
-        try {
-            await refereeApi.confirmRaceResult(selectedRaceId, resultId);
-            await refreshResults();
-            setSuccess('Result confirmed.');
-        } catch (err) {
-            setError(err.message || 'Failed to confirm result.');
-        } finally { setSaving(''); }
-    };
-
-    const handleCreateViolation = async (e) => {
+    const handleSaveViolation = async (e) => {
         e.preventDefault();
         const msg = validateViolationForm();
         if (msg) { setError(msg); setSuccess(''); return; }
-        setSaving('violation'); setError(''); setSuccess('');
-        try {
-            await refereeApi.createViolation(selectedRaceId, {
-                registrationId: Number(violationForm.registrationId),
-                violationType: violationForm.violationType.trim(),
-                description: violationForm.description?.trim() || null,
-                action: violationForm.action,
-                penaltyPoints: nullableNumber(violationForm.penaltyPoints),
+
+        if (isEditingViolation) {
+            const confirmed = await requestViolationConfirm({
+                title: 'Update violation',
+                message: 'Are you sure you want to update this violation?',
+                confirmLabel: 'Update',
+                tone: 'primary',
             });
+            if (!confirmed) return;
+        }
+
+        setSaving('violation'); setError(''); setSuccess('');
+        const payload = {
+            registrationId: Number(violationForm.registrationId),
+            violationType: violationForm.violationType.trim(),
+            description: violationForm.description?.trim() || null,
+            action: violationForm.action,
+            penaltyPoints: nullableNumber(violationForm.penaltyPoints),
+        };
+        try {
+            if (isEditingViolation) {
+                await refereeApi.updateViolation(selectedRaceId, editingViolationId, payload);
+            } else {
+                await refereeApi.createViolation(selectedRaceId, payload);
+            }
             await refreshViolations();
             setViolationForm((p) => ({ ...emptyViolationForm, registrationId: p.registrationId }));
-            setSuccess('Violation created.');
+            setEditingViolationId('');
+            const successMessage = isEditingViolation ? 'Violation updated successfully.' : 'Violation created.';
+            setSuccess(successMessage);
+            if (isEditingViolation) {
+                showToast(successMessage, 'success', 'Updated');
+            }
         } catch (err) {
-            setError(err.message || 'Failed to create violation.');
+            setError(err.message || (isEditingViolation ? 'Failed to update violation.' : 'Failed to create violation.'));
         } finally { setSaving(''); }
     };
 
-    const handleCreateReport = async (e) => {
-        e.preventDefault();
-        if (!selectedRaceId || !reportContent.trim()) return;
-        setSaving('report'); setError(''); setSuccess('');
+    const handleEditViolation = (violation) => {
+        setEditingViolationId(String(violation.violationId || ''));
+        setViolationForm({
+            registrationId: String(violation.registrationId || ''),
+            violationType: violation.violationType ?? '',
+            description: violation.description ?? '',
+            action: violation.action ?? VIOLATION_ACTIONS.warning,
+            penaltyPoints: violation.penaltyPoints ?? '',
+        });
+        setSuccess('Editing violation - update fields and save.');
+        setError('');
+    };
+
+    const handleCancelViolationEdit = () => {
+        setViolationForm((p) => ({ ...emptyViolationForm, registrationId: p.registrationId }));
+        setEditingViolationId('');
+        setError('');
+        setSuccess('');
+    };
+
+    const handleDeleteViolation = async (violation) => {
+        if (!selectedRaceId || !violation?.violationId) return;
+        const confirmed = await requestViolationConfirm({
+            title: 'Delete violation',
+            message: 'Are you sure you want to delete this violation?',
+            confirmLabel: 'Delete',
+            tone: 'danger',
+        });
+        if (!confirmed) return;
+
+        const savingKey = `delete-violation-${violation.violationId}`;
+        setSaving(savingKey);
+        setError('');
+        setSuccess('');
         try {
-            await refereeApi.createRefereeReport(selectedRaceId, reportContent.trim(), reportType);
-            await refreshReports();
-            setReportContent('');
-            setSuccess('Report submitted.');
+            await refereeApi.deleteViolation(selectedRaceId, violation.violationId);
+            await refreshViolations();
+            if (String(editingViolationId) === String(violation.violationId)) {
+                setViolationForm((p) => ({ ...emptyViolationForm, registrationId: p.registrationId }));
+                setEditingViolationId('');
+            }
+            const successMessage = 'Violation deleted successfully.';
+            setSuccess(successMessage);
+            showToast(successMessage, 'success', 'Deleted');
         } catch (err) {
-            setError(err.message || 'Failed to submit report.');
+            setError(err.message || 'Failed to delete violation.');
+        } finally {
+            setSaving('');
+        }
+    };
+
+    const handleSubmitPostRaceReport = async () => {
+        if (!selectedRaceId) return;
+        if (results.length === 0) {
+            setError('Save race results before submitting.');
+            setSuccess('');
+            return;
+        }
+
+        setSaving('submit-report'); setError(''); setSuccess('');
+        try {
+            const updatedLifecycle = await refereeApi.confirmAllRaceResults(selectedRaceId);
+            setRaces((prev) =>
+                prev.map((race) =>
+                    String(race.raceId) === String(selectedRaceId)
+                        ? {
+                            ...race,
+                            raceStatus: updatedLifecycle?.raceStatus || 'ResultPending',
+                            currentStage: updatedLifecycle?.currentStage,
+                            nextStage: updatedLifecycle?.nextStage,
+                            allowedActions: updatedLifecycle?.allowedActions,
+                        }
+                        : race
+                )
+            );
+            await loadRaceWorkflowData(selectedRaceId);
+            setActiveTab('results');
+            setSuccess(`Post-race report submitted to admin with ${results.length} result${results.length === 1 ? '' : 's'} and ${violations.length} violation${violations.length === 1 ? '' : 's'}.`);
+        } catch (err) {
+            setError(err.message || 'Failed to submit post-race report.');
         } finally { setSaving(''); }
     };
 
@@ -342,7 +470,7 @@ function AssignedPostRace() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
                     <div>
                         <h1 className="page-title">Post-Race Workflow</h1>
-                        <p className="page-subtitle">Enter results, log violations, and submit referee reports.</p>
+                        <p className="page-subtitle">Enter results, log violations, and submit the post-race report to admin.</p>
                     </div>
                     <button
                         type="button"
@@ -384,9 +512,9 @@ function AssignedPostRace() {
                     </div>
                 )}
 
-                {selectedRace && !canEnterResults && activeTab === 'results' && selectedRace.raceStatus !== 'Ongoing' && (
-                    <div className="rounded-[8px] border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
-                        Race results can only be entered when race status is <strong>Finished</strong>. Current status: <strong>{selectedRace.raceStatus}</strong>
+                {selectedRace?.raceStatus === 'ResultPending' && activeTab === 'results' && (
+                    <div className="rounded-[8px] border border-blue-200 bg-blue-50 px-5 py-4 font-semibold text-blue-700">
+                        Post-race report has already been sent to admin. Current status: <strong>{selectedRace.raceStatus}</strong>
                     </div>
                 )}
 
@@ -448,8 +576,7 @@ function AssignedPostRace() {
                     {TABS.map((tab) => {
                         const Icon = tab.icon;
                         const count = tab.key === 'results' ? results.length
-                            : tab.key === 'violations' ? violations.length
-                            : reports.length;
+                            : violations.length;
                         const isActive = activeTab === tab.key;
                         return (
                             <button
@@ -570,7 +697,7 @@ function AssignedPostRace() {
                                     disabled={saving === 'result' || loadingRaceData || registrations.length === 0 || !canEnterResults}
                                     className={primaryBtn}
                                 >
-                                    {saving === 'result' ? 'Saving...' : 'Save Result'}
+                                    {saving === 'result' ? 'Saving...' : isEditingResult ? 'Save Change' : 'Save Result'}
                                 </button>
                             </div>
                         </form>
@@ -614,12 +741,6 @@ function AssignedPostRace() {
                                                             style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #dce5ef', background: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
                                                             Edit
                                                         </button>
-                                                        <button type="button" onClick={() => handleConfirmResult(result.resultId)}
-                                                            disabled={result.status === 'RefereeConfirmed' || saving === `confirm-${result.resultId}`}
-                                                            style={{ padding: '5px 12px', borderRadius: 6, border: 'none', background: '#0b7f5a', color: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                                                            <FaCheck className="mr-1 inline" />
-                                                            {saving === `confirm-${result.resultId}` ? '...' : 'Confirm'}
-                                                        </button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -635,9 +756,9 @@ function AssignedPostRace() {
                 {!loadingRaceData && activeTab === 'violations' && (
                     <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
                         {/* Form */}
-                        <form onSubmit={handleCreateViolation} className="surface-card" style={{ padding: 24 }}>
+                        <form onSubmit={handleSaveViolation} className="surface-card" style={{ padding: 24 }}>
                             <h2 style={{ margin: '0 0 20px', fontSize: '1.1rem', fontWeight: 800, color: '#2b1b1b', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <FaGavel style={{ color: '#0b7f5a' }} /> Log Violation
+                                <FaGavel style={{ color: '#0b7f5a' }} /> {isEditingViolation ? 'Edit Violation' : 'Log Violation'}
                             </h2>
 
                             {selectedRace && (
@@ -710,9 +831,23 @@ function AssignedPostRace() {
                                         placeholder="Describe what happened" className={inputClass} />
                                 </div>
 
-                                <button type="submit" disabled={saving === 'violation' || loadingRaceData || registrations.length === 0} className={primaryBtn}>
-                                    {saving === 'violation' ? 'Creating...' : 'Create Violation'}
-                                </button>
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                    <button type="submit" disabled={saving === 'violation' || loadingRaceData || registrations.length === 0} className={primaryBtn}>
+                                        {saving === 'violation' ? 'Saving...' : isEditingViolation ? 'Update Violation' : 'Create Violation'}
+                                    </button>
+                                    {isEditingViolation && (
+                                        <button
+                                            type="button"
+                                            onClick={handleCancelViolationEdit}
+                                            title="Cancel edit"
+                                            aria-label="Cancel edit"
+                                            disabled={saving === 'violation'}
+                                            className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded border border-[#dce5ef] bg-white text-[#64748b] disabled:cursor-not-allowed disabled:opacity-60"
+                                        >
+                                            <FaTimes />
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         </form>
 
@@ -738,9 +873,31 @@ function AssignedPostRace() {
                                                     {formatDateTime(v.createdAt)} · Penalty: {v.penaltyPoints ?? 0} pts
                                                 </div>
                                             </div>
-                                            <span style={{ background: '#fde8e8', color: '#b91c1c', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, flexShrink: 0 }}>
-                                                {v.action}
-                                            </span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                                                <span style={{ background: '#fde8e8', color: '#b91c1c', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, flexShrink: 0 }}>
+                                                    {v.action}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleEditViolation(v)}
+                                                    title="Edit violation"
+                                                    aria-label="Edit violation"
+                                                    disabled={loadingRaceData || Boolean(saving)}
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded border border-[#dce5ef] bg-white text-[#0b7f5a] disabled:cursor-not-allowed disabled:opacity-60"
+                                                >
+                                                    <FaEdit />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteViolation(v)}
+                                                    title="Delete violation"
+                                                    aria-label="Delete violation"
+                                                    disabled={loadingRaceData || Boolean(saving)}
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded border border-red-200 bg-white text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+                                                >
+                                                    <FaTrash />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -749,65 +906,93 @@ function AssignedPostRace() {
                     </div>
                 )}
 
-                {/* ── REPORTS TAB ── */}
-                {!loadingRaceData && activeTab === 'reports' && (
-                    <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
-                        {/* Form */}
-                        <form onSubmit={handleCreateReport} className="surface-card" style={{ padding: 24 }}>
-                            <h2 style={{ margin: '0 0 20px', fontSize: '1.1rem', fontWeight: 800, color: '#2b1b1b', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <FaFileAlt style={{ color: '#0b7f5a' }} /> Submit Report
-                            </h2>
-
-                            {selectedRace && (
-                                <div style={{ background: '#faf6f5', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#64748b' }}>
-                                    Race: <strong style={{ color: '#0b7f5a' }}>{selectedRace.raceName}</strong>
-                                </div>
-                            )}
-
-                            <div style={{ marginBottom: 14 }}>
-                                <label className={labelClass}>Report Type</label>
-                                <select value={reportType} onChange={(e) => setReportType(e.target.value)} className={inputClass}>
-                                    <option value="PostRace">Post-Race</option>
-                                    <option value="PreRace">Pre-Race</option>
-                                </select>
-                            </div>
-
+                {/* Final submit */}
+                {!loadingRaceData && selectedRaceId && (
+                    <section className="surface-card" style={{ padding: 22 }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap' }}>
                             <div>
-                                <label className={labelClass}>Report Content</label>
-                                <textarea value={reportContent} rows={12} required
-                                    onChange={(e) => setReportContent(e.target.value)}
-                                    placeholder="Write your post-race report here..." className={inputClass} />
-                            </div>
-
-                            <button type="submit" disabled={saving === 'report' || !reportContent.trim()} className={primaryBtn} style={{ marginTop: 14 }}>
-                                {saving === 'report' ? 'Submitting...' : 'Submit Report'}
-                            </button>
-                        </form>
-
-                        {/* Reports list */}
-                        <div className="surface-card" style={{ overflow: 'hidden' }}>
-                            <div style={{ padding: '16px 20px', borderBottom: '1px solid #dce5ef' }}>
-                                <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <FaFileAlt style={{ color: '#0b7f5a' }} /> Submitted Reports
+                                <h2 style={{ margin: 0, fontSize: '1.08rem', fontWeight: 800, color: '#2b1b1b', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    <FaClipboardList style={{ color: '#0b7f5a' }} /> Submit Post-Race Report
                                 </h2>
+                                <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13, fontWeight: 600 }}>
+                                    {submitReportHint}
+                                </p>
                             </div>
-                            <div>
-                                {reports.length === 0 ? (
-                                    <div style={{ padding: 24, textAlign: 'center', color: '#999', fontSize: 13 }}>No reports submitted.</div>
-                                ) : reports.map((r) => (
-                                    <div key={r.reportId} style={{ padding: '16px 20px', borderBottom: '1px solid #f5f5f5' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                                            <span style={{ fontWeight: 700, fontSize: 14, color: '#2b1b1b' }}>Report #{r.reportId}</span>
-                                            <span style={{ fontSize: 11, color: '#999' }}>{formatDateTime(r.submittedAt)}</span>
-                                        </div>
-                                        <p style={{ margin: 0, fontSize: 13, color: '#64748b', lineHeight: 1.6 }}>{r.reportContent}</p>
-                                    </div>
-                                ))}
+                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                <span style={{ border: '1px solid #dce5ef', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 800, color: '#0b7f5a', background: '#f8fbff' }}>
+                                    Results: {results.length}
+                                </span>
+                                <span style={{ border: '1px solid #dce5ef', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 800, color: '#0b7f5a', background: '#f8fbff' }}>
+                                    Draft: {draftResultCount}
+                                </span>
+                                <span style={{ border: '1px solid #dce5ef', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 800, color: '#0b7f5a', background: '#f8fbff' }}>
+                                    Confirmed: {confirmedResultCount}
+                                </span>
+                                <span style={{ border: '1px solid #dce5ef', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 800, color: '#0b7f5a', background: '#f8fbff' }}>
+                                    Violations: {violations.length}
+                                </span>
                             </div>
                         </div>
-                    </div>
+
+                        <button
+                            type="button"
+                            onClick={handleSubmitPostRaceReport}
+                            disabled={submitReportDisabled}
+                            className="mt-5 inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded bg-[#0b7f5a] px-6 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            <FaCheck />
+                            {saving === 'submit-report' ? 'Submitting...' : 'Submit Report to Admin'}
+                        </button>
+                    </section>
                 )}
             </section>
+
+            {confirmRequest && (
+                <div
+                    aria-modal="true"
+                    className="fixed inset-0 z-[10000] grid place-items-center bg-[rgba(15,23,42,0.42)] px-5 py-8"
+                    onClick={() => resolveConfirmRequest(false)}
+                    role="dialog"
+                >
+                    <section
+                        className="grid w-[min(440px,100%)] gap-5 rounded-[8px] border border-[#dce5ef] bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.28)]"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <div className="grid gap-2">
+                            <h2 className="m-0 text-[1.15rem] font-black text-[#2b1b1b]">
+                                {confirmRequest.title}
+                            </h2>
+                            <p className="m-0 text-[0.92rem] font-semibold leading-6 text-[#64748b]">
+                                {confirmRequest.message}
+                            </p>
+                        </div>
+
+                        <div className="flex justify-end gap-3 max-[520px]:flex-col">
+                            <button
+                                className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md border border-[#dce5ef] bg-[#fffdfc] px-4 font-black text-[#2b1b1b] hover:bg-[#e8f7ef]"
+                                onClick={() => resolveConfirmRequest(false)}
+                                type="button"
+                            >
+                                {confirmRequest.cancelLabel}
+                            </button>
+                            <button
+                                className={`inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md px-4 font-black text-white ${confirmToneClass[confirmRequest.tone] || confirmToneClass.primary}`}
+                                onClick={() => resolveConfirmRequest(true)}
+                                type="button"
+                            >
+                                {confirmRequest.confirmLabel}
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            )}
+
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                title={toast.title}
+                onClose={hideToast}
+            />
         </RefereeLayout>
     );
 }

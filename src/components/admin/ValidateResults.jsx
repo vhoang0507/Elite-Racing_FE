@@ -14,10 +14,15 @@ import {
     FaFileAlt,
     FaFlagCheckered,
     FaHorseHead,
+    FaTrashAlt,
     FaTrophy,
 } from 'react-icons/fa';
 
 import { adminApi } from '../../api/adminApi';
+import {
+    confirmAdminAction,
+    showAdminSuccess,
+} from '../../utils/adminFeedback';
 import { getCompactPaginationItems } from '../../utils/pagination';
 
 import AdminLayout from './AdminLayout';
@@ -106,6 +111,7 @@ function ValidateResults() {
     const [query, setQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
     const [page, setPage] = useState(1);
+    const [deletingId, setDeletingId] = useState('');
 
     useEffect(() => {
         let isMounted = true;
@@ -138,6 +144,35 @@ function ValidateResults() {
         setPage(1);
     };
 
+    const handleDeleteSubmission = async (submission) => {
+        const confirmed = await confirmAdminAction({
+            title: 'Delete result report',
+            message: `Are you sure you want to delete ${submission.race || 'this result report'} (${submission.detail || 'selected submission'})?`,
+            confirmLabel: 'Delete',
+            tone: 'danger',
+        });
+
+        if (!confirmed) return;
+
+        const ids = Array.isArray(submission.resultIds) && submission.resultIds.length > 0
+            ? submission.resultIds
+            : [submission.resultId || submission.id || submission.slug].filter(Boolean);
+        const deleteKey = String(submission.id || submission.slug || ids[0] || '');
+        setDeletingId(deleteKey);
+
+        try {
+            for (const id of ids) {
+                await adminApi.deleteResult(id);
+            }
+            setSubmissions((current) => current.filter((item) => item !== submission));
+            showAdminSuccess('Result report deleted successfully.', 'Deleted');
+        } catch (err) {
+            window.alert(err.message || 'Failed to delete result report.');
+        } finally {
+            setDeletingId('');
+        }
+    };
+
     return (
         <AdminLayout
             activeKey="results"
@@ -152,7 +187,7 @@ function ValidateResults() {
                             Validate Results
                         </h1>
                         <p className="mt-2 text-[0.95rem] font-semibold leading-[1.45] text-[var(--admin-muted)]">
-                            Review referee-submitted race results and reports before publishing official race outcomes.
+                            Review referee-submitted race results and violations before publishing official race outcomes.
                         </p>
                     </div>
 
@@ -162,7 +197,7 @@ function ValidateResults() {
                     >
                         <div className="flex min-h-[58px] items-center justify-between gap-4 border-b border-[var(--admin-border)] bg-[var(--validate-soft-panel)] px-6">
                             <h2 className="m-0 text-[1.04rem] font-black text-[var(--admin-ink)]">
-                                Active Submissions & Reports
+                                Active Result Submissions
                             </h2>
                             <select
                                 value={statusFilter}
@@ -185,7 +220,7 @@ function ValidateResults() {
                                         <th className="w-[260px] border-b border-[var(--admin-border)] bg-[var(--validate-table-head)] px-6 py-[18px] text-left text-[0.66rem] font-black uppercase tracking-normal text-[var(--admin-muted)]">
                                             Status
                                         </th>
-                                        <th className="w-60 border-b border-[var(--admin-border)] bg-[var(--validate-table-head)] px-6 py-[18px] text-center text-[0.66rem] font-black uppercase tracking-normal text-[var(--admin-muted)]">
+                                        <th className="w-[300px] border-b border-[var(--admin-border)] bg-[var(--validate-table-head)] px-6 py-[18px] text-center text-[0.66rem] font-black uppercase tracking-normal text-[var(--admin-muted)]">
                                             Action
                                         </th>
                                     </tr>
@@ -216,14 +251,25 @@ function ValidateResults() {
                                                         {submission.status}
                                                     </span>
                                                 </td>
-                                                <td className="w-60 whitespace-nowrap border-b border-[var(--admin-border)] px-6 py-[18px] text-center align-middle">
-                                                    <Link
-                                                        className="inline-flex min-h-[38px] min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-md border border-[var(--admin-primary)] bg-white text-[0.82rem] font-extrabold text-[var(--admin-primary)] no-underline hover:bg-[var(--admin-primary)] hover:text-white"
-                                                        to={`/admin/results/${submission.slug}`}
-                                                    >
-                                                        <span>{submission.kind === 'report' ? 'View Report' : 'View Details'}</span>
-                                                        <FaChevronRight aria-hidden="true" className="h-3 w-3" />
-                                                    </Link>
+                                                <td className="w-[300px] whitespace-nowrap border-b border-[var(--admin-border)] px-6 py-[18px] text-center align-middle">
+                                                    <div className="inline-flex items-center justify-center gap-2">
+                                                        <Link
+                                                            className="inline-flex min-h-[38px] min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-md border border-[var(--admin-primary)] bg-white text-[0.82rem] font-extrabold text-[var(--admin-primary)] no-underline hover:bg-[var(--admin-primary)] hover:text-white"
+                                                            to={`/admin/results/${submission.slug}`}
+                                                        >
+                                                            <span>View Details</span>
+                                                            <FaChevronRight aria-hidden="true" className="h-3 w-3" />
+                                                        </Link>
+                                                        <button
+                                                            aria-label={`Delete ${submission.race || 'result report'}`}
+                                                            className="grid h-[38px] w-[38px] cursor-pointer place-items-center rounded-md border border-[#f0b7ae] bg-white text-[#a11616] hover:bg-[#fff1ef] disabled:cursor-not-allowed disabled:opacity-50"
+                                                            disabled={deletingId === String(submission.id || submission.slug || submission.resultId)}
+                                                            onClick={() => handleDeleteSubmission(submission)}
+                                                            type="button"
+                                                        >
+                                                            <FaTrashAlt aria-hidden="true" />
+                                                        </button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );
