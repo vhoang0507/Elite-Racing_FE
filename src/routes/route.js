@@ -54,6 +54,7 @@ import SpectatorTournaments from '../components/Spectator/SpectatorTournaments';
 import SpectatorPredictions from '../components/Spectator/SpectatorPredictions';
 import SpectatorResultReward from '../components/Spectator/SpectatorResultReward';
 import SpectatorNotificationsPage from '../components/Spectator/SpectatorNotificationsPage';
+import SpectatorRaceReplay from '../components/Spectator/SpectatorRaceReplay';
 
 import AssignedPostRace from '../components/referee/AssignedPostRace';
 import AssignedPreRace from '../components/referee/AssignedPreRace';
@@ -138,6 +139,7 @@ const appRoutes = [
     { path: '/spectator/results', element: guard('Spectator', SpectatorResultReward) },
     { path: '/spectator/notifications', element: guard('Spectator', SpectatorNotificationsPage) },
     { path: '/spectator/settings', element: guard('Spectator', SpectatorSetting) },
+    { path: '/spectator/races/:raceId/replay', element: guard('Spectator', SpectatorRaceReplay) },
 ];
 
 function AppRoutes() {

@@ -21,7 +21,7 @@ export async function getRaceRegistrations(raceId) {
 }
 
 // ─── Predictions ─────────────────────────────────────────────────────────────
-// payload: { tournamentId, predictedHorseId }  — 1 prediction per tournament
+// payload: { tournamentId, predictedHorseId, stakePoints }
 
 export async function createPrediction(payload) {
     return apiRequest('/spectator/predictions', {
@@ -32,8 +32,25 @@ export async function createPrediction(payload) {
 
 export async function getMyPredictions() {
     // Returns array of { predictionId, tournamentId, tournamentName, predictedHorseId,
-    //   predictedHorseName, isCorrect, pointsAwarded, status }
+    //   predictedHorseName, isCorrect, pointsAwarded, stakePoints, netPoints, status, lockedAt }
     return apiRequest('/spectator/predictions/my');
+}
+
+// Returns { bettingPoints, initialBettingPoints, minimumStakePoints,
+//           totalStakePoints, totalPayoutPoints, pendingStakePoints, netPoints }
+export async function getSpectatorWallet() {
+    return apiRequest('/spectator/predictions/wallet');
+}
+
+// ─── Race Replay ─────────────────────────────────────────────────────────────
+// Returns { raceId, tournamentId, raceName, tournamentName, distanceMeters,
+//           seed, totalDurationMs, officialAt,
+//           runners[]: { resultId, horseId, horseName, horseImageUrl,
+//                        ownerName, jockeyName, rank, finishTimeSeconds,
+//                        finishTimeMs, lane, color } }
+
+export async function getRaceReplay(raceId) {
+    return apiRequest(`/spectator/races/${raceId}/replay`);
 }
 
 // ─── Tournament horses (for prediction picker) ────────────────────────────────
@@ -96,7 +113,9 @@ export const spectatorApi = {
     getRaceRegistrations,
     createPrediction,
     getMyPredictions,
+    getSpectatorWallet,
     getTournamentHorses,
+    getRaceReplay,
     getHorseLeaderboard,
     getPredictorLeaderboard,
     getCurrentSeason,

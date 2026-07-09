@@ -28,7 +28,7 @@ function getOutcome(prediction) {
 }
 
 function PredictionCard({ prediction }) {
-    const { pointsAwarded, tournamentName, predictedHorseName, tournamentStatus } = prediction;
+    const { pointsAwarded, stakePoints, netPoints, tournamentName, predictedHorseName, tournamentStatus } = prediction;
     const outcome = getOutcome(prediction);
 
     const accentColor = {
@@ -49,7 +49,7 @@ function PredictionCard({ prediction }) {
 
     const badgeLabel = {
         correct:   `✓ Correct  +${pointsAwarded ?? 0} pts`,
-        wrong:     '✗ Wrong',
+        wrong:     `✗ Wrong  -${stakePoints ?? 0} pts`,
         locked:    '🔒 Locked – Awaiting Evaluation',
         cancelled: '✕ Cancelled',
         pending:   '⏳ Awaiting Result',
@@ -67,6 +67,16 @@ function PredictionCard({ prediction }) {
                     <p style={{ margin: '3px 0 0', fontWeight: 700, fontSize: '0.95rem', color: '#2b1b1b' }}>
                         {predictedHorseName}
                     </p>
+                    {stakePoints != null && (
+                        <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: '#999' }}>
+                            Stake: {stakePoints} pts
+                            {netPoints != null && outcome !== 'pending' && outcome !== 'locked' && (
+                                <span style={{ marginLeft: 8, fontWeight: 700, color: netPoints >= 0 ? '#155724' : '#721c24' }}>
+                                    Net: {netPoints >= 0 ? '+' : ''}{netPoints} pts
+                                </span>
+                            )}
+                        </p>
+                    )}
                     {tournamentStatus && (
                         <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: '#bbb' }}>
                             Tournament: {tournamentStatus}
@@ -101,12 +111,14 @@ export default function Predictions() {
     const pending   = predictions.filter(p => p.isCorrect == null && p.status !== 'Cancelled').length;
     const accuracy  = (correct + wrong) === 0 ? 0 : Math.round((correct / (correct + wrong)) * 100);
     const totalPts  = predictions.reduce((s, p) => s + (p.pointsAwarded ?? 0), 0);
+    const totalStake = predictions.reduce((s, p) => s + (p.stakePoints ?? 0), 0);
+    const netTotal  = totalPts - totalStake;
 
     const stats = [
-        { label: 'Total',      value: total,          icon: FaBullseye,    tone: '' },
-        { label: 'Correct',    value: correct,         icon: FaCheckCircle, tone: 'green' },
-        { label: 'Accuracy',   value: `${accuracy}%`,  icon: FaPercent,     tone: 'blue' },
-        { label: 'Pts Earned', value: `${totalPts}`,   icon: FaCoins,       tone: 'gold', suffix: 'pts' },
+        { label: 'Total',      value: total,           icon: FaBullseye,    tone: '' },
+        { label: 'Correct',    value: correct,          icon: FaCheckCircle, tone: 'green' },
+        { label: 'Accuracy',   value: `${accuracy}%`,   icon: FaPercent,     tone: 'blue' },
+        { label: 'Net Points', value: `${netTotal >= 0 ? '+' : ''}${netTotal}`, icon: FaCoins, tone: netTotal >= 0 ? 'gold' : 'red', suffix: 'pts' },
     ];
 
     const counts = { all: total, pending, correct, wrong, cancelled };
@@ -134,7 +146,7 @@ export default function Predictions() {
                     const Icon = s.icon;
                     return (
                         <article key={s.label} className="stat-card min-h-[110px]">
-                            <div className={`stat-icon ${s.tone === 'green' ? 'bg-[#dff7e9] text-[#118548]' : s.tone === 'blue' ? 'bg-[#e3f2fd] text-[#1565c0]' : s.tone === 'gold' ? 'bg-[#fff3cd] text-[#856404]' : ''}`}>
+                            <div className={`stat-icon ${s.tone === 'green' ? 'bg-[#dff7e9] text-[#118548]' : s.tone === 'blue' ? 'bg-[#e3f2fd] text-[#1565c0]' : s.tone === 'gold' ? 'bg-[#fff3cd] text-[#856404]' : s.tone === 'red' ? 'bg-[#f8d7da] text-[#721c24]' : ''}`}>
                                 <Icon aria-hidden="true" />
                             </div>
                             <small className="stat-label">{s.label}</small>
