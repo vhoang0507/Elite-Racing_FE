@@ -90,6 +90,52 @@ function getRunnerFinishMs(runner, raceMs, runnerCount) {
     return raceMs * (0.82 + spread * 0.18);
 }
 
+function getStableSeed(value) {
+    const text = String(value || 'race-replay');
+    let hash = 2166136261;
+
+    for (let index = 0; index < text.length; index += 1) {
+        hash ^= text.charCodeAt(index);
+        hash = Math.imul(hash, 16777619);
+    }
+
+    return hash >>> 0;
+}
+
+function getRunnerStableKey(runner, fallbackIndex) {
+    return [
+        runner?.horseId,
+        runner?.horseName,
+        runner?.ownerName,
+    ].filter(Boolean).join('|') || String(fallbackIndex);
+}
+
+function getStableReplayLaneRunners(runners, tournamentKey) {
+    const runnerCount = runners.length;
+    const tournamentSeed = tournamentKey || 'race-replay';
+    const stableOrder = runners
+        .map((runner, index) => ({
+            index,
+            runner,
+            seed: getStableSeed(`${tournamentSeed}|${getRunnerStableKey(runner, index)}`),
+        }))
+        .sort((a, b) => (
+            a.seed - b.seed
+            || String(a.runner?.horseName || '').localeCompare(String(b.runner?.horseName || ''))
+            || a.index - b.index
+        ));
+
+    return stableOrder.map(({ runner }, index) => {
+        const replayLane = index + 1;
+
+        return {
+            ...runner,
+            replayColor: getLaneColor(replayLane),
+            replayLane,
+        };
+    });
+}
+
 function HorseSilhouette({ color }) {
     return (
         <span
@@ -135,13 +181,13 @@ function ResultHorseIcon({ color }) {
 }
 
 function RaceTrack({ runners, phase, raceMs, replayKey }) {
-    const laneCount = Math.max(6, runners.length);
+    const laneCount = runners.length;
     const lanes = Array.from({ length: laneCount }, (_, index) => index + 1);
     const laneTopStart = 23;
     const laneTopEnd = 78;
     const laneGap = laneCount > 1 ? (laneTopEnd - laneTopStart) / (laneCount - 1) : 0;
     const runnerByLane = new Map(
-        runners.map((runner, index) => [Number(runner.lane || index + 1), runner])
+        runners.map((runner, index) => [Number(runner.replayLane || runner.lane || index + 1), runner])
     );
 
     return (
@@ -244,8 +290,8 @@ function RaceTrack({ runners, phase, raceMs, replayKey }) {
 
                 {lanes.map((lane) => {
                     const runner = runnerByLane.get(lane);
-                    const top = laneTopStart + (lane - 1) * laneGap;
-                    const color = runner?.color || getLaneColor(lane);
+                    const top = laneCount > 1 ? laneTopStart + (lane - 1) * laneGap : 50;
+                    const color = runner?.replayColor || runner?.color || getLaneColor(lane);
                     const finishMs = getRunnerFinishMs(runner, raceMs, runners.length);
 
                     return (
@@ -401,7 +447,12 @@ export default function RaceReplay() {
 
     if (!data) return null;
 
-    const sortedRunners = [...(data.runners || [])].sort((a, b) => (a.lane || a.rank) - (b.lane || b.rank));
+    const tournamentKey = [data.tournamentId, data.tournamentName].filter(Boolean).join('|')
+        || [raceId, data.raceId, data.raceName].filter(Boolean).join('|');
+    const replayRunners = getStableReplayLaneRunners(data.runners || [], tournamentKey);
+    const sortedRunners = [...replayRunners].sort((a, b) => (
+        (a.replayLane || a.lane || a.rank) - (b.replayLane || b.lane || b.rank)
+    ));
     const totalMs = getReplayDurationMs(sortedRunners, data.totalDurationMs);
 
     return (
@@ -478,8 +529,8 @@ export default function RaceReplay() {
                                     background: runner.rank === 1 ? '#fffbea' : runner.rank === 2 ? '#f8faff' : runner.rank === 3 ? '#fff8f4' : '#fafafa',
                                     border: `1.5px solid ${runner.rank === 1 ? '#f59e0b' : runner.rank === 2 ? '#93c5fd' : runner.rank === 3 ? '#fca5a5' : '#eee'}`,
                                 }}>
-                                    <span style={{ flexShrink: 0, width: 38, textAlign: 'center', fontWeight: 900, color: getLaneColor(runner.lane) }}>{rankLabel(runner.rank)}</span>
-                                    <ResultHorseIcon color={runner.color || getLaneColor(runner.lane)} />
+                                    <span style={{ flexShrink: 0, width: 38, textAlign: 'center', fontWeight: 900, color: runner.replayColor || getLaneColor(runner.replayLane || runner.lane) }}>{rankLabel(runner.rank)}</span>
+                                    <ResultHorseIcon color={runner.replayColor || runner.color || getLaneColor(runner.replayLane || runner.lane)} />
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <p style={{ margin: 0, fontWeight: 800, fontSize: '0.92rem', color: '#2b1b1b' }}>{runner.horseName}</p>
                                         <p style={{ margin: '1px 0 0', fontSize: '0.73rem', color: '#999' }}>
@@ -488,7 +539,7 @@ export default function RaceReplay() {
                                     </div>
                                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                                         <p style={{ margin: 0, fontWeight: 900, fontSize: '0.88rem', color: '#2b1b1b' }}>{formatFinishTime(runner)}</p>
-                                        <p style={{ margin: '1px 0 0', fontSize: '0.7rem', color: '#999' }}>Lane {runner.lane}</p>
+                                        <p style={{ margin: '1px 0 0', fontSize: '0.7rem', color: '#999' }}>Lane {runner.replayLane || runner.lane}</p>
                                     </div>
                                 </div>
                             ))}
