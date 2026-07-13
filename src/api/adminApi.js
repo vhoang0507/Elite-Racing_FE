@@ -1150,6 +1150,10 @@ async function publishResult(idOrSlug) {
     return apiRequest(`/admin/results/${id}/approve`, { method: 'PUT' });
 }
 
+async function publishRaceResults(raceId) {
+    return apiRequest(`/admin/results/race/${raceId}/approve-all`, { method: 'PUT' });
+}
+
 async function rejectResult(id) {
     return apiRequest(`/admin/results/${id}/reject`, { method: 'PUT' });
 }
@@ -1157,6 +1161,19 @@ async function rejectResult(id) {
 async function deleteResult(idOrSlug) {
     const id = String(idOrSlug).replace('result-', '');
     return apiRequest(`/admin/results/${id}`, { method: 'DELETE' });
+}
+
+async function getAdminRewards(status) {
+    const query = status ? `?status=${encodeURIComponent(status)}` : '';
+    return apiRequest(`/admin/rewards${query}`);
+}
+
+async function approveRewardPayment(id) {
+    return apiRequest(`/admin/rewards/${id}/approve-payment`, { method: 'PUT' });
+}
+
+async function rejectRewardPayment(id) {
+    return apiRequest(`/admin/rewards/${id}/reject`, { method: 'PUT' });
 }
 
 // ─── Reports (Violations) ────────────────────────────────────────────────────
@@ -1352,8 +1369,14 @@ export const adminApi = {
     getResultDetail,
     getResultReportDetail,
     publishResult,
+    publishRaceResults,
     rejectResult,
     deleteResult,
+
+    // Rewards
+    getAdminRewards,
+    approveRewardPayment,
+    rejectRewardPayment,
 
     // Reports
     getReports,

@@ -41,7 +41,8 @@ const statusClass = {
     draft: 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
     refereeconfirmed: 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
     adminapproved: 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
-    returned: 'border-[#e8897d] bg-[#e8f7ef] text-[var(--admin-primary)]',
+    published: 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
+    returned: 'border-[#e8897d] bg-[#fff1ef] text-[#a11616]',
     'referee-report': 'border-[#9ab8ff] bg-[#e7f0ff] text-[#1747c2]',
     'violation-report': 'border-[#f1d59b] bg-[#fff7df] text-[#8a5a00]',
     warning: 'border-[#f1d59b] bg-[#fff7df] text-[#8a5a00]',
@@ -98,6 +99,13 @@ const isViolationReport = (report) => (
     report?.sourceType === 'Violation'
     || Boolean(report?.violationId)
     || Boolean(report?.violationType)
+);
+
+const normalizeViolationValue = (value) => String(value || '').replace(/\s+/g, '').toLowerCase();
+
+const isDisqualifiedViolation = (report) => (
+    isViolationReport(report)
+    && [report?.action, report?.violationType].some((value) => normalizeViolationValue(value) === 'disqualified')
 );
 
 const formatPenaltyPoints = (value) => {
@@ -184,7 +192,9 @@ function ValidateResultDetail() {
     const handleApprove = async () => {
         const confirmed = await confirmAdminAction({
             title: 'Approve result report',
-            message: 'Are you sure you want to approve this result report? This will publish all referee-confirmed results and award prizes.',
+            message: hasDisqualifiedViolations
+                ? 'Disqualified participants will be excluded from official ranks and prize awards. Approve and publish the remaining valid results?'
+                : 'Are you sure you want to approve this result report? This will publish all referee-confirmed results and award prizes.',
             confirmLabel: 'Approve',
         });
 
@@ -194,23 +204,21 @@ function ValidateResultDetail() {
         setActionError('');
         setActionSuccess('');
         try {
-            const currentResultId = String(resultId || '').replace('result-', '');
-            const resultIds = [
-                ...new Set([
-                    ...postRaceResults
-                        .filter((result) => result?.resultId && result.status === 'RefereeConfirmed')
-                        .map((result) => String(result.resultId)),
-                    /^\d+$/.test(currentResultId) ? currentResultId : '',
-                ].filter(Boolean)),
-            ];
+            const raceId = detail?.raceId || postRaceResults.find((result) => result?.raceId)?.raceId;
+            const approvableResults = postRaceResults.filter((result) => (
+                result?.status === 'RefereeConfirmed'
+                || result?.status === 'AdminApproved'
+            ));
 
-            if (resultIds.length === 0) {
+            if (!raceId) {
+                throw new Error('Race information is missing for this approval.');
+            }
+
+            if (approvableResults.length === 0) {
                 throw new Error('No referee-confirmed results to approve.');
             }
 
-            for (const id of resultIds) {
-                await adminApi.publishResult(id);
-            }
+            await adminApi.publishRaceResults(raceId);
 
             setActionSuccess('Results approved and tournament completed.');
             showAdminSuccess('Results approved and tournament completed.', 'Approved');
@@ -275,6 +283,17 @@ function ValidateResultDetail() {
     const postRaceResults = detail?.postRace?.results || [];
     const postRaceReports = detail?.postRace?.reports || detail?.reports || [];
     const postRaceViolations = postRaceReports.filter(isViolationReport);
+    const disqualifiedViolations = postRaceViolations.filter(isDisqualifiedViolation);
+    const disqualifiedRegistrationIds = new Set(disqualifiedViolations
+        .map((violation) => violation?.registrationId)
+        .filter(Boolean)
+        .map(String));
+    const hasDisqualifiedViolations = disqualifiedViolations.length > 0;
+    const getDisqualifiedViolation = (result) => disqualifiedViolations.find((violation) => (
+        result?.registrationId
+        && violation?.registrationId
+        && String(result.registrationId) === String(violation.registrationId)
+    ));
     const isPostRaceReportItem = (report) => report.reportPhase === 'PostRace';
     const getReportTournament = (report) => report.tournamentName || detail?.tournamentName || detail?.raceName || '-';
     const getReportSubtitle = (report) => (
@@ -398,7 +417,7 @@ function ValidateResultDetail() {
                                 </button>
                                 <button
                                     type="button"
-                                    disabled={actionLoading}
+                                    disabled={actionLoading || !detail?.raceId}
                                     onClick={handleApprove}
                                     className="flex min-h-[38px] cursor-pointer items-center gap-2 rounded-md bg-[var(--admin-primary)] px-4 text-[0.78rem] font-black text-white hover:bg-[var(--admin-primary-dark)] disabled:opacity-50"
                                 >
@@ -479,6 +498,30 @@ function ValidateResultDetail() {
                             </section>
                         ) : null}
 
+                        {hasDisqualifiedViolations ? (
+                            <section className={`${panelWidthClass} flex items-start gap-3 rounded-[var(--admin-radius)] border border-[#f0b7ae] bg-[#fff1ef] px-6 py-4 text-[#a11616]`}>
+                                <FaExclamationCircle aria-hidden="true" className="mt-1 flex-none" />
+                                <div className="grid gap-2">
+                                    <p className="m-0 text-[0.88rem] font-black">
+                                        {disqualifiedRegistrationIds.size} disqualified registration{disqualifiedRegistrationIds.size === 1 ? '' : 's'} found.
+                                    </p>
+                                    <p className="m-0 text-[0.8rem] font-bold leading-6">
+                                        Disqualified participants will be excluded from official ranks and prize awards when results are approved.
+                                    </p>
+                                    <div className="flex flex-wrap gap-2">
+                                        {disqualifiedViolations.map((violation) => (
+                                            <span
+                                                className="inline-flex min-h-7 items-center rounded-full border border-[#f0b7ae] bg-white px-3 text-[0.68rem] font-extrabold text-[#a11616]"
+                                                key={violation.id || violation.violationId || violation.registrationId}
+                                            >
+                                                {formatRegistrationSelection(violation) || `Registration ${violation.registrationId || '-'}`}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            </section>
+                        ) : null}
+
                         <section
                             aria-label="Post-race workflow"
                             className={`${panelWidthClass} overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_16px_34px_rgba(15,23,42,0.06)]`}
@@ -510,14 +553,25 @@ function ValidateResultDetail() {
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {postRaceResults.map((result) => (
-                                                    <tr key={result.resultId || result.registrationId}>
+                                                {postRaceResults.map((result) => {
+                                                    const disqualifiedViolation = getDisqualifiedViolation(result);
+
+                                                    return (
+                                                        <tr
+                                                            className={disqualifiedViolation ? 'bg-[#fff8f6]' : ''}
+                                                            key={result.resultId || result.registrationId}
+                                                        >
                                                         <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.86rem] font-black text-[var(--admin-primary-dark)]">
                                                             {result.finishPosition ? `#${result.finishPosition}` : '-'}
                                                         </td>
                                                         <td className="border-b border-[var(--admin-border)] px-4 py-3">
                                                             <strong className="block text-[0.86rem] text-[var(--admin-ink)]">{result.horse}</strong>
                                                             <span className="text-[0.72rem] font-bold text-[var(--admin-muted)]">Horse #{result.horseId || '-'}</span>
+                                                            {disqualifiedViolation ? (
+                                                                <span className="mt-1 inline-flex min-h-6 items-center rounded-full border border-[#f0b7ae] bg-[#fff1ef] px-2.5 text-[0.62rem] font-extrabold text-[#a11616]">
+                                                                    Disqualified
+                                                                </span>
+                                                            ) : null}
                                                         </td>
                                                         <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-muted)]">
                                                             #{result.registrationId || '-'}
@@ -534,10 +588,13 @@ function ValidateResultDetail() {
                                                             </span>
                                                         </td>
                                                         <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.82rem] font-semibold text-[var(--admin-muted)]">
-                                                            {result.note || '-'}
+                                                            {disqualifiedViolation
+                                                                ? 'Excluded from official rank and prize'
+                                                                : (result.note || '-')}
                                                         </td>
                                                     </tr>
-                                                ))}
+                                                    );
+                                                })}
                                             </tbody>
                                         </table>
                                     </div>

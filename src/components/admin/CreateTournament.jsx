@@ -351,15 +351,7 @@ function CreateTournament() {
                                         </label>
                                     </div>
 
-                                    <label className={fieldClass}>
-                                        <span className={labelClass}>Point Prediction (pts)</span>
-                                        <select className={selectClass} defaultValue="" name="predictionPoints">
-                                            <option value="" disabled>Select Point</option>
-                                            <option value="10">10 pts</option>
-                                            <option value="25">25 pts</option>
-                                            <option value="50">50 pts</option>
-                                        </select>
-                                    </label>
+                                    
                                 </div>
 
                                 <label className={fieldClass}>
