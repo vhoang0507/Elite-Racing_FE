@@ -172,7 +172,7 @@ export default function RegistrationManagement() {
             const statItems = Array.isArray(allData) ? allData : [];
             setRegistrationStats({
                 pending: statItems.filter((item) => formatClass(item.status) === 'pending').length,
-                approved: statItems.filter((item) => formatClass(item.status) === 'approved').length,
+                approved: statItems.filter((item) => ['approved', 'jockeyinvited', 'readytorace'].includes(formatClass(item.status))).length,
                 rejected: statItems.filter((item) => formatClass(item.status) === 'rejected').length,
             });
         } catch (err) {

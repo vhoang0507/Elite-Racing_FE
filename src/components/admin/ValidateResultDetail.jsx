@@ -194,23 +194,10 @@ function ValidateResultDetail() {
         setActionError('');
         setActionSuccess('');
         try {
-            const currentResultId = String(resultId || '').replace('result-', '');
-            const resultIds = [
-                ...new Set([
-                    ...postRaceResults
-                        .filter((result) => result?.resultId && result.status === 'RefereeConfirmed')
-                        .map((result) => String(result.resultId)),
-                    /^\d+$/.test(currentResultId) ? currentResultId : '',
-                ].filter(Boolean)),
-            ];
+            const raceId = postRaceResults[0]?.raceId || detail?.raceId;
+            if (!raceId) throw new Error('Cannot determine race ID to approve.');
 
-            if (resultIds.length === 0) {
-                throw new Error('No referee-confirmed results to approve.');
-            }
-
-            for (const id of resultIds) {
-                await adminApi.publishResult(id);
-            }
+            await adminApi.approveAllResults(raceId);
 
             setActionSuccess('Results approved and tournament completed.');
             showAdminSuccess('Results approved and tournament completed.', 'Approved');

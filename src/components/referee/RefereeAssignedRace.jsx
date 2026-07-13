@@ -48,7 +48,7 @@ function formatStatus(status) {
 }
 
 function canOpenPreRace(race) {
-    return race?.tournamentStatus === 'ClosedRegistration' || race?.raceStatus === 'Scheduled';
+    return race?.tournamentStatus === 'ClosedRegistration' || race?.raceStatus === 'AssignedReferee';
 }
 
 function RefereeAssignedRace() {
@@ -185,7 +185,7 @@ function RefereeAssignedRace() {
                                     {/* Action buttons */}
                                     {(() => {
                                         const canPreRace = canOpenPreRace(race);
-                                        const canPostRace = ['Ongoing', 'Finished', 'ResultPending'].includes(race.raceStatus);
+                                        const canPostRace = ['RefereeReady', 'Ongoing', 'Finished', 'ResultPending'].includes(race.raceStatus);
                                         return (
                                             <div style={{ display: 'flex', gap: 8, padding: '0 20px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                                                 <button

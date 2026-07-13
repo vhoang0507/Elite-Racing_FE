@@ -168,6 +168,7 @@ function AssignedPostRace() {
             const data = await refereeApi.getAssignedRaces();
             if (ignoreRef.current) return;
             const nextRaces = (data ?? []).filter((r) =>
+                r.raceStatus === 'RefereeReady' ||
                 r.raceStatus === 'Ongoing' ||
                 r.raceStatus === 'Finished' ||
                 r.raceStatus === 'ResultPending'
@@ -269,6 +270,34 @@ function AssignedPostRace() {
         if (violationForm.penaltyPoints !== '' && (pts === null || pts < 0)) return 'Penalty points must be ≥ 0.';
         if (violationForm.action === VIOLATION_ACTIONS.pointDeduction && (!pts || pts <= 0)) return 'Point deduction requires penalty points > 0.';
         return '';
+    };
+
+    const handleStartRace = async () => {
+        if (!selectedRaceId) return;
+        setSaving('start');
+        setError('');
+        setSuccess('');
+        try {
+            const updatedLifecycle = await refereeApi.startRace(selectedRaceId);
+            setRaces((prev) =>
+                prev.map((race) =>
+                    String(race.raceId) === String(selectedRaceId)
+                        ? {
+                            ...race,
+                            raceStatus: updatedLifecycle?.raceStatus || 'Ongoing',
+                            currentStage: updatedLifecycle?.currentStage,
+                            nextStage: updatedLifecycle?.nextStage,
+                            allowedActions: updatedLifecycle?.allowedActions,
+                        }
+                        : race
+                )
+            );
+            setSuccess('Race started! Status is now Ongoing.');
+        } catch (err) {
+            setError(err.message || 'Failed to start race.');
+        } finally {
+            setSaving('');
+        }
     };
 
     const handleFinishRace = async () => {
@@ -491,6 +520,24 @@ function AssignedPostRace() {
                 {success && (
                     <div className="rounded-[8px] border border-green-200 bg-green-50 px-5 py-4 font-semibold text-green-700">
                         {success}
+                    </div>
+                )}
+
+                {selectedRace?.raceStatus === 'RefereeReady' && (
+                    <div className="rounded-[8px] border border-blue-200 bg-blue-50 px-5 py-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                            <div className="font-semibold text-blue-800">
+                                Race is <strong>Ready</strong>. Start the race when all runners are at the gate.
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleStartRace}
+                                disabled={saving === 'start'}
+                                className="rounded bg-[#0b7f5a] px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {saving === 'start' ? 'Starting...' : '🏁 Start Race'}
+                            </button>
+                        </div>
                     </div>
                 )}
 

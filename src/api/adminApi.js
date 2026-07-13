@@ -1150,6 +1150,10 @@ async function publishResult(idOrSlug) {
     return apiRequest(`/admin/results/${id}/approve`, { method: 'PUT' });
 }
 
+async function approveAllResults(raceId) {
+    return apiRequest(`/admin/results/race/${raceId}/approve-all`, { method: 'PUT' });
+}
+
 async function rejectResult(id) {
     return apiRequest(`/admin/results/${id}/reject`, { method: 'PUT' });
 }
@@ -1352,6 +1356,7 @@ export const adminApi = {
     getResultDetail,
     getResultReportDetail,
     publishResult,
+    approveAllResults,
     rejectResult,
     deleteResult,
 
