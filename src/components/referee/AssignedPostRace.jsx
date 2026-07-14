@@ -84,6 +84,27 @@ function getStatusClass(status) {
     return 'bg-[#e8f7ef] text-[#0b7f5a]';
 }
 
+function isSeasonActive(race) {
+    return !race?.seasonStatus || race.seasonStatus === 'Active';
+}
+
+function hasPostRaceAction(race) {
+    const actions = race?.allowedActions ?? {};
+    return Boolean(
+        actions.canStartRace ||
+        actions.canFinishRace ||
+        actions.canEnterResults ||
+        actions.canConfirmResults ||
+        actions.canSubmitPostRaceReport
+    );
+}
+
+function getRaceBlockingReason(race) {
+    if (race?.blockingReason) return race.blockingReason;
+    if (!isSeasonActive(race)) return `Season is ${race.seasonStatus}.`;
+    return '';
+}
+
 const inputClass = "rounded border border-[#dce5ef] px-3 py-2.5 text-sm outline-none focus:border-[#0b7f5a] w-full";
 const labelClass = "block text-xs font-bold text-[#64748b] uppercase mb-1.5";
 const primaryBtn = "rounded bg-[#0b7f5a] px-5 py-2.5 font-semibold text-white text-sm disabled:cursor-not-allowed disabled:opacity-60 w-full";
@@ -130,14 +151,22 @@ function AssignedPostRace() {
     const selectedViolationRegistration = registrationById.get(String(violationForm.registrationId));
     const isEditingResult = Boolean(editingResultId);
     const isEditingViolation = Boolean(editingViolationId);
+    const selectedRaceBlockingReason = getRaceBlockingReason(selectedRace);
+
+    const canStartRace =
+        isSeasonActive(selectedRace) &&
+        (selectedRace?.allowedActions?.canStartRace ||
+            selectedRace?.raceStatus === 'RefereeReady');
 
     const canFinishRace =
-        selectedRace?.allowedActions?.canFinishRace ||
-        selectedRace?.raceStatus === 'Ongoing';
+        isSeasonActive(selectedRace) &&
+        (selectedRace?.allowedActions?.canFinishRace ||
+            selectedRace?.raceStatus === 'Ongoing');
 
     const canEnterResults =
-        selectedRace?.allowedActions?.canEnterResults ||
-        selectedRace?.raceStatus === 'Finished';
+        isSeasonActive(selectedRace) &&
+        (selectedRace?.allowedActions?.canEnterResults ||
+            selectedRace?.raceStatus === 'Finished');
 
     const draftResultCount = results.filter((result) => result.status === 'Draft').length;
     const confirmedResultCount = results.filter((result) => result.status === 'RefereeConfirmed').length;
@@ -151,6 +180,8 @@ function AssignedPostRace() {
 
     const submitReportHint = !selectedRaceId
         ? 'Select a race before submitting.'
+        : selectedRaceBlockingReason
+            ? selectedRaceBlockingReason
         : selectedRace?.raceStatus === 'ResultPending'
             ? 'Post-race report has already been sent to admin.'
             : !canEnterResults
@@ -165,13 +196,15 @@ function AssignedPostRace() {
         setLoadingRaces(true);
         setError('');
         try {
-            const data = await refereeApi.getAssignedRaces();
+            const data = await refereeApi.getAssignedRacesWithLifecycle();
             if (ignoreRef.current) return;
             const nextRaces = (data ?? []).filter((r) =>
+                isSeasonActive(r) &&
+                (hasPostRaceAction(r) ||
                 r.raceStatus === 'RefereeReady' ||
                 r.raceStatus === 'Ongoing' ||
                 r.raceStatus === 'Finished' ||
-                r.raceStatus === 'ResultPending'
+                r.raceStatus === 'ResultPending')
             );
             setRaces(nextRaces);
             setSelectedRaceId((current) => {
@@ -284,10 +317,13 @@ function AssignedPostRace() {
                     String(race.raceId) === String(selectedRaceId)
                         ? {
                             ...race,
+                            ...updatedLifecycle,
                             raceStatus: updatedLifecycle?.raceStatus || 'Ongoing',
                             currentStage: updatedLifecycle?.currentStage,
                             nextStage: updatedLifecycle?.nextStage,
-                            allowedActions: updatedLifecycle?.allowedActions,
+                            allowedActions: updatedLifecycle?.allowedActions ?? race.allowedActions,
+                            seasonStatus: updatedLifecycle?.seasonStatus ?? race.seasonStatus,
+                            blockingReason: updatedLifecycle?.blockingReason ?? race.blockingReason,
                         }
                         : race
                 )
@@ -312,10 +348,13 @@ function AssignedPostRace() {
                     String(race.raceId) === String(selectedRaceId)
                         ? {
                             ...race,
+                            ...updatedLifecycle,
                             raceStatus: updatedLifecycle?.raceStatus || 'Finished',
                             currentStage: updatedLifecycle?.currentStage,
                             nextStage: updatedLifecycle?.nextStage,
-                            allowedActions: updatedLifecycle?.allowedActions,
+                            allowedActions: updatedLifecycle?.allowedActions ?? race.allowedActions,
+                            seasonStatus: updatedLifecycle?.seasonStatus ?? race.seasonStatus,
+                            blockingReason: updatedLifecycle?.blockingReason ?? race.blockingReason,
                         }
                         : race
                 )
@@ -476,10 +515,13 @@ function AssignedPostRace() {
                     String(race.raceId) === String(selectedRaceId)
                         ? {
                             ...race,
+                            ...updatedLifecycle,
                             raceStatus: updatedLifecycle?.raceStatus || 'ResultPending',
                             currentStage: updatedLifecycle?.currentStage,
                             nextStage: updatedLifecycle?.nextStage,
-                            allowedActions: updatedLifecycle?.allowedActions,
+                            allowedActions: updatedLifecycle?.allowedActions ?? race.allowedActions,
+                            seasonStatus: updatedLifecycle?.seasonStatus ?? race.seasonStatus,
+                            blockingReason: updatedLifecycle?.blockingReason ?? race.blockingReason,
                         }
                         : race
                 )
@@ -522,6 +564,11 @@ function AssignedPostRace() {
                         {success}
                     </div>
                 )}
+                {selectedRaceBlockingReason && (
+                    <div className="rounded-[8px] border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
+                        {selectedRaceBlockingReason}
+                    </div>
+                )}
 
                 {selectedRace?.raceStatus === 'RefereeReady' && (
                     <div className="rounded-[8px] border border-blue-200 bg-blue-50 px-5 py-4">
@@ -532,7 +579,8 @@ function AssignedPostRace() {
                             <button
                                 type="button"
                                 onClick={handleStartRace}
-                                disabled={saving === 'start'}
+                                disabled={!canStartRace || saving === 'start'}
+                                title={canStartRace ? 'Start race' : selectedRaceBlockingReason || 'Race cannot be started yet.'}
                                 className="rounded bg-[#0b7f5a] px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {saving === 'start' ? 'Starting...' : '🏁 Start Race'}
@@ -551,6 +599,7 @@ function AssignedPostRace() {
                                 type="button"
                                 onClick={handleFinishRace}
                                 disabled={!canFinishRace || saving === 'finish'}
+                                title={canFinishRace ? 'Finish race' : selectedRaceBlockingReason || 'Race cannot be finished yet.'}
                                 className="rounded bg-[#0b7f5a] px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {saving === 'finish' ? 'Finishing...' : 'Finish Race'}
@@ -601,6 +650,11 @@ function AssignedPostRace() {
                                     <span style={{ fontSize: 11, color: isSelected ? '#0b7f5a' : '#aaa', marginTop: 2, fontWeight: 600 }}>
                                         {race.raceStatus}
                                     </span>
+                                    {race.seasonStatus && (
+                                        <span style={{ fontSize: 11, color: race.seasonStatus === 'Active' ? '#0b7f5a' : '#b91c1c', marginTop: 2, fontWeight: 600 }}>
+                                            Season: {race.seasonStatus}
+                                        </span>
+                                    )}
                                 </button>
                             );
                         })}

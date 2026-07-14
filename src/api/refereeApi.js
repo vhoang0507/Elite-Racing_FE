@@ -24,6 +24,41 @@ export async function getAssignedRaces() {
     return apiRequest('/referee/races');
 }
 
+export async function getRaceLifecycle(raceId) {
+    return apiRequest(`/referee/races/${raceId}/lifecycle`);
+}
+
+function mergeRaceLifecycle(race, lifecycle) {
+    const merged = { ...race, ...(lifecycle || {}) };
+
+    return {
+        ...merged,
+        raceStatus: lifecycle?.raceStatus ?? race?.raceStatus,
+        tournamentStatus: lifecycle?.tournamentStatus ?? race?.tournamentStatus,
+        seasonStatus: lifecycle?.seasonStatus ?? race?.seasonStatus,
+        allowedActions: lifecycle?.allowedActions ?? race?.allowedActions,
+        blockingReason: lifecycle?.blockingReason ?? race?.blockingReason,
+        currentStage: lifecycle?.currentStage ?? race?.currentStage,
+        nextStage: lifecycle?.nextStage ?? race?.nextStage,
+    };
+}
+
+export async function getAssignedRacesWithLifecycle() {
+    const races = await getAssignedRaces();
+    const list = races ?? [];
+
+    const lifecycleResults = await Promise.allSettled(
+        list.map((race) => getRaceLifecycle(race.raceId))
+    );
+
+    return list.map((race, index) => {
+        const result = lifecycleResults[index];
+        return result?.status === 'fulfilled'
+            ? mergeRaceLifecycle(race, result.value)
+            : race;
+    });
+}
+
 export async function getRaceRegistrations(raceId) {
     return apiRequest(`/referee/races/${raceId}/registrations`);
 }
@@ -146,6 +181,8 @@ export const refereeApi = {
     getRefereeDashboard,
     getRefereeProfile,
     getAssignedRaces,
+    getAssignedRacesWithLifecycle,
+    getRaceLifecycle,
     getRaceRegistrations,
     saveInspection,
     getInspectionReport,

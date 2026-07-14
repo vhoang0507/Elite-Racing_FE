@@ -45,6 +45,21 @@ function statusFromOutcome(outcome) {
     return INSPECTION_STATUSES.pending;
 }
 
+function isSeasonActive(race) {
+    return !race?.seasonStatus || race.seasonStatus === 'Active';
+}
+
+function canMarkRaceReady(race) {
+    if (!isSeasonActive(race)) return false;
+    return Boolean(race?.allowedActions?.canMarkReady || race?.raceStatus === 'AssignedReferee');
+}
+
+function getMarkReadyDisabledReason(race) {
+    if (race?.blockingReason) return race.blockingReason;
+    if (!isSeasonActive(race)) return `Season is ${race.seasonStatus}.`;
+    return 'Race is not ready for this action.';
+}
+
 function HealthCertificateCell({ url }) {
     if (!url) {
         return (
@@ -120,7 +135,7 @@ function PreRaceInspectionRegistry() {
             setLoadingRace(true);
 
             try {
-                const data = await refereeApi.getAssignedRaces();
+                const data = await refereeApi.getAssignedRacesWithLifecycle();
 
                 if (!ignore) {
                     setRaces(data ?? []);
@@ -223,7 +238,14 @@ function PreRaceInspectionRegistry() {
         setError('');
         setSuccess('');
         try {
-            await refereeApi.markRaceReady(raceId);
+            const updatedLifecycle = await refereeApi.markRaceReady(raceId);
+            setRaces((previous) =>
+                previous.map((race) =>
+                    String(race.raceId) === String(raceId)
+                        ? { ...race, ...updatedLifecycle }
+                        : race
+                )
+            );
             setSuccess('Race marked as Ready. You can now start the race from the Post-Race panel.');
             showToast('Race marked as Ready!', 'success');
         } catch (err) {
@@ -273,6 +295,9 @@ function PreRaceInspectionRegistry() {
         }
     };
 
+    const showMarkReadyButton = selectedRace?.raceStatus === 'AssignedReferee' || selectedRace?.allowedActions?.canMarkReady;
+    const markReadyAllowed = canMarkRaceReady(selectedRace);
+
     return (
         <RefereeLayout activeKey="pre-race">
             <Toast
@@ -307,12 +332,13 @@ function PreRaceInspectionRegistry() {
                         <span className="rounded-full bg-[#e8f7ef] px-4 py-2 text-sm font-bold text-[#0b7f5a]">
                             Race #{raceId}
                         </span>
-                        {selectedRace?.raceStatus === 'AssignedReferee' && (
+                        {showMarkReadyButton && (
                             <button
                                 type="button"
-                                disabled={markingReady}
+                                disabled={markingReady || !markReadyAllowed}
                                 onClick={handleMarkReady}
-                                style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: '#0b7f5a', color: '#fff', fontWeight: 700, fontSize: '0.88rem', cursor: markingReady ? 'not-allowed' : 'pointer', opacity: markingReady ? 0.7 : 1 }}
+                                title={markReadyAllowed ? 'Mark race ready' : getMarkReadyDisabledReason(selectedRace)}
+                                style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: '#0b7f5a', color: '#fff', fontWeight: 700, fontSize: '0.88rem', cursor: markingReady || !markReadyAllowed ? 'not-allowed' : 'pointer', opacity: markingReady || !markReadyAllowed ? 0.7 : 1 }}
                             >
                                 {markingReady ? 'Processing...' : '✓ Mark Race Ready'}
                             </button>
@@ -353,6 +379,18 @@ function PreRaceInspectionRegistry() {
                                 {selectedRace?.tournamentName && (
                                     <p className="mt-1 font-semibold text-[#0b7f5a]">
                                         {selectedRace.tournamentName}
+                                    </p>
+                                )}
+
+                                {selectedRace?.seasonStatus && (
+                                    <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${selectedRace.seasonStatus === 'Active' ? 'bg-[#e8f7ef] text-[#0b7f5a]' : 'bg-red-100 text-red-700'}`}>
+                                        Season: {selectedRace.seasonStatus}
+                                    </span>
+                                )}
+
+                                {selectedRace?.blockingReason && (
+                                    <p className="mt-2 text-sm font-semibold text-red-700">
+                                        {selectedRace.blockingReason}
                                     </p>
                                 )}
 

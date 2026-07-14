@@ -24,6 +24,7 @@ const STATUS_LABELS = {
     AssignedReferee: 'Assigned Referee',
     ClosedRegistration: 'Closed Registration',
     OpenRegistration: 'Open Registration',
+    RefereeReady: 'Referee Ready',
     ResultPending: 'Result Pending',
 };
 
@@ -37,8 +38,21 @@ function formatStatus(status) {
     return STATUS_LABELS[status] || status || 'N/A';
 }
 
+function isSeasonActive(race) {
+    return !race?.seasonStatus || race.seasonStatus === 'Active';
+}
+
 function canOpenPreRace(race) {
-    return race?.tournamentStatus === 'ClosedRegistration' || race?.raceStatus === 'Scheduled';
+    if (!isSeasonActive(race)) return false;
+
+    const actions = race?.allowedActions ?? {};
+    return Boolean(
+        actions.canInspect ||
+        actions.canSubmitPreRaceReport ||
+        actions.canMarkReady ||
+        race?.tournamentStatus === 'ClosedRegistration' ||
+        ['AssignedReferee', 'Scheduled'].includes(race?.raceStatus)
+    );
 }
 
 function CertificatePreviewList({ certificates }) {
@@ -95,7 +109,7 @@ function AssignedPreRace() {
             setCertificatesByRace({});
 
             try {
-                const data = await refereeApi.getAssignedRaces();
+                const data = await refereeApi.getAssignedRacesWithLifecycle();
                 const assignedRaces = (data ?? []).filter(
                     (r) => canOpenPreRace(r)
                 );
@@ -188,9 +202,16 @@ function AssignedPreRace() {
                                 className="soft-card group cursor-pointer p-6 text-left transition hover:border-[#0b7f5a] hover:shadow-md"
                             >
                                 <div className="flex justify-between">
-                                    <span className="rounded-full bg-[#e8f7ef] px-3 py-1 text-xs font-semibold">
-                                        {formatStatus(getDisplayStatus(race))}
-                                    </span>
+                                    <div className="flex flex-wrap gap-2">
+                                        <span className="rounded-full bg-[#e8f7ef] px-3 py-1 text-xs font-semibold">
+                                            {formatStatus(getDisplayStatus(race))}
+                                        </span>
+                                        {race.seasonStatus && (
+                                            <span className="rounded-full bg-[#f8fbff] px-3 py-1 text-xs font-semibold text-[#64748b]">
+                                                Season: {race.seasonStatus}
+                                            </span>
+                                        )}
+                                    </div>
 
                                     <span className="font-bold">
                                         #{race.raceId}

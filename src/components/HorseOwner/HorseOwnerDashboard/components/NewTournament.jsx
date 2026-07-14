@@ -30,6 +30,14 @@ export default function NewTournament() {
                             <p style={styles.name}>{t.tournamentName}</p>
                             <span style={styles.date}>{t.raceDate}</span>
                         </div>
+                        {(t.seasonName || t.seasonStatus) && (
+                            <p style={styles.season}>
+                                Season: {t.seasonName || "N/A"}{t.seasonStatus ? ` (${t.seasonStatus})` : ""}
+                            </p>
+                        )}
+                        {t.registrationDeadline && (
+                            <p style={styles.location}>Deadline: {t.registrationDeadline}</p>
+                        )}
                         <p style={styles.location}>{t.location}</p>
                         <button style={styles.detailBtn} onClick={() => navigate('/owner/registrations')}>View Details</button>
                     </div>
@@ -49,6 +57,7 @@ const styles = {
     cardTop: { display: "flex", justifyContent: "space-between", alignItems: "center" },
     name: { margin: 0, fontWeight: "bold", fontSize: "14px", color: "#2d2020" },
     date: { fontSize: "12px", color: "#64748b" },
+    season: { margin: "6px 0 2px", fontSize: "12px", color: "#0b7f5a", fontWeight: 700 },
     location: { margin: "4px 0 10px", fontSize: "12px", color: "#64748b" },
     detailBtn: { width: "100%", padding: "8px", border: "1px solid #dce5ef", borderRadius: "8px", background: "#fffefd", cursor: "pointer", fontSize: "13px", color: "#2d2020", fontWeight: 700 },
 };

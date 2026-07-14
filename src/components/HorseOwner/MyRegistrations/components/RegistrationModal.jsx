@@ -23,6 +23,31 @@ const registrationStatusLabel = (status) => {
     }
 };
 
+const isSeasonActive = (tournament) => !tournament?.seasonStatus || tournament.seasonStatus === "Active";
+
+const isBeforeRegistrationDeadline = (tournament) => {
+    if (!tournament?.registrationDeadline) return true;
+    const deadline = Date.parse(tournament.registrationDeadline);
+    if (Number.isNaN(deadline)) return true;
+    return Date.now() <= deadline;
+};
+
+const getRegistrationUnavailableReason = (tournament, tournamentStatus) => {
+    if (tournamentStatus !== "OpenRegistration") {
+        return registrationStatusLabel(tournamentStatus);
+    }
+
+    if (!isSeasonActive(tournament)) {
+        return `Season is ${tournament.seasonStatus}.`;
+    }
+
+    if (!isBeforeRegistrationDeadline(tournament)) {
+        return "Registration deadline has passed.";
+    }
+
+    return "";
+};
+
 function HealthCertificateLink({ url }) {
     const [lightboxSrc, setLightboxSrc] = useState(null);
     if (!url) {
@@ -88,7 +113,8 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
     if (!tournament) return null;
 
     const tournamentStatus = getTournamentStatus(tournament);
-    const isRegistrationOpen = tournamentStatus === "OpenRegistration";
+    const registrationUnavailableReason = getRegistrationUnavailableReason(tournament, tournamentStatus);
+    const isRegistrationOpen = !registrationUnavailableReason;
 
     const handleSelectHorse = (horse) => {
         if (!horse.isEligible) return;
@@ -98,7 +124,7 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
 
     const handleSubmit = async () => {
         if (!isRegistrationOpen) {
-            setError(registrationStatusLabel(tournamentStatus));
+            setError(registrationUnavailableReason);
             return;
         }
 
@@ -151,6 +177,12 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
 
                     {/* Left column - Tournament Info */}
                     <div style={styles.infoCol}>
+                        {(tournament.seasonName || tournament.seasonStatus) && (
+                            <div style={styles.infoRow}><span>S</span><div><small>SEASON</small><p>{tournament.seasonName || "N/A"}{tournament.seasonStatus ? ` (${tournament.seasonStatus})` : ""}</p></div></div>
+                        )}
+                        {tournament.registrationDeadline && (
+                            <div style={styles.infoRow}><span>D</span><div><small>DEADLINE</small><p>{tournament.registrationDeadline}</p></div></div>
+                        )}
                         <div style={styles.infoRow}><span>📅</span><div><small>DATE</small><p>{tournament.raceDate}</p></div></div>
                         <div style={styles.infoRow}><span>📍</span><div><small>LOCATION</small><p>{tournament.location}</p></div></div>
                         <div style={styles.infoRow}><span>👥</span><div><small>SLOTS LEFT</small><p>{tournament.availableSlots} / {tournament.maxHorses}</p></div></div>
@@ -215,7 +247,7 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                         />
 
                         {!isRegistrationOpen && (
-                            <p style={styles.closedNotice}>{registrationStatusLabel(tournamentStatus)}</p>
+                            <p style={styles.closedNotice}>{registrationUnavailableReason}</p>
                         )}
                         {error && <p style={{ color: "#721c24", fontSize: "13px", marginBottom: "8px" }}>{error}</p>}
                         {success && <p style={{ color: "#155724", fontSize: "13px", marginBottom: "8px" }}>{success}</p>}
@@ -226,7 +258,7 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                                 disabled={submitting || !isRegistrationOpen}
                                 style={{ ...styles.submitBtn, opacity: submitting || !isRegistrationOpen ? 0.7 : 1 }}
                             >
-                                {submitting ? "Submitting..." : isRegistrationOpen ? "Submit Registration ➤" : registrationStatusLabel(tournamentStatus)}
+                                {submitting ? "Submitting..." : isRegistrationOpen ? "Submit Registration ➤" : registrationUnavailableReason}
                             </button>
                             <button style={styles.cancelBtn} onClick={onClose}>Cancel</button>
                         </div>

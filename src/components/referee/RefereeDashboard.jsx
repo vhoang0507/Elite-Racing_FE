@@ -50,6 +50,29 @@ function formatStatus(status) {
     return statusLabels[status] || status || 'N/A';
 }
 
+function isSeasonActive(race) {
+    return !race?.seasonStatus || race.seasonStatus === 'Active';
+}
+
+function canOpenPreRace(race) {
+    if (!isSeasonActive(race)) return false;
+
+    const actions = race?.allowedActions ?? {};
+    return Boolean(
+        actions.canInspect ||
+        actions.canSubmitPreRaceReport ||
+        actions.canMarkReady ||
+        race?.tournamentStatus === 'ClosedRegistration' ||
+        ['AssignedReferee', 'Scheduled'].includes(race?.raceStatus)
+    );
+}
+
+function getDisabledReason(race) {
+    if (race?.blockingReason) return race.blockingReason;
+    if (!isSeasonActive(race)) return `Season is ${race.seasonStatus}.`;
+    return 'Inspection is not available for this race yet.';
+}
+
 function getStatusBadgeClass(status) {
     if (status === 'ClosedRegistration') {
         return 'status-badge bg-red-100 text-red-700';
@@ -78,7 +101,7 @@ function RefereeDashboard() {
             try {
                 const [data, assignedRaces] = await Promise.all([
                     refereeApi.getRefereeDashboard(),
-                    refereeApi.getAssignedRaces().catch(() => []),
+                    refereeApi.getAssignedRacesWithLifecycle().catch(() => []),
                 ]);
 
                 const assignedByRaceId = new Map(
@@ -93,6 +116,9 @@ function RefereeDashboard() {
                             raceStatus: assignedRace.raceStatus ?? race.raceStatus,
                             tournamentStatus: assignedRace.tournamentStatus,
                             assignmentStatus: assignedRace.assignmentStatus,
+                            seasonStatus: assignedRace.seasonStatus ?? race.seasonStatus,
+                            allowedActions: assignedRace.allowedActions ?? race.allowedActions,
+                            blockingReason: assignedRace.blockingReason ?? race.blockingReason,
                         }
                         : race;
                 });
@@ -280,7 +306,10 @@ function RefereeDashboard() {
                                                     </td>
                                                 </tr>
                                             ) : (
-                                                upcomingRaces.map((item) => (
+                                                upcomingRaces.map((item) => {
+                                                    const canInspect = canOpenPreRace(item);
+
+                                                    return (
                                                     <tr key={item.assignmentId}>
                                                         <td>
                                                             {formatTime(item.raceDate)}
@@ -294,6 +323,11 @@ function RefereeDashboard() {
                                                             <div className="text-sm text-[var(--admin-muted)]">
                                                                 {item.tournamentName}
                                                             </div>
+                                                            {item.seasonStatus && (
+                                                                <div className={`mt-1 text-xs font-bold ${item.seasonStatus === 'Active' ? 'text-[#0b7f5a]' : 'text-red-700'}`}>
+                                                                    Season: {item.seasonStatus}
+                                                                </div>
+                                                            )}
                                                         </td>
 
                                                         <td>
@@ -310,13 +344,16 @@ function RefereeDashboard() {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => navigate(`/referee/races/pre-race/${item.raceId}`, { state: { race: item } })}
-                                                                className="font-bold text-[#0b7f5a]"
+                                                                disabled={!canInspect}
+                                                                title={canInspect ? 'Open inspection registry' : getDisabledReason(item)}
+                                                                className="font-bold text-[#0b7f5a] disabled:cursor-not-allowed disabled:opacity-50"
                                                             >
                                                                 Inspect
                                                             </button>
                                                         </td>
                                                     </tr>
-                                                ))
+                                                    );
+                                                })
                                             )}
                                         </tbody>
                                     </table>

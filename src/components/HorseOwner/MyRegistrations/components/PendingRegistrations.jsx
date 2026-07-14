@@ -27,7 +27,7 @@ export default function PendingRegistrations({ onViewStatus }) {
 
     const filteredData = search.trim()
         ? data.filter(row =>
-            [row.tournamentName, row.horseName]
+            [row.tournamentName, row.horseName, row.seasonName, row.seasonStatus, row.registrationDeadline]
                 .some(v => String(v || '').toLowerCase().includes(search.trim().toLowerCase()))
           )
         : data;
@@ -75,7 +75,17 @@ export default function PendingRegistrations({ onViewStatus }) {
                                     const cfg = STATUS_CFG[row.status] ?? { bg: '#f1f5f9', color: '#64748b', border: '#cbd5e1' };
                                     return (
                                         <tr key={row.registrationId} style={{ ...styles.row, backgroundColor: i % 2 === 0 ? '#fff' : '#faf7f5' }}>
-                                            <td style={styles.td}><span style={styles.bold}>{row.tournamentName}</span></td>
+                                            <td style={styles.td}>
+                                                <span style={styles.bold}>{row.tournamentName}</span>
+                                                {(row.seasonName || row.seasonStatus) && (
+                                                    <span style={styles.blockMuted}>
+                                                        Season: {row.seasonName || "N/A"}{row.seasonStatus ? ` (${row.seasonStatus})` : ""}
+                                                    </span>
+                                                )}
+                                                {row.registrationDeadline && (
+                                                    <span style={styles.blockMuted}>Deadline: {row.registrationDeadline}</span>
+                                                )}
+                                            </td>
                                             <td style={styles.td}>{row.horseName}</td>
                                             <td style={styles.td}><span style={styles.date}>{row.regDate}</span></td>
                                             <td style={styles.td}>
@@ -120,6 +130,7 @@ const styles = {
     row: { borderBottom: "1px solid #f0ebe8" },
     td: { padding: "12px 16px", fontSize: 13, verticalAlign: "middle" },
     bold: { fontWeight: 600, color: "#1e293b" },
+    blockMuted: { display: "block", marginTop: 3, fontSize: 11, color: "#64748b", fontWeight: 600 },
     date: { fontSize: 12, color: "#64748b" },
     note: { fontSize: 12, color: "#94a3b8", fontStyle: "italic" },
     statusBadge: { fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "3px 10px", display: "inline-block" },

@@ -1,4 +1,5 @@
 import {
+    useCallback,
     useEffect,
     useMemo,
     useState,
@@ -84,6 +85,8 @@ function DetailItem({ label, value }) {
 }
 
 function HealthCertificatePreview({ url, compact = false }) {
+    const [lightboxSrc, setLightboxSrc] = useState(null);
+
     if (!url) {
         if (!compact) {
             return (
@@ -100,7 +103,6 @@ function HealthCertificatePreview({ url, compact = false }) {
         );
     }
 
-    const [lightboxSrc, setLightboxSrc] = useState(null);
     const resolvedUrl = resolveFileUrl(url);
 
     if (compact) {
@@ -149,7 +151,7 @@ export default function RegistrationManagement() {
     const [selectedError, setSelectedError] = useState('');
     const [registrationStats, setRegistrationStats] = useState({ pending: 0, approved: 0, rejected: 0 });
 
-    const loadRegistrations = async (nextStatus = statusFilter) => {
+    const loadRegistrations = useCallback(async (nextStatus = 'pending') => {
         try {
             setLoading(true);
             setError('');
@@ -180,11 +182,11 @@ export default function RegistrationManagement() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         loadRegistrations('pending');
-    }, []);
+    }, [loadRegistrations]);
 
     const handleStatusFilterChange = (event) => {
         const nextStatus = event.target.value;
@@ -206,7 +208,11 @@ export default function RegistrationManagement() {
                 item.ownerName,
                 item.ownerEmail,
                 item.tournamentName,
+                item.tournamentStatus,
                 item.raceName,
+                item.seasonName,
+                item.seasonStatus,
+                item.raceStatus,
                 item.status,
             ].join(' ').toLowerCase();
 
@@ -436,9 +442,24 @@ export default function RegistrationManagement() {
 
                                                     <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
                                                         <strong>{item.tournamentName || '-'}</strong>
+                                                        {item.tournamentStatus && (
+                                                            <span className="ml-2 inline-flex min-h-5 items-center rounded border border-[var(--admin-border)] bg-[#fffdfc] px-2 text-[0.62rem] font-black uppercase text-[#64748b]">
+                                                                Tournament: {item.tournamentStatus}
+                                                            </span>
+                                                        )}
                                                         <span className="mt-1 block text-[0.74rem] text-[var(--admin-muted)]">
                                                             {item.raceName || '-'}
                                                         </span>
+                                                        {item.seasonName && (
+                                                            <span className="mt-1 block text-[0.72rem] font-bold text-[var(--admin-muted)]">
+                                                                Season: {item.seasonName}
+                                                            </span>
+                                                        )}
+                                                        {item.raceStatus && (
+                                                            <span className="mt-1 inline-flex min-h-5 items-center rounded border border-[var(--admin-border)] bg-[#fffdfc] px-2 text-[0.62rem] font-black uppercase text-[#64748b]">
+                                                                Race: {item.raceStatus}
+                                                            </span>
+                                                        )}
                                                     </td>
 
                                                     <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
@@ -562,8 +583,13 @@ export default function RegistrationManagement() {
                                 <DetailItem label="Owner" value={selected.ownerName} />
                                 <DetailItem label="Owner Email" value={selected.ownerEmail} />
                                 <DetailItem label="Tournament" value={selected.tournamentName} />
+                                <DetailItem label="Tournament Status" value={selected.tournamentStatus} />
+                                <DetailItem label="Season" value={selected.seasonName} />
+                                <DetailItem label="Season Status" value={selected.seasonStatus} />
                                 <DetailItem label="Race" value={selected.raceName} />
+                                <DetailItem label="Race Status" value={selected.raceStatus} />
                                 <DetailItem label="Race Date" value={formatDateTime(selected.raceDate)} />
+                                <DetailItem label="Registration Deadline" value={formatDateTime(selected.registrationDeadline)} />
                                 <DetailItem label="Distance" value={detailValue(selected.distanceMeters, ' m')} />
                                 <DetailItem label="Status" value={selected.status} />
                                 <DetailItem label="Submitted At" value={formatDateTime(selected.submittedAt)} />
