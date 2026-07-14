@@ -47,6 +47,14 @@ export default function OpenTournaments() {
                             </div>
                             <div style={styles.info}>
                                 <p style={styles.name}>{t.tournamentName}</p>
+                                {(t.seasonName || t.seasonStatus) && (
+                                    <p style={styles.season}>
+                                        Season: {t.seasonName || "N/A"}{t.seasonStatus ? ` (${t.seasonStatus})` : ""}
+                                    </p>
+                                )}
+                                {t.registrationDeadline && (
+                                    <p style={styles.date}>Deadline: {t.registrationDeadline}</p>
+                                )}
                                 <p style={styles.date}>📅 {t.raceDate}</p>
                                 <p style={styles.date}>📍 {t.location}</p>
                                 <p style={styles.date}>🐎 {t.availableSlots} slots left</p>
@@ -80,5 +88,6 @@ const styles = {
     prizeBadge: { position: "absolute", top: "8px", right: "8px", backgroundColor: "#0b7f5a", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "10px" },
     info: { padding: "10px" },
     name: { margin: "0 0 4px", fontWeight: "bold", fontSize: "14px" },
+    season: { margin: "2px 0", fontSize: "12px", color: "#0b7f5a", fontWeight: 700 },
     date: { margin: "2px 0", fontSize: "12px", color: "#999" },
 };

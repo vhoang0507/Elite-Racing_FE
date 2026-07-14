@@ -342,6 +342,14 @@ async function getTournaments() {
         prizePool: t.prizePool,
         referee: getAssignedReferee(t),
         status: t.status,
+        seasonId: readApiField(t, 'seasonId'),
+        seasonName: readApiField(t, 'seasonName'),
+        seasonStatus: readApiField(t, 'seasonStatus'),
+        raceId: readApiField(t, 'raceId') ?? t.race?.raceId ?? t.Race?.RaceId,
+        raceDateTime: readApiField(t, 'raceDateTime') ?? t.race?.raceDate ?? t.Race?.RaceDate,
+        raceStartTime: readApiField(t, 'raceStartTime'),
+        raceStatus: readApiField(t, 'raceStatus') ?? t.race?.status ?? t.Race?.Status,
+        predictionDeadline: readApiField(t, 'predictionDeadline') ?? t.race?.predictionDeadline ?? t.Race?.PredictionDeadline,
         rules: t.rules,
         createdAt: t.createdAt,
         imageUrl: readApiField(t, 'imageUrl'),
@@ -361,19 +369,12 @@ function getAssignedReferee(tournament) {
 
 async function getTournamentById(id) {
     const detail = await apiRequest(`/admin/tournaments/${id}`);
-    let spectatorDetail = null;
-
-    try {
-        spectatorDetail = await apiRequest(`/spectator/tournaments/${id}`);
-    } catch {
-        spectatorDetail = null;
-    }
 
     return {
         ...detail,
-        race: spectatorDetail?.race ?? detail?.race ?? detail?.Race,
-        raceDateTime: spectatorDetail?.race?.raceDate ?? detail?.race?.raceDate ?? detail?.raceDate ?? detail?.RaceDate ?? null,
-        distanceMeters: getTournamentDistanceMeters(detail) ?? getTournamentDistanceMeters(spectatorDetail),
+        race: detail?.race ?? detail?.Race,
+        raceDateTime: detail?.race?.raceDate ?? detail?.raceDate ?? detail?.RaceDate ?? null,
+        distanceMeters: getTournamentDistanceMeters(detail),
     };
 }
 
@@ -408,7 +409,6 @@ async function createTournament(payload) {
             : parseCurrency(payload.prizePool)
     );
     appendFormValue(formData, 'Rules', payload.rules || '');
-    appendFormValue(formData, 'Status', payload.status || '');
 
     if (typeof File !== 'undefined' && payload.tournamentImage instanceof File && payload.tournamentImage.size > 0) {
         formData.append('TournamentImage', payload.tournamentImage);
@@ -423,12 +423,16 @@ async function createTournament(payload) {
 async function updateTournamentStatus(id, status) {
     return apiRequest(`/admin/tournaments/${id}/status`, {
         method: 'PUT',
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ Status: status }),
     });
 }
 
 async function approveTournament(id) {
     return apiRequest(`/admin/tournaments/${id}/approve`, { method: 'PUT' });
+}
+
+async function closeTournamentRegistration(id) {
+    return updateTournamentStatus(id, 'ClosedRegistration');
 }
 
 async function cancelTournament(id) {
@@ -448,7 +452,6 @@ async function updateTournament(id, patch) {
     appendFormValue(formData, 'MaxHorses', Number(patch.maxHorses || 0));
     appendFormValue(formData, 'PrizePool', parseCurrency(patch.prizePool));
     appendFormValue(formData, 'Rules', patch.rules || '');
-    appendFormValue(formData, 'Status', patch.status || '');
 
     if (typeof File !== 'undefined' && patch.tournamentImage instanceof File && patch.tournamentImage.size > 0) {
         formData.append('TournamentImage', patch.tournamentImage);
@@ -462,6 +465,79 @@ async function updateTournament(id, patch) {
 
 async function deleteTournament(id) {
     return apiRequest(`/admin/tournaments/${id}`, { method: 'DELETE' });
+}
+
+const toSeasonPayload = (payload) => ({
+    SeasonName: payload.seasonName ?? payload.SeasonName ?? '',
+    StartDate: payload.startDate ?? payload.StartDate ?? '',
+    EndDate: payload.endDate ?? payload.EndDate ?? '',
+    PointsPerCorrectPrediction: Number(
+        payload.pointsPerCorrectPrediction
+        ?? payload.PointsPerCorrectPrediction
+        ?? 100
+    ),
+});
+
+const toRewardRulePayload = (rule) => ({
+    RankPosition: Number(rule.rankPosition ?? rule.RankPosition ?? 0),
+    RewardName: rule.rewardName ?? rule.RewardName ?? '',
+    RewardDescription: rule.rewardDescription ?? rule.RewardDescription ?? '',
+    BonusPoints: Number(rule.bonusPoints ?? rule.BonusPoints ?? 0),
+});
+
+async function getSeasons() {
+    return apiRequest('/admin/seasons');
+}
+
+async function getSeasonById(id) {
+    return apiRequest(`/admin/seasons/${id}`);
+}
+
+async function createSeason(payload) {
+    return apiRequest('/admin/seasons', {
+        method: 'POST',
+        body: JSON.stringify(toSeasonPayload(payload)),
+    });
+}
+
+async function updateSeason(id, payload) {
+    return apiRequest(`/admin/seasons/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(toSeasonPayload(payload)),
+    });
+}
+
+async function activateSeason(id) {
+    return apiRequest(`/admin/seasons/${id}/activate`, { method: 'PUT' });
+}
+
+async function closeSeason(id) {
+    return apiRequest(`/admin/seasons/${id}/close`, { method: 'PUT' });
+}
+
+async function cancelSeason(id) {
+    return apiRequest(`/admin/seasons/${id}/cancel`, { method: 'PUT' });
+}
+
+async function getSeasonLeaderboard(id, limit = 100) {
+    return apiRequest(`/admin/seasons/${id}/leaderboard?limit=${encodeURIComponent(limit)}`);
+}
+
+async function getSeasonRewardRules(id) {
+    return apiRequest(`/admin/seasons/${id}/reward-rules`);
+}
+
+async function upsertSeasonRewardRules(id, rules) {
+    return apiRequest(`/admin/seasons/${id}/reward-rules`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            Rules: (rules || []).map(toRewardRulePayload),
+        }),
+    });
+}
+
+async function getSeasonRewards(id) {
+    return apiRequest(`/admin/seasons/${id}/rewards`);
 }
 
 // ─── Race Registrations ──────────────────────────────────────────────────────
@@ -1199,11 +1275,27 @@ async function getReportStatistics() {
 }
 
 async function resolveReport(id) {
-    return apiRequest(`/admin/reports/${id}/resolve`, { method: 'PUT' });
+    const parsedReport = parseAdminReportSlug(id);
+
+    if (parsedReport && parsedReport.type !== 'Violation') {
+        throw new Error('Only violation reports can be resolved.');
+    }
+
+    const violationId = parsedReport?.id ?? String(id).replace('violation-', '');
+
+    return apiRequest(`/admin/reports/${violationId}/resolve`, { method: 'PUT' });
 }
 
 async function rejectReport(id) {
-    return apiRequest(`/admin/reports/${id}/reject`, { method: 'PUT' });
+    const parsedReport = parseAdminReportSlug(id);
+
+    if (parsedReport && parsedReport.type !== 'Violation') {
+        throw new Error('Only violation reports can be rejected.');
+    }
+
+    const violationId = parsedReport?.id ?? String(id).replace('violation-', '');
+
+    return apiRequest(`/admin/reports/${violationId}/reject`, { method: 'PUT' });
 }
 
 // ─── Verifications ───────────────────────────────────────────────────────────
@@ -1311,6 +1403,12 @@ async function updatePredictionStatus(id, status) {
     });
 }
 
+async function evaluateRacePredictions(raceId) {
+    return apiRequest(`/admin/predictions/races/${raceId}/evaluate`, {
+        method: 'POST',
+    });
+}
+
 // ─── Horse Reports (mapped to BE reports/violations) ─────────────────────────
 
 async function closeHorseReport(id) {
@@ -1318,8 +1416,10 @@ async function closeHorseReport(id) {
 }
 
 async function deleteHorseReport(id) {
-    // No delete endpoint in BE - use reject as alternative
-    return rejectReport(id);
+    const value = String(id || '');
+    const slug = parseAdminReportSlug(value) ? value : `violation-${value.replace('violation-', '')}`;
+
+    return apiRequest(`/admin/reports/${slug}`, { method: 'DELETE' });
 }
 
 // ─── Export ──────────────────────────────────────────────────────────────────
@@ -1356,9 +1456,23 @@ export const adminApi = {
     createTournament,
     updateTournamentStatus,
     approveTournament,
+    closeTournamentRegistration,
     cancelTournament,
     updateTournament,
     deleteTournament,
+
+    // Seasons
+    getSeasons,
+    getSeasonById,
+    createSeason,
+    updateSeason,
+    activateSeason,
+    closeSeason,
+    cancelSeason,
+    getSeasonLeaderboard,
+    getSeasonRewardRules,
+    upsertSeasonRewardRules,
+    getSeasonRewards,
 
     // Race Registrations
     getRegistrations,
@@ -1408,6 +1522,7 @@ export const adminApi = {
     // Predictions
     getPredictions,
     updatePredictionStatus,
+    evaluateRacePredictions,
 
     // Horse reports
     closeHorseReport,

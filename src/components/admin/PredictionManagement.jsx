@@ -41,7 +41,20 @@ const statusClass = {
     inactive: 'bg-[#f3e8e6] text-[#7f645f] before:bg-[#7f645f]',
     banned: 'bg-[#e8f7ef] text-[var(--admin-primary)] before:bg-[var(--admin-primary)]',
 };
-const predictionStatusOptions = ['Pending', 'Locked', 'Evaluated', 'Cancelled'];
+const getPredictionCount = (prediction) => Number(prediction.count ?? 1);
+const getPredictionStatusOptions = (prediction) => {
+    const status = formatClass(prediction.status);
+
+    if (status === 'pending') {
+        return ['Locked', 'Cancelled'];
+    }
+
+    if (status === 'locked') {
+        return ['Cancelled'];
+    }
+
+    return [];
+};
 const actionMenuWidth = 150;
 const actionMenuHeight = 150;
 const actionMenuViewportPadding = 12;
@@ -86,6 +99,7 @@ function PredictionManagement() {
     const [sortBy, setSortBy] = useState('count');
     const [actionMenu, setActionMenu] = useState(null);
     const [page, setPage] = useState(1);
+    const [evaluatingRaceId, setEvaluatingRaceId] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
@@ -101,11 +115,11 @@ function PredictionManagement() {
         };
     }, []);
 
-    const tournaments = useMemo(() => Array.from(new Set(predictions.map((prediction) => prediction.tournament))), [predictions]);
+    const tournaments = useMemo(() => Array.from(new Set(predictions.map((prediction) => prediction.tournament).filter(Boolean))), [predictions]);
 
     const summaryCards = useMemo(() => {
-        const topPrediction = [...predictions].sort((current, next) => next.count - current.count)[0];
-        const totalPredictions = predictions.reduce((total, prediction) => total + Number(prediction.count || 0), 0);
+        const topPrediction = [...predictions].sort((current, next) => getPredictionCount(next) - getPredictionCount(current))[0];
+        const totalPredictions = predictions.reduce((total, prediction) => total + getPredictionCount(prediction), 0);
         const activeEvents = predictions.filter((prediction) => formatClass(prediction.status) === 'locked').length;
 
         return [
@@ -144,14 +158,14 @@ function PredictionManagement() {
                 return current.tournament.localeCompare(next.tournament);
             }
 
-            return next.count - current.count;
+            return getPredictionCount(next) - getPredictionCount(current);
         });
 
         return sortPendingFirst(sorted, (prediction) => prediction.status);
     }, [accuracyFilter, predictions, query, sortBy, statusFilter, tournamentFilter]);
 
     const topPredicted = useMemo(() => [...predictions]
-        .sort((current, next) => next.count - current.count)
+        .sort((current, next) => getPredictionCount(next) - getPredictionCount(current))
         .slice(0, 3)
         .map((prediction, index) => ({
             ...prediction,
@@ -220,6 +234,37 @@ function PredictionManagement() {
             showAdminSuccess('Prediction status updated successfully.', 'Updated');
         } catch (err) {
             window.alert(err.message || 'Failed to update prediction status.');
+        }
+    };
+
+    const handleEvaluateRace = async (prediction) => {
+        if (!prediction.raceId) {
+            window.alert('Race information is missing for this prediction.');
+            return;
+        }
+
+        const confirmed = await confirmAdminAction({
+            title: 'Retry prediction evaluation',
+            message: `Retry evaluation for race #${prediction.raceId}?`,
+            confirmLabel: 'Retry Evaluation',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        setEvaluatingRaceId(prediction.raceId);
+
+        try {
+            const response = await adminApi.evaluateRacePredictions(prediction.raceId);
+            const payload = await adminApi.getPredictions();
+            setPredictions(Array.isArray(payload) ? payload : []);
+            setActionMenu(null);
+            showAdminSuccess(response?.message || response?.Message || 'Prediction evaluation completed.', 'Evaluated');
+        } catch (err) {
+            window.alert(err.message || 'Failed to evaluate race predictions.');
+        } finally {
+            setEvaluatingRaceId(null);
         }
     };
 
@@ -340,7 +385,7 @@ function PredictionManagement() {
                                                     </button>
                                                     {actionMenu?.id === prediction.id && (
                                                         <div className="fixed z-50 min-w-[150px] overflow-hidden rounded-md border border-[var(--admin-border)] bg-[#fffdfc] py-1 shadow-[0_14px_32px_rgba(15,23,42,0.14)]" role="menu" style={{ left: actionMenu.left, top: actionMenu.top }}>
-                                                            {predictionStatusOptions.map((status) => {
+                                                            {getPredictionStatusOptions(prediction).map((status) => {
                                                                 const isCurrentStatus = formatClass(prediction.status) === formatClass(status);
 
                                                                 return (
@@ -356,6 +401,23 @@ function PredictionManagement() {
                                                                     </button>
                                                                 );
                                                             })}
+                                                            {getPredictionStatusOptions(prediction).length === 0 && (
+                                                                <span className="block px-3 py-2 text-[0.76rem] font-bold text-[var(--admin-muted)]">No manual status actions</span>
+                                                            )}
+                                                            {prediction.raceId && (
+                                                                <>
+                                                                    <span className="my-1 block h-px bg-[var(--admin-border)]" />
+                                                                    <button
+                                                                        className="flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-2 text-left text-[0.78rem] font-bold text-[var(--admin-primary)] hover:bg-[#e8f7ef] disabled:cursor-not-allowed disabled:opacity-60"
+                                                                        disabled={evaluatingRaceId === prediction.raceId}
+                                                                        onClick={() => handleEvaluateRace(prediction)}
+                                                                        role="menuitem"
+                                                                        type="button"
+                                                                    >
+                                                                        <span>{evaluatingRaceId === prediction.raceId ? 'Evaluating...' : 'Retry Evaluation'}</span>
+                                                                    </button>
+                                                                </>
+                                                            )}
                                                         </div>
                                                     )}
                                                 </div>
@@ -405,7 +467,7 @@ function PredictionManagement() {
                                         style={{ objectPosition: item.imagePosition }}
                                     />
                                     <strong className="text-[var(--admin-ink)]">{item.horse}</strong>
-                                    <span className="text-[0.78rem] font-bold text-[var(--admin-muted)]">{item.count.toLocaleString('en-US')} predictions</span>
+                                    <span className="text-[0.78rem] font-bold text-[var(--admin-muted)]">{getPredictionCount(item).toLocaleString('en-US')} predictions</span>
                                     <small className={`absolute right-4 top-4 grid h-7 w-7 place-items-center rounded-full text-[0.72rem] font-black ${rankClass[item.tone]}`}>{item.rank}</small>
                                 </article>
                             ))}

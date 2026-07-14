@@ -27,6 +27,7 @@ import PredictionManagement from '../components/admin/PredictionManagement';
 import RaceManagement from '../components/admin/RaceManagement';
 import RegistrationManagement from '../components/admin/RegistrationManagement';
 import AdminProfile from '../components/admin/AdminProfile';
+import AdminSeasonManagement from '../components/admin/AdminSeasonManagement';
 import AdminSystemTime from '../components/admin/AdminSystemTime';
 import UserManagement from '../components/admin/UserManagement';
 import ValidateResultDetail from '../components/admin/ValidateResultDetail';
@@ -84,6 +85,7 @@ const appRoutes = [
     // ── Admin ──
     { path: '/admin', element: createElement(Navigate, { to: '/admin/dashboard', replace: true }) },
     { path: '/admin/dashboard', element: guard('Admin', AdminDashboard) },
+    { path: '/admin/seasons', element: guard('Admin', AdminSeasonManagement) },
     { path: '/admin/races', element: guard('Admin', RaceManagement) },
     { path: '/admin/registrations', element: guard('Admin', RegistrationManagement) },
     { path: '/admin/predictions', element: guard('Admin', PredictionManagement) },

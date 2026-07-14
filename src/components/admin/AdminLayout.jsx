@@ -6,6 +6,7 @@ import {
 
 import {
     FaBell,
+    FaCalendarAlt,
     FaChartBar,
     FaChartLine,
     FaClipboardCheck,
@@ -45,6 +46,12 @@ const navigation = [
         label: 'Tournament Management',
         icon: FaFlagCheckered,
         path: '/admin/races',
+    },
+    {
+        key: 'seasons',
+        label: 'Season Management',
+        icon: FaCalendarAlt,
+        path: '/admin/seasons',
     },
     {
         key: 'registrations',

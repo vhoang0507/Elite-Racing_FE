@@ -24,7 +24,9 @@ const STATUS_STYLE = {
     Scheduled:     { bg: '#e3f2fd', color: '#1565c0' },
     AssignedReferee: { bg: '#fff3cd', color: '#856404' },
     ClosedRegistration: { bg: '#fee2e2', color: '#b91c1c' },
+    RefereeReady:  { bg: '#d4edda', color: '#155724' },
     Ongoing:       { bg: '#fff3cd', color: '#856404' },
+    Finished:      { bg: '#e8f7ef', color: '#0b7f5a' },
     Completed:     { bg: '#d4edda', color: '#155724' },
     ResultPending: { bg: '#fff3cd', color: '#856404' },
     Cancelled:     { bg: '#f8d7da', color: '#721c24' },
@@ -34,6 +36,7 @@ const STATUS_LABELS = {
     AssignedReferee: 'Assigned Referee',
     ClosedRegistration: 'Closed Registration',
     OpenRegistration: 'Open Registration',
+    RefereeReady: 'Referee Ready',
     ResultPending: 'Result Pending',
 };
 
@@ -47,8 +50,41 @@ function formatStatus(status) {
     return STATUS_LABELS[status] || status || 'N/A';
 }
 
+function isSeasonActive(race) {
+    return !race?.seasonStatus || race.seasonStatus === 'Active';
+}
+
 function canOpenPreRace(race) {
-    return race?.tournamentStatus === 'ClosedRegistration' || race?.raceStatus === 'AssignedReferee';
+    if (!isSeasonActive(race)) return false;
+
+    const actions = race?.allowedActions ?? {};
+    return Boolean(
+        actions.canInspect ||
+        actions.canSubmitPreRaceReport ||
+        actions.canMarkReady ||
+        race?.tournamentStatus === 'ClosedRegistration' ||
+        race?.raceStatus === 'AssignedReferee'
+    );
+}
+
+function canOpenPostRace(race) {
+    if (!isSeasonActive(race)) return false;
+
+    const actions = race?.allowedActions ?? {};
+    return Boolean(
+        actions.canStartRace ||
+        actions.canFinishRace ||
+        actions.canEnterResults ||
+        actions.canConfirmResults ||
+        actions.canSubmitPostRaceReport ||
+        ['RefereeReady', 'Ongoing', 'Finished', 'ResultPending'].includes(race?.raceStatus)
+    );
+}
+
+function getDisabledReason(race, fallback) {
+    if (race?.blockingReason) return race.blockingReason;
+    if (!isSeasonActive(race)) return `Season is ${race.seasonStatus}.`;
+    return fallback;
 }
 
 function RefereeAssignedRace() {
@@ -63,7 +99,7 @@ function RefereeAssignedRace() {
         const q = search.trim().toLowerCase();
         return races.filter(race => {
             const displayStatus = getDisplayStatus(race) ?? '';
-            const matchesSearch = !q || [race.raceName, race.tournamentName, race.location]
+            const matchesSearch = !q || [race.raceName, race.tournamentName, race.location, race.seasonStatus]
                 .some(v => String(v || '').toLowerCase().includes(q));
             const matchesStatus = statusFilter === 'all' ||
                 displayStatus.toLowerCase() === statusFilter.toLowerCase();
@@ -77,7 +113,7 @@ function RefereeAssignedRace() {
             setLoading(true);
             setError('');
             try {
-                const data = await refereeApi.getAssignedRaces();
+                const data = await refereeApi.getAssignedRacesWithLifecycle();
                 if (!ignore) setRaces(data ?? []);
             } catch (err) {
                 if (!ignore) setError(err.message || 'Failed to load assigned races.');
@@ -163,6 +199,18 @@ function RefereeAssignedRace() {
                                             }}>
                                                 {formatStatus(displayStatus)}
                                             </span>
+                                            {race.seasonStatus && (
+                                                <span style={{
+                                                    backgroundColor: race.seasonStatus === 'Active' ? '#e8f7ef' : '#fee2e2',
+                                                    color: race.seasonStatus === 'Active' ? '#0b7f5a' : '#b91c1c',
+                                                    fontSize: 11,
+                                                    fontWeight: 700,
+                                                    padding: '2px 10px',
+                                                    borderRadius: 20,
+                                                }}>
+                                                    Season: {race.seasonStatus}
+                                                </span>
+                                            )}
                                         </div>
 
                                         <div style={{ fontSize: 13, color: '#0b7f5a', fontWeight: 600, marginTop: 2 }}>
@@ -180,19 +228,24 @@ function RefereeAssignedRace() {
                                                 🏃 {race.distanceMeters?.toLocaleString('en-US') ?? 0}m
                                             </span>
                                         </div>
+                                        {race.blockingReason && (
+                                            <div style={{ marginTop: 6, fontSize: 12, color: '#b91c1c', fontWeight: 600 }}>
+                                                {race.blockingReason}
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Action buttons */}
                                     {(() => {
                                         const canPreRace = canOpenPreRace(race);
-                                        const canPostRace = ['RefereeReady', 'Ongoing', 'Finished', 'ResultPending'].includes(race.raceStatus);
+                                        const canPostRace = canOpenPostRace(race);
                                         return (
                                             <div style={{ display: 'flex', gap: 8, padding: '0 20px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                                                 <button
                                                     type="button"
                                                     disabled={!canPreRace}
                                                     onClick={() => navigate(`/referee/races/pre-race/${race.raceId}`, { state: { race } })}
-                                                    title={canPreRace ? 'Open pre-race inspection' : 'Only available after registration is closed'}
+                                                    title={canPreRace ? 'Open pre-race inspection' : getDisabledReason(race, 'Only available after registration is closed')}
                                                     style={{
                                                         display: 'flex', alignItems: 'center', gap: 6,
                                                         padding: '8px 16px', borderRadius: 8,
@@ -209,7 +262,7 @@ function RefereeAssignedRace() {
                                                     type="button"
                                                     disabled={!canPostRace}
                                                     onClick={() => navigate('/referee/races/post-race', { state: { raceId: race.raceId } })}
-                                                    title={canPostRace ? 'Open post-race workflow' : 'Only available for Ongoing / Finished / ResultPending races'}
+                                                    title={canPostRace ? 'Open post-race workflow' : getDisabledReason(race, 'Only available for ready / ongoing / finished races')}
                                                     style={{
                                                         display: 'flex', alignItems: 'center', gap: 6,
                                                         padding: '8px 16px', borderRadius: 8,

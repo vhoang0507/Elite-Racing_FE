@@ -9,6 +9,7 @@ import {
 } from 'react-router-dom';
 
 import {
+    FaCalendarAlt,
     FaDollarSign,
     FaInfoCircle,
     FaMapMarkerAlt,
@@ -51,6 +52,45 @@ const locationOptions = [
 ];
 const distanceOptions = [1000, 1500, 2400];
 
+function readSeasonField(season, key) {
+    const pascalKey = key[0].toUpperCase() + key.slice(1);
+
+    return season?.[key] ?? season?.[pascalKey];
+}
+
+function toDateOnly(value) {
+    return value ? String(value).split('T')[0] : '';
+}
+
+function findSeasonForRaceDate(seasons, raceDateValue) {
+    const raceDate = toDateOnly(raceDateValue);
+
+    if (!raceDate) {
+        return null;
+    }
+
+    return seasons.find((season) => {
+        const startDate = toDateOnly(readSeasonField(season, 'startDate'));
+        const endDate = toDateOnly(readSeasonField(season, 'endDate'));
+
+        return startDate && endDate && raceDate >= startDate && raceDate <= endDate;
+    }) || null;
+}
+
+function formatDateOnly(value) {
+    const date = toDateOnly(value);
+
+    if (!date) {
+        return '-';
+    }
+
+    return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+    }).format(new Date(`${date}T00:00:00`));
+}
+
 function CreateTournament() {
     const navigate = useNavigate();
     const [isSaving, setIsSaving] = useState(false);
@@ -60,6 +100,13 @@ function CreateTournament() {
     const [refereeError, setRefereeError] = useState('');
     const [tournamentImageName, setTournamentImageName] = useState('');
     const [tournamentImagePreview, setTournamentImagePreview] = useState('');
+    const [raceDateValue, setRaceDateValue] = useState('');
+    const [seasons, setSeasons] = useState([]);
+    const [isLoadingSeasons, setIsLoadingSeasons] = useState(true);
+    const [seasonError, setSeasonError] = useState('');
+
+    const matchedSeason = findSeasonForRaceDate(seasons, raceDateValue);
+    const matchedSeasonStatus = readSeasonField(matchedSeason, 'status');
 
     useEffect(() => {
         let isMounted = true;
@@ -85,6 +132,36 @@ function CreateTournament() {
         };
 
         loadReferees();
+
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadSeasons = async () => {
+            try {
+                const data = await apiRequest('/admin/seasons');
+
+                if (isMounted) {
+                    setSeasons(Array.isArray(data) ? data : []);
+                    setSeasonError('');
+                }
+            } catch (err) {
+                if (isMounted) {
+                    setSeasons([]);
+                    setSeasonError(err.message || 'Failed to load seasons.');
+                }
+            } finally {
+                if (isMounted) {
+                    setIsLoadingSeasons(false);
+                }
+            }
+        };
+
+        loadSeasons();
 
         return () => {
             isMounted = false;
@@ -143,6 +220,19 @@ function CreateTournament() {
         if (!distanceOptions.includes(distanceMeters)) {
             setError('Distance must be 1000, 1500, or 2400 meters.');
             return;
+        }
+        if (!seasonError && !isLoadingSeasons && !findSeasonForRaceDate(seasons, raceDate)) {
+            setError('Race Date must belong to a configured season.');
+            return;
+        }
+        if (action === 'publish') {
+            const raceSeason = findSeasonForRaceDate(seasons, raceDate);
+            const raceSeasonStatus = readSeasonField(raceSeason, 'status');
+
+            if (raceSeason && raceSeasonStatus !== 'Active') {
+                setError('Only tournaments in an Active season can be published. Save as draft or activate the season first.');
+                return;
+            }
         }
         if (maxHorses <= 0) {
             setError('Max horses must be greater than 0.');
@@ -274,13 +364,37 @@ function CreateTournament() {
                                 <div className={twoColumnClass}>
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Race Date</span>
-                                        <input className={inputClass} lang="en-US" name="raceDate" type="datetime-local" />
+                                        <input className={inputClass} lang="en-US" name="raceDate" onChange={(event) => setRaceDateValue(event.target.value)} type="datetime-local" value={raceDateValue} />
                                     </label>
 
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Registration Deadline</span>
                                         <input className={inputClass} name="registrationDeadline" type="date" />
                                     </label>
+                                </div>
+
+                                <div className="rounded-md border border-[var(--admin-border)] bg-[#f8fbff] px-4 py-3">
+                                    <div className="mb-2 flex items-center gap-2 text-[0.76rem] font-[850] uppercase text-[#5b403c]">
+                                        <FaCalendarAlt aria-hidden="true" className="text-[var(--admin-primary)]" />
+                                        <span>Matched Season</span>
+                                    </div>
+                                    {isLoadingSeasons ? (
+                                        <p className="m-0 text-[0.82rem] font-semibold text-[var(--admin-muted)]">Loading seasons...</p>
+                                    ) : seasonError ? (
+                                        <p className="m-0 text-[0.82rem] font-semibold text-[var(--admin-primary)]">{seasonError}</p>
+                                    ) : !raceDateValue ? (
+                                        <p className="m-0 text-[0.82rem] font-semibold text-[var(--admin-muted)]">Select a race date to match a season.</p>
+                                    ) : matchedSeason ? (
+                                        <div className="flex flex-wrap items-center gap-2 text-[0.82rem] font-bold text-[var(--admin-ink)]">
+                                            <span>{readSeasonField(matchedSeason, 'seasonName')}</span>
+                                            <span className="rounded-full bg-[#e8f7ef] px-2.5 py-1 text-[0.68rem] font-black text-[var(--admin-primary)]">{matchedSeasonStatus}</span>
+                                            <span className="text-[var(--admin-muted)]">
+                                                {formatDateOnly(readSeasonField(matchedSeason, 'startDate'))} - {formatDateOnly(readSeasonField(matchedSeason, 'endDate'))}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <p className="m-0 text-[0.82rem] font-semibold text-[var(--admin-primary)]">No season covers this race date.</p>
+                                    )}
                                 </div>
 
                                 <div className={twoColumnClass}>

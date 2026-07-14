@@ -82,6 +82,7 @@ const deadlineClass = {
 
 const statusActionLabels = {
     approve: 'Publish Tournament',
+    closeRegistration: 'Close Registration',
     cancel: 'Cancel Tournament',
 };
 
@@ -90,6 +91,7 @@ const getTournamentActions = (status) => {
         case 'Draft':
             return ['approve', 'cancel'];
         case 'OpenRegistration':
+            return ['closeRegistration', 'cancel'];
         case 'ClosedRegistration':
         case 'Ongoing':
             return ['cancel'];
@@ -262,6 +264,26 @@ const getRaceDateLabel = (tournament) => {
     return raceDate ? adminApi.formatters.toDateLabel(String(raceDate).split('T')[0]) : '-';
 };
 
+const getDateTimeLabel = (value) => {
+    if (!value) {
+        return '-';
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return String(value);
+    }
+
+    return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(date);
+};
+
 const getRaceTimeInputValue = (tournament) => {
     const raceTime = getRaceTimeLabel(tournament);
 
@@ -427,13 +449,40 @@ function RaceManagement() {
     };
 
     const handleTournamentStatusChange = async (tournament, action) => {
+        const actionCopy = {
+            approve: {
+                title: 'Publish tournament',
+                message: `Are you sure you want to publish "${tournament.name}"?`,
+                confirmLabel: 'Publish',
+                tone: 'primary',
+                fallbackMessage: 'Tournament published successfully.',
+            },
+            closeRegistration: {
+                title: 'Close registration',
+                message: `Are you sure you want to close registration for "${tournament.name}"?`,
+                confirmLabel: 'Close Registration',
+                tone: 'primary',
+                fallbackMessage: 'Tournament registration closed successfully.',
+            },
+            cancel: {
+                title: 'Cancel tournament',
+                message: `Are you sure you want to cancel "${tournament.name}"?`,
+                confirmLabel: 'Cancel tournament',
+                tone: 'danger',
+                fallbackMessage: 'Tournament cancelled successfully.',
+            },
+        }[action] || {
+            title: 'Update tournament',
+            message: `Are you sure you want to update "${tournament.name}"?`,
+            confirmLabel: 'Update',
+            tone: 'primary',
+            fallbackMessage: 'Tournament updated successfully.',
+        };
         const confirmed = await confirmAdminAction({
-            title: action === 'approve' ? 'Publish tournament' : 'Cancel tournament',
-            message: action === 'approve'
-                ? `Are you sure you want to publish "${tournament.name}"?`
-                : `Are you sure you want to cancel "${tournament.name}"?`,
-            confirmLabel: action === 'approve' ? 'Publish' : 'Cancel tournament',
-            tone: action === 'approve' ? 'primary' : 'danger',
+            title: actionCopy.title,
+            message: actionCopy.message,
+            confirmLabel: actionCopy.confirmLabel,
+            tone: actionCopy.tone,
         });
 
         if (!confirmed) {
@@ -448,10 +497,12 @@ function RaceManagement() {
             let response;
             if (action === 'approve') {
                 response = await adminApi.approveTournament(tournament.id);
+            } else if (action === 'closeRegistration') {
+                response = await adminApi.closeTournamentRegistration(tournament.id);
             } else if (action === 'cancel') {
                 response = await adminApi.cancelTournament(tournament.id);
             }
-            const successMessage = response?.message || response?.Message || `Tournament ${action}d successfully.`;
+            const successMessage = response?.message || response?.Message || actionCopy.fallbackMessage;
             setStatusActionMessage(successMessage);
             showAdminSuccess(successMessage, 'Updated');
             setActionMenuId(null);
@@ -488,7 +539,6 @@ function RaceManagement() {
             prizePool: parseCurrency(formData.get('prizePool')),
             raceStartTime: String(formData.get('raceStartTime') || '').trim(),
             rules: formData.get('rules'),
-            status: formData.get('status'),
             tournamentImage: typeof File !== 'undefined' && tournamentImage instanceof File && tournamentImage.size > 0 ? tournamentImage : null,
         };
 
@@ -513,7 +563,6 @@ function RaceManagement() {
         }
 
         try {
-            // Update tournament data (now includes status)
             await adminApi.updateTournament(editingTournament.id, patch);
 
             // Refresh tournament list from BE
@@ -794,6 +843,18 @@ function RaceManagement() {
                                             {detailValue(adminApi.formatters.formatTournamentStatus(selectedTournament.status))}
                                         </span>
                                     </DetailItem>
+                                    <DetailItem label="Season">
+                                        {detailValue(readTournamentField(selectedTournament, 'seasonName', 'SeasonName'))}
+                                    </DetailItem>
+                                    <DetailItem label="Season Status">
+                                        {detailValue(readTournamentField(selectedTournament, 'seasonStatus', 'SeasonStatus'))}
+                                    </DetailItem>
+                                    <DetailItem label="Race Status">
+                                        {detailValue(readTournamentField(selectedTournament, 'raceStatus', 'RaceStatus') ?? selectedTournament?.race?.status)}
+                                    </DetailItem>
+                                    <DetailItem label="Prediction Deadline">
+                                        {getDateTimeLabel(readTournamentField(selectedTournament, 'predictionDeadline', 'PredictionDeadline') ?? selectedTournament?.race?.predictionDeadline)}
+                                    </DetailItem>
                                     <DetailItem label="Registration Deadline">
                                         <span className="block">{adminApi.formatters.toDateLabel(selectedTournament.startDate)}</span>
                                         {adminApi.formatters.getTournamentDeadlineWarning(selectedTournament) && (
@@ -879,18 +940,6 @@ function RaceManagement() {
                                             {distanceOptions.map((distanceMeters) => (
                                                 <option key={distanceMeters} value={distanceMeters}>{distanceMeters}m</option>
                                             ))}
-                                        </select>
-                                    </label>
-
-                                    <label className={editFieldClass}>
-                                        <span className={editLabelClass}>Status</span>
-                                        <select className={editControlClass} defaultValue={editingTournament.status} name="status">
-                                            <option value="Draft">Draft</option>
-                                            <option value="OpenRegistration">Open Registration</option>
-                                            <option value="ClosedRegistration">Closed Registration</option>
-                                            <option value="Ongoing">Ongoing</option>
-                                            <option value="Completed">Completed</option>
-                                            <option value="Cancelled">Cancelled</option>
                                         </select>
                                     </label>
 

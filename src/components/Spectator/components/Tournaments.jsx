@@ -25,17 +25,19 @@ function getStatusStyle(status) {
     return STATUS_BADGE[status] ?? { bg: '#e8f7ef', color: '#0b7f5a', label: status };
 }
 
-// BE blocks prediction when race status is Ongoing/Finished/ResultPending/Published/Cancelled
-// and when tournament is Completed/Cancelled.
-// tournament.race.status is included in the API response, so we check that directly.
 const RACE_CLOSED_FOR_PREDICTION = ['Ongoing', 'Finished', 'ResultPending', 'Published', 'Cancelled'];
 
 function canPredict(tournament) {
     if (!tournament) return false;
+    if (typeof tournament.canPredict === 'boolean') return tournament.canPredict;
     if (tournament.status === 'Completed' || tournament.status === 'Cancelled') return false;
     const raceStatus = tournament.race?.status;
     if (!raceStatus) return false;
     return !RACE_CLOSED_FOR_PREDICTION.includes(raceStatus);
+}
+
+function getPredictionUnavailableReason(tournament) {
+    return tournament?.predictionUnavailableReason || 'Prediction period has ended';
 }
 
 function canWatchReplay(tournament) {
@@ -356,7 +358,7 @@ function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
                         </button>
                     ) : (
                         <p style={{ margin: 0, fontSize: '0.83rem', color: '#bbb', textAlign: 'center' }}>
-                            Prediction period has ended
+                            {getPredictionUnavailableReason(tournament)}
                         </p>
                     )}
                 </div>

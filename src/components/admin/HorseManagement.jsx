@@ -124,6 +124,8 @@ function HorseDetailItem({ label, value }) {
 }
 
 function HealthCertificateLink({ url, compact = false }) {
+    const [lightboxSrc, setLightboxSrc] = useState(null);
+
     if (!url) {
         if (!compact) {
             return (
@@ -140,7 +142,6 @@ function HealthCertificateLink({ url, compact = false }) {
         );
     }
 
-    const [lightboxSrc, setLightboxSrc] = useState(null);
     const resolvedUrl = resolveFileUrl(url);
 
     if (compact) {
@@ -289,7 +290,7 @@ function HorseManagement() {
     };
 
     const handleCloseHorseDetail = () => {
-        handleCloseHorseDetail();
+        setSelectedHorseId(null);
         setSelectedHorseDetail(null);
         setSelectedHorseError('');
         setSelectedHorseLoading(false);

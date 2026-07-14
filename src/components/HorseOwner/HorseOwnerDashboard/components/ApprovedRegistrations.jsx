@@ -141,6 +141,9 @@ function RaceInfoModal({ data, onClose }) {
                 <div style={styles.modalBody}>
                     <div style={styles.infoGrid}>
                         <InfoItem label="Tournament"           value={race.tournamentName || data.tournamentName} />
+                        <InfoItem label="Season"              value={data.seasonName} />
+                        <InfoItem label="Season Status"       value={data.seasonStatus} />
+                        <InfoItem label="Registration Deadline" value={data.registrationDeadline} />
                         <InfoItem label="Race Name"            value={race.raceName || data.tournamentName} />
                         <InfoItem label="Race Date"            value={race.raceDate || data.raceDate} />
                         <InfoItem label="Location"             value={race.location} />

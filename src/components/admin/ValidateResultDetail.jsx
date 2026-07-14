@@ -272,6 +272,39 @@ function ValidateResultDetail() {
         }
     };
 
+    const handleRetryPredictionEvaluation = async () => {
+        const raceId = detail?.raceId || postRaceResults.find((result) => result?.raceId)?.raceId;
+
+        if (!raceId) {
+            setActionError('Race information is missing for prediction evaluation.');
+            return;
+        }
+
+        const confirmed = await confirmAdminAction({
+            title: 'Retry prediction evaluation',
+            message: 'Retry prediction evaluation for this race?',
+            confirmLabel: 'Retry Evaluation',
+        });
+
+        if (!confirmed) return;
+
+        setActionLoading(true);
+        setActionError('');
+        setActionSuccess('');
+
+        try {
+            const response = await adminApi.evaluateRacePredictions(raceId);
+            const successMessage = response?.message || response?.Message || 'Prediction evaluation completed.';
+            setActionSuccess(successMessage);
+            showAdminSuccess(successMessage, 'Evaluated');
+            await loadDetail();
+        } catch (err) {
+            setActionError(err.message || 'Failed to evaluate predictions.');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     const isStandaloneReport = detail?.detailType === 'admin-report';
     const heading = isStandaloneReport
         ? `${formatReportType(detail?.sourceType)}: ${detail?.raceName || 'Race report'}`
@@ -425,6 +458,17 @@ function ValidateResultDetail() {
                                     Approve
                                 </button>
                             </>
+                        )}
+                        {!loading && !error && detail?.raceId && (
+                            <button
+                                type="button"
+                                disabled={actionLoading}
+                                onClick={handleRetryPredictionEvaluation}
+                                className="flex min-h-[38px] cursor-pointer items-center gap-2 rounded-md border border-[var(--admin-border)] bg-white px-4 text-[0.78rem] font-black text-[var(--admin-primary)] hover:bg-[#e8f7ef] disabled:opacity-50"
+                            >
+                                <FaRedoAlt aria-hidden="true" className="h-3 w-3" />
+                                Retry Evaluation
+                            </button>
                         )}
                         <button
                             aria-label="Refresh referee report"
