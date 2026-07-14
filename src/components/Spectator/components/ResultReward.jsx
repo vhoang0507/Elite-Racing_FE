@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import {
     FaBullseye,
-    FaCheckCircle,
     FaCoins,
     FaListOl,
+    FaPercent,
 } from 'react-icons/fa';
 import { spectatorApi } from '../../../api/spectatorApi';
 
@@ -22,11 +22,12 @@ export default function ResultReward() {
         }).finally(() => setLoading(false));
     }, []);
 
-    const pts       = rewards?.rewardPoints ?? 0;
-    const correct   = rewards?.correctPredictions ?? 0;
-    const accuracy  = rewards?.predictionAccuracy ?? 0;
-    const myRank    = rewards?.myRank ?? null;
-    const history   = rewards?.pointHistory ?? [];
+    const bettingPoints = rewards?.bettingPoints ?? 0;
+    const netPoints     = rewards?.netPoints ?? 0;
+    const correct       = rewards?.correctPredictions ?? 0;
+    const accuracy      = rewards?.predictionAccuracy ?? 0;
+    const myRank        = rewards?.myRank ?? null;
+    const history       = rewards?.pointHistory ?? [];
 
     // Progress: how far into season
     const seasonPct = season?.daysLeft != null && season?.totalDays
@@ -34,10 +35,10 @@ export default function ResultReward() {
         : null;
 
     const stats = [
-        { label: 'Points This Season', value: pts,           suffix: 'pts', icon: FaCoins,       tone: 'gold' },
-        { label: 'Correct Predictions', value: correct,      icon: FaCheckCircle, tone: 'green' },
-        { label: 'Prediction Accuracy', value: `${accuracy}%`, icon: FaBullseye, tone: 'blue' },
-        { label: 'My Season Rank',      value: myRank ? `#${myRank}` : '—', icon: FaListOl, tone: '' },
+        { label: 'Wallet Balance',       value: bettingPoints, suffix: 'pts', icon: FaCoins,       tone: 'gold' },
+        { label: 'Net Points',           value: `${netPoints >= 0 ? '+' : ''}${netPoints}`, suffix: 'pts', icon: FaCoins, tone: netPoints >= 0 ? 'green' : 'red' },
+        { label: 'Prediction Accuracy',  value: `${accuracy}%`, icon: FaPercent, tone: 'blue' },
+        { label: 'My Season Rank',       value: myRank ? `#${myRank}` : '—', icon: FaListOl, tone: '' },
     ];
 
     return (
@@ -59,7 +60,7 @@ export default function ResultReward() {
                             const Icon = s.icon;
                             return (
                                 <article key={s.label} className="stat-card min-h-[110px]">
-                                    <div className={`stat-icon ${s.tone === 'gold' ? 'bg-[#fff3cd] text-[#856404]' : s.tone === 'green' ? 'bg-[#dff7e9] text-[#118548]' : s.tone === 'blue' ? 'bg-[#e3f2fd] text-[#1565c0]' : ''}`}>
+                                    <div className={`stat-icon ${s.tone === 'gold' ? 'bg-[#fff3cd] text-[#856404]' : s.tone === 'green' ? 'bg-[#dff7e9] text-[#118548]' : s.tone === 'blue' ? 'bg-[#e3f2fd] text-[#1565c0]' : s.tone === 'red' ? 'bg-[#f8d7da] text-[#721c24]' : ''}`}>
                                         <Icon aria-hidden="true" />
                                     </div>
                                     <small className="stat-label">{s.label}</small>
@@ -136,24 +137,38 @@ export default function ResultReward() {
                     {/* Points history */}
                     <div className="surface-card">
                         <div className="section-bar">
-                            <h2 className="m-0 text-[1.05rem] font-bold">Points History</h2>
-                            <span className="font-black text-[var(--admin-primary)]">Total: {pts} pts</span>
+                            <h2 className="m-0 text-[1.05rem] font-bold">Bet History</h2>
+                            <span className="font-black" style={{ color: netPoints >= 0 ? '#155724' : '#721c24' }}>
+                                Net: {netPoints >= 0 ? '+' : ''}{netPoints} pts
+                            </span>
                         </div>
                         {history.length === 0 ? (
                             <div className="p-8 text-center">
-                                <p className="m-0 text-[var(--admin-muted)]">No points earned yet. Make correct predictions to earn points!</p>
+                                <p className="m-0 text-[var(--admin-muted)]">No bets placed yet. Make predictions to see your history!</p>
                             </div>
                         ) : (
-                            history.map((item, i) => (
-                                <div key={i} className="flex items-center gap-3 border-b border-[var(--admin-border)] px-5 py-3 last:border-b-0">
-                                    <span className="text-xl">🐴</span>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="m-0 font-bold text-[0.9rem]">{item.tournamentName ?? item.raceName ?? 'Tournament'}</p>
-                                        <p className="m-0 text-xs text-[var(--admin-muted)]">Correct prediction</p>
+                            history.map((item, i) => {
+                                const won = item.isCorrect === true;
+                                const lost = item.isCorrect === false;
+                                const pending = !won && !lost;
+                                const net = item.netPoints ?? (won ? item.payoutPoints - item.stakePoints : -(item.stakePoints ?? 0));
+                                return (
+                                    <div key={i} className="flex items-center gap-3 border-b border-[var(--admin-border)] px-5 py-3 last:border-b-0">
+                                        <span className="text-xl">{won ? '✅' : lost ? '❌' : '⏳'}</span>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="m-0 font-bold text-[0.9rem]">{item.tournamentName ?? item.raceName ?? 'Tournament'}</p>
+                                            <p className="m-0 text-xs text-[var(--admin-muted)]">
+                                                Pick: {item.predictedHorseName ?? '—'}
+                                                {item.actualWinnerHorseName && ` · Winner: ${item.actualWinnerHorseName}`}
+                                                {item.stakePoints > 0 && ` · Stake: ${item.stakePoints} pts`}
+                                            </p>
+                                        </div>
+                                        <span className="font-black" style={{ color: pending ? '#856404' : net >= 0 ? '#155724' : '#721c24' }}>
+                                            {pending ? '—' : `${net >= 0 ? '+' : ''}${net} pts`}
+                                        </span>
                                     </div>
-                                    <span className="font-black text-[#155724]">+{item.points} pts</span>
-                                </div>
-                            ))
+                                );
+                            })
                         )}
                     </div>
                 </>

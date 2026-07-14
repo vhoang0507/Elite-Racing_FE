@@ -218,7 +218,7 @@ function ValidateResultDetail() {
                 throw new Error('No referee-confirmed results to approve.');
             }
 
-            await adminApi.publishRaceResults(raceId);
+            await adminApi.approveAllResults(raceId);
 
             setActionSuccess('Results approved and tournament completed.');
             showAdminSuccess('Results approved and tournament completed.', 'Approved');

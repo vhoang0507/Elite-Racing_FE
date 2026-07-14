@@ -13,6 +13,7 @@ import { spectatorApi } from '../../../api/spectatorApi';
 const FILTERS = [
     { key: 'all',       label: 'All' },
     { key: 'pending',   label: 'Pending' },
+    { key: 'locked',    label: 'Locked' },
     { key: 'correct',   label: 'Correct' },
     { key: 'wrong',     label: 'Wrong' },
     { key: 'cancelled', label: 'Cancelled' },
@@ -108,7 +109,8 @@ export default function Predictions() {
     const correct   = predictions.filter(p => p.isCorrect === true).length;
     const wrong     = predictions.filter(p => p.isCorrect === false).length;
     const cancelled = predictions.filter(p => p.status === 'Cancelled').length;
-    const pending   = predictions.filter(p => p.isCorrect == null && p.status !== 'Cancelled').length;
+    const locked    = predictions.filter(p => p.status === 'Locked').length;
+    const pending   = predictions.filter(p => p.status === 'Pending').length;
     const accuracy  = (correct + wrong) === 0 ? 0 : Math.round((correct / (correct + wrong)) * 100);
     const totalPts  = predictions.reduce((s, p) => s + (p.pointsAwarded ?? 0), 0);
     const totalStake = predictions.reduce((s, p) => s + (p.stakePoints ?? 0), 0);
@@ -121,10 +123,11 @@ export default function Predictions() {
         { label: 'Net Points', value: `${netTotal >= 0 ? '+' : ''}${netTotal}`, icon: FaCoins, tone: netTotal >= 0 ? 'gold' : 'red', suffix: 'pts' },
     ];
 
-    const counts = { all: total, pending, correct, wrong, cancelled };
+    const counts = { all: total, pending, locked, correct, wrong, cancelled };
 
     const filtered = predictions.filter(p => {
-        if (filter === 'pending')   return p.isCorrect == null && p.status !== 'Cancelled';
+        if (filter === 'pending')   return p.status === 'Pending';
+        if (filter === 'locked')    return p.status === 'Locked';
         if (filter === 'correct')   return p.isCorrect === true;
         if (filter === 'wrong')     return p.isCorrect === false;
         if (filter === 'cancelled') return p.status === 'Cancelled';

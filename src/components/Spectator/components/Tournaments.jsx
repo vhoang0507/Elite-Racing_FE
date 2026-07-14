@@ -286,6 +286,8 @@ function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
     const hasPredicted = !!myPrediction || tournament.hasPredicted;
     const horseName = myPrediction?.predictedHorseName ?? tournament.myPrediction?.predictedHorseName;
     const isCorrect = myPrediction?.isCorrect;
+    const predStatus = myPrediction?.status ?? null;
+    const isLocked = predStatus === 'Locked';
     const pts = myPrediction?.pointsAwarded ?? 0;
     const open = canPredict(tournament);
     const replayOpen = canWatchReplay(tournament);
@@ -293,7 +295,7 @@ function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
     return (
         <article className="surface-card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             {/* Status stripe */}
-            <div style={{ height: 4, background: hasPredicted ? (isCorrect === true ? '#155724' : isCorrect === false ? '#721c24' : '#856404') : (open ? '#0b7f5a' : '#ccc') }} />
+            <div style={{ height: 4, background: hasPredicted ? (isCorrect === true ? '#155724' : isCorrect === false ? '#721c24' : isLocked ? '#1e40af' : '#856404') : (open ? '#0b7f5a' : '#ccc') }} />
 
             <div style={{ padding: '18px 20px', flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {/* Tournament info */}
@@ -329,10 +331,10 @@ function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
                             </div>
                             <span style={{
                                 fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20, flexShrink: 0,
-                                background: isCorrect === true ? '#d4edda' : isCorrect === false ? '#f8d7da' : '#fff3cd',
-                                color: isCorrect === true ? '#155724' : isCorrect === false ? '#721c24' : '#856404',
+                                background: isCorrect === true ? '#d4edda' : isCorrect === false ? '#f8d7da' : isLocked ? '#dbeafe' : '#fff3cd',
+                                color: isCorrect === true ? '#155724' : isCorrect === false ? '#721c24' : isLocked ? '#1e40af' : '#856404',
                             }}>
-                                {isCorrect === true ? `✓ Correct  +${pts} pts` : isCorrect === false ? '✗ Wrong' : '⏳ Pending Result'}
+                                {isCorrect === true ? `✓ Correct  +${pts} pts` : isCorrect === false ? '✗ Wrong' : isLocked ? '🔒 Locked' : '⏳ Pending Result'}
                             </span>
                         </div>
                     ) : open ? (
@@ -410,7 +412,7 @@ export default function Tournaments() {
         setModal(null);
         setPredictions(prev => [
             ...prev.filter(p => p.tournamentId !== tournamentId),
-            { predictionId: Date.now(), tournamentId, predictedHorseId: horse.horseId, predictedHorseName: horse.horseName, isCorrect: null, pointsAwarded: 0 },
+            { predictionId: Date.now(), tournamentId, predictedHorseId: horse.horseId, predictedHorseName: horse.horseName, isCorrect: null, pointsAwarded: 0, status: 'Pending' },
         ]);
     };
 

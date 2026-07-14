@@ -61,6 +61,14 @@ export async function confirmAllRaceResults(raceId) {
     });
 }
 
+export async function markRaceReady(raceId) {
+    return apiRequest(`/referee/races/${raceId}/mark-ready`, { method: 'PUT' });
+}
+
+export async function startRace(raceId) {
+    return apiRequest(`/referee/races/${raceId}/start`, { method: 'PUT' });
+}
+
 export async function finishRace(raceId) {
     return apiRequest(`/referee/races/${raceId}/finish`, {
         method: 'PUT',
@@ -141,6 +149,8 @@ export const refereeApi = {
     getRaceRegistrations,
     saveInspection,
     getInspectionReport,
+    markRaceReady,
+    startRace,
     saveRaceResult,
     confirmRaceResult,
     confirmAllRaceResults,

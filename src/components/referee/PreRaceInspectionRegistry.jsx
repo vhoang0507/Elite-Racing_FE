@@ -83,6 +83,7 @@ function PreRaceInspectionRegistry() {
     const [loadingRace, setLoadingRace] = useState(!location.state?.race);
     const [loadingReport, setLoadingReport] = useState(false);
     const [savingId, setSavingId] = useState(null);
+    const [markingReady, setMarkingReady] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const { toast, showToast, hideToast } = useToast();
@@ -216,6 +217,22 @@ function PreRaceInspectionRegistry() {
         }));
     };
 
+    const handleMarkReady = async () => {
+        if (!raceId || markingReady) return;
+        setMarkingReady(true);
+        setError('');
+        setSuccess('');
+        try {
+            await refereeApi.markRaceReady(raceId);
+            setSuccess('Race marked as Ready. You can now start the race from the Post-Race panel.');
+            showToast('Race marked as Ready!', 'success');
+        } catch (err) {
+            setError(err.message || 'Failed to mark race as ready.');
+        } finally {
+            setMarkingReady(false);
+        }
+    };
+
     const handleSaveInspection = async (registrationId) => {
         if (!raceId) return;
 
@@ -286,9 +303,21 @@ function PreRaceInspectionRegistry() {
                         </p>
                     </div>
 
-                    <span className="rounded-full bg-[#e8f7ef] px-4 py-2 text-sm font-bold text-[#0b7f5a]">
-                        Race #{raceId}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span className="rounded-full bg-[#e8f7ef] px-4 py-2 text-sm font-bold text-[#0b7f5a]">
+                            Race #{raceId}
+                        </span>
+                        {selectedRace?.raceStatus === 'AssignedReferee' && (
+                            <button
+                                type="button"
+                                disabled={markingReady}
+                                onClick={handleMarkReady}
+                                style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: '#0b7f5a', color: '#fff', fontWeight: 700, fontSize: '0.88rem', cursor: markingReady ? 'not-allowed' : 'pointer', opacity: markingReady ? 0.7 : 1 }}
+                            >
+                                {markingReady ? 'Processing...' : '✓ Mark Race Ready'}
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {error && (
