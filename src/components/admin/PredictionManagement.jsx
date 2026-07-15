@@ -42,38 +42,6 @@ const statusClass = {
     banned: 'bg-[#e8f7ef] text-[var(--admin-primary)] before:bg-[var(--admin-primary)]',
 };
 const getPredictionCount = (prediction) => Number(prediction.count ?? 1);
-const readPredictionField = (prediction, key) => {
-    const pascalKey = key[0].toUpperCase() + key.slice(1);
-
-    return prediction?.[key] ?? prediction?.[pascalKey];
-};
-const isPredictionEvaluated = (prediction) => {
-    const status = formatClass(readPredictionField(prediction, 'status'));
-
-    return status === 'evaluated'
-        || readPredictionField(prediction, 'isCorrect') === true
-        || readPredictionField(prediction, 'isCorrect') === false;
-};
-const getPredictionPoints = (prediction) => {
-    const stakePoints = Number(readPredictionField(prediction, 'stakePoints') ?? 0);
-    const pointsAwarded = Number(readPredictionField(prediction, 'pointsAwarded') ?? 0);
-    const netValue = readPredictionField(prediction, 'netPoints');
-    const netPoints = netValue != null
-        ? Number(netValue)
-        : isPredictionEvaluated(prediction)
-            ? pointsAwarded - stakePoints
-            : null;
-
-    return { stakePoints, pointsAwarded, netPoints };
-};
-const getPredictionResultLabel = (prediction) => {
-    const isCorrect = readPredictionField(prediction, 'isCorrect');
-
-    if (isCorrect === true) return 'Correct';
-    if (isCorrect === false) return 'Wrong';
-
-    return 'Awaiting Result';
-};
 const getPredictionStatusOptions = (prediction) => {
     const status = formatClass(prediction.status);
 
@@ -277,7 +245,7 @@ function PredictionManagement() {
 
         const confirmed = await confirmAdminAction({
             title: 'Retry prediction evaluation',
-            message: `Retry evaluation for race #${prediction.raceId}? Correct predictions will receive their staked points back. Incorrect predictions will lose their staked points. No pool or fixed prediction bonus will be applied.`,
+            message: `Retry evaluation for race #${prediction.raceId}?`,
             confirmLabel: 'Retry Evaluation',
         });
 
@@ -379,10 +347,10 @@ function PredictionManagement() {
                         </div>
 
                         <div className="w-full overflow-x-auto">
-                            <table className="w-full border-collapse max-[820px]:min-w-[1080px]">
+                            <table className="w-full border-collapse max-[820px]:min-w-[760px]">
                                 <thead>
                                     <tr>
-                                        {['Tournament', 'Spectator', 'Predictions', 'Stake', 'Returned', 'Net', 'Result', 'Status', 'Actions'].map((heading) => (
+                                        {['Tournament', 'Spectator', 'Predictions', 'Status', 'Actions'].map((heading) => (
                                             <th className="border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] py-[18px] text-left text-[0.7rem] uppercase text-[#64748b]" key={heading}>
                                                 {heading}
                                             </th>
@@ -390,37 +358,27 @@ function PredictionManagement() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {visiblePredictions.map((prediction) => {
-                                        const { stakePoints, pointsAwarded, netPoints } = getPredictionPoints(prediction);
-                                        const resultLabel = getPredictionResultLabel(prediction);
-
-                                        return (
-                                            <tr key={prediction.id}>
-                                                <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">{prediction.tournament}</td>
-                                                <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">{prediction.spectator}</td>
-                                                <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">
-                                                    <div className="flex items-center gap-3">
-                                                        <img
-                                                            alt=""
-                                                            className="h-10 w-10 rounded-md object-cover"
-                                                            src={horseRacing}
-                                                            style={{ objectPosition: prediction.imagePosition }}
-                                                        />
-                                                        <span>{prediction.horse}</span>
-                                                    </div>
-                                                </td>
-                                                <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.86rem] font-bold text-[var(--admin-ink)]">{stakePoints} pts</td>
-                                                <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.86rem] font-bold text-[var(--admin-ink)]">{pointsAwarded} pts</td>
-                                                <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.86rem] font-black" style={{ color: netPoints == null ? '#64748b' : netPoints >= 0 ? '#155724' : '#721c24' }}>
-                                                    {netPoints == null ? '-' : `${netPoints >= 0 ? '+' : ''}${netPoints} pts`}
-                                                </td>
-                                                <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.86rem] font-bold text-[var(--admin-ink)]">{resultLabel}</td>
-                                                <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">
-                                                    <span className={`relative inline-flex min-h-6 items-center rounded px-2.5 pl-5 text-[0.68rem] font-black uppercase before:absolute before:left-2 before:h-1.5 before:w-1.5 before:rounded-full before:content-[''] ${statusClass[formatClass(prediction.status)]}`}>
-                                                        {prediction.status}
-                                                    </span>
-                                                </td>
-                                                <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">
+                                    {visiblePredictions.map((prediction) => (
+                                        <tr key={prediction.id}>
+                                            <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">{prediction.tournament}</td>
+                                            <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">{prediction.spectator}</td>
+                                            <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">
+                                                <div className="flex items-center gap-3">
+                                                    <img
+                                                        alt=""
+                                                        className="h-10 w-10 rounded-md object-cover"
+                                                        src={horseRacing}
+                                                        style={{ objectPosition: prediction.imagePosition }}
+                                                    />
+                                                    <span>{prediction.horse}</span>
+                                                </div>
+                                            </td>
+                                            <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">
+                                                <span className={`relative inline-flex min-h-6 items-center rounded px-2.5 pl-5 text-[0.68rem] font-black uppercase before:absolute before:left-2 before:h-1.5 before:w-1.5 before:rounded-full before:content-[''] ${statusClass[formatClass(prediction.status)]}`}>
+                                                    {prediction.status}
+                                                </span>
+                                            </td>
+                                            <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">
                                                 <div className="relative inline-flex items-center gap-3">
                                                     <button aria-expanded={actionMenu?.id === prediction.id} aria-haspopup="menu" aria-label={`Actions for ${prediction.horse}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-md bg-transparent text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]" onClick={(event) => handleActionToggle(event, prediction.id)} type="button">
                                                         <FaEllipsisH aria-hidden="true" />
@@ -465,8 +423,7 @@ function PredictionManagement() {
                                                 </div>
                                             </td>
                                         </tr>
-                                        );
-                                    })}
+                                    ))}
                                 </tbody>
                             </table>
                         </div>
