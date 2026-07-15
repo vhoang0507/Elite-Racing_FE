@@ -27,102 +27,6 @@ function getStatusStyle(status) {
 }
 
 const RACE_CLOSED_FOR_PREDICTION = ['Ongoing', 'Finished', 'ResultPending', 'Published', 'Cancelled'];
-const MIN_PREDICTION_STAKE = 10;
-const MAX_PREDICTION_STAKE = 100;
-const QUICK_STAKE_OPTIONS = [10, 25, 50, 100];
-
-function toSafePoints(value) {
-    const points = Number(value);
-
-    return Number.isFinite(points) ? Math.max(0, points) : 0;
-}
-
-function readPredictionField(prediction, key) {
-    const pascalKey = key[0].toUpperCase() + key.slice(1);
-
-    return prediction?.[key] ?? prediction?.[pascalKey];
-}
-
-function isEvaluatedStatus(status) {
-    return String(status || '').toLowerCase() === 'evaluated';
-}
-
-function calculatePredictionNet(prediction) {
-    const netPoints = readPredictionField(prediction, 'netPoints');
-
-    if (netPoints != null) {
-        return Number(netPoints);
-    }
-
-    if (!isEvaluatedStatus(readPredictionField(prediction, 'status'))) {
-        return 0;
-    }
-
-    return Number(readPredictionField(prediction, 'pointsAwarded') ?? 0)
-        - Number(readPredictionField(prediction, 'stakePoints') ?? 0);
-}
-
-function getPredictionBadgeLabel(prediction) {
-    const isCorrect = readPredictionField(prediction, 'isCorrect');
-    const status = readPredictionField(prediction, 'status');
-    const stake = Number(readPredictionField(prediction, 'stakePoints') ?? 0);
-    const returned = Number(readPredictionField(prediction, 'pointsAwarded') ?? 0);
-    const net = calculatePredictionNet(prediction);
-
-    if (isCorrect === true) {
-        if (net > 0) return `Correct - +${net} pts net`;
-        return `Correct - ${returned || stake} pts returned`;
-    }
-
-    if (isCorrect === false) {
-        return `Wrong - ${Math.abs(net) || stake} pts lost`;
-    }
-
-    if (String(status || '').toLowerCase() === 'locked') return 'Locked - Awaiting Evaluation';
-
-    return 'Pending Result';
-}
-
-function normalizeCreatedPrediction(response, tournamentId, horse, stakePoints) {
-    const prediction = response?.prediction ?? response?.Prediction ?? response?.data ?? response?.Data ?? response;
-    const hasPredictionData = hasPredictionPayload(response);
-
-    if (hasPredictionData) {
-        return {
-            ...prediction,
-            predictionId: readPredictionField(prediction, 'predictionId') ?? Date.now(),
-            tournamentId: readPredictionField(prediction, 'tournamentId') ?? tournamentId,
-            predictedHorseId: readPredictionField(prediction, 'predictedHorseId') ?? horse.horseId,
-            predictedHorseName: readPredictionField(prediction, 'predictedHorseName') ?? horse.horseName,
-            stakePoints: readPredictionField(prediction, 'stakePoints') ?? stakePoints,
-            pointsAwarded: readPredictionField(prediction, 'pointsAwarded') ?? 0,
-            netPoints: readPredictionField(prediction, 'netPoints') ?? null,
-            isCorrect: readPredictionField(prediction, 'isCorrect') ?? null,
-            status: readPredictionField(prediction, 'status') ?? 'Pending',
-        };
-    }
-
-    return {
-        predictionId: Date.now(),
-        tournamentId,
-        predictedHorseId: horse.horseId,
-        predictedHorseName: horse.horseName,
-        stakePoints,
-        pointsAwarded: 0,
-        netPoints: null,
-        isCorrect: null,
-        status: 'Pending',
-    };
-}
-
-function hasPredictionPayload(response) {
-    const prediction = response?.prediction ?? response?.Prediction ?? response?.data ?? response?.Data ?? response;
-
-    return prediction && typeof prediction === 'object' && (
-        readPredictionField(prediction, 'predictionId') != null
-        || readPredictionField(prediction, 'tournamentId') != null
-    );
-}
 
 function canPredict(tournament) {
     if (!tournament) return false;
@@ -155,7 +59,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
     const [wallet, setWallet] = useState(null);
     const [loading, setLoading] = useState(true);
     const [selected, setSelected] = useState(null);
-    const [stakePoints, setStakePoints] = useState(String(MIN_PREDICTION_STAKE));
+    const [stakePoints, setStakePoints] = useState(10);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState('');
 
@@ -166,56 +70,32 @@ function PredictModal({ tournament, onClose, onSuccess }) {
         ]).then(([h, w]) => {
             setHorses(h ?? []);
             setWallet(w);
-            const apiMinimum = Number(w?.minimumStakePoints);
-            const initialStake = Number.isFinite(apiMinimum) && apiMinimum > 0
-                ? Math.max(MIN_PREDICTION_STAKE, apiMinimum)
-                : MIN_PREDICTION_STAKE;
-            setStakePoints(String(initialStake));
+            if (w?.minimumStakePoints) setStakePoints(w.minimumStakePoints);
         }).finally(() => setLoading(false));
     }, [tournament.tournamentId]);
 
-    const walletBalance = toSafePoints(wallet?.bettingPoints ?? 0);
-    const apiMinimumStake = Number(wallet?.minimumStakePoints);
-    const minStake = Number.isFinite(apiMinimumStake) && apiMinimumStake > 0
-        ? Math.max(MIN_PREDICTION_STAKE, apiMinimumStake)
-        : MIN_PREDICTION_STAKE;
-    const maxStake = Math.min(MAX_PREDICTION_STAKE, walletBalance);
-    const stakeNumber = Number(stakePoints);
-    const hasEnoughBalance = maxStake >= minStake;
-    const remaining = wallet ? Math.max(0, walletBalance - (Number.isFinite(stakeNumber) ? stakeNumber : 0)) : null;
-
-    const getStakeValidationMessage = () => {
-        if (!hasEnoughBalance) return `You need at least ${MIN_PREDICTION_STAKE} points to make a prediction.`;
-        if (stakePoints === '' || !Number.isFinite(stakeNumber) || !Number.isInteger(stakeNumber)) return `The minimum stake is ${minStake} points.`;
-        if (stakeNumber < minStake) return `The minimum stake is ${minStake} points.`;
-        if (stakeNumber > MAX_PREDICTION_STAKE) return `The maximum stake is ${MAX_PREDICTION_STAKE} points.`;
-        if (stakeNumber > walletBalance) return 'Your point balance is not sufficient.';
-
-        return '';
-    };
-
-    const stakeValidationMessage = getStakeValidationMessage();
-    const stakeValid = stakeValidationMessage === '';
+    const minStake = wallet?.minimumStakePoints ?? 10;
+    const maxStake = wallet?.bettingPoints ?? 9999;
+    const remaining = wallet ? Math.max(0, wallet.bettingPoints - stakePoints) : null;
+    const stakeValid = stakePoints >= minStake && stakePoints <= maxStake;
 
     const handleStakeChange = (e) => {
-        const value = e.target.value;
-        if (/^\d*$/.test(value)) {
-            setStakePoints(value);
-        }
+        const val = parseInt(e.target.value) || minStake;
+        setStakePoints(Math.min(Math.max(minStake, val), maxStake));
     };
 
     const handleSubmit = async () => {
-        if (!selected || submitting) return;
-        if (!stakeValid) { setError(stakeValidationMessage); return; }
+        if (!selected) return;
+        if (!stakeValid) { setError(`Stake must be between ${minStake} and ${maxStake} points.`); return; }
         setSubmitting(true);
         setError('');
         try {
-            const createdPrediction = await spectatorApi.createPrediction({
+            await spectatorApi.createPrediction({
                 tournamentId: tournament.tournamentId,
                 predictedHorseId: selected.horseId,
-                stakePoints: stakeNumber,
+                stakePoints,
             });
-            await onSuccess(tournament.tournamentId, selected, createdPrediction, stakeNumber);
+            onSuccess(tournament.tournamentId, selected);
         } catch (err) {
             setError(err.message || 'Failed to submit prediction. Please try again.');
         } finally {
@@ -260,11 +140,11 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                     <div style={{ padding: '12px 28px', background: '#f0faf5', borderBottom: '1px solid #d4edda', flexShrink: 0, display: 'flex', gap: 0, alignItems: 'stretch' }}>
                         <div style={{ flex: 1, borderRight: '1px solid #c3e6cb', paddingRight: 14, display: 'flex', flexDirection: 'column', gap: 1 }}>
                             <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#0b7f5a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>💰 Balance</span>
-                            <span style={{ fontSize: '1rem', fontWeight: 800, color: '#0b7f5a' }}>{walletBalance.toLocaleString()} pts</span>
+                            <span style={{ fontSize: '1rem', fontWeight: 800, color: '#0b7f5a' }}>{wallet.bettingPoints.toLocaleString()} pts</span>
                         </div>
                         <div style={{ flex: 1, paddingLeft: 14, borderRight: '1px solid #c3e6cb', paddingRight: 14, display: 'flex', flexDirection: 'column', gap: 1 }}>
                             <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Min Stake</span>
-                            <span style={{ fontSize: '1rem', fontWeight: 800, color: '#333' }}>{minStake} pts</span>
+                            <span style={{ fontSize: '1rem', fontWeight: 800, color: '#333' }}>{wallet.minimumStakePoints ?? 10} pts</span>
                         </div>
                         <div style={{ flex: 1, paddingLeft: 14, display: 'flex', flexDirection: 'column', gap: 1 }}>
                             <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em' }}>After Stake</span>
@@ -279,7 +159,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                 <div style={{ padding: '10px 28px', background: '#fffdf8', borderBottom: '1px solid #f0e8e6', flexShrink: 0 }}>
                     <p style={{ margin: 0, fontSize: '0.8rem', color: '#777', display: 'flex', alignItems: 'flex-start', gap: 6 }}>
                         <span style={{ flexShrink: 0 }}>ℹ️</span>
-                        <span>Stake between {MIN_PREDICTION_STAKE} and {MAX_PREDICTION_STAKE} points. Correct prediction: your stake is returned. Wrong prediction: your stake is lost.</span>
+                        <span>Select a horse and set your stake. <strong>You can only predict once</strong> per tournament — choose carefully!</span>
                     </p>
                 </div>
 
@@ -347,33 +227,27 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                         <div style={{ flex: 1 }}>
                             <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#555', marginBottom: 5 }}>
                                 Stake Points
-                                {wallet && hasEnoughBalance && <span style={{ fontWeight: 400, color: '#aaa', marginLeft: 5 }}>({minStake}-{maxStake.toLocaleString()} pts)</span>}
+                                {wallet && <span style={{ fontWeight: 400, color: '#aaa', marginLeft: 5 }}>({minStake}–{maxStake.toLocaleString()})</span>}
                             </label>
                             <input
                                 type="number"
                                 min={minStake}
                                 max={maxStake}
-                                step={1}
                                 value={stakePoints}
                                 onChange={handleStakeChange}
-                                disabled={!hasEnoughBalance || submitting}
                                 style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: `1.5px solid ${!stakeValid && wallet ? '#dc3545' : '#dce5ef'}`, fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
                             />
-                            {wallet && !stakeValid && (
-                                <p style={{ margin: '5px 0 0', fontSize: '0.75rem', color: '#721c24', fontWeight: 700 }}>
-                                    {stakeValidationMessage}
-                                </p>
-                            )}
                         </div>
                         {/* Quick-pick buttons */}
                         {wallet && (
                             <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
-                                {QUICK_STAKE_OPTIONS.map(val => {
-                                    const disabled = val < minStake || val > maxStake;
+                                {[25, 50, 100].map(pct => {
+                                    const val = Math.max(minStake, Math.floor(wallet.bettingPoints * pct / 100));
+                                    if (val > wallet.bettingPoints) return null;
                                     return (
-                                        <button key={val} type="button" disabled={disabled || submitting} onClick={() => setStakePoints(String(val))}
-                                            style={{ padding: '9px 10px', borderRadius: 8, border: '1.5px solid #dce5ef', background: '#fff', fontSize: '0.73rem', fontWeight: 700, color: disabled ? '#aaa' : '#0b7f5a', cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.55 : 1 }}>
-                                            {val} pts
+                                        <button key={pct} type="button" onClick={() => setStakePoints(val)}
+                                            style={{ padding: '9px 10px', borderRadius: 8, border: '1.5px solid #dce5ef', background: '#fff', fontSize: '0.73rem', fontWeight: 700, color: '#0b7f5a', cursor: 'pointer' }}>
+                                            {pct}%
                                         </button>
                                     );
                                 })}
@@ -390,7 +264,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                             </div>
                             <div style={{ textAlign: 'right' }}>
                                 <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Staking</p>
-                                <p style={{ margin: '1px 0 0', fontSize: '0.88rem', fontWeight: 800, color: '#0b7f5a' }}>{stakeNumber.toLocaleString()} pts</p>
+                                <p style={{ margin: '1px 0 0', fontSize: '0.88rem', fontWeight: 800, color: '#0b7f5a' }}>{stakePoints.toLocaleString()} pts</p>
                             </div>
                         </div>
                     )}
@@ -413,7 +287,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                                 cursor: selected && !submitting && stakeValid ? 'pointer' : 'not-allowed',
                             }}
                         >
-                            {submitting ? 'Submitting...' : selected ? `Confirm - ${stakeNumber.toLocaleString()} pts on ${selected.horseName}` : 'Select a Horse First'}
+                            {submitting ? 'Submitting...' : selected ? `Confirm — ${stakePoints} pts on ${selected.horseName}` : 'Select a Horse First'}
                         </button>
                     </div>
                 </div>
@@ -431,7 +305,7 @@ function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
     const isCorrect = myPrediction?.isCorrect;
     const predStatus = myPrediction?.status ?? null;
     const isLocked = predStatus === 'Locked';
-    const badgeLabel = getPredictionBadgeLabel(myPrediction);
+    const pts = myPrediction?.pointsAwarded ?? 0;
     const open = canPredict(tournament);
     const replayOpen = canWatchReplay(tournament);
 
@@ -477,7 +351,7 @@ function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
                                 background: isCorrect === true ? '#d4edda' : isCorrect === false ? '#f8d7da' : isLocked ? '#dbeafe' : '#fff3cd',
                                 color: isCorrect === true ? '#155724' : isCorrect === false ? '#721c24' : isLocked ? '#1e40af' : '#856404',
                             }}>
-                                {badgeLabel}
+                                {isCorrect === true ? `✓ Correct  +${pts} pts` : isCorrect === false ? '✗ Wrong' : isLocked ? '🔒 Locked' : '⏳ Pending Result'}
                             </span>
                         </div>
                     ) : open ? (
@@ -553,23 +427,12 @@ export default function Tournaments() {
         completed: tournaments.filter(t => t.status === 'Completed').length,
     };
 
-    const handlePredictSuccess = async (tournamentId, horse, createdPrediction, stakePoints) => {
+    const handlePredictSuccess = (tournamentId, horse) => {
         setModal(null);
-        const localPrediction = normalizeCreatedPrediction(createdPrediction, tournamentId, horse, stakePoints);
-
         setPredictions(prev => [
             ...prev.filter(p => p.tournamentId !== tournamentId),
-            localPrediction,
+            { predictionId: Date.now(), tournamentId, predictedHorseId: horse.horseId, predictedHorseName: horse.horseName, isCorrect: null, pointsAwarded: 0, status: 'Pending' },
         ]);
-
-        if (!hasPredictionPayload(createdPrediction)) {
-            try {
-                const latestPredictions = await spectatorApi.getMyPredictions();
-                setPredictions(latestPredictions ?? []);
-            } catch {
-                // Keep the local pending prediction if the refresh fails.
-            }
-        }
     };
 
     return (

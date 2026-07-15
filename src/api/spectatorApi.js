@@ -33,8 +33,6 @@ export async function createPrediction(payload) {
 export async function getMyPredictions() {
     // Returns array of { predictionId, tournamentId, tournamentName, predictedHorseId,
     //   predictedHorseName, isCorrect, pointsAwarded, stakePoints, netPoints, status, lockedAt }
-    // pointsAwarded is the returned stake when correct; netPoints is 0 when
-    // correct under the new scoring and -stakePoints when wrong.
     return apiRequest('/spectator/predictions/my');
 }
 
