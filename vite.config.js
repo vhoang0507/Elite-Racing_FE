@@ -8,6 +8,9 @@ export default defineConfig({
   server: {
     host: 'localhost',
     port: 5174,
+    watch: {
+      ignored: ['**/.vs/**'],
+    },
     proxy: {
       '/api': {
         target: 'https://localhost:7082',
