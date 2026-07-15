@@ -522,6 +522,10 @@ async function updateSeason(id, payload) {
     });
 }
 
+async function deleteSeason(id) {
+    return apiRequest(`/admin/seasons/${id}`, { method: 'DELETE' });
+}
+
 async function activateSeason(id) {
     return apiRequest(`/admin/seasons/${id}/activate`, { method: 'PUT' });
 }
@@ -1484,6 +1488,7 @@ export const adminApi = {
     getSeasonById,
     createSeason,
     updateSeason,
+    deleteSeason,
     activateSeason,
     closeSeason,
     cancelSeason,
