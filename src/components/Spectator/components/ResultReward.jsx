@@ -6,6 +6,28 @@ import {
 } from 'react-icons/fa';
 import { spectatorApi } from '../../../api/spectatorApi';
 
+function isEvaluatedHistoryItem(item) {
+    return String(item?.status || '').toLowerCase() === 'evaluated'
+        || item?.isCorrect === true
+        || item?.isCorrect === false;
+}
+
+function getHistoryPoints(item) {
+    const pointsReturned = Number(
+        item.pointsAwarded
+        ?? item.payoutPoints
+        ?? 0
+    );
+    const stake = Number(item.stakePoints ?? 0);
+    const net = item.netPoints != null
+        ? Number(item.netPoints)
+        : isEvaluatedHistoryItem(item)
+            ? pointsReturned - stake
+            : 0;
+
+    return { pointsReturned, stake, net };
+}
+
 export default function ResultReward() {
     const [rewards, setRewards] = useState(null);
     const [season, setSeason] = useState(null);
@@ -149,7 +171,9 @@ export default function ResultReward() {
                                 const won = item.isCorrect === true;
                                 const lost = item.isCorrect === false;
                                 const pending = !won && !lost;
-                                const net = item.netPoints ?? (won ? item.payoutPoints - item.stakePoints : -(item.stakePoints ?? 0));
+                                const { pointsReturned, stake, net } = getHistoryPoints(item);
+                                const resultLabel = won ? 'Correct' : lost ? 'Wrong' : 'Awaiting Result';
+
                                 return (
                                     <div key={i} className="flex items-center gap-3 border-b border-[var(--admin-border)] px-5 py-3 last:border-b-0">
                                         <span className="text-xl">{won ? '✅' : lost ? '❌' : '⏳'}</span>
@@ -158,7 +182,11 @@ export default function ResultReward() {
                                             <p className="m-0 text-xs text-[var(--admin-muted)]">
                                                 Pick: {item.predictedHorseName ?? '—'}
                                                 {item.actualWinnerHorseName && ` · Winner: ${item.actualWinnerHorseName}`}
-                                                {item.stakePoints > 0 && ` · Stake: ${item.stakePoints} pts`}
+                                            </p>
+                                            <p className="m-0 mt-1 text-xs font-bold text-[var(--admin-muted)]">
+                                                {resultLabel}
+                                                {stake > 0 && ` - Stake: ${stake} pts`}
+                                                {!pending && ` - Returned: ${pointsReturned} pts - Net: ${net >= 0 ? '+' : ''}${net} pts`}
                                             </p>
                                         </div>
                                         <span className="font-black" style={{ color: pending ? '#856404' : net >= 0 ? '#155724' : '#721c24' }}>
