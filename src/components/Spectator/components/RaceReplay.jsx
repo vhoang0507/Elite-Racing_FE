@@ -111,7 +111,6 @@ function getRunnerStableKey(runner, fallbackIndex) {
 }
 
 function getStableReplayLaneRunners(runners, tournamentKey) {
-    const runnerCount = runners.length;
     const tournamentSeed = tournamentKey || 'race-replay';
     const stableOrder = runners
         .map((runner, index) => ({

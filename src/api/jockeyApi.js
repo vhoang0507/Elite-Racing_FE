@@ -76,6 +76,26 @@ export async function getJockeyCalendar(month) {
     return apiRequest(`/jockey/calendar${query}`);
 }
 
+export async function getJockeyAvailabilities(from, to) {
+    const params = new URLSearchParams();
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    const query = params.toString();
+    return apiRequest(`/jockey/availabilities${query ? `?${query}` : ''}`);
+}
+
+export async function updateJockeyAvailabilities(items) {
+    return apiRequest('/jockey/availabilities', {
+        method: 'PUT',
+        body: JSON.stringify({
+            Items: (items || []).map((item) => ({
+                Date: item.date ?? item.Date,
+                Status: item.status ?? item.Status,
+            })),
+        }),
+    });
+}
+
 // ─── Notifications ────────────────────────────────────────────────────────────
 
 export async function getNotificationSummary() {
@@ -125,6 +145,8 @@ export const jockeyApi = {
     getAcceptedRaces,
     getRaceDetail,
     getJockeyCalendar,
+    getJockeyAvailabilities,
+    updateJockeyAvailabilities,
     getNotificationSummary,
     getNotifications,
     getNotificationDetail,

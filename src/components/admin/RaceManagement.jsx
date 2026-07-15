@@ -16,6 +16,7 @@ import {
     FaSortAmountDown,
     FaTimes,
     FaTrashAlt,
+    FaUserTie,
 } from 'react-icons/fa';
 
 import { adminApi } from '../../api/adminApi';
@@ -35,7 +36,6 @@ import { getCompactPaginationItems } from '../../utils/pagination';
 import AdminLayout from './AdminLayout';
 
 const formatClass = (value) => String(value || '').toLowerCase();
-const isVisibleTournament = (tournament) => formatClass(tournament.status) !== 'cancelled';
 
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-7 px-11 pb-7 pt-11 max-[820px]:px-5 max-[820px]:py-7';
 
@@ -84,6 +84,7 @@ const statusActionLabels = {
     approve: 'Publish Tournament',
     closeRegistration: 'Close Registration',
     cancel: 'Cancel Tournament',
+    restore: 'Restore Tournament',
 };
 
 const getTournamentActions = (status) => {
@@ -95,6 +96,8 @@ const getTournamentActions = (status) => {
         case 'ClosedRegistration':
         case 'Ongoing':
             return ['cancel'];
+        case 'Cancelled':
+            return ['restore'];
         default:
             return [];
     }
@@ -346,13 +349,19 @@ function RaceManagement() {
     const [statusActionError, setStatusActionError] = useState('');
     const [statusActionMessage, setStatusActionMessage] = useState('');
     const [updatingStatusId, setUpdatingStatusId] = useState(null);
+    const [referees, setReferees] = useState([]);
+    const [loadingReferees, setLoadingReferees] = useState(false);
+    const [assigningTournament, setAssigningTournament] = useState(null);
+    const [assignRefereeId, setAssignRefereeId] = useState('');
+    const [assignError, setAssignError] = useState('');
+    const [savingAssignment, setSavingAssignment] = useState(false);
 
     useEffect(() => {
         let isMounted = true;
 
         buildTournamentRows().then((tournamentRows) => {
             if (isMounted) {
-                setTournaments(tournamentRows.filter(isVisibleTournament));
+                setTournaments(tournamentRows);
             }
         });
 
@@ -444,7 +453,7 @@ function RaceManagement() {
     const refreshTournamentRows = async () => {
         const tournamentRows = await buildTournamentRows();
 
-        setTournaments(tournamentRows.filter(isVisibleTournament));
+        setTournaments(tournamentRows);
         setPage(1);
     };
 
@@ -470,6 +479,13 @@ function RaceManagement() {
                 confirmLabel: 'Cancel tournament',
                 tone: 'danger',
                 fallbackMessage: 'Tournament cancelled successfully.',
+            },
+            restore: {
+                title: 'Restore tournament',
+                message: `Restore "${tournament.name}" to Draft status?`,
+                confirmLabel: 'Restore',
+                tone: 'primary',
+                fallbackMessage: 'Tournament restored successfully.',
             },
         }[action] || {
             title: 'Update tournament',
@@ -501,6 +517,8 @@ function RaceManagement() {
                 response = await adminApi.closeTournamentRegistration(tournament.id);
             } else if (action === 'cancel') {
                 response = await adminApi.cancelTournament(tournament.id);
+            } else if (action === 'restore') {
+                response = await adminApi.restoreTournament(tournament.id);
             }
             const successMessage = response?.message || response?.Message || actionCopy.fallbackMessage;
             setStatusActionMessage(successMessage);
@@ -511,6 +529,63 @@ function RaceManagement() {
             setStatusActionError(err.message || `Failed to ${action} tournament.`);
         } finally {
             setUpdatingStatusId(null);
+        }
+    };
+
+    const openAssignReferee = async (tournament) => {
+        setAssigningTournament(tournament);
+        setAssignRefereeId('');
+        setAssignError('');
+        setLoadingReferees(true);
+
+        try {
+            const payload = await adminApi.getTournamentReferees();
+            setReferees(Array.isArray(payload) ? payload : []);
+        } catch (err) {
+            setReferees([]);
+            setAssignError(err.message || 'Failed to load referees.');
+        } finally {
+            setLoadingReferees(false);
+        }
+    };
+
+    const closeAssignReferee = () => {
+        setAssigningTournament(null);
+        setAssignRefereeId('');
+        setAssignError('');
+    };
+
+    const handleAssignReferee = async (event) => {
+        event.preventDefault();
+
+        if (!assigningTournament || !assignRefereeId) {
+            setAssignError('Select a referee before saving.');
+            return;
+        }
+
+        const confirmed = await confirmAdminAction({
+            title: 'Assign referee',
+            message: `Assign selected referee to "${assigningTournament.name}"? Existing assignment will be replaced.`,
+            confirmLabel: 'Save Assignment',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        setSavingAssignment(true);
+        setAssignError('');
+
+        try {
+            const response = await adminApi.assignTournamentReferee(assigningTournament.id, assignRefereeId);
+            const successMessage = response?.message || response?.Message || 'Referee assignment saved successfully.';
+            showAdminSuccess(successMessage, 'Saved');
+            closeAssignReferee();
+            await refreshTournamentRows();
+        } catch (err) {
+            setAssignError(err.message || 'Failed to assign referee.');
+        } finally {
+            setSavingAssignment(false);
         }
     };
 
@@ -764,6 +839,9 @@ function RaceManagement() {
                                                             <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#fff6f4]" onClick={() => { setEditTournamentImageName(''); setEditingTournament(tournament); setActionMenuId(null); }} type="button">
                                                                 Edit Tournament
                                                             </button>
+                                                            <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#fff6f4]" onClick={() => { openAssignReferee(tournament); setActionMenuId(null); }} type="button">
+                                                                Assign/Reassign Referee
+                                                            </button>
                                                             {statusActions.length > 0 && <span className="my-1 h-px bg-[var(--admin-border)]" />}
                                                             {statusActions.map((nextStatus) => (
                                                                 <button
@@ -813,6 +891,74 @@ function RaceManagement() {
                             </div>
                         </div>
                     </section>
+
+                    {assigningTournament && (
+                        <div className="fixed inset-0 z-20 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={closeAssignReferee} role="presentation">
+                            <form
+                                aria-label={`Assign referee for ${assigningTournament.name}`}
+                                className="grid w-[min(520px,100%)] gap-5 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 shadow-[0_20px_48px_rgba(45,32,32,0.22)]"
+                                onClick={(event) => event.stopPropagation()}
+                                onSubmit={handleAssignReferee}
+                            >
+                                <div className="flex items-start justify-between gap-4">
+                                    <div>
+                                        <h2 className="m-0 flex items-center gap-2 text-[1.25rem] leading-[1.15] text-[var(--admin-primary-dark)]">
+                                            <FaUserTie aria-hidden="true" />
+                                            Assign Referee
+                                        </h2>
+                                        <p className="mb-0 mt-1.5 text-[0.86rem] font-semibold text-[var(--admin-muted)]">
+                                            {assigningTournament.name}
+                                        </p>
+                                    </div>
+                                    <button aria-label="Close assign referee" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={closeAssignReferee} type="button">
+                                        <FaTimes aria-hidden="true" />
+                                    </button>
+                                </div>
+
+                                <div className="grid gap-2 rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-3">
+                                    <span className="text-[0.68rem] font-black uppercase text-[#64748b]">Current Referee</span>
+                                    <strong className="text-[0.9rem] text-[var(--admin-ink)]">
+                                        {getRefereeNames(assigningTournament).length > 0 ? getRefereeNames(assigningTournament).join(', ') : 'Unassigned'}
+                                    </strong>
+                                </div>
+
+                                <label className={editFieldClass}>
+                                    <span className={editLabelClass}>Select Referee</span>
+                                    <select
+                                        className={editControlClass}
+                                        disabled={loadingReferees || savingAssignment}
+                                        onChange={(event) => setAssignRefereeId(event.target.value)}
+                                        required
+                                        value={assignRefereeId}
+                                    >
+                                        <option value="" disabled>
+                                            {loadingReferees ? 'Loading referees...' : 'Select referee'}
+                                        </option>
+                                        {referees.map((referee) => (
+                                            <option key={referee.refereeId} value={referee.refereeId}>
+                                                {referee.fullName}{referee.email ? ` (${referee.email})` : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </label>
+
+                                {assignError && (
+                                    <div className="rounded-md border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-[0.85rem] font-semibold text-[var(--admin-primary)]">
+                                        {assignError}
+                                    </div>
+                                )}
+
+                                <div className="flex justify-end gap-3 max-[720px]:flex-col">
+                                    <button className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-4 font-black text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={closeAssignReferee} type="button">
+                                        Cancel
+                                    </button>
+                                    <button className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md bg-[var(--admin-primary)] px-4 font-black text-white hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60" disabled={savingAssignment || loadingReferees || !assignRefereeId} type="submit">
+                                        {savingAssignment ? 'Saving...' : 'Save Assignment'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
 
                     {selectedTournament && (
                         <div className="fixed inset-0 z-20 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={() => setSelectedTournament(null)} role="presentation">

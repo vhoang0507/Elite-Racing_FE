@@ -5,7 +5,8 @@ import {
     FaCheckCircle,
 } from 'react-icons/fa';
 import { spectatorApi } from '../../../api/spectatorApi';
-import Toast, { useToast } from '../../shared/Toast';
+import Toast from '../../shared/Toast';
+import { useToast } from '../../shared/useToast';
 
 export default function SpectatorNotifications() {
     const [notifications, setNotifications] = useState([]);

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
     FaCheck,
@@ -18,7 +18,8 @@ import {
     refereeApi,
 } from '../../api/refereeApi';
 import RefereeLayout from './RefereeLayout';
-import Toast, { useToast } from '../shared/Toast';
+import Toast from '../shared/Toast';
+import { useToast } from '../shared/useToast';
 
 const emptyResultForm = {
     registrationId: '',
@@ -115,18 +116,22 @@ const confirmToneClass = {
 
 function AssignedPostRace() {
     const location = useLocation();
+    const initialRaceId = location.state?.raceId;
 
     const [races, setRaces] = useState([]);
     const [selectedRaceId, setSelectedRaceId] = useState(null);
     const [registrations, setRegistrations] = useState([]);
     const [results, setResults] = useState([]);
     const [violations, setViolations] = useState([]);
+    const [reports, setReports] = useState([]);
     const [activeTab, setActiveTab] = useState('results');
 
     const [resultForm, setResultForm] = useState(emptyResultForm);
     const [editingResultId, setEditingResultId] = useState('');
     const [violationForm, setViolationForm] = useState(emptyViolationForm);
     const [editingViolationId, setEditingViolationId] = useState('');
+    const [reportContent, setReportContent] = useState('');
+    const [editingReportId, setEditingReportId] = useState('');
 
     const [loadingRaces, setLoadingRaces] = useState(true);
     const [loadingRaceData, setLoadingRaceData] = useState(false);
@@ -151,6 +156,8 @@ function AssignedPostRace() {
     const selectedViolationRegistration = registrationById.get(String(violationForm.registrationId));
     const isEditingResult = Boolean(editingResultId);
     const isEditingViolation = Boolean(editingViolationId);
+    const isEditingReport = Boolean(editingReportId);
+    const trimmedReportContent = reportContent.trim();
     const selectedRaceBlockingReason = getRaceBlockingReason(selectedRace);
 
     const canStartRace =
@@ -176,7 +183,8 @@ function AssignedPostRace() {
         !selectedRaceId ||
         !canEnterResults ||
         results.length === 0 ||
-        draftResultCount === 0;
+        draftResultCount === 0 ||
+        !trimmedReportContent;
 
     const submitReportHint = !selectedRaceId
         ? 'Select a race before submitting.'
@@ -188,11 +196,13 @@ function AssignedPostRace() {
                 ? `Race must be Finished before submission. Current status: ${selectedRace?.raceStatus || 'N/A'}.`
                 : results.length === 0
                     ? 'Save race results before submitting.'
-                    : draftResultCount === 0
-                        ? 'No draft results waiting for submission.'
-                        : `${draftResultCount} draft result${draftResultCount === 1 ? '' : 's'} ready to submit.`;
+                    : !trimmedReportContent
+                        ? 'Write the post-race report content before submitting.'
+                        : draftResultCount === 0
+                            ? 'No draft results waiting for submission.'
+                            : `${draftResultCount} draft result${draftResultCount === 1 ? '' : 's'} ready to submit.`;
 
-    async function loadAssignedRaces(ignoreRef = { current: false }) {
+    const loadAssignedRaces = useCallback(async (ignoreRef = { current: false }) => {
         setLoadingRaces(true);
         setError('');
         try {
@@ -209,8 +219,7 @@ function AssignedPostRace() {
             setRaces(nextRaces);
             setSelectedRaceId((current) => {
                 if (current) return current;
-                const fromNav = location.state?.raceId;
-                if (fromNav) return fromNav;
+                if (initialRaceId) return initialRaceId;
                 return nextRaces[0]?.raceId ?? null;
             });
         } catch (err) {
@@ -218,7 +227,7 @@ function AssignedPostRace() {
         } finally {
             if (!ignoreRef.current) setLoadingRaces(false);
         }
-    }
+    }, [initialRaceId]);
 
     async function loadRaceWorkflowData(raceId, ignoreRef = { current: false }) {
         if (!raceId) return;
@@ -226,21 +235,27 @@ function AssignedPostRace() {
         setError('');
         setSuccess('');
         try {
-            const [registrationData, resultData, violationData] = await Promise.all([
+            const [registrationData, resultData, violationData, reportData] = await Promise.all([
                 refereeApi.getRaceRegistrations(raceId),
                 refereeApi.getRaceResults(raceId),
                 refereeApi.getViolations(raceId),
+                refereeApi.getRefereeReports(raceId).catch(() => []),
             ]);
             if (ignoreRef.current) return;
             const nextRegistrations = registrationData ?? [];
             const firstId = nextRegistrations[0]?.registrationId ? String(nextRegistrations[0].registrationId) : '';
+            const nextReports = reportData ?? [];
+            const postRaceReport = nextReports.find((report) => report.reportType === 'PostRace');
             setRegistrations(nextRegistrations);
             setResults(resultData ?? []);
             setViolations(violationData ?? []);
+            setReports(nextReports);
             setResultForm({ ...emptyResultForm, registrationId: firstId });
             setEditingResultId('');
             setViolationForm({ ...emptyViolationForm, registrationId: firstId });
             setEditingViolationId('');
+            setReportContent(postRaceReport?.reportContent ?? '');
+            setEditingReportId(postRaceReport?.reportId ? String(postRaceReport.reportId) : '');
         } catch (err) {
             if (!ignoreRef.current) setError(err.message || 'Failed to load race data.');
         } finally {
@@ -252,7 +267,7 @@ function AssignedPostRace() {
         const ignoreRef = { current: false };
         loadAssignedRaces(ignoreRef);
         return () => { ignoreRef.current = true; };
-    }, []);
+    }, [loadAssignedRaces]);
 
     useEffect(() => {
         if (!selectedRaceId) return undefined;
@@ -263,6 +278,15 @@ function AssignedPostRace() {
 
     const refreshResults = async () => { if (selectedRaceId) setResults(await refereeApi.getRaceResults(selectedRaceId) ?? []); };
     const refreshViolations = async () => { if (selectedRaceId) setViolations(await refereeApi.getViolations(selectedRaceId) ?? []); };
+    const refreshReports = async () => {
+        if (!selectedRaceId) return [];
+
+        const nextReports = await refereeApi.getRefereeReports(selectedRaceId) ?? [];
+        const postRaceReport = nextReports.find((report) => report.reportType === 'PostRace');
+        setReports(nextReports);
+        setEditingReportId(postRaceReport?.reportId ? String(postRaceReport.reportId) : '');
+        return nextReports;
+    };
 
     const requestViolationConfirm = (options) => new Promise((resolve) => {
         setConfirmRequest({
@@ -303,6 +327,47 @@ function AssignedPostRace() {
         if (violationForm.penaltyPoints !== '' && (pts === null || pts < 0)) return 'Penalty points must be ≥ 0.';
         if (violationForm.action === VIOLATION_ACTIONS.pointDeduction && (!pts || pts <= 0)) return 'Point deduction requires penalty points > 0.';
         return '';
+    };
+
+    const persistPostRaceReport = async () => {
+        if (!selectedRaceId) {
+            throw new Error('Select a race first.');
+        }
+
+        if (!trimmedReportContent) {
+            throw new Error('Post-race report content is required.');
+        }
+
+        const existingReportId = editingReportId
+            || reports.find((report) => report.reportType === 'PostRace')?.reportId;
+
+        const response = existingReportId
+            ? await refereeApi.updateRefereeReport(selectedRaceId, existingReportId, trimmedReportContent, 'PostRace')
+            : await refereeApi.createRefereeReport(selectedRaceId, trimmedReportContent, 'PostRace');
+
+        const nextReports = await refreshReports();
+        const postRaceReport = nextReports.find((report) => report.reportType === 'PostRace');
+
+        if (postRaceReport?.reportContent !== undefined) {
+            setReportContent(postRaceReport.reportContent);
+        }
+
+        return response;
+    };
+
+    const handleSavePostRaceReport = async () => {
+        setSaving('save-report');
+        setError('');
+        setSuccess('');
+
+        try {
+            await persistPostRaceReport();
+            setSuccess(isEditingReport ? 'Post-race report updated successfully.' : 'Post-race report saved successfully.');
+        } catch (err) {
+            setError(err.message || 'Failed to save post-race report.');
+        } finally {
+            setSaving('');
+        }
     };
 
     const handleStartRace = async () => {
@@ -506,9 +571,15 @@ function AssignedPostRace() {
             setSuccess('');
             return;
         }
+        if (!trimmedReportContent) {
+            setError('Write the post-race report content before submitting.');
+            setSuccess('');
+            return;
+        }
 
         setSaving('submit-report'); setError(''); setSuccess('');
         try {
+            await persistPostRaceReport();
             const updatedLifecycle = await refereeApi.confirmAllRaceResults(selectedRaceId);
             setRaces((prev) =>
                 prev.map((race) =>
@@ -1032,6 +1103,35 @@ function AssignedPostRace() {
                                 <span style={{ border: '1px solid #dce5ef', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 800, color: '#0b7f5a', background: '#f8fbff' }}>
                                     Violations: {violations.length}
                                 </span>
+                            </div>
+                        </div>
+
+                        <div style={{ marginTop: 18 }}>
+                            <label className={labelClass}>Post-Race Report</label>
+                            <textarea
+                                className={inputClass}
+                                disabled={loadingRaceData || Boolean(saving) || !canEnterResults}
+                                onChange={(event) => setReportContent(event.target.value)}
+                                placeholder="Summarize race conditions, result notes, incidents, and referee confirmation."
+                                rows={5}
+                                style={{ minHeight: 118, resize: 'vertical' }}
+                                value={reportContent}
+                            />
+                            <div style={{ alignItems: 'center', display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 10 }}>
+                                <button
+                                    className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded border border-[#0b7f5a] bg-white px-4 text-sm font-bold text-[#0b7f5a] disabled:cursor-not-allowed disabled:opacity-60"
+                                    disabled={saving === 'save-report' || loadingRaceData || !selectedRaceId || !canEnterResults || !trimmedReportContent}
+                                    onClick={handleSavePostRaceReport}
+                                    type="button"
+                                >
+                                    <FaClipboardList />
+                                    {saving === 'save-report' ? 'Saving...' : isEditingReport ? 'Update Report' : 'Save Report'}
+                                </button>
+                                {isEditingReport && (
+                                    <span style={{ color: '#64748b', fontSize: 12, fontWeight: 700 }}>
+                                        Editing report #{editingReportId}
+                                    </span>
+                                )}
                             </div>
                         </div>
 

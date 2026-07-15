@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import {
     FaEnvelope,
     FaPhoneAlt,
@@ -20,7 +20,7 @@ const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7'
 const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]';
 const MAX_FILE_MB = 5;
 
-function validate(profile, distanceExperiences, selectedFiles) {
+function validate(profile, distanceExperiences) {
     const errs = {};
 
     // Weight
@@ -179,7 +179,7 @@ function JockeySetting() {
         setError('');
         setSuccess('');
 
-        const errs = validate(profile, distanceExperiences, selectedFiles);
+        const errs = validate(profile, distanceExperiences);
         setFieldErrors(errs);
         if (Object.keys(errs).length > 0) {
             setError('Please fix the errors above before saving.');

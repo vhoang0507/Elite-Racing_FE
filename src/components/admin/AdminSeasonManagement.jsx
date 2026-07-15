@@ -8,6 +8,7 @@ import {
     FaCalendarAlt,
     FaCheck,
     FaEdit,
+    FaEye,
     FaPlus,
     FaSyncAlt,
     FaTimes,
@@ -98,6 +99,18 @@ function normalizeRewardRules(payload) {
     }));
 }
 
+function normalizeSeasonLeaderboard(payload) {
+    const items = payload?.items ?? payload?.Items ?? [];
+
+    return Array.isArray(items) ? items : [];
+}
+
+function normalizeSeasonRewards(payload) {
+    const rewards = payload?.rewards ?? payload?.Rewards ?? [];
+
+    return Array.isArray(rewards) ? rewards : [];
+}
+
 function AdminSeasonManagement() {
     const [seasons, setSeasons] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -110,6 +123,12 @@ function AdminSeasonManagement() {
     const [rewardRules, setRewardRules] = useState(defaultRewardRules);
     const [savingRules, setSavingRules] = useState(false);
     const [actionLoading, setActionLoading] = useState('');
+    const [detailSeason, setDetailSeason] = useState(null);
+    const [seasonDetail, setSeasonDetail] = useState(null);
+    const [seasonLeaderboard, setSeasonLeaderboard] = useState([]);
+    const [seasonRewards, setSeasonRewards] = useState([]);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [detailError, setDetailError] = useState('');
 
     const loadSeasons = async () => {
         setLoading(true);
@@ -295,6 +314,41 @@ function AdminSeasonManagement() {
         }
     };
 
+    const closeSeasonDetail = () => {
+        setDetailSeason(null);
+        setSeasonDetail(null);
+        setSeasonLeaderboard([]);
+        setSeasonRewards([]);
+        setDetailError('');
+    };
+
+    const openSeasonDetail = async (season) => {
+        const id = getSeasonId(season);
+
+        setDetailSeason(season);
+        setSeasonDetail(null);
+        setSeasonLeaderboard([]);
+        setSeasonRewards([]);
+        setDetailError('');
+        setDetailLoading(true);
+
+        try {
+            const [detailPayload, leaderboardPayload, rewardsPayload] = await Promise.all([
+                adminApi.getSeasonById(id),
+                adminApi.getSeasonLeaderboard(id),
+                adminApi.getSeasonRewards(id),
+            ]);
+
+            setSeasonDetail(detailPayload);
+            setSeasonLeaderboard(normalizeSeasonLeaderboard(leaderboardPayload));
+            setSeasonRewards(normalizeSeasonRewards(rewardsPayload));
+        } catch (err) {
+            setDetailError(err.message || 'Failed to load season detail.');
+        } finally {
+            setDetailLoading(false);
+        }
+    };
+
     const handleRewardRuleChange = (index, field) => (event) => {
         setRewardRules((current) => current.map((rule, ruleIndex) => (
             ruleIndex === index
@@ -360,6 +414,14 @@ function AdminSeasonManagement() {
             setSavingRules(false);
         }
     };
+
+    const detailSource = seasonDetail || detailSeason;
+    const detailTournaments = Array.isArray(readSeasonField(seasonDetail, 'tournaments'))
+        ? readSeasonField(seasonDetail, 'tournaments')
+        : [];
+    const detailRewardRules = Array.isArray(readSeasonField(seasonDetail, 'rewardRules'))
+        ? readSeasonField(seasonDetail, 'rewardRules')
+        : [];
 
     return (
         <AdminLayout
@@ -583,6 +645,10 @@ function AdminSeasonManagement() {
                                             </td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4">
                                                 <div className="flex flex-wrap gap-2">
+                                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} onClick={() => openSeasonDetail(season)} type="button">
+                                                        <FaEye aria-hidden="true" />
+                                                        View
+                                                    </button>
                                                     <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} disabled={!isDraft} onClick={() => startEditSeason(season)} type="button">
                                                         <FaEdit aria-hidden="true" />
                                                         Edit
@@ -612,6 +678,132 @@ function AdminSeasonManagement() {
                         </table>
                     </div>
                 </section>
+
+                {detailSeason && (
+                    <div className="fixed inset-0 z-20 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={closeSeasonDetail} role="presentation">
+                        <section
+                            aria-label={`Details for ${readSeasonField(detailSource, 'seasonName') || 'season'}`}
+                            className="grid max-h-[calc(100vh-48px)] w-[min(980px,100%)] gap-5 overflow-y-auto rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 shadow-[0_20px_48px_rgba(45,32,32,0.22)]"
+                            onClick={(event) => event.stopPropagation()}
+                            role="dialog"
+                        >
+                            <div className="flex items-start justify-between gap-4">
+                                <div>
+                                    <h2 className="m-0 text-[1.45rem] leading-[1.15] text-[var(--admin-primary-dark)]">
+                                        {readSeasonField(detailSource, 'seasonName') || 'Season Detail'}
+                                    </h2>
+                                    <p className="mb-0 mt-1.5 text-[0.86rem] font-semibold text-[var(--admin-muted)]">
+                                        Detail, predictor leaderboard, and awarded rewards.
+                                    </p>
+                                </div>
+                                <button aria-label="Close season details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={closeSeasonDetail} type="button">
+                                    <FaTimes aria-hidden="true" />
+                                </button>
+                            </div>
+
+                            {detailLoading ? (
+                                <div className="rounded-md border border-[var(--admin-border)] bg-[#f8fbff] px-4 py-5 text-[0.9rem] font-bold text-[var(--admin-muted)]">
+                                    Loading season detail...
+                                </div>
+                            ) : detailError ? (
+                                <div className="rounded-md border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-[0.86rem] font-bold text-[var(--admin-primary)]">
+                                    {detailError}
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="grid grid-cols-4 gap-3 max-[900px]:grid-cols-2 max-[620px]:grid-cols-1">
+                                        {[
+                                            ['Status', readSeasonField(detailSource, 'status')],
+                                            ['Date Range', `${formatDate(readSeasonField(detailSource, 'startDate'))} - ${formatDate(readSeasonField(detailSource, 'endDate'))}`],
+                                            ['Points', readSeasonField(detailSource, 'pointsPerCorrectPrediction')],
+                                            ['Tournaments', detailTournaments.length || readSeasonField(detailSource, 'tournamentCount') || 0],
+                                        ].map(([label, value]) => (
+                                            <div className="grid gap-1 rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-3" key={label}>
+                                                <span className="text-[0.66rem] font-black uppercase text-[#64748b]">{label}</span>
+                                                <strong className="text-[0.9rem] text-[var(--admin-ink)]">{value ?? '-'}</strong>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <section className="overflow-hidden rounded-md border border-[var(--admin-border)]">
+                                        <div className="border-b border-[var(--admin-border)] bg-[#f8fbff] px-4 py-3">
+                                            <h3 className="m-0 text-[0.95rem] font-black text-[var(--admin-primary-dark)]">Leaderboard</h3>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full min-w-[720px] border-collapse">
+                                                <thead>
+                                                    <tr>
+                                                        {['Rank', 'Spectator', 'Points', 'Correct', 'Accuracy', 'Predictions'].map((heading) => (
+                                                            <th className="border-b border-[var(--admin-border)] px-4 py-3 text-left text-[0.64rem] font-black uppercase text-[#64748b]" key={heading}>{heading}</th>
+                                                        ))}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {seasonLeaderboard.length === 0 ? (
+                                                        <tr>
+                                                            <td className="px-4 py-5 text-center text-[0.86rem] font-bold text-[var(--admin-muted)]" colSpan="6">No leaderboard data.</td>
+                                                        </tr>
+                                                    ) : seasonLeaderboard.map((item) => (
+                                                        <tr key={`${readSeasonField(item, 'rank')}-${readSeasonField(item, 'spectatorId')}`}>
+                                                            <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.84rem] font-black text-[var(--admin-primary-dark)]">#{readSeasonField(item, 'rank')}</td>
+                                                            <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.84rem] font-bold text-[var(--admin-ink)]">{readSeasonField(item, 'spectatorName')}</td>
+                                                            <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.84rem] font-bold text-[var(--admin-ink)]">{readSeasonField(item, 'points')}</td>
+                                                            <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.84rem] font-bold text-[var(--admin-muted)]">{readSeasonField(item, 'correctPredictions')}</td>
+                                                            <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.84rem] font-bold text-[var(--admin-muted)]">{readSeasonField(item, 'accuracy')}%</td>
+                                                            <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.84rem] font-bold text-[var(--admin-muted)]">{readSeasonField(item, 'totalPredictions')}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </section>
+
+                                    <section className="grid grid-cols-2 gap-4 max-[900px]:grid-cols-1">
+                                        <div className="overflow-hidden rounded-md border border-[var(--admin-border)]">
+                                            <div className="border-b border-[var(--admin-border)] bg-[#f8fbff] px-4 py-3">
+                                                <h3 className="m-0 text-[0.95rem] font-black text-[var(--admin-primary-dark)]">Reward Rules</h3>
+                                            </div>
+                                            <div className="divide-y divide-[var(--admin-border)]">
+                                                {detailRewardRules.length === 0 ? (
+                                                    <div className="px-4 py-5 text-[0.86rem] font-bold text-[var(--admin-muted)]">No reward rules configured.</div>
+                                                ) : detailRewardRules.map((rule) => (
+                                                    <div className="grid gap-1 px-4 py-3" key={readSeasonField(rule, 'seasonRewardRuleId') || readSeasonField(rule, 'rankPosition')}>
+                                                        <strong className="text-[0.86rem] text-[var(--admin-ink)]">#{readSeasonField(rule, 'rankPosition')} - {readSeasonField(rule, 'rewardName')}</strong>
+                                                        <span className="text-[0.78rem] font-bold text-[var(--admin-muted)]">{readSeasonField(rule, 'bonusPoints')} bonus points</span>
+                                                        {readSeasonField(rule, 'rewardDescription') && (
+                                                            <span className="text-[0.78rem] font-semibold text-[var(--admin-muted)]">{readSeasonField(rule, 'rewardDescription')}</span>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div className="overflow-hidden rounded-md border border-[var(--admin-border)]">
+                                            <div className="border-b border-[var(--admin-border)] bg-[#f8fbff] px-4 py-3">
+                                                <h3 className="m-0 text-[0.95rem] font-black text-[var(--admin-primary-dark)]">Awarded Rewards</h3>
+                                            </div>
+                                            <div className="divide-y divide-[var(--admin-border)]">
+                                                {seasonRewards.length === 0 ? (
+                                                    <div className="px-4 py-5 text-[0.86rem] font-bold text-[var(--admin-muted)]">No season rewards awarded yet.</div>
+                                                ) : seasonRewards.map((reward) => (
+                                                    <div className="grid gap-1 px-4 py-3" key={readSeasonField(reward, 'seasonRewardId') || `${readSeasonField(reward, 'rankPosition')}-${readSeasonField(reward, 'spectatorId')}`}>
+                                                        <strong className="text-[0.86rem] text-[var(--admin-ink)]">#{readSeasonField(reward, 'rankPosition')} - {readSeasonField(reward, 'spectatorName')}</strong>
+                                                        <span className="text-[0.78rem] font-bold text-[var(--admin-muted)]">
+                                                            {readSeasonField(reward, 'rewardName')} | {readSeasonField(reward, 'bonusPoints')} bonus points
+                                                        </span>
+                                                        <span className="text-[0.78rem] font-semibold text-[var(--admin-muted)]">
+                                                            Final points: {readSeasonField(reward, 'finalPoints')} | Status: {readSeasonField(reward, 'status')}
+                                                        </span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </section>
+                                </>
+                            )}
+                        </section>
+                    </div>
+                )}
             </section>
         </AdminLayout>
     );

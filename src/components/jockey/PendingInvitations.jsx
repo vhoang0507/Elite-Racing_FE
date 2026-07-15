@@ -13,7 +13,8 @@ import { jockeyApi } from '../../api/jockeyApi';
 import { resolveFileUrl } from '../../api/uploadApi';
 import { formatCurrency } from '../../utils/currency';
 import ImageLightbox from '../shared/ImageLightbox';
-import Toast, { useToast } from '../shared/Toast';
+import Toast from '../shared/Toast';
+import { useToast } from '../shared/useToast';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 
@@ -59,6 +60,9 @@ function mapDetailToFlat(detail) {
 }
 
 function HealthCertificateBadge({ url }) {
+    const [lightboxSrc, setLightboxSrc] = useState(null);
+    const resolvedUrl = resolveFileUrl(url);
+
     if (!url) {
         return (
             <span className="mt-2 inline-flex rounded border border-[#dbc3bf] bg-[#f3e8e6] px-2.5 py-1 text-[0.68rem] font-black uppercase text-[#7f645f]">
@@ -66,9 +70,6 @@ function HealthCertificateBadge({ url }) {
             </span>
         );
     }
-
-    const [lightboxSrc, setLightboxSrc] = useState(null);
-    const resolvedUrl = resolveFileUrl(url);
 
     return (
         <>

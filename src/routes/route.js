@@ -27,6 +27,7 @@ import PredictionManagement from '../components/admin/PredictionManagement';
 import RaceManagement from '../components/admin/RaceManagement';
 import RegistrationManagement from '../components/admin/RegistrationManagement';
 import AdminProfile from '../components/admin/AdminProfile';
+import AdminRewardPayments from '../components/admin/AdminRewardPayments';
 import AdminSeasonManagement from '../components/admin/AdminSeasonManagement';
 import AdminSystemTime from '../components/admin/AdminSystemTime';
 import UserManagement from '../components/admin/UserManagement';
@@ -95,6 +96,7 @@ const appRoutes = [
     { path: '/admin/horses', element: guard('Admin', HorseManagement) },
     { path: '/admin/results', element: guard('Admin', ValidateResults) },
     { path: '/admin/results/:resultId', element: guard('Admin', ValidateResultDetail) },
+    { path: '/admin/rewards', element: guard('Admin', AdminRewardPayments) },
     { path: '/admin/notifications', element: guard('Admin', Notifications) },
     { path: '/admin/system-time', element: guard('Admin', AdminSystemTime) },
     { path: '/admin/profile', element: guard('Admin', AdminProfile) },

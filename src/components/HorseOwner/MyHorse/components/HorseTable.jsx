@@ -64,15 +64,6 @@ export default function HorseTable() {
         fetchHorses(filters, 1);
     };
 
-    const handleToggleStatus = async (horse) => {
-        try {
-            await ownerApi.updateHorseStatus(horse.horseId, !horse.isActive);
-            fetchHorses(filters, page);
-        } catch (err) {
-            handleOwnerAccessError(err, navigate);
-        }
-    };
-
     const handleDeleteHorse = async (horseId) => {
         if (!window.confirm("Are you sure you want to permanently delete this horse? This action cannot be undone.")) return;
         try {

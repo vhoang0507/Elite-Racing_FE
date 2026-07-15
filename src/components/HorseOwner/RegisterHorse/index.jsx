@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import HorseOwnerLayout from "../HorseOwnerLayout";
 import { ownerApi } from "../../../api/ownerApi";
-import { uploadFile, resolveFileUrl } from "../../../api/uploadApi";
-import Toast, { useToast } from "../../shared/Toast";
+import { uploadFile } from "../../../api/uploadApi";
+import Toast from "../../shared/Toast";
+import { useToast } from "../../shared/useToast";
 
 const MAX_FILE_MB = 5;
 
@@ -16,7 +17,7 @@ function validateHorse(form, horseImageFile, healthCertificateFile) {
         errs.horseName = 'Horse name is required.';
     } else if (name.length < 2 || name.length > 60) {
         errs.horseName = 'Name must be 2–60 characters.';
-    } else if (!/^[A-Za-zÀ-ỹ0-9 '\-]+$/.test(name)) {
+    } else if (!/^[A-Za-zÀ-ỹ0-9 '-]+$/.test(name)) {
         errs.horseName = 'Name may only contain letters, numbers, spaces, hyphens or apostrophes.';
     }
 

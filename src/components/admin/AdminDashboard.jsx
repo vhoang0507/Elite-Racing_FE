@@ -18,10 +18,6 @@ import { useNavigate } from 'react-router-dom';
 
 import AdminLayout from './AdminLayout';
 import { adminApi } from '../../api/adminApi';
-import {
-    confirmAdminAction,
-    showAdminSuccess,
-} from '../../utils/adminFeedback';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 const headingClass = 'flex items-center justify-between gap-[18px] max-[720px]:flex-col max-[720px]:items-stretch';
@@ -139,21 +135,11 @@ function AdminDashboard() {
         tournament.status,
     ], query)), (tournament) => tournament.status), [dashboard.tournaments, query]);
 
-    const visibleApprovals = useMemo(() => dashboard.approvals.filter((approval) => matchesQuery([
-        approval.name,
-        approval.role,
-        approval.request,
-    ], query)), [dashboard.approvals, query]);
-
     const visibleUsers = useMemo(() => sortPendingFirst(dashboard.users.filter((user) => matchesQuery([
         user.name,
         user.role,
         user.email,
     ], query)), (user) => user.status), [dashboard.users, query]);
-
-    const refreshDashboard = async () => {
-        setDashboard(await adminApi.getDashboard());
-    };
 
     const handleViewAllTournaments = () => {
         navigate('/admin/races');
@@ -161,35 +147,6 @@ function AdminDashboard() {
 
     const handleViewAllUsers = () => {
         navigate('/admin/users');
-    };
-
-    const handleApproval = async (approval, nextStatus) => {
-        const isApproving = nextStatus === 'Active' || nextStatus === 'Approved';
-        const confirmed = await confirmAdminAction({
-            title: isApproving ? 'Approve request' : 'Reject request',
-            message: `Are you sure you want to ${isApproving ? 'approve' : 'reject'} "${approval.name}"?`,
-            confirmLabel: isApproving ? 'Approve' : 'Reject',
-            tone: isApproving ? 'primary' : 'danger',
-        });
-
-        if (!confirmed) {
-            return;
-        }
-
-        if (approval.source === 'user' && approval.role === 'Jockey') {
-            if (isApproving) {
-                await adminApi.approveVerification(approval.id);
-            } else {
-                await adminApi.rejectVerification(approval.id);
-            }
-        } else if (approval.source === 'user') {
-            await adminApi.updateUserStatus(approval.id, nextStatus);
-        } else {
-            await adminApi.updateHorseApproval(approval.id, nextStatus);
-        }
-
-        await refreshDashboard();
-        showAdminSuccess(isApproving ? 'Request approved successfully.' : 'Request rejected successfully.', isApproving ? 'Approved' : 'Rejected');
     };
 
     return (

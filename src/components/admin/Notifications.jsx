@@ -19,7 +19,8 @@ import {
 import { adminApi } from '../../api/adminApi';
 import { confirmAdminAction } from '../../utils/adminFeedback';
 import { getCompactPaginationItems } from '../../utils/pagination';
-import Toast, { useToast } from '../shared/Toast';
+import Toast from '../shared/Toast';
+import { useToast } from '../shared/useToast';
 
 import AdminLayout from './AdminLayout';
 

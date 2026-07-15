@@ -1,3 +1,4 @@
+import { createElement } from 'react';
 import {
     FaCheckCircle,
     FaEnvelope,
@@ -61,14 +62,14 @@ function formatValue(value) {
 }
 
 function ProfileField({
-    icon: Icon,
+    icon,
     label,
     value,
 }) {
     return (
         <article className="grid grid-cols-[48px_minmax(0,1fr)] items-center gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-4 shadow-[0_8px_22px_rgba(15,23,42,0.05)]">
             <div className="grid h-12 w-12 place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
-                <Icon aria-hidden="true" />
+                {icon ? createElement(icon, { 'aria-hidden': true }) : null}
             </div>
             <div className="min-w-0">
                 <span className="block text-[0.7rem] font-black uppercase text-[var(--admin-muted)]">

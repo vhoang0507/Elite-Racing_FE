@@ -15,7 +15,7 @@ function validateHorse(form, horseImageFile) {
         errs.horseName = 'Horse name is required.';
     } else if (name.length < 2 || name.length > 60) {
         errs.horseName = 'Name must be 2–60 characters.';
-    } else if (!/^[A-Za-zÀ-ỹ0-9 '\-]+$/.test(name)) {
+    } else if (!/^[A-Za-zÀ-ỹ0-9 '-]+$/.test(name)) {
         errs.horseName = 'Name may only contain letters, numbers, spaces, hyphens or apostrophes.';
     }
 
