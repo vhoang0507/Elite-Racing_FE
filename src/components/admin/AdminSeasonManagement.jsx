@@ -192,17 +192,15 @@ function AdminSeasonManagement() {
             return;
         }
 
-        if (Number(seasonForm.pointsPerCorrectPrediction) <= 0) {
-            setError('Points per correct prediction must be greater than 0.');
-            return;
-        }
-
         setSavingSeason(true);
 
         try {
+            const compatiblePointsValue = Number(seasonForm.pointsPerCorrectPrediction) > 0
+                ? Number(seasonForm.pointsPerCorrectPrediction)
+                : 100;
             const payload = {
                 ...seasonForm,
-                pointsPerCorrectPrediction: Number(seasonForm.pointsPerCorrectPrediction),
+                pointsPerCorrectPrediction: compatiblePointsValue,
             };
 
             if (editingSeason) {
@@ -449,11 +447,6 @@ function AdminSeasonManagement() {
                                 </label>
                             </div>
 
-                            <label className={fieldClass}>
-                                <span className={labelClass}>Points Per Correct Prediction</span>
-                                <input className={controlClass} min="1" onChange={handleSeasonFieldChange('pointsPerCorrectPrediction')} required type="number" value={seasonForm.pointsPerCorrectPrediction} />
-                            </label>
-
                             <button
                                 className={`${actionButtonClass} w-fit bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary-dark)] max-[720px]:w-full`}
                                 disabled={savingSeason}
@@ -534,10 +527,10 @@ function AdminSeasonManagement() {
                     </div>
 
                     <div className="w-full overflow-x-auto">
-                        <table className="w-full border-collapse max-[900px]:min-w-[980px]">
+                        <table className="w-full border-collapse max-[900px]:min-w-[880px]">
                             <thead>
                                 <tr>
-                                    {['Season', 'Date Range', 'Points', 'Tournaments', 'Rewards', 'Status', 'Actions'].map((heading) => (
+                                    {['Season', 'Date Range', 'Tournaments', 'Rewards', 'Status', 'Actions'].map((heading) => (
                                         <th className="border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-5 py-4 text-left text-[0.68rem] font-black uppercase text-[#64748b]" key={heading}>
                                             {heading}
                                         </th>
@@ -547,11 +540,11 @@ function AdminSeasonManagement() {
                             <tbody>
                                 {loading ? (
                                     <tr>
-                                        <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="7">Loading seasons...</td>
+                                        <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="6">Loading seasons...</td>
                                     </tr>
                                 ) : seasons.length === 0 ? (
                                     <tr>
-                                        <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="7">No seasons found.</td>
+                                        <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="6">No seasons found.</td>
                                     </tr>
                                 ) : seasons.map((season) => {
                                     const id = getSeasonId(season);
@@ -566,9 +559,6 @@ function AdminSeasonManagement() {
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-muted)]">
                                                 {formatDate(readSeasonField(season, 'startDate'))} - {formatDate(readSeasonField(season, 'endDate'))}
-                                            </td>
-                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-ink)]">
-                                                {readSeasonField(season, 'pointsPerCorrectPrediction')}
                                             </td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-ink)]">
                                                 {readSeasonField(season, 'tournamentCount') ?? 0}
