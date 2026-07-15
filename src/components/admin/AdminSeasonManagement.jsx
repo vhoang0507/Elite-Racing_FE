@@ -84,6 +84,10 @@ function formatStatus(status) {
     return status || '-';
 }
 
+function canDeleteSeason(status) {
+    return status === 'Draft' || status === 'Cancelled';
+}
+
 function normalizeRewardRules(payload) {
     const rules = payload?.rules ?? payload?.Rules ?? [];
 
@@ -322,6 +326,46 @@ function AdminSeasonManagement() {
         setDetailError('');
     };
 
+    const handleDeleteSeason = async (season) => {
+        const id = getSeasonId(season);
+        const seasonName = readSeasonField(season, 'seasonName') || 'this season';
+        const status = readSeasonField(season, 'status');
+
+        if (!id || !canDeleteSeason(status)) {
+            setDetailError('Only draft or cancelled seasons can be deleted.');
+            return;
+        }
+
+        const confirmed = await confirmAdminAction({
+            title: 'Delete season',
+            message: `Delete "${seasonName}" permanently? This action cannot be undone.`,
+            confirmLabel: 'Delete Season',
+            tone: 'danger',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        setActionLoading(`delete-${id}`);
+        setDetailError('');
+        setError('');
+        setMessage('');
+
+        try {
+            const response = await adminApi.deleteSeason(id);
+            const successMessage = response?.message || response?.Message || 'Season deleted successfully.';
+            setMessage(successMessage);
+            showAdminSuccess(successMessage, 'Deleted');
+            closeSeasonDetail();
+            await loadSeasons();
+        } catch (err) {
+            setDetailError(err.message || 'Failed to delete season.');
+        } finally {
+            setActionLoading('');
+        }
+    };
+
     const openSeasonDetail = async (season) => {
         const id = getSeasonId(season);
 
@@ -422,6 +466,9 @@ function AdminSeasonManagement() {
     const detailRewardRules = Array.isArray(readSeasonField(seasonDetail, 'rewardRules'))
         ? readSeasonField(seasonDetail, 'rewardRules')
         : [];
+    const detailSeasonId = getSeasonId(detailSource);
+    const detailStatus = readSeasonField(detailSource, 'status');
+    const detailCanDelete = canDeleteSeason(detailStatus);
 
     return (
         <AdminLayout
@@ -696,9 +743,21 @@ function AdminSeasonManagement() {
                                         Detail, predictor leaderboard, and awarded rewards.
                                     </p>
                                 </div>
-                                <button aria-label="Close season details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={closeSeasonDetail} type="button">
-                                    <FaTimes aria-hidden="true" />
-                                </button>
+                                <div className="flex flex-wrap justify-end gap-2">
+                                    <button
+                                        className={`${actionButtonClass} border border-[#f0b4b4] bg-white text-[#b91c1c] hover:bg-[#fff3f3]`}
+                                        disabled={!detailCanDelete || actionLoading === `delete-${detailSeasonId}`}
+                                        onClick={() => handleDeleteSeason(detailSource)}
+                                        title={detailCanDelete ? 'Delete season' : 'Only draft or cancelled seasons can be deleted'}
+                                        type="button"
+                                    >
+                                        <FaTrashAlt aria-hidden="true" />
+                                        {actionLoading === `delete-${detailSeasonId}` ? 'Deleting...' : 'Delete'}
+                                    </button>
+                                    <button aria-label="Close season details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={closeSeasonDetail} type="button">
+                                        <FaTimes aria-hidden="true" />
+                                    </button>
+                                </div>
                             </div>
 
                             {detailLoading ? (
