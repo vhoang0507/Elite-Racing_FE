@@ -10,6 +10,7 @@ import {
     FaTrophy,
 } from 'react-icons/fa';
 import { spectatorApi } from '../../../api/spectatorApi';
+import { resolveFileUrl } from '../../../api/uploadApi';
 import { formatCurrency } from '../../../utils/currency';
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
@@ -134,6 +135,11 @@ function canPredict(tournament) {
 
 function getPredictionUnavailableReason(tournament) {
     return tournament?.predictionUnavailableReason || 'Prediction period has ended';
+}
+
+function getHorseImageUrl(horse) {
+    const imageUrl = horse?.imageUrl ?? horse?.ImageUrl;
+    return imageUrl ? resolveFileUrl(imageUrl) : '';
 }
 
 function canWatchReplay(tournament) {
@@ -289,6 +295,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
                             {horses.map((h, idx) => {
                                 const isSel = selected?.horseId === h.horseId;
+                                const horseImageUrl = getHorseImageUrl(h);
                                 return (
                                     <button
                                         key={h.horseId}
@@ -307,8 +314,16 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                                         <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: isSel ? '#0b7f5a' : '#f0f4f8', color: isSel ? '#fff' : '#888', fontWeight: 800, fontSize: '0.85rem' }}>
                                             {idx + 1}
                                         </div>
-                                        {/* Horse icon */}
-                                        <span style={{ fontSize: 22, flexShrink: 0 }}>🐴</span>
+                                        {/* Horse image */}
+                                        {horseImageUrl ? (
+                                            <img
+                                                alt={h.horseName || 'Horse'}
+                                                src={horseImageUrl}
+                                                style={{ width: 28, height: 28, borderRadius: 7, flexShrink: 0, objectFit: 'cover' }}
+                                            />
+                                        ) : (
+                                            <span style={{ fontSize: 22, flexShrink: 0 }}>🐴</span>
+                                        )}
                                         {/* Info */}
                                         <div style={{ minWidth: 0, flex: 1 }}>
                                             <p style={{ margin: 0, fontWeight: 700, fontSize: '0.92rem', color: '#2b1b1b' }}>{h.horseName}</p>
