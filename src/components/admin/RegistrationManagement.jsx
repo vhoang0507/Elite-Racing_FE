@@ -434,32 +434,11 @@ export default function RegistrationManagement() {
                                                     </td>
 
                                                     <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
-                                                        <strong>{item.ownerName || '-'}</strong>
-                                                        <span className="mt-1 block text-[0.74rem] text-[var(--admin-muted)]">
-                                                            {item.ownerEmail || '-'}
-                                                        </span>
+                                                        {item.ownerName || '-'}
                                                     </td>
 
                                                     <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
-                                                        <strong>{item.tournamentName || '-'}</strong>
-                                                        {item.tournamentStatus && (
-                                                            <span className="ml-2 inline-flex min-h-5 items-center rounded border border-[var(--admin-border)] bg-[#fffdfc] px-2 text-[0.62rem] font-black uppercase text-[#64748b]">
-                                                                Tournament: {item.tournamentStatus}
-                                                            </span>
-                                                        )}
-                                                        <span className="mt-1 block text-[0.74rem] text-[var(--admin-muted)]">
-                                                            {item.raceName || '-'}
-                                                        </span>
-                                                        {item.seasonName && (
-                                                            <span className="mt-1 block text-[0.72rem] font-bold text-[var(--admin-muted)]">
-                                                                Season: {item.seasonName}
-                                                            </span>
-                                                        )}
-                                                        {item.raceStatus && (
-                                                            <span className="mt-1 inline-flex min-h-5 items-center rounded border border-[var(--admin-border)] bg-[#fffdfc] px-2 text-[0.62rem] font-black uppercase text-[#64748b]">
-                                                                Race: {item.raceStatus}
-                                                            </span>
-                                                        )}
+                                                        {item.tournamentName || '-'}
                                                     </td>
 
                                                     <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
