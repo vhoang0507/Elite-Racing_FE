@@ -14,7 +14,8 @@ import {
 import { resolveFileUrl } from '../../api/uploadApi';
 import ImageLightbox from '../shared/ImageLightbox';
 import RefereeLayout from './RefereeLayout';
-import Toast, { useToast } from '../shared/Toast';
+import Toast from '../shared/Toast';
+import { useToast } from '../shared/useToast';
 
 const filterOptions = [
     { key: 'ALL', apiValue: 'all', label: 'ALL' },
@@ -61,6 +62,9 @@ function getMarkReadyDisabledReason(race) {
 }
 
 function HealthCertificateCell({ url }) {
+    const [lightboxSrc, setLightboxSrc] = useState(null);
+    const resolvedUrl = resolveFileUrl(url);
+
     if (!url) {
         return (
             <span className="inline-flex rounded border border-[#dbc3bf] bg-[#f3e8e6] px-2.5 py-1 text-xs font-bold text-[#7f645f]">
@@ -68,9 +72,6 @@ function HealthCertificateCell({ url }) {
             </span>
         );
     }
-
-    const [lightboxSrc, setLightboxSrc] = useState(null);
-    const resolvedUrl = resolveFileUrl(url);
 
     return (
         <>

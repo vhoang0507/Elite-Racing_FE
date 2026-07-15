@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-    FaBullseye,
     FaCoins,
     FaListOl,
     FaPercent,
@@ -24,7 +23,6 @@ export default function ResultReward() {
 
     const bettingPoints = rewards?.bettingPoints ?? 0;
     const netPoints     = rewards?.netPoints ?? 0;
-    const correct       = rewards?.correctPredictions ?? 0;
     const accuracy      = rewards?.predictionAccuracy ?? 0;
     const myRank        = rewards?.myRank ?? null;
     const history       = rewards?.pointHistory ?? [];

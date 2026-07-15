@@ -9,6 +9,53 @@ const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTH_NAMES = ['January','February','March','April','May','June',
                      'July','August','September','October','November','December'];
+const pad2 = (value) => String(value).padStart(2, '0');
+const toDateKey = (year, month, day) => `${year}-${pad2(month + 1)}-${pad2(day)}`;
+
+function mergeAvailabilityItems(calendar, availabilityPayload) {
+    const days = Array.isArray(calendar?.days) ? calendar.days : [];
+    const dayMap = new Map(days.map((day) => [Number(day.dayNumber), day]));
+    const availabilityItems = availabilityPayload?.items ?? availabilityPayload?.Items ?? [];
+
+    availabilityItems.forEach((item) => {
+        const date = item.date ?? item.Date;
+        const status = item.status ?? item.Status;
+        const dayNumber = Number(String(date || '').split('-')[2]);
+
+        if (!dayNumber || !status) {
+            return;
+        }
+
+        const existing = dayMap.get(dayNumber) ?? {
+            dayNumber,
+            races: [],
+        };
+
+        if (!existing.races?.length && existing.status !== 'RacingDay') {
+            dayMap.set(dayNumber, {
+                ...existing,
+                status,
+            });
+        }
+    });
+
+    return {
+        ...calendar,
+        days: [...dayMap.values()].sort((a, b) => Number(a.dayNumber) - Number(b.dayNumber)),
+    };
+}
+
+async function fetchCalendarData(year, month) {
+    const monthStr = `${year}-${pad2(month + 1)}`;
+    const from = toDateKey(year, month, 1);
+    const to = toDateKey(year, month, getDaysInMonth(year, month));
+    const [calendarPayload, availabilityPayload] = await Promise.all([
+        jockeyApi.getJockeyCalendar(monthStr),
+        jockeyApi.getJockeyAvailabilities(from, to).catch(() => ({ items: [] })),
+    ]);
+
+    return mergeAvailabilityItems(calendarPayload, availabilityPayload);
+}
 
 export default function JockeyCalendar() {
     const today = new Date();
@@ -17,16 +64,38 @@ export default function JockeyCalendar() {
     const [calendarData, setCalendarData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [availabilityMessage, setAvailabilityMessage] = useState('');
+    const [savingAvailability, setSavingAvailability] = useState(false);
     const [selectedDay, setSelectedDay] = useState(null);
 
     useEffect(() => {
+        let isMounted = true;
+
         setLoading(true);
         setError('');
-        const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`;
-        jockeyApi.getJockeyCalendar(monthStr)
-            .then(data => { setCalendarData(data); setSelectedDay(null); })
-            .catch(err => { setError(err.message || 'Failed to load calendar'); setCalendarData(null); })
-            .finally(() => setLoading(false));
+        setAvailabilityMessage('');
+        fetchCalendarData(year, month)
+            .then(data => {
+                if (isMounted) {
+                    setCalendarData(data);
+                    setSelectedDay(null);
+                }
+            })
+            .catch(err => {
+                if (isMounted) {
+                    setError(err.message || 'Failed to load calendar');
+                    setCalendarData(null);
+                }
+            })
+            .finally(() => {
+                if (isMounted) {
+                    setLoading(false);
+                }
+            });
+
+        return () => {
+            isMounted = false;
+        };
     }, [year, month]);
 
     const prevMonth = () => {
@@ -52,6 +121,39 @@ export default function JockeyCalendar() {
         day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
 
     const selectedDayData = selectedDay ? getDayData(selectedDay) : null;
+    const selectedDayRaces = selectedDayData?.races ?? [];
+    const selectedDayStatus = selectedDayData?.status ?? 'Available';
+    const selectedDayIsRacing = selectedDayStatus === 'RacingDay' || selectedDayRaces.length > 0;
+    const selectedDayIsUnavailable = selectedDayStatus === 'Unavailable';
+    const selectedDateKey = selectedDay ? toDateKey(year, month, selectedDay) : '';
+
+    const handleAvailabilityToggle = async () => {
+        if (!selectedDay || selectedDayIsRacing) {
+            return;
+        }
+
+        const nextStatus = selectedDayIsUnavailable ? 'Available' : 'Unavailable';
+
+        setSavingAvailability(true);
+        setError('');
+        setAvailabilityMessage('');
+
+        try {
+            await jockeyApi.updateJockeyAvailabilities([
+                {
+                    date: selectedDateKey,
+                    status: nextStatus,
+                },
+            ]);
+            const refreshedCalendar = await fetchCalendarData(year, month);
+            setCalendarData(refreshedCalendar);
+            setAvailabilityMessage(`Availability updated for ${selectedDateKey}.`);
+        } catch (err) {
+            setError(err.message || 'Failed to update availability.');
+        } finally {
+            setSavingAvailability(false);
+        }
+    };
 
     return (
         <JockeyLayout activeKey="schedule">
@@ -66,6 +168,10 @@ export default function JockeyCalendar() {
 
                 {error && (
                     <div style={styles.errorBar}>⚠️ {error}</div>
+                )}
+
+                {availabilityMessage && (
+                    <div style={styles.successBar}>{availabilityMessage}</div>
                 )}
 
                 {/* Summary cards */}
@@ -148,7 +254,7 @@ export default function JockeyCalendar() {
                                                     : isTod
                                                     ? '2px solid #3b82f6'
                                                     : '1px solid #f0ebe8',
-                                                cursor: (isRacing || isUnavailable) ? 'pointer' : 'default',
+                                                cursor: 'pointer',
                                             }}
                                             onClick={() => setSelectedDay(isSel ? null : day)}
                                         >
@@ -208,6 +314,29 @@ export default function JockeyCalendar() {
                                 <p style={styles.detailTitle}>
                                     {MONTH_NAMES[month]} {selectedDay}, {year}
                                 </p>
+                                <div style={styles.availabilityActionRow}>
+                                    <span style={styles.availabilityStatus}>
+                                        Status: {selectedDayIsRacing ? 'Racing Day' : selectedDayStatus}
+                                    </span>
+                                    <button
+                                        disabled={savingAvailability || selectedDayIsRacing}
+                                        onClick={handleAvailabilityToggle}
+                                        style={{
+                                            ...styles.availabilityButton,
+                                            opacity: savingAvailability || selectedDayIsRacing ? 0.6 : 1,
+                                            cursor: savingAvailability || selectedDayIsRacing ? 'not-allowed' : 'pointer',
+                                        }}
+                                        type="button"
+                                    >
+                                        {selectedDayIsRacing
+                                            ? 'Locked'
+                                            : savingAvailability
+                                                ? 'Saving...'
+                                                : selectedDayIsUnavailable
+                                                    ? 'Mark Available'
+                                                    : 'Mark Unavailable'}
+                                    </button>
+                                </div>
                                 {selectedDayData?.races?.length > 0 ? (
                                     selectedDayData.races.map((race, i) => (
                                         <div key={i} style={styles.detailRace}>
@@ -291,6 +420,7 @@ const styles = {
     pageTitle: { margin: 0, fontSize: '1.9rem', fontWeight: 800, color: '#610000' },
     pageSubtitle: { margin: '4px 0 0', fontSize: 14, color: '#64748b' },
     errorBar: { backgroundColor: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#991b1b', fontWeight: 600 },
+    successBar: { backgroundColor: '#dcfce7', border: '1px solid #86efac', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#15803d', fontWeight: 700 },
     summaryGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
     summaryCard: { display: 'flex', alignItems: 'center', gap: 14, backgroundColor: '#fff', border: '1px solid #e8ddd9', borderRadius: 12, padding: '16px 20px' },
     summaryIcon: { width: 42, height: 42, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 },
@@ -321,6 +451,9 @@ const styles = {
     sidebar: { display: 'flex', flexDirection: 'column', gap: 16 },
     detailCard: { backgroundColor: '#fff', border: '1px solid #e8ddd9', borderRadius: 12, padding: 16 },
     detailTitle: { margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: '#610000' },
+    availabilityActionRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 },
+    availabilityStatus: { fontSize: 12, fontWeight: 800, color: '#64748b' },
+    availabilityButton: { border: '1px solid #0b7f5a', backgroundColor: '#0b7f5a', color: '#fff', borderRadius: 8, padding: '7px 10px', fontSize: 11, fontWeight: 800 },
     detailRace: { backgroundColor: '#f0fdf4', border: '1px solid #86efac', borderRadius: 8, padding: '10px 12px', marginBottom: 8 },
     detailRaceName: { margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: '#15803d' },
     detailMeta: { margin: '2px 0 0', fontSize: 12, color: '#64748b' },

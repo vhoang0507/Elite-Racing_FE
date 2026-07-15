@@ -4,7 +4,8 @@ import RewardStats from "./components/RewardStats";
 import AvailableRewards from "./components/AvailableRewards";
 import MyHorseResults from "./components/MyHorseResults";
 import { ownerApi } from "../../../api/ownerApi";
-import Toast, { useToast } from "../../shared/Toast";
+import Toast from "../../shared/Toast";
+import { useToast } from "../../shared/useToast";
 
 export default function ResultReward() {
     const [summary, setSummary] = useState(null);

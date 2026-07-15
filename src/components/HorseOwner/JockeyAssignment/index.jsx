@@ -7,7 +7,8 @@ import TournamentSelectModal from "./components/TournamentSelectModal";
 import ActivityTimeline from "./components/ActivityTimeline";
 import InvitationResponses from "./components/InvitationResponses";
 import { ownerApi } from "../../../api/ownerApi";
-import Toast, { useToast } from "../../shared/Toast";
+import Toast from "../../shared/Toast";
+import { useToast } from "../../shared/useToast";
 
 export default function JockeyAssignment() {
     const [selectedJockey, setSelectedJockey] = useState(null);

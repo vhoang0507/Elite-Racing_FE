@@ -318,7 +318,7 @@ function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
                 </div>
 
                 {/* Prediction section */}
-                <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid #f5eeec' }}>
+                <div style={{ marginTop: 'auto', paddingTop: 12, borderTop: '1px solid #f5eeec', display: 'grid', gap: 10 }}>
                     {hasPredicted ? (
                         // Already predicted
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -348,7 +348,13 @@ function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
                         >
                             <FaHorseHead /> Make Prediction
                         </button>
-                    ) : replayOpen ? (
+                    ) : !replayOpen ? (
+                        <p style={{ margin: 0, fontSize: '0.83rem', color: '#bbb', textAlign: 'center' }}>
+                            {getPredictionUnavailableReason(tournament)}
+                        </p>
+                    ) : null}
+
+                    {replayOpen && (
                         <button
                             type="button"
                             onClick={() => onReplay(tournament.race.raceId)}
@@ -356,10 +362,6 @@ function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
                         >
                             <FaPlay /> Watch Official Replay
                         </button>
-                    ) : (
-                        <p style={{ margin: 0, fontSize: '0.83rem', color: '#bbb', textAlign: 'center' }}>
-                            {getPredictionUnavailableReason(tournament)}
-                        </p>
                     )}
                 </div>
             </div>

@@ -12,18 +12,19 @@ import JockeyLayout from './JockeyLayout';
 import { jockeyApi } from '../../api/jockeyApi';
 import { resolveFileUrl } from '../../api/uploadApi';
 import ImageLightbox from '../shared/ImageLightbox';
-import Toast, { useToast } from '../shared/Toast';
+import Toast from '../shared/Toast';
+import { useToast } from '../shared/useToast';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]';
 
 function HealthCertificateLink({ url }) {
+    const [lightboxSrc, setLightboxSrc] = useState(null);
+    const resolvedUrl = resolveFileUrl(url);
+
     if (!url) {
         return <span className="text-[var(--admin-muted)]">Not uploaded</span>;
     }
-
-    const [lightboxSrc, setLightboxSrc] = useState(null);
-    const resolvedUrl = resolveFileUrl(url);
 
     return (
         <>
@@ -127,7 +128,9 @@ function JockeyNotifications() {
                     prev?.notificationId === notif.notificationId ? { ...prev, isRead: true } : prev
                 ));
                 setSummary(prev => prev ? { ...prev, unread: Math.max(0, prev.unread - 1) } : prev);
-            } catch { }
+            } catch {
+                // Ignore notification count refresh errors.
+            }
         }
     };
 

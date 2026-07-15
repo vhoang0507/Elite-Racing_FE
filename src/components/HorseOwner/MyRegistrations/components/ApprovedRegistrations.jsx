@@ -10,7 +10,7 @@ const STATUS_CFG = {
     Completed:     { bg: "#f0fdf4", color: "#065f46", border: "#6ee7b7" },
 };
 
-export default function ApprovedRegistrations({ onViewStatus }) {
+export default function ApprovedRegistrations() {
     const navigate = useNavigate();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);

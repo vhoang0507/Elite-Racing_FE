@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
     FaBell,
     FaCalendarAlt,
@@ -11,7 +10,8 @@ import {
 
 import { ownerApi } from "../../../api/ownerApi";
 import HorseOwnerLayout from "../HorseOwnerLayout";
-import Toast, { useToast } from "../../shared/Toast";
+import Toast from "../../shared/Toast";
+import { useToast } from "../../shared/useToast";
 
 const tabs = ["All", "Registrations", "Jockeys", "Tournaments"];
 const emptySummary = {
@@ -49,7 +49,7 @@ function normalizeSummary(summary) {
     };
 }
 
-function NotificationDetailModal({ notification, onClose, onNavigate }) {
+function NotificationDetailModal({ notification, onClose }) {
     const Icon = iconByCategory[notification.category] || FaBell;
     const statusStyle = getStatusStyle(notification.statusLabel);
     const tag = notification.statusLabel || notification.category;
@@ -121,7 +121,6 @@ export default function Notifications() {
     const [markingAll, setMarkingAll] = useState(false);
     const [selectedNotification, setSelectedNotification] = useState(null);
     const { toast, showToast, hideToast } = useToast();
-    const navigate = useNavigate();
 
     useEffect(() => {
         let isMounted = true;
@@ -336,7 +335,6 @@ export default function Notifications() {
                 <NotificationDetailModal
                     notification={selectedNotification}
                     onClose={() => setSelectedNotification(null)}
-                    onNavigate={(url) => { setSelectedNotification(null); navigate(url); }}
                 />
             )}
 

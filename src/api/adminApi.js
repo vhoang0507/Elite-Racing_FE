@@ -467,6 +467,21 @@ async function deleteTournament(id) {
     return apiRequest(`/admin/tournaments/${id}`, { method: 'DELETE' });
 }
 
+async function restoreTournament(id) {
+    return apiRequest(`/admin/tournaments/${id}/restore`, { method: 'PUT' });
+}
+
+async function getTournamentReferees() {
+    return apiRequest('/admin/tournaments/referees');
+}
+
+async function assignTournamentReferee(tournamentId, refereeId) {
+    return apiRequest(`/admin/tournaments/${tournamentId}/assign-referee`, {
+        method: 'PUT',
+        body: JSON.stringify({ RefereeId: Number(refereeId) }),
+    });
+}
+
 const toSeasonPayload = (payload) => ({
     SeasonName: payload.seasonName ?? payload.SeasonName ?? '',
     StartDate: payload.startDate ?? payload.StartDate ?? '',
@@ -1460,6 +1475,9 @@ export const adminApi = {
     cancelTournament,
     updateTournament,
     deleteTournament,
+    restoreTournament,
+    getTournamentReferees,
+    assignTournamentReferee,
 
     // Seasons
     getSeasons,

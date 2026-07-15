@@ -61,6 +61,8 @@ export default function HorseResultDetail() {
 }
 
 function HorseProfileCard({ horse }) {
+    const [lightboxSrc, setLightboxSrc] = useState(null);
+
     return (
         <div style={styles.card}>
             <div style={styles.profileRow}>

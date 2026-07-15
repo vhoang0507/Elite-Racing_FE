@@ -149,6 +149,7 @@ function DetailItem({ label, children }) {
 }
 
 function DocumentPreview({ label, url }) {
+    const [lightboxSrc, setLightboxSrc] = useState(null);
     const resolvedUrl = hasValue(url) ? resolveFileUrl(String(url)) : '';
     const fileName = getDocumentName(url);
 

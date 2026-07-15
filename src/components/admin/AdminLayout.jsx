@@ -10,6 +10,7 @@ import {
     FaChartBar,
     FaChartLine,
     FaClipboardCheck,
+    FaDollarSign,
     FaFlagCheckered,
     FaPlus,
     FaQuestionCircle,
@@ -26,7 +27,8 @@ import {
     ADMIN_SUCCESS_EVENT,
     ADMIN_SUCCESS_STORAGE_KEY,
 } from '../../utils/adminFeedback';
-import Toast, { useToast } from '../shared/Toast';
+import Toast from '../shared/Toast';
+import { useToast } from '../shared/useToast';
 
 const navigation = [
     {
@@ -70,6 +72,12 @@ const navigation = [
         label: 'Validate Results',
         icon: FaClipboardCheck,
         path: '/admin/results',
+    },
+    {
+        key: 'rewards',
+        label: 'Reward Payments',
+        icon: FaDollarSign,
+        path: '/admin/rewards',
     },
     {
         key: 'notifications',

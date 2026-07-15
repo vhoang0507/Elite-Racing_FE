@@ -22,12 +22,12 @@ const formatDate = (dateStr) => {
 };
 
 function HealthCertificateLink({ url }) {
+    const [lightboxSrc, setLightboxSrc] = useState(null);
+    const resolvedUrl = resolveFileUrl(url);
+
     if (!url) {
         return <span className="text-[var(--admin-muted)]">Not uploaded</span>;
     }
-
-    const [lightboxSrc, setLightboxSrc] = useState(null);
-    const resolvedUrl = resolveFileUrl(url);
 
     return (
         <>
