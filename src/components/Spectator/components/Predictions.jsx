@@ -21,45 +21,16 @@ const FILTERS = [
 
 function getOutcome(prediction) {
     const { isCorrect, status } = prediction;
-    const normalizedStatus = String(status || '').toLowerCase();
-    if (normalizedStatus === 'cancelled') return 'cancelled';
+    if (status === 'Cancelled') return 'cancelled';
     if (isCorrect === true)     return 'correct';
     if (isCorrect === false)    return 'wrong';
-    if (normalizedStatus === 'locked') return 'locked';
+    if (status === 'Locked')    return 'locked';
     return 'pending';
 }
 
-function isEvaluated(prediction) {
-    return String(prediction?.status || '').toLowerCase() === 'evaluated'
-        || prediction?.isCorrect === true
-        || prediction?.isCorrect === false;
-}
-
-function isPendingLike(prediction) {
-    const status = String(prediction?.status || '').toLowerCase();
-
-    return status === 'pending' || status === 'locked';
-}
-
-function calculatePredictionNet(prediction) {
-    if (prediction.netPoints != null) {
-        return Number(prediction.netPoints);
-    }
-
-    if (!isEvaluated(prediction)) {
-        return 0;
-    }
-
-    return Number(prediction.pointsAwarded ?? 0)
-        - Number(prediction.stakePoints ?? 0);
-}
-
 function PredictionCard({ prediction }) {
-    const { pointsAwarded, stakePoints, tournamentName, predictedHorseName, tournamentStatus } = prediction;
+    const { pointsAwarded, stakePoints, netPoints, tournamentName, predictedHorseName, tournamentStatus } = prediction;
     const outcome = getOutcome(prediction);
-    const returnedPoints = Number(pointsAwarded ?? 0);
-    const stake = Number(stakePoints ?? 0);
-    const net = calculatePredictionNet(prediction);
 
     const accentColor = {
         correct:   '#155724',
@@ -78,11 +49,11 @@ function PredictionCard({ prediction }) {
     }[outcome];
 
     const badgeLabel = {
-        correct:   net > 0 ? `Correct - Net +${net} pts` : `Correct - ${returnedPoints} pts returned`,
-        wrong:     `Wrong - ${Math.abs(net) || stake} pts lost`,
-        locked:    'Locked - Awaiting Evaluation',
-        cancelled: 'Cancelled',
-        pending:   'Awaiting Result',
+        correct:   `✓ Correct  +${pointsAwarded ?? 0} pts`,
+        wrong:     `✗ Wrong  -${stakePoints ?? 0} pts`,
+        locked:    '🔒 Locked – Awaiting Evaluation',
+        cancelled: '✕ Cancelled',
+        pending:   '⏳ Awaiting Result',
     }[outcome];
 
     return (
@@ -100,14 +71,9 @@ function PredictionCard({ prediction }) {
                     {stakePoints != null && (
                         <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: '#999' }}>
                             Stake: {stakePoints} pts
-                            {isEvaluated(prediction) && outcome !== 'pending' && outcome !== 'locked' && (
-                                <span style={{ marginLeft: 8, fontWeight: 700, color: '#555' }}>
-                                    Returned: {returnedPoints} pts
-                                </span>
-                            )}
-                            {isEvaluated(prediction) && outcome !== 'pending' && outcome !== 'locked' && (
-                                <span style={{ marginLeft: 8, fontWeight: 700, color: net >= 0 ? '#155724' : '#721c24' }}>
-                                    Net: {net >= 0 ? '+' : ''}{net} pts
+                            {netPoints != null && outcome !== 'pending' && outcome !== 'locked' && (
+                                <span style={{ marginLeft: 8, fontWeight: 700, color: netPoints >= 0 ? '#155724' : '#721c24' }}>
+                                    Net: {netPoints >= 0 ? '+' : ''}{netPoints} pts
                                 </span>
                             )}
                         </p>
@@ -142,25 +108,13 @@ export default function Predictions() {
     const total     = predictions.length;
     const correct   = predictions.filter(p => p.isCorrect === true).length;
     const wrong     = predictions.filter(p => p.isCorrect === false).length;
-    const cancelled = predictions.filter(p => String(p.status || '').toLowerCase() === 'cancelled').length;
-    const locked    = predictions.filter(p => String(p.status || '').toLowerCase() === 'locked').length;
-    const pending   = predictions.filter(p => String(p.status || '').toLowerCase() === 'pending').length;
+    const cancelled = predictions.filter(p => p.status === 'Cancelled').length;
+    const locked    = predictions.filter(p => p.status === 'Locked').length;
+    const pending   = predictions.filter(p => p.status === 'Pending').length;
     const accuracy  = (correct + wrong) === 0 ? 0 : Math.round((correct / (correct + wrong)) * 100);
-    const netTotal = predictions.reduce((totalNet, prediction) => {
-        if (isPendingLike(prediction)) {
-            return totalNet;
-        }
-
-        if (prediction.netPoints != null) {
-            return totalNet + Number(prediction.netPoints);
-        }
-
-        if (!isEvaluated(prediction)) {
-            return totalNet;
-        }
-
-        return totalNet + calculatePredictionNet(prediction);
-    }, 0);
+    const totalPts  = predictions.reduce((s, p) => s + (p.pointsAwarded ?? 0), 0);
+    const totalStake = predictions.reduce((s, p) => s + (p.stakePoints ?? 0), 0);
+    const netTotal  = totalPts - totalStake;
 
     const stats = [
         { label: 'Total',      value: total,           icon: FaBullseye,    tone: '' },
@@ -172,12 +126,11 @@ export default function Predictions() {
     const counts = { all: total, pending, locked, correct, wrong, cancelled };
 
     const filtered = predictions.filter(p => {
-        const normalizedStatus = String(p.status || '').toLowerCase();
-        if (filter === 'pending')   return normalizedStatus === 'pending';
-        if (filter === 'locked')    return normalizedStatus === 'locked';
+        if (filter === 'pending')   return p.status === 'Pending';
+        if (filter === 'locked')    return p.status === 'Locked';
         if (filter === 'correct')   return p.isCorrect === true;
         if (filter === 'wrong')     return p.isCorrect === false;
-        if (filter === 'cancelled') return normalizedStatus === 'cancelled';
+        if (filter === 'cancelled') return p.status === 'Cancelled';
         return true;
     });
 
@@ -234,7 +187,7 @@ export default function Predictions() {
                             <FaTrophy aria-hidden="true" />
                         </div>
                         <p className="m-0 text-[0.85rem] text-[var(--admin-muted)]">
-                            A correct prediction returns your staked points. An incorrect prediction loses the staked points. At the end of the season (every 3 months), top predictors receive exclusive rewards. Points reset each season.
+                            Each correct prediction earns you points. At the end of the season (every 3 months), top predictors receive exclusive rewards. Points reset each season.
                         </p>
                     </div>
 
