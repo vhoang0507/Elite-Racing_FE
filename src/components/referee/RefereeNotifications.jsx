@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
     FaBell,
+    FaCheck,
     FaExclamationTriangle,
     FaEnvelopeOpenText,
     FaInfoCircle,
@@ -126,25 +127,25 @@ function RefereeNotification() {
         >
             <div className="min-h-screen bg-[#faf8f8] p-8">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-[#0b7f5a]">
+                    <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)]">
                         Referee Notifications
                     </h1>
 
-                    <p className="mt-2 text-gray-600">
+                    <p className="mt-2 text-[var(--admin-muted)]">
                         Track race assignments, inspection updates, result submissions, and official race alerts.
                     </p>
                 </div>
 
                 {error && (
-                    <div className="mb-6 rounded-[8px] border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
+                    <div className="mb-6 rounded-[8px] border border-[#e3bcb7] bg-[#f3e1df] px-5 py-4 font-semibold text-[#a4392f]">
                         {error}
                     </div>
                 )}
 
                 <div className="mb-8 flex flex-wrap gap-5">
-                    <div className="flex w-56 justify-between rounded-[8px] border border-[#dce5ef] bg-white p-5">
+                    <div className="flex w-56 justify-between rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
                         <div>
-                            <p className="text-sm uppercase text-gray-500">
+                            <p className="text-sm uppercase text-[var(--admin-muted)]">
                                 Total Notifications
                             </p>
 
@@ -153,28 +154,28 @@ function RefereeNotification() {
                             </h3>
                         </div>
 
-                        <FaBell className="text-[#0b7f5a]" size={22} />
+                        <FaBell className="text-[var(--admin-primary)]" size={22} />
                     </div>
 
-                    <div className="flex w-56 justify-between rounded-[8px] border border-[#dce5ef] bg-white p-5">
+                    <div className="flex w-56 justify-between rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
                         <div>
-                            <p className="text-sm uppercase text-gray-500">
+                            <p className="text-sm uppercase text-[var(--admin-muted)]">
                                 Unread Alerts
                             </p>
 
-                            <h3 className="mt-2 text-2xl font-bold text-red-600">
+                            <h3 className="mt-2 text-2xl font-bold text-[#a4392f]">
                                 {unreadCount}
                             </h3>
                         </div>
 
-                        <FaExclamationTriangle className="text-red-500" size={22} />
+                        <FaExclamationTriangle className="text-[#a4392f]" size={22} />
                     </div>
 
-                    <div className="flex items-center gap-3 rounded-[8px] border border-[#dce5ef] bg-white p-4">
+                    <div className="flex items-center gap-3 rounded-[8px] border border-[var(--admin-border)] bg-white p-4">
                         <select
                             value={filter}
                             onChange={(event) => setFilter(event.target.value)}
-                            className="rounded border border-[#dce5ef] px-3 py-2 font-semibold outline-none focus:border-[#0b7f5a]"
+                            className="rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-4 py-2 font-semibold outline-none focus:border-[var(--admin-primary)]"
                         >
                             <option value="all">All</option>
                             <option value="unread">Unread</option>
@@ -185,8 +186,9 @@ function RefereeNotification() {
                             type="button"
                             onClick={handleMarkAllRead}
                             disabled={saving || unreadCount === 0}
-                            className="rounded-lg bg-[#0b7f5a] px-5 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex items-center gap-2 rounded-full border border-[var(--admin-primary)] px-4 py-2 font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                         >
+                            <FaCheck aria-hidden="true" />
                             {saving ? 'Updating...' : 'Mark All Read'}
                         </button>
                     </div>
@@ -195,11 +197,11 @@ function RefereeNotification() {
                 <div className="grid gap-8 xl:grid-cols-[360px_1fr]">
                     <div className="space-y-2">
                         {loading ? (
-                            <div className="rounded-[8px] border border-[#dce5ef] bg-white p-5 text-gray-500">
+                            <div className="rounded-[8px] border border-[var(--admin-border)] bg-white p-5 text-[var(--admin-muted)]">
                                 Loading notifications...
                             </div>
                         ) : filteredNotifications.length === 0 ? (
-                            <div className="rounded-[8px] border border-[#dce5ef] bg-white p-5 text-gray-500">
+                            <div className="rounded-[8px] border border-[var(--admin-border)] bg-white p-5 text-[var(--admin-muted)]">
                                 No notifications for this filter.
                             </div>
                         ) : (
@@ -208,7 +210,7 @@ function RefereeNotification() {
                                     type="button"
                                     key={item.notificationId}
                                     onClick={() => handleSelect(item)}
-                                    className={`w-full cursor-pointer rounded-[8px] border border-[#dce5ef] bg-white p-4 text-left hover:bg-[#faf5f4] ${selectedNotification?.notificationId === item.notificationId ? 'ring-2 ring-[#0b7f5a]' : ''
+                                    className={`w-full cursor-pointer rounded-[8px] border border-[var(--admin-border)] bg-white p-4 text-left hover:bg-[#faf5f4] ${selectedNotification?.notificationId === item.notificationId ? 'ring-2 ring-[var(--admin-primary)]' : ''
                                         }`}
                                 >
                                     <div className="flex justify-between gap-3">
@@ -216,17 +218,17 @@ function RefereeNotification() {
                                             {item.title}
                                         </h3>
 
-                                        <span className="whitespace-nowrap text-sm text-gray-500">
+                                        <span className="whitespace-nowrap text-sm text-[var(--admin-muted)]">
                                             {formatDateTime(item.createdAt)}
                                         </span>
                                     </div>
 
-                                    <p className="mt-2 line-clamp-2 text-sm text-gray-500">
+                                    <p className="mt-2 line-clamp-2 text-sm text-[var(--admin-muted)]">
                                         {item.message}
                                     </p>
 
                                     {!item.isRead && (
-                                        <span className="mt-3 inline-block rounded bg-red-100 px-2 py-1 text-xs font-semibold text-red-700">
+                                        <span className="mt-3 inline-block rounded-full bg-[#f3e1df] px-2.5 py-1 text-xs font-semibold text-[#a4392f]">
                                             NEW
                                         </span>
                                     )}
@@ -236,17 +238,17 @@ function RefereeNotification() {
                     </div>
 
                     <div className="space-y-4">
-                        <div className="overflow-hidden rounded-[8px] border border-[#dce5ef] bg-white">
+                        <div className="overflow-hidden rounded-[8px] border border-[var(--admin-border)] bg-white">
                             {selectedNotification ? (
                                 <>
                                     <div className="flex items-center justify-between border-b p-4">
-                                        <div className="flex items-center gap-2 rounded-full bg-[#f3a697] px-4 py-1 text-sm text-white">
+                                        <div className="flex items-center gap-2 rounded-full bg-[var(--admin-primary)] px-4 py-1 text-sm text-white">
                                             <FaEnvelopeOpenText />
                                             Referee Alert
                                         </div>
 
                                         <div className="text-right">
-                                            <p className="text-xs uppercase text-gray-500">
+                                            <p className="text-xs uppercase text-[var(--admin-muted)]">
                                                 Time Received
                                             </p>
 
@@ -256,7 +258,7 @@ function RefereeNotification() {
                                         </div>
                                     </div>
 
-                                    <div className="p-6 leading-8 text-gray-700">
+                                    <div className="p-6 leading-8 text-[var(--admin-ink)]">
                                         <h2 className="mb-4 text-2xl font-bold text-[#2b1b1b]">
                                             {selectedNotification.title}
                                         </h2>
@@ -272,7 +274,7 @@ function RefereeNotification() {
                                                 type="button"
                                                 onClick={() => handleSelect(selectedNotification)}
                                                 disabled={selectedNotification.isRead}
-                                                className="rounded-lg bg-[#0b7f5a] px-5 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                                className="rounded-full bg-[var(--admin-primary)] px-5 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
                                             >
                                                 Mark as Read
                                             </button>
@@ -280,25 +282,25 @@ function RefereeNotification() {
                                     </div>
                                 </>
                             ) : (
-                                <div className="p-6 text-gray-500">
+                                <div className="p-6 text-[var(--admin-muted)]">
                                     Select a notification to view details.
                                 </div>
                             )}
                         </div>
 
-                        <div className="rounded-[8px] border border-[#dce5ef] bg-white p-5">
+                        <div className="rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
                             <h3 className="mb-5 flex items-center gap-2 font-semibold">
-                                <FaInfoCircle className="text-[#0b7f5a]" />
+                                <FaInfoCircle className="text-[var(--admin-primary)]" />
                                 Recent Referee Activity
                             </h3>
 
                             <div className="space-y-4">
                                 {notifications.slice(0, 3).map((item) => (
                                     <div key={item.notificationId} className="flex gap-3">
-                                        <div className={`mt-2 h-3 w-3 rounded-full ${item.isRead ? 'bg-gray-300' : 'bg-red-700'}`} />
+                                        <div className={`mt-2 h-3 w-3 rounded-full ${item.isRead ? 'bg-[var(--admin-border)]' : 'bg-[#a4392f]'}`} />
                                         <div>
                                             <p>{item.title}</p>
-                                            <p className="text-sm text-gray-500">
+                                            <p className="text-sm text-[var(--admin-muted)]">
                                                 {formatDateTime(item.createdAt)}
                                             </p>
                                         </div>
@@ -306,7 +308,7 @@ function RefereeNotification() {
                                 ))}
 
                                 {notifications.length === 0 && (
-                                    <p className="text-sm text-gray-500">
+                                    <p className="text-sm text-[var(--admin-muted)]">
                                         No recent notification activity.
                                     </p>
                                 )}

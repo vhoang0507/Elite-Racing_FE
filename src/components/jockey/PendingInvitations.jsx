@@ -6,6 +6,9 @@ import {
     FaUsers,
     FaTimes,
     FaDollarSign,
+    FaHorseHead,
+    FaLock,
+    FaTrophy,
 } from 'react-icons/fa';
 
 import JockeyLayout from './JockeyLayout';
@@ -65,7 +68,7 @@ function HealthCertificateBadge({ url }) {
 
     if (!url) {
         return (
-            <span className="mt-2 inline-flex rounded border border-[#dbc3bf] bg-[#f3e8e6] px-2.5 py-1 text-[0.68rem] font-black uppercase text-[#7f645f]">
+            <span className="mt-2 inline-flex rounded-full border border-[#e2dcc6] bg-[var(--admin-surface-strong)] px-2.5 py-1 text-[0.68rem] font-black uppercase text-[var(--admin-muted)]">
                 Certificate not uploaded
             </span>
         );
@@ -74,8 +77,7 @@ function HealthCertificateBadge({ url }) {
     return (
         <>
             <button
-                className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded border border-[#e7a49a] bg-[#fff8f6] px-2.5 py-1 text-[0.68rem] font-black uppercase text-[var(--admin-primary)] hover:bg-[#e8f7ef]"
-                style={{ background: undefined, border: undefined }}
+                className="mt-2 inline-flex cursor-pointer items-center gap-2 rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-2.5 py-1 text-[0.68rem] font-black uppercase text-[var(--admin-primary)] transition-colors hover:bg-[#edf2fa]"
                 onClick={() => setLightboxSrc(resolvedUrl)}
                 type="button"
             >
@@ -89,11 +91,11 @@ function HealthCertificateBadge({ url }) {
 
 function getStatusBadgeStyle(status) {
     const map = {
-        Pending:   { background: '#fef9c3', color: '#92400e' },
-        Accepted:  { background: '#dcfce7', color: '#15803d' },
-        Confirmed: { background: '#dbeafe', color: '#1e40af' },
-        Rejected:  { background: '#fee2e2', color: '#991b1b' },
-        Cancelled: { background: '#f1f5f9', color: '#64748b' },
+        Pending:   { background: '#faf2e0', color: '#8a6209' },
+        Accepted:  { background: '#e8f7ee', color: '#16864f' },
+        Confirmed: { background: '#edf2fa', color: '#16305c' },
+        Rejected:  { background: '#f3e1df', color: '#a4392f' },
+        Cancelled: { background: '#efe8d6', color: '#6b6456' },
     };
     return map[status] ?? { background: 'rgba(0,0,0,0.55)', color: '#fff' };
 }
@@ -190,7 +192,7 @@ function PendingInvitations() {
 
     if (loading) return (
         <JockeyLayout activeKey="invitations">
-            <p style={{ textAlign: 'center', padding: '40px', color: '#999' }}>Loading...</p>
+            <p className="p-10 text-center font-semibold text-[var(--admin-muted)]">Loading...</p>
         </JockeyLayout>
     );
 
@@ -207,7 +209,7 @@ function PendingInvitations() {
                 </div>
 
                 {error && (
-                    <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-[0.85rem] text-red-700">
+                    <div className="rounded-[var(--admin-radius)] border border-[#d89288] bg-[#f3e1df] px-4 py-3 text-[0.85rem] font-semibold text-[#a4392f]">
                         {error}
                     </div>
                 )}
@@ -226,17 +228,17 @@ function PendingInvitations() {
                     <div>
                         {filteredInvitations.length === 0 ? (
                             <div className="flex flex-col items-center justify-center rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] py-20">
-                                <FaEnvelope className="mb-4 text-[3rem] text-[#ddd]" />
+                                <FaEnvelope className="mb-4 text-[3rem] text-[#e2dcc6]" />
                                 <p className="text-[1rem] font-bold text-[var(--admin-muted)]">
                                     {invitations.length === 0 ? 'No pending invitations.' : 'No invitations match your search.'}
                                 </p>
-                                {invitations.length === 0 && <p className="mt-1 text-[0.85rem] text-[#bbb]">You will be notified when a horse owner sends you an invitation.</p>}
+                                {invitations.length === 0 && <p className="mt-1 text-[0.85rem] text-[#b3a98d]">You will be notified when a horse owner sends you an invitation.</p>}
                             </div>
                         ) : (
                             <div className="grid grid-cols-2 gap-6 max-[900px]:grid-cols-1">
                                 {filteredInvitations.map((inv) => (
-                                    <article key={inv.invitationId} className="overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]">
-                                        <div className="relative h-[140px] overflow-hidden bg-[#3d2c1e]">
+                                    <article key={inv.invitationId} className="overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_8px_22px_rgba(15,23,42,0.05)]">
+                                        <div className="relative h-[140px] overflow-hidden bg-[#0b1b34]">
                                             {inv.horseImageUrl ? (
                                                 <img
                                                     src={resolveFileUrl(inv.horseImageUrl)}
@@ -249,9 +251,9 @@ function PendingInvitations() {
                                                     }}
                                                 />
                                             ) : null}
-                                            <div className="absolute inset-0 flex items-center justify-center text-white text-[2rem]" style={{ display: inv.horseImageUrl ? 'none' : 'flex' }}>🏇</div>
+                                            <div className="absolute inset-0 flex items-center justify-center text-[2rem] text-[var(--racing-gold-bright)]" style={{ display: inv.horseImageUrl ? 'none' : 'flex' }}><FaHorseHead /></div>
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                                            <span className="absolute right-3 top-3 rounded px-2.5 py-1 text-[0.68rem] font-black uppercase" style={getStatusBadgeStyle(inv.status)}>
+                                            <span className="absolute right-3 top-3 rounded-full px-2.5 py-1 text-[0.68rem] font-black uppercase" style={getStatusBadgeStyle(inv.status)}>
                                                 {inv.status || 'Pending'}
                                             </span>
                                             <div className="absolute bottom-3 left-4 right-4">
@@ -271,7 +273,7 @@ function PendingInvitations() {
                                                 <HealthCertificateBadge url={inv.healthCertificateImageUrl} />
                                             </div>
                                             <div className="text-right">
-                                                <span className="block text-[0.7rem] font-bold uppercase tracking-wide text-[#118548]">Owner &amp; Details</span>
+                                                <span className="block text-[0.7rem] font-bold uppercase tracking-wide text-[var(--admin-primary)]">Owner &amp; Details</span>
                                                 <span className="mt-1 flex items-center justify-end gap-1 text-[var(--admin-muted)]">
                                                     <FaUsers className="text-[0.65rem]" /> {inv.ownerName}
                                                 </span>
@@ -285,7 +287,7 @@ function PendingInvitations() {
                                         </div>
 
                                         {inv.ownerMessage && (
-                                            <div className="mx-5 mb-3 rounded-md bg-[#e8f7ef] px-4 py-3">
+                                            <div className="mx-5 mb-3 rounded-[var(--admin-radius)] bg-[var(--admin-surface-strong)] px-4 py-3">
                                                 <p className="m-0 text-[0.7rem] font-bold uppercase tracking-wide text-[var(--admin-primary)]">Owner Message</p>
                                                 <p className="m-0 mt-1 text-[0.82rem] italic text-[var(--admin-ink)]">"{inv.ownerMessage}"</p>
                                             </div>
@@ -295,14 +297,14 @@ function PendingInvitations() {
                                             {inv.status === 'Pending' || !inv.status ? (
                                                 <div className="flex gap-3">
                                                     <button
-                                                        className="inline-flex min-h-[40px] flex-1 cursor-pointer items-center justify-center rounded-md bg-[var(--admin-primary)] text-[0.85rem] font-[850] text-white hover:bg-[var(--admin-primary-dark)]"
+                                                        className="inline-flex min-h-[40px] flex-1 cursor-pointer items-center justify-center rounded-full bg-[var(--admin-primary)] text-[0.85rem] font-[850] text-white transition-colors hover:bg-[var(--admin-primary-dark)]"
                                                         onClick={() => handleAccept(inv.invitationId)}
                                                         type="button"
                                                     >
                                                         Accept Invitation
                                                     </button>
                                                     <button
-                                                        className="inline-flex min-h-[40px] flex-1 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-white text-[0.85rem] font-[850] text-[var(--admin-ink)] hover:bg-[#f5f5f5]"
+                                                        className="inline-flex min-h-[40px] flex-1 cursor-pointer items-center justify-center rounded-full border border-[var(--admin-border)] bg-white text-[0.85rem] font-[850] text-[var(--admin-ink)] transition-colors hover:bg-[var(--admin-surface-strong)]"
                                                         onClick={() => handleReject(inv.invitationId)}
                                                         type="button"
                                                     >
@@ -310,23 +312,23 @@ function PendingInvitations() {
                                                     </button>
                                                 </div>
                                             ) : inv.status === 'Cancelled' ? (
-                                                <div className="flex items-center gap-2 rounded-md bg-[#f1f5f9] px-4 py-3 text-[0.82rem] font-semibold text-[#64748b]">
-                                                    <span>🔒</span>
+                                                <div className="flex items-center gap-2 rounded-full bg-[#efe8d6] px-4 py-3 text-[0.82rem] font-semibold text-[#6b6456]">
+                                                    <FaLock className="text-[0.85rem]" />
                                                     <span>This invitation has been closed — the owner selected another jockey.</span>
                                                 </div>
                                             ) : inv.status === 'Accepted' ? (
-                                                <div className="flex items-center gap-2 rounded-md bg-[#dcfce7] px-4 py-3 text-[0.82rem] font-semibold text-[#15803d]">
-                                                    <span>✅</span>
+                                                <div className="flex items-center gap-2 rounded-full bg-[#e8f7ee] px-4 py-3 text-[0.82rem] font-semibold text-[#16864f]">
+                                                    <FaCheckCircle className="text-[0.85rem]" />
                                                     <span>You accepted this invitation. Waiting for owner to confirm.</span>
                                                 </div>
                                             ) : inv.status === 'Confirmed' ? (
-                                                <div className="flex items-center gap-2 rounded-md bg-[#dbeafe] px-4 py-3 text-[0.82rem] font-semibold text-[#1e40af]">
-                                                    <span>🏆</span>
+                                                <div className="flex items-center gap-2 rounded-full bg-[#edf2fa] px-4 py-3 text-[0.82rem] font-semibold text-[#16305c]">
+                                                    <FaTrophy className="text-[0.85rem]" />
                                                     <span>You are the official jockey for this race!</span>
                                                 </div>
                                             ) : inv.status === 'Rejected' ? (
-                                                <div className="flex items-center gap-2 rounded-md bg-[#fee2e2] px-4 py-3 text-[0.82rem] font-semibold text-[#991b1b]">
-                                                    <span>✕</span>
+                                                <div className="flex items-center gap-2 rounded-full bg-[#f3e1df] px-4 py-3 text-[0.82rem] font-semibold text-[#a4392f]">
+                                                    <FaTimes className="text-[0.85rem]" />
                                                     <span>You declined this invitation.</span>
                                                 </div>
                                             ) : null}
@@ -346,9 +348,9 @@ function PendingInvitations() {
 
                     {/* Stat sidebar */}
                     <aside className="grid content-start gap-4">
-                        <StatCard icon={<FaEnvelope />} bg="#e8f7ef" color="var(--admin-primary)" label="Pending Invitations" value={dashboard?.pendingInvitations} />
-                        <StatCard icon={<FaCheckCircle />} bg="#fff3cd" color="#856404" label="Accepted Invitations" value={dashboard?.acceptedInvitations} />
-                        <StatCard icon={<FaCalendarAlt />} bg="#e3f2fd" color="#1565c0" label="Upcoming Races" value={dashboard?.upcomingRaces} />
+                        <StatCard icon={<FaEnvelope />} bg="var(--admin-surface-strong)" color="var(--admin-primary)" label="Pending Invitations" value={dashboard?.pendingInvitations} />
+                        <StatCard icon={<FaCheckCircle />} bg="#faf2e0" color="#8a6209" label="Accepted Invitations" value={dashboard?.acceptedInvitations} />
+                        <StatCard icon={<FaCalendarAlt />} bg="#e8f7ee" color="#16864f" label="Upcoming Races" value={dashboard?.upcomingRaces} />
                     </aside>
                 </div>
 
@@ -356,7 +358,7 @@ function PendingInvitations() {
                 {selectedInvitation && (
                     <div className="fixed inset-0 z-20 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8 overflow-auto" onClick={() => setSelectedInvitation(null)}>
                         <section className="grid w-[min(600px,100%)] gap-0 overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-xl" onClick={e => e.stopPropagation()}>
-                            <div className="relative h-[160px] bg-[#3d2c1e] flex items-center justify-center overflow-hidden">
+                            <div className="relative h-[160px] bg-[#0b1b34] flex items-center justify-center overflow-hidden">
                                 {selectedInvitation.horseImageUrl ? (
                                     <img
                                         src={resolveFileUrl(selectedInvitation.horseImageUrl)}
@@ -369,7 +371,7 @@ function PendingInvitations() {
                                         }}
                                     />
                                 ) : null}
-                                <div className="text-[3rem]" style={{ display: selectedInvitation.horseImageUrl ? 'none' : 'flex' }}>🏇</div>
+                                <div className="text-[3rem] text-[var(--racing-gold-bright)]" style={{ display: selectedInvitation.horseImageUrl ? 'none' : 'flex' }}><FaHorseHead /></div>
                                 <div className="absolute inset-0 bg-black/40" />
                                 <button className="absolute right-4 top-4 grid h-8 w-8 cursor-pointer place-items-center rounded-full border-0 bg-[rgba(0,0,0,0.5)] text-white" onClick={() => setSelectedInvitation(null)} type="button">
                                     <FaTimes />
@@ -382,7 +384,7 @@ function PendingInvitations() {
                             <div className="grid gap-4 p-6">
                                 {loadingDetail && <p className="m-0 text-[0.8rem] text-[var(--admin-muted)]">Loading full details...</p>}
 
-                                <div className="rounded-md bg-[#fff8f6] p-4 text-[0.85rem]">
+                                <div className="rounded-[var(--admin-radius)] bg-[var(--admin-surface-strong)] p-4 text-[0.85rem]">
                                     <p className="m-0"><strong>Tournament:</strong> {selectedInvitation.tournamentName}</p>
                                     <p className="m-0 mt-1"><strong>Owner:</strong> {selectedInvitation.ownerName}</p>
                                     <p className="m-0 mt-1"><strong>Race Date:</strong> {formatDate(selectedInvitation.raceDate)}</p>
@@ -401,14 +403,14 @@ function PendingInvitations() {
 
                                 <div className="flex gap-3">
                                     <button
-                                        className="inline-flex min-h-[44px] flex-1 cursor-pointer items-center justify-center rounded-md bg-[var(--admin-primary)] text-[0.9rem] font-[850] text-white hover:bg-[var(--admin-primary-dark)]"
+                                        className="inline-flex min-h-[44px] flex-1 cursor-pointer items-center justify-center rounded-full bg-[var(--admin-primary)] text-[0.9rem] font-[850] text-white transition-colors hover:bg-[var(--admin-primary-dark)]"
                                         onClick={() => handleAccept(selectedInvitation.invitationId)}
                                         type="button"
                                     >
                                         Accept Invitation
                                     </button>
                                     <button
-                                        className="inline-flex min-h-[44px] flex-1 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-white text-[0.9rem] font-[850] text-[var(--admin-ink)] hover:bg-[#f5f5f5]"
+                                        className="inline-flex min-h-[44px] flex-1 cursor-pointer items-center justify-center rounded-full border border-[var(--admin-border)] bg-white text-[0.9rem] font-[850] text-[var(--admin-ink)] transition-colors hover:bg-[var(--admin-surface-strong)]"
                                         onClick={() => handleReject(selectedInvitation.invitationId)}
                                         type="button"
                                     >
@@ -434,8 +436,8 @@ function PendingInvitations() {
 
 function StatCard({ icon, bg, color, label, value }) {
     return (
-        <article className="grid content-start gap-2 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5">
-            <div className="grid h-9 w-9 place-items-center rounded-lg text-[1rem]" style={{ backgroundColor: bg, color }}>
+        <article className="grid content-start gap-2 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5 shadow-[0_8px_22px_rgba(15,23,42,0.05)]">
+            <div className="grid h-10 w-10 place-items-center rounded-full text-[1rem]" style={{ backgroundColor: bg, color }}>
                 {icon}
             </div>
             <span className="text-[0.72rem] font-bold uppercase tracking-wide text-[var(--admin-muted)]">{label}</span>

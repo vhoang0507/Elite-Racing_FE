@@ -38,9 +38,9 @@ const fieldClass = 'grid gap-1.5';
 const labelClass = 'text-[0.74rem] font-black uppercase text-[#64748b]';
 const inputClass = 'h-10 w-full min-w-0 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.88rem] font-bold text-[var(--admin-ink)] outline-0 transition-all duration-200 focus:border-[#0b7f5a] focus:bg-white focus:shadow-[0_0_0_3px_rgba(16,185,129,0.08)] disabled:cursor-not-allowed disabled:bg-[#f4eeee] disabled:text-[#94a3b8]';
 const checkboxClass = 'h-4 w-4 accent-[var(--admin-primary)]';
-const primaryButtonClass = 'inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border-0 bg-[var(--admin-primary)] px-5 text-[0.82rem] font-black text-white hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60';
-const secondaryButtonClass = 'inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-5 text-[0.82rem] font-black text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef] disabled:cursor-not-allowed disabled:opacity-60';
-const dangerButtonClass = 'inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-[#e7a49a] bg-[#e8f7ef] px-5 text-[0.82rem] font-black text-[var(--admin-primary)] hover:bg-[#d7f2e4] disabled:cursor-not-allowed disabled:opacity-60';
+const primaryButtonClass = 'inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-full border-0 bg-[var(--admin-primary)] px-5 text-[0.82rem] font-black text-white hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60';
+const secondaryButtonClass = 'inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-full border border-[var(--admin-border)] bg-white px-5 text-[0.82rem] font-black text-[var(--admin-primary-dark)] transition-colors hover:border-[var(--admin-gold)] disabled:cursor-not-allowed disabled:opacity-60';
+const dangerButtonClass = 'inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-full border border-[#d89288] bg-white px-5 text-[0.82rem] font-black text-[#a4392f] transition-colors hover:bg-[#f3e1df] disabled:cursor-not-allowed disabled:opacity-60';
 
 function readApiField(item, camelKey, pascalKey = camelKey[0].toUpperCase() + camelKey.slice(1)) {
     return item?.[camelKey] ?? item?.[pascalKey];
@@ -144,7 +144,7 @@ function StatusBadge({
     inactiveLabel,
 }) {
     return (
-        <span className={`inline-flex min-h-7 items-center rounded border px-3 text-[0.7rem] font-black uppercase ${isActive ? 'border-[#a7dfbf] bg-[#e8f7ee] text-[#16864f]' : 'border-[#e7a49a] bg-[#e8f7ef] text-[var(--admin-primary)]'}`}>
+        <span className={`inline-flex min-h-7 items-center rounded-full px-3 text-[0.7rem] font-black uppercase ${isActive ? 'bg-[#e8f7ee] text-[#16864f]' : 'bg-[#f3e1df] text-[#a4392f]'}`}>
             {isActive ? activeLabel : inactiveLabel}
         </span>
     );

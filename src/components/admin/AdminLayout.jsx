@@ -36,60 +36,70 @@ const navigation = [
         label: 'Dashboard',
         icon: FaChartLine,
         path: '/admin/dashboard',
+        section: 'Overview',
     },
     {
         key: 'users',
         label: 'User Management',
         icon: FaUsers,
         path: '/admin/users',
+        section: 'People',
     },
     {
         key: 'races',
         label: 'Tournament Management',
         icon: FaFlagCheckered,
         path: '/admin/races',
+        section: 'Racing Operations',
     },
     {
         key: 'seasons',
         label: 'Season Management',
         icon: FaCalendarAlt,
         path: '/admin/seasons',
+        section: 'Racing Operations',
     },
     {
         key: 'registrations',
         label: 'Race Entry Approval',
         icon: FaClipboardCheck,
         path: '/admin/registrations',
+        section: 'Racing Operations',
     },
     {
         key: 'predictions',
         label: 'Prediction Management',
         icon: FaChartBar,
         path: '/admin/predictions',
+        section: 'Racing Operations',
     },
     {
         key: 'results',
         label: 'Validate Results',
         icon: FaClipboardCheck,
         path: '/admin/results',
+        section: 'Racing Operations',
     },
     {
         key: 'rewards',
         label: 'Reward Payments',
         icon: FaDollarSign,
         path: '/admin/rewards',
+        section: 'Finance',
     },
     {
         key: 'notifications',
         label: 'Notifications',
         icon: FaBell,
         path: '/admin/notifications',
+        section: 'System',
     },
     {
         key: 'system-time',
         label: 'System Time',
         icon: FaTools,
         path: '/admin/system-time',
+        section: 'System',
     },
 ];
 
@@ -226,22 +236,27 @@ function AdminLayout({
                 </div>
 
                 <nav className="role-nav flex-1 max-[980px]:flex-none">
-                    {navigation.map((item) => {
+                    {navigation.map((item, index) => {
                         const Icon = item.icon;
                         const isActive = item.key === activeKey;
+                        const showSectionLabel = item.section && item.section !== navigation[index - 1]?.section;
 
                         return (
-                            <Link
-                                className={[
-                                    'role-nav-item',
-                                    isActive ? 'is-active' : '',
-                                ].join(' ')}
-                                key={item.key}
-                                to={item.path}
-                            >
-                                <Icon aria-hidden="true" className="h-4 w-4 flex-none" />
-                                <span>{item.label}</span>
-                            </Link>
+                            <div key={item.key} className="contents">
+                                {showSectionLabel && (
+                                    <div className="role-nav-section-label">{item.section}</div>
+                                )}
+                                <Link
+                                    className={[
+                                        'role-nav-item',
+                                        isActive ? 'is-active' : '',
+                                    ].join(' ')}
+                                    to={item.path}
+                                >
+                                    <Icon aria-hidden="true" className="h-4 w-4 flex-none" />
+                                    <span>{item.label}</span>
+                                </Link>
+                            </div>
                         );
                     })}
                 </nav>

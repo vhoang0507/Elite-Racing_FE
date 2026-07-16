@@ -1,11 +1,17 @@
+import { FaCalendarAlt, FaCheck, FaEnvelope, FaHourglassHalf, FaStar, FaTrophy } from 'react-icons/fa';
 import { resolveFileUrl } from '../../../../api/uploadApi';
 
+const formatShortDate = (value) => {
+    if (!value) return '—';
+    return new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).format(new Date(value));
+};
+
 const STATUS_CONFIG = {
-    Pending:   { bg: '#fef9c3', color: '#92400e', border: '#fde68a', label: 'Pending' },
-    Accepted:  { bg: '#dcfce7', color: '#15803d', border: '#86efac', label: 'Accepted' },
-    Rejected:  { bg: '#fee2e2', color: '#991b1b', border: '#fca5a5', label: 'Declined' },
-    Confirmed: { bg: '#dbeafe', color: '#1e40af', border: '#93c5fd', label: 'Confirmed' },
-    Cancelled: { bg: '#f1f5f9', color: '#64748b', border: '#cbd5e1', label: 'Cancelled' },
+    Pending:   { bg: '#faf2e0', color: '#8a6209', border: '#eddcb0', label: 'Pending' },
+    Accepted:  { bg: '#e8f7ee', color: '#16864f', border: '#bfe6d0', label: 'Accepted' },
+    Rejected:  { bg: '#f3e1df', color: '#a4392f', border: '#e3bcb7', label: 'Declined' },
+    Confirmed: { bg: 'var(--admin-surface-strong)', color: 'var(--admin-primary)', border: 'var(--admin-border)', label: 'Confirmed' },
+    Cancelled: { bg: '#f3e1df', color: '#a4392f', border: '#e3bcb7', label: 'Cancelled' },
 };
 
 const AVATAR_FALLBACK = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36"%3E%3Ccircle cx="18" cy="18" r="18" fill="%23f0ebe8"/%3E%3Ctext x="18" y="24" text-anchor="middle" font-size="18" fill="%23c9a8a0"%3E🏇%3C/text%3E%3C/svg%3E';
@@ -23,59 +29,57 @@ function SafeAvatar({ src, alt, large }) {
 }
 
 function OfficialJockeyCard({ jockey }) {
-    const confirmedDate = jockey.respondedAt
-        ? new Date(jockey.respondedAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-        : '—';
+    const confirmedDate = formatShortDate(jockey.respondedAt);
 
     return (
         <div style={styles.cardWrap}>
             <div style={styles.cardHeader}>
                 <div style={styles.cardHeaderLeft}>
-                    <span style={styles.checkIcon}>✓</span>
+                    <span style={styles.checkIcon}><FaCheck aria-hidden="true" /></span>
                     <div>
                         <p style={styles.cardHeaderTitle}>Official Jockey Confirmed</p>
                         <p style={styles.cardHeaderSub}>A jockey has been officially assigned to this registration</p>
                     </div>
                 </div>
-                <span style={styles.officialBadge}>★ Official</span>
+                <span style={{ ...styles.officialBadge, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                    <FaStar aria-hidden="true" size={10} /> Official
+                </span>
             </div>
 
             <div style={styles.profileBody}>
                 <div style={styles.profileLeft}>
                     <div style={styles.avatarWrap}>
                         <SafeAvatar src={jockey.profileImageUrl} alt={jockey.jockeyName} large />
-                        <span style={styles.avatarBadge}>✓</span>
+                        <span style={styles.avatarBadge}><FaCheck aria-hidden="true" size={10} /></span>
                     </div>
                     <div style={styles.profileInfo}>
                         <h3 style={styles.profileName}>{jockey.jockeyName}</h3>
-                        <span style={styles.officialPill}>★ Official Jockey</span>
+                        <span style={{ ...styles.officialPill, display: 'inline-flex', alignItems: 'center', gap: 5, width: 'fit-content' }}>
+                            <FaStar aria-hidden="true" size={10} /> Official Jockey
+                        </span>
                     </div>
                 </div>
 
                 <div style={styles.profileStats}>
                     <div style={styles.statItem}>
-                        <span style={styles.statIcon}>🏆</span>
+                        <span style={styles.statIcon}><FaTrophy aria-hidden="true" /></span>
                         <div>
                             <p style={styles.statLabel}>Experience</p>
                             <p style={styles.statValue}>{jockey.experienceYears ?? '—'} years</p>
                         </div>
                     </div>
                     <div style={styles.statItem}>
-                        <span style={styles.statIcon}>📅</span>
+                        <span style={styles.statIcon}><FaCalendarAlt aria-hidden="true" /></span>
                         <div>
                             <p style={styles.statLabel}>Confirmed On</p>
                             <p style={styles.statValue}>{confirmedDate}</p>
                         </div>
                     </div>
                     <div style={styles.statItem}>
-                        <span style={styles.statIcon}>✉️</span>
+                        <span style={styles.statIcon}><FaEnvelope aria-hidden="true" /></span>
                         <div>
                             <p style={styles.statLabel}>Invitation Sent</p>
-                            <p style={styles.statValue}>
-                                {jockey.sentAt
-                                    ? new Date(jockey.sentAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                                    : '—'}
-                            </p>
+                            <p style={styles.statValue}>{formatShortDate(jockey.sentAt)}</p>
                         </div>
                     </div>
                 </div>
@@ -98,14 +102,14 @@ export default function InvitationResponses({ invitations, loading, onSign }) {
 
             {loading && (
                 <div style={styles.stateBox}>
-                    <span>⏳</span>
+                    <FaHourglassHalf aria-hidden="true" style={{ fontSize: 22, color: '#94a3b8' }} />
                     <p style={styles.stateText}>Loading responses...</p>
                 </div>
             )}
 
             {!loading && invitations.length === 0 && (
                 <div style={styles.stateBox}>
-                    <span style={{ fontSize: 32 }}>✉️</span>
+                    <FaEnvelope aria-hidden="true" style={{ fontSize: 32, color: '#94a3b8' }} />
                     <p style={styles.stateText}>No invitations sent yet. Pick a jockey above to get started.</p>
                 </div>
             )}
@@ -144,9 +148,7 @@ export default function InvitationResponses({ invitations, loading, onSign }) {
                                         </td>
                                         <td style={styles.td}>
                                             <span style={styles.dateText}>
-                                                {inv.respondedAt
-                                                    ? new Date(inv.respondedAt).toLocaleDateString()
-                                                    : new Date(inv.sentAt).toLocaleDateString()}
+                                                {formatShortDate(inv.respondedAt || inv.sentAt)}
                                             </span>
                                         </td>
                                         <td style={styles.td}>
@@ -161,7 +163,8 @@ export default function InvitationResponses({ invitations, loading, onSign }) {
                                                     onClick={() => onSign(inv.invitationId)}
                                                     style={styles.confirmBtn}
                                                 >
-                                                    Confirm ✓
+                                                    <FaCheck aria-hidden="true" size={10} style={{ marginRight: 5 }} />
+                                                    Confirm
                                                 </button>
                                             ) : (
                                                 <span style={styles.noop}>—</span>
@@ -187,8 +190,8 @@ const styles = {
     stateText: { margin: 0, fontSize: 13, color: '#64748b' },
     tableWrap: { overflowX: 'auto' },
     table: { width: '100%', borderCollapse: 'collapse' },
-    headRow: { backgroundColor: '#f8f4f2' },
-    th: { textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', borderBottom: '1px solid #e8ddd9' },
+    headRow: { backgroundColor: '#efe8d6' },
+    th: { textAlign: 'left', padding: '10px 16px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#64748b', borderBottom: '2px solid #c8a24a' },
     row: { borderBottom: '1px solid #f0ebe8', transition: 'background 0.15s' },
     td: { padding: '12px 16px', fontSize: 13, verticalAlign: 'middle' },
     jockeyCell: { display: 'flex', alignItems: 'center', gap: 10 },
@@ -197,23 +200,23 @@ const styles = {
     chip: { backgroundColor: '#f0ebe8', color: '#5b3a3a', borderRadius: 6, padding: '3px 8px', fontSize: 12, fontWeight: 600 },
     dateText: { fontSize: 12, color: '#64748b' },
     statusBadge: { fontSize: 11, fontWeight: 700, borderRadius: 20, padding: '3px 10px', display: 'inline-block' },
-    confirmBtn: { backgroundColor: '#15803d', color: '#fff', border: 'none', borderRadius: 8, padding: '7px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer' },
+    confirmBtn: { backgroundColor: '#16864f', color: '#fff', border: 'none', borderRadius: 999, padding: '7px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer' },
     noop: { color: '#cbd5e1', fontSize: 14 },
-    cardWrap: { borderRadius: 12, border: '1.5px solid #86efac', backgroundColor: '#f0fdf4', overflow: 'hidden' },
-    cardHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', backgroundColor: '#dcfce7', borderBottom: '1px solid #bbf7d0' },
+    cardWrap: { borderRadius: 12, border: '1.5px solid #bfe6d0', backgroundColor: '#f4fbf7', overflow: 'hidden' },
+    cardHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', backgroundColor: '#e8f7ee', borderBottom: '1px solid #bfe6d0' },
     cardHeaderLeft: { display: 'flex', alignItems: 'center', gap: 12 },
-    checkIcon: { display: 'grid', placeItems: 'center', width: 32, height: 32, borderRadius: '50%', backgroundColor: '#15803d', color: '#fff', fontSize: 14, fontWeight: 800, flexShrink: 0 },
-    cardHeaderTitle: { margin: 0, fontSize: 14, fontWeight: 700, color: '#14532d' },
-    cardHeaderSub: { margin: '2px 0 0', fontSize: 12, color: '#166534' },
-    officialBadge: { backgroundColor: '#15803d', color: '#fff', fontSize: 11, fontWeight: 700, borderRadius: 20, padding: '4px 12px' },
+    checkIcon: { display: 'grid', placeItems: 'center', width: 32, height: 32, borderRadius: '50%', backgroundColor: '#16864f', color: '#fff', fontSize: 14, fontWeight: 800, flexShrink: 0 },
+    cardHeaderTitle: { margin: 0, fontSize: 14, fontWeight: 700, color: '#0f5c38' },
+    cardHeaderSub: { margin: '2px 0 0', fontSize: 12, color: '#16864f' },
+    officialBadge: { backgroundColor: '#16864f', color: '#fff', fontSize: 11, fontWeight: 700, borderRadius: 20, padding: '4px 12px' },
     profileBody: { display: 'flex', alignItems: 'center', gap: 32, padding: '24px 20px', flexWrap: 'wrap' },
     profileLeft: { display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 },
     avatarWrap: { position: 'relative', flexShrink: 0 },
-    avatarLg: { width: 96, height: 96, borderRadius: '50%', objectFit: 'cover', border: '3px solid #15803d' },
-    avatarBadge: { position: 'absolute', bottom: 2, right: 2, width: 22, height: 22, borderRadius: '50%', backgroundColor: '#15803d', color: '#fff', fontSize: 11, fontWeight: 800, display: 'grid', placeItems: 'center', border: '2px solid #fff' },
+    avatarLg: { width: 96, height: 96, borderRadius: '50%', objectFit: 'cover', border: '3px solid #16864f' },
+    avatarBadge: { position: 'absolute', bottom: 2, right: 2, width: 22, height: 22, borderRadius: '50%', backgroundColor: '#16864f', color: '#fff', fontSize: 11, fontWeight: 800, display: 'grid', placeItems: 'center', border: '2px solid #fff' },
     profileInfo: { display: 'flex', flexDirection: 'column', gap: 6 },
-    profileName: { margin: 0, fontSize: 18, fontWeight: 800, color: '#14532d' },
-    officialPill: { display: 'inline-block', backgroundColor: '#15803d', color: '#fff', fontSize: 11, fontWeight: 700, borderRadius: 20, padding: '3px 10px' },
+    profileName: { margin: 0, fontSize: 18, fontWeight: 800, color: '#0f5c38' },
+    officialPill: { display: 'inline-block', backgroundColor: '#16864f', color: '#fff', fontSize: 11, fontWeight: 700, borderRadius: 20, padding: '3px 10px' },
     profileStats: { display: 'flex', gap: 28, flexWrap: 'wrap', flex: 1 },
     statItem: { display: 'flex', alignItems: 'center', gap: 10 },
     statIcon: { fontSize: 22, flexShrink: 0 },

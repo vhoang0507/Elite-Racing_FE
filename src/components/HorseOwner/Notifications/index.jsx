@@ -21,11 +21,11 @@ const emptySummary = {
 };
 
 const statusColorMap = {
-    approved: { bg: "#dff7e9", color: "#118548" },
-    confirmed: { bg: "#e3f2fd", color: "#1565c0" },
-    returned: { bg: "#f5e1df", color: "#0b7f5a" },
-    rejected: { bg: "#f5e1df", color: "#0b7f5a" },
-    pending: { bg: "#fff3cd", color: "#856404" },
+    approved: { bg: "#e8f7ee", color: "#16864f" },
+    confirmed: { bg: "#edf2fa", color: "#16305c" },
+    returned: { bg: "#f3e1df", color: "#a4392f" },
+    rejected: { bg: "#f3e1df", color: "#a4392f" },
+    pending: { bg: "#faf2e0", color: "#8a6209" },
 };
 
 const iconByCategory = {
@@ -74,7 +74,7 @@ function NotificationDetailModal({ notification, onClose }) {
             >
                 {/* Header */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '20px', borderBottom: '1px solid #eee' }}>
-                    <span style={{ display: 'grid', placeItems: 'center', width: 42, height: 42, borderRadius: '10px', backgroundColor: '#e8f7ef', color: '#0b7f5a', flexShrink: 0 }}>
+                    <span style={{ display: 'grid', placeItems: 'center', width: 42, height: 42, borderRadius: '999px', backgroundColor: '#edf2fa', color: '#16305c', flexShrink: 0 }}>
                         <Icon />
                     </span>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -89,7 +89,7 @@ function NotificationDetailModal({ notification, onClose }) {
                             )}
                         </div>
                     </div>
-                    <button onClick={onClose} style={{ border: '1px solid #dce5ef', borderRadius: 8, background: '#fff8f6', color: '#0b7f5a', fontSize: 16, fontWeight: 800, cursor: 'pointer', width: 32, height: 32 }}>✕</button>
+                    <button onClick={onClose} style={{ border: '1px solid #ded2ad', borderRadius: 999, background: '#faf7f0', color: '#16305c', fontSize: 16, fontWeight: 800, cursor: 'pointer', width: 32, height: 32 }}>✕</button>
                 </div>
 
                 {/* Body */}
@@ -101,7 +101,7 @@ function NotificationDetailModal({ notification, onClose }) {
                 <div style={{ padding: '14px 20px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end' }}>
                     <button
                         onClick={onClose}
-                        style={{ backgroundColor: '#f3f4f6', color: '#374151', border: '1px solid #dce5ef', borderRadius: 8, padding: '9px 18px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+                        style={{ backgroundColor: '#efe8d6', color: '#374151', border: '1px solid #ded2ad', borderRadius: 999, padding: '9px 18px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
                     >
                         Close
                     </button>
@@ -235,7 +235,7 @@ export default function Notifications() {
 
                         return (
                             <div className="flex items-center gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5" key={stat.label}>
-                                <span className="grid h-10 w-10 place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
+                                <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                                     <Icon aria-hidden="true" />
                                 </span>
                                 <div>
@@ -250,7 +250,7 @@ export default function Notifications() {
                 <div className="flex items-center gap-1 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-1 max-[720px]:flex-wrap">
                     {tabs.map((tab) => (
                         <button
-                            className={`cursor-pointer rounded-md border-0 px-4 py-2 text-[0.82rem] font-bold transition-colors ${activeTab === tab ? "bg-[var(--admin-primary)] text-white" : "bg-transparent text-[var(--admin-muted)] hover:bg-[#e8f7ef]"}`}
+                            className={`cursor-pointer rounded-full border-0 px-4 py-2 text-[0.82rem] font-bold transition-colors ${activeTab === tab ? "bg-[var(--admin-primary)] text-white" : "bg-transparent text-[var(--admin-muted)] hover:bg-[var(--admin-surface-strong)]"}`}
                             key={tab}
                             onClick={() => setActiveTab(tab)}
                             type="button"
@@ -260,7 +260,7 @@ export default function Notifications() {
                     ))}
                     <div className="ml-auto flex items-center gap-2 max-[720px]:ml-0">
                         <button
-                            className="cursor-pointer rounded-md border border-[var(--admin-primary)] bg-transparent px-3 py-2 text-[0.82rem] font-bold text-[var(--admin-primary)] hover:bg-[#e8f7ef] disabled:cursor-not-allowed disabled:opacity-50"
+                            className="cursor-pointer rounded-full border border-[var(--admin-primary)] bg-transparent px-3 py-2 text-[0.82rem] font-bold text-[var(--admin-primary)] hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-50"
                             onClick={handleMarkAllRead}
                             disabled={markingAll || summary.unread === 0}
                             type="button"
@@ -268,7 +268,7 @@ export default function Notifications() {
                             {markingAll ? 'Updating...' : 'Mark all read'}
                         </button>
                         <button
-                            className="cursor-pointer rounded-md border-0 bg-transparent px-3 py-2 text-[0.82rem] font-bold text-[var(--admin-primary)] hover:bg-[#e8f7ef]"
+                            className="cursor-pointer rounded-full border-0 bg-transparent px-3 py-2 text-[0.82rem] font-bold text-[var(--admin-primary)] hover:bg-[var(--admin-surface-strong)]"
                             onClick={() => setReloadKey((current) => current + 1)}
                             type="button"
                         >
@@ -304,7 +304,7 @@ export default function Notifications() {
                                 onClick={() => handleNotificationClick(notification)}
                                 type="button"
                             >
-                                <span className="grid h-10 w-10 flex-none place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
+                                <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                                     <Icon aria-hidden="true" />
                                 </span>
                                 <div className="min-w-0 flex-1">

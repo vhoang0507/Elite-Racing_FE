@@ -21,15 +21,15 @@ function formatDateTime(value) {
 }
 
 const STATUS_STYLE = {
-    Scheduled:     { bg: '#e3f2fd', color: '#1565c0' },
-    AssignedReferee: { bg: '#fff3cd', color: '#856404' },
-    ClosedRegistration: { bg: '#fee2e2', color: '#b91c1c' },
-    RefereeReady:  { bg: '#d4edda', color: '#155724' },
-    Ongoing:       { bg: '#fff3cd', color: '#856404' },
-    Finished:      { bg: '#e8f7ef', color: '#0b7f5a' },
-    Completed:     { bg: '#d4edda', color: '#155724' },
-    ResultPending: { bg: '#fff3cd', color: '#856404' },
-    Cancelled:     { bg: '#f8d7da', color: '#721c24' },
+    Scheduled:     { bg: 'var(--admin-surface-strong)', color: 'var(--admin-primary)' },
+    AssignedReferee: { bg: '#faf2e0', color: '#8a6209' },
+    ClosedRegistration: { bg: '#f3e1df', color: '#a4392f' },
+    RefereeReady:  { bg: '#e8f7ee', color: '#16864f' },
+    Ongoing:       { bg: '#faf2e0', color: '#8a6209' },
+    Finished:      { bg: 'var(--admin-surface-strong)', color: 'var(--admin-primary)' },
+    Completed:     { bg: '#e8f7ee', color: '#16864f' },
+    ResultPending: { bg: '#faf2e0', color: '#8a6209' },
+    Cancelled:     { bg: '#f3e1df', color: '#a4392f' },
 };
 
 const STATUS_LABELS = {
@@ -176,7 +176,7 @@ function RefereeAssignedRace() {
                     <div className="grid gap-3">
                         {filteredRaces.map((race) => {
                             const displayStatus = getDisplayStatus(race);
-                            const s = STATUS_STYLE[displayStatus] ?? { bg: '#e8f7ef', color: '#0b7f5a' };
+                            const s = STATUS_STYLE[displayStatus] ?? { bg: 'var(--admin-surface-strong)', color: 'var(--admin-primary)' };
                             return (
                                 <div
                                     key={race.raceId}
@@ -201,8 +201,8 @@ function RefereeAssignedRace() {
                                             </span>
                                             {race.seasonStatus && (
                                                 <span style={{
-                                                    backgroundColor: race.seasonStatus === 'Active' ? '#e8f7ef' : '#fee2e2',
-                                                    color: race.seasonStatus === 'Active' ? '#0b7f5a' : '#b91c1c',
+                                                    backgroundColor: race.seasonStatus === 'Active' ? 'var(--admin-surface-strong)' : '#f3e1df',
+                                                    color: race.seasonStatus === 'Active' ? 'var(--admin-primary)' : '#a4392f',
                                                     fontSize: 11,
                                                     fontWeight: 700,
                                                     padding: '2px 10px',
@@ -213,7 +213,7 @@ function RefereeAssignedRace() {
                                             )}
                                         </div>
 
-                                        <div style={{ fontSize: 13, color: '#0b7f5a', fontWeight: 600, marginTop: 2 }}>
+                                        <div style={{ fontSize: 13, color: 'var(--admin-primary)', fontWeight: 600, marginTop: 2 }}>
                                             {race.tournamentName}
                                         </div>
 
@@ -251,7 +251,7 @@ function RefereeAssignedRace() {
                                                         padding: '8px 16px', borderRadius: 8,
                                                         border: '1px solid #dce5ef',
                                                         background: canPreRace ? '#fff8f6' : '#f5f5f5',
-                                                        color: canPreRace ? '#0b7f5a' : '#bbb',
+                                                        color: canPreRace ? 'var(--admin-primary)' : '#bbb',
                                                         fontWeight: 700, fontSize: 13,
                                                         cursor: canPreRace ? 'pointer' : 'not-allowed',
                                                     }}
@@ -267,7 +267,7 @@ function RefereeAssignedRace() {
                                                         display: 'flex', alignItems: 'center', gap: 6,
                                                         padding: '8px 16px', borderRadius: 8,
                                                         border: 'none',
-                                                        background: canPostRace ? '#0b7f5a' : '#e0e0e0',
+                                                        background: canPostRace ? 'var(--admin-primary)' : '#e0e0e0',
                                                         color: '#fff', fontWeight: 700, fontSize: 13,
                                                         cursor: canPostRace ? 'pointer' : 'not-allowed',
                                                     }}

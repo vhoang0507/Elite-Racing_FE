@@ -30,7 +30,7 @@ const panelHeaderClass = 'flex min-h-[62px] items-center justify-between gap-4 b
 const fieldClass = 'grid gap-1.5';
 const labelClass = 'text-[0.68rem] font-black uppercase text-[#64748b]';
 const controlClass = 'h-10 w-full rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.86rem] font-bold text-[var(--admin-ink)] outline-0 focus:border-[#0b7f5a] focus:bg-white focus:shadow-[0_0_0_3px_rgba(16,185,129,0.08)]';
-const actionButtonClass = 'inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-md px-4 text-[0.78rem] font-black disabled:cursor-not-allowed disabled:opacity-60';
+const actionButtonClass = 'inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-full px-4 text-[0.78rem] font-black transition-colors disabled:cursor-not-allowed disabled:opacity-60';
 
 const emptySeasonForm = {
     seasonName: '',
@@ -47,9 +47,9 @@ const defaultRewardRules = [
 
 const statusClass = {
     Draft: 'bg-[#f3f4f6] text-[#374151]',
-    Active: 'bg-[#dcfce7] text-[#15803d]',
-    Closed: 'bg-[#ede9fe] text-[#6d28d9]',
-    Cancelled: 'bg-[#fee2e2] text-[#b91c1c]',
+    Active: 'bg-[#e8f7ee] text-[#16864f]',
+    Closed: 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]',
+    Cancelled: 'bg-[#f3e1df] text-[#a4392f]',
 };
 
 function readSeasonField(season, key) {
@@ -508,7 +508,7 @@ function AdminSeasonManagement() {
                                         <span className="block text-[0.72rem] font-black uppercase text-[#64748b]">{stat.label}</span>
                                         <strong className="mt-3 block text-[2rem] leading-none text-[var(--admin-primary-dark)]">{stat.value}</strong>
                                     </div>
-                                    <span className="grid h-10 w-10 place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
+                                    <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-gold-dark,var(--admin-primary))]">
                                         <Icon aria-hidden="true" />
                                     </span>
                                 </div>
@@ -610,7 +610,7 @@ function AdminSeasonManagement() {
                                     </label>
                                     <button
                                         aria-label="Remove reward rule"
-                                        className="mt-[22px] grid h-10 w-10 cursor-pointer place-items-center rounded-md border border-[#f0b4b4] bg-white text-[#b91c1c] hover:bg-[#fff3f3] max-[720px]:mt-0"
+                                        className="mt-[22px] grid h-10 w-10 cursor-pointer place-items-center rounded-full border border-[var(--admin-border)] bg-white text-[#a4392f] transition-colors hover:border-[#a4392f] hover:bg-[#f3e1df] max-[720px]:mt-0"
                                         disabled={rewardRules.length === 1}
                                         onClick={() => removeRewardRule(index)}
                                         type="button"
@@ -708,7 +708,7 @@ function AdminSeasonManagement() {
                                                         <FaCheck aria-hidden="true" />
                                                         Activate
                                                     </button>
-                                                    <button className={`${actionButtonClass} bg-[#ede9fe] text-[#6d28d9] hover:bg-[#ddd6fe]`} disabled={!isActive || actionLoading === `close-${id}`} onClick={() => handleSeasonAction(season, 'close')} type="button">
+                                                    <button className={`${actionButtonClass} bg-[var(--admin-surface-strong)] text-[var(--admin-primary)] hover:bg-[#d8e0ea]`} disabled={!isActive || actionLoading === `close-${id}`} onClick={() => handleSeasonAction(season, 'close')} type="button">
                                                         <FaTrophy aria-hidden="true" />
                                                         Close
                                                     </button>
@@ -754,7 +754,7 @@ function AdminSeasonManagement() {
                                         <FaTrashAlt aria-hidden="true" />
                                         {actionLoading === `delete-${detailSeasonId}` ? 'Deleting...' : 'Delete'}
                                     </button>
-                                    <button aria-label="Close season details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={closeSeasonDetail} type="button">
+                                    <button aria-label="Close season details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-full border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] transition-colors hover:border-[var(--admin-gold)]" onClick={closeSeasonDetail} type="button">
                                         <FaTimes aria-hidden="true" />
                                     </button>
                                 </div>

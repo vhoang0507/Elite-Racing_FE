@@ -8,6 +8,9 @@ import {
     FaTrash,
     FaPlus,
     FaSave,
+    FaFileAlt,
+    FaExclamationTriangle,
+    FaCheckCircle,
 } from 'react-icons/fa';
 
 import ChangePasswordCard from '../shared/ChangePasswordCard';
@@ -62,7 +65,7 @@ function validate(profile, distanceExperiences) {
 
 function ErrMsg({ msg }) {
     if (!msg) return null;
-    return <p style={{ margin: '4px 0 0', fontSize: 11, color: '#dc2626', fontWeight: 600 }}>{msg}</p>;
+    return <p style={{ margin: '4px 0 0', fontSize: 11, color: '#a4392f', fontWeight: 600 }}>{msg}</p>;
 }
 
 function JockeySetting() {
@@ -228,7 +231,7 @@ function JockeySetting() {
 
     if (loading) return (
         <JockeyLayout activeKey="settings">
-            <p style={{ textAlign: 'center', padding: '40px', color: '#999' }}>Loading...</p>
+            <p className="p-10 text-center font-semibold text-[var(--admin-muted)]">Loading...</p>
         </JockeyLayout>
     );
 
@@ -262,7 +265,7 @@ function JockeySetting() {
                                 <div className="mt-6 border-t border-[var(--admin-border)] pt-5">
                                     <div className="grid grid-cols-2 gap-6 max-[720px]:grid-cols-1">
                                         <div className="flex items-center gap-3">
-                                            <div className="grid h-10 w-10 place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
+                                            <div className="grid h-10 w-10 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                                                 <FaPhoneAlt />
                                             </div>
                                             <div>
@@ -271,7 +274,7 @@ function JockeySetting() {
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3">
-                                            <div className="grid h-10 w-10 place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
+                                            <div className="grid h-10 w-10 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                                                 <FaEnvelope />
                                             </div>
                                             <div>
@@ -300,14 +303,14 @@ function JockeySetting() {
                                         setProfile(prev => ({ ...prev, weightKg: e.target.value }));
                                         setFieldErrors(prev => ({ ...prev, weightKg: undefined }));
                                     }}
-                                    className={`mt-1 w-full rounded-md border px-2 py-1 text-center text-[1.2rem] font-bold outline-none focus:border-[var(--admin-primary)] ${fieldErrors.weightKg ? 'border-red-400 bg-red-50' : 'border-[var(--admin-border)]'}`}
+                                    className={`mt-1 w-full rounded-[var(--admin-radius)] border px-2 py-1 text-center text-[1.2rem] font-bold outline-none focus:border-[var(--admin-primary)] ${fieldErrors.weightKg ? 'border-[#d89288] bg-[#f3e1df]' : 'border-[var(--admin-border)]'}`}
                                 />
                                 <ErrMsg msg={fieldErrors.weightKg} />
                             </article>
 
                             {/* Health */}
                             <article className={`${panelClass} p-5 text-center`}>
-                                <FaShieldAlt className="mx-auto text-[1.3rem] text-[#12a150]" />
+                                <FaShieldAlt className="mx-auto text-[1.3rem] text-[#16864f]" />
                                 <p className="mt-2 text-[0.8rem] text-[var(--admin-muted)]">Health</p>
                                 <select
                                     value={profile?.healthStatus ?? ''}
@@ -315,7 +318,7 @@ function JockeySetting() {
                                         setProfile(prev => ({ ...prev, healthStatus: e.target.value }));
                                         setFieldErrors(prev => ({ ...prev, healthStatus: undefined }));
                                     }}
-                                    className={`mt-1 w-full rounded-md border px-2 py-1 text-center text-[1rem] font-bold text-[#12a150] outline-none focus:border-[var(--admin-primary)] ${fieldErrors.healthStatus ? 'border-red-400 bg-red-50' : 'border-[var(--admin-border)]'}`}
+                                    className={`mt-1 w-full rounded-[var(--admin-radius)] border px-2 py-1 text-center text-[1rem] font-bold text-[#16864f] outline-none focus:border-[var(--admin-primary)] ${fieldErrors.healthStatus ? 'border-[#d89288] bg-[#f3e1df]' : 'border-[var(--admin-border)]'}`}
                                 >
                                     <option value="">-- Select --</option>
                                     {options?.healthStatuses?.map((status) => (
@@ -339,7 +342,7 @@ function JockeySetting() {
                                     setProfile(prev => ({ ...prev, yearsOfExperience: e.target.value }));
                                     setFieldErrors(prev => ({ ...prev, yearsOfExperience: undefined }));
                                 }}
-                                className={`mt-2 w-32 rounded-md border px-3 py-2 text-[1.5rem] font-light text-[var(--admin-primary-dark)] outline-none focus:border-[var(--admin-primary)] ${fieldErrors.yearsOfExperience ? 'border-red-400 bg-red-50' : 'border-[var(--admin-border)]'}`}
+                                className={`mt-2 w-32 rounded-[var(--admin-radius)] border px-3 py-2 text-[1.5rem] font-light text-[var(--admin-primary-dark)] outline-none focus:border-[var(--admin-primary)] ${fieldErrors.yearsOfExperience ? 'border-[#d89288] bg-[#f3e1df]' : 'border-[var(--admin-border)]'}`}
                             />
                             <ErrMsg msg={fieldErrors.yearsOfExperience} />
                         </article>
@@ -353,65 +356,65 @@ function JockeySetting() {
 
                     <div className="mt-6 grid grid-cols-2 gap-4 max-[720px]:grid-cols-1">
                         {/* Profile Avatar */}
-                        <div className="rounded-lg border border-[var(--admin-border)] p-4">
+                        <div className="rounded-[var(--admin-radius)] border border-[var(--admin-border)] p-4">
                             <p className="mb-3 text-[0.85rem] font-bold">Profile Avatar</p>
-                            <div className="mb-3 flex min-h-[140px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-[var(--admin-border)] bg-[#faf8f8] p-4">
+                            <div className="mb-3 flex min-h-[140px] flex-col items-center justify-center rounded-[var(--admin-radius)] border-2 border-dashed border-[var(--admin-border)] bg-[var(--admin-surface-strong)] p-4">
                                 {getPreview('profileImageUrl') ? (
                                     <img src={getPreview('profileImageUrl')} alt="avatar" className="max-h-[120px] rounded-md object-contain" />
                                 ) : (
-                                    <div className="flex flex-col items-center gap-2 text-[#ccc]">
-                                        <span className="text-[2rem]">🖼</span>
+                                    <div className="flex flex-col items-center gap-2 text-[#d8cfb8]">
+                                        <FaSave className="text-[1.6rem]" />
                                         <span className="text-[0.75rem]">profileAvatar.jpg</span>
                                     </div>
                                 )}
                             </div>
                             <input type="file" accept="image/*" onChange={handleFileChange('profileImageUrl')}
-                                className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none" />
+                                className="w-full rounded-[var(--admin-radius)] border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none" />
                             <ErrMsg msg={fileErrors.profileImageUrl} />
                         </div>
 
                         {/* ID Front */}
-                        <div className="rounded-lg border border-[var(--admin-border)] p-4">
+                        <div className="rounded-[var(--admin-radius)] border border-[var(--admin-border)] p-4">
                             <p className="mb-3 text-[0.85rem] font-bold">National ID - Front</p>
-                            <div className="mb-3 flex min-h-[140px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-[var(--admin-border)] bg-[#faf8f8] p-4">
+                            <div className="mb-3 flex min-h-[140px] flex-col items-center justify-center rounded-[var(--admin-radius)] border-2 border-dashed border-[var(--admin-border)] bg-[var(--admin-surface-strong)] p-4">
                                 {getPreview('idCardFrontUrl') ? (
                                     <img src={getPreview('idCardFrontUrl')} alt="id front" className="max-h-[120px] rounded-md object-contain" />
                                 ) : (
-                                    <div className="flex flex-col items-center gap-2 text-[#ccc]">
-                                        <span className="text-[2rem]">🖼</span>
+                                    <div className="flex flex-col items-center gap-2 text-[#d8cfb8]">
+                                        <FaSave className="text-[1.6rem]" />
                                         <span className="text-[0.75rem]">national_id_front.jpg</span>
                                     </div>
                                 )}
                             </div>
                             <input type="file" accept="image/*" onChange={handleFileChange('idCardFrontUrl')}
-                                className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none" />
+                                className="w-full rounded-[var(--admin-radius)] border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none" />
                             <ErrMsg msg={fileErrors.idCardFrontUrl} />
                         </div>
 
                         {/* ID Back */}
-                        <div className="rounded-lg border border-[var(--admin-border)] p-4">
+                        <div className="rounded-[var(--admin-radius)] border border-[var(--admin-border)] p-4">
                             <p className="mb-3 text-[0.85rem] font-bold">National ID - Back</p>
-                            <div className="mb-3 flex min-h-[140px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-[var(--admin-border)] bg-[#faf8f8] p-4">
+                            <div className="mb-3 flex min-h-[140px] flex-col items-center justify-center rounded-[var(--admin-radius)] border-2 border-dashed border-[var(--admin-border)] bg-[var(--admin-surface-strong)] p-4">
                                 {getPreview('idCardBackUrl') ? (
                                     <img src={getPreview('idCardBackUrl')} alt="id back" className="max-h-[120px] rounded-md object-contain" />
                                 ) : (
-                                    <div className="flex flex-col items-center gap-2 text-[#ccc]">
-                                        <span className="text-[2rem]">🖼</span>
+                                    <div className="flex flex-col items-center gap-2 text-[#d8cfb8]">
+                                        <FaSave className="text-[1.6rem]" />
                                         <span className="text-[0.75rem]">national_id_back.jpg</span>
                                     </div>
                                 )}
                             </div>
                             <input type="file" accept="image/*" onChange={handleFileChange('idCardBackUrl')}
-                                className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none" />
+                                className="w-full rounded-[var(--admin-radius)] border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none" />
                             <ErrMsg msg={fileErrors.idCardBackUrl} />
                         </div>
 
                         {/* Certificate */}
-                        <div className="rounded-lg border border-[var(--admin-border)] p-4">
+                        <div className="rounded-[var(--admin-radius)] border border-[var(--admin-border)] p-4">
                             <p className="mb-3 text-[0.85rem] font-bold">Horse Racing Certificate</p>
                             {(selectedFiles.certificateFileUrl || profile?.certificateFileUrl) && (
-                                <div className="mb-2 flex items-center gap-2 rounded-md bg-[#e8f7ef] px-3 py-2 text-[0.82rem]">
-                                    <span>📄</span>
+                                <div className="mb-2 flex items-center gap-2 rounded-full bg-[var(--admin-surface-strong)] px-3 py-2 text-[0.82rem]">
+                                    <FaFileAlt className="text-[var(--admin-primary)]" />
                                     <span className="flex-1 truncate text-[var(--admin-primary)]">
                                         {selectedFiles.certificateFileUrl?.name ?? profile?.certificateFileUrl}
                                     </span>
@@ -426,27 +429,27 @@ function JockeySetting() {
                                         setFieldErrors(prev => ({ ...prev, certificateNo: undefined }));
                                     }}
                                     placeholder="e.g. CERT-2024-001"
-                                    className={`w-full rounded-md border px-3 py-2 text-[0.82rem] outline-none focus:border-[var(--admin-primary)] ${fieldErrors.certificateNo ? 'border-red-400 bg-red-50' : 'border-[var(--admin-border)]'}`}
+                                    className={`w-full rounded-[var(--admin-radius)] border px-3 py-2 text-[0.82rem] outline-none focus:border-[var(--admin-primary)] ${fieldErrors.certificateNo ? 'border-[#d89288] bg-[#f3e1df]' : 'border-[var(--admin-border)]'}`}
                                 />
                                 <ErrMsg msg={fieldErrors.certificateNo} />
                             </div>
                             <input type="file" accept="image/*,application/pdf" onChange={handleFileChange('certificateFileUrl')}
-                                className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none" />
+                                className="w-full rounded-[var(--admin-radius)] border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none" />
                             <ErrMsg msg={fileErrors.certificateFileUrl} />
                         </div>
                     </div>
 
                     {/* Health Certificate */}
-                    <div className="mt-4 rounded-lg border border-[var(--admin-border)] p-4">
+                    <div className="mt-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] p-4">
                         <p className="mb-3 text-[0.85rem] font-bold">Health Examination Certificate</p>
                         {(selectedFiles.healthCertificateUrl || profile?.healthCertificateUrl) && (
-                            <div className="mb-3 flex items-center gap-2 rounded-md bg-[#e8f7ef] px-3 py-2 text-[0.82rem]">
+                            <div className="mb-3 flex items-center gap-2 rounded-full bg-[var(--admin-surface-strong)] px-3 py-2 text-[0.82rem]">
                                 <span>📄</span>
                                 <span className="truncate">{selectedFiles.healthCertificateUrl?.name ?? profile?.healthCertificateUrl}</span>
                             </div>
                         )}
                         <input type="file" accept="image/*,application/pdf" onChange={handleFileChange('healthCertificateUrl')}
-                            className="w-full rounded-md border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none" />
+                            className="w-full rounded-[var(--admin-radius)] border border-[var(--admin-border)] px-3 py-2 text-[0.82rem] outline-none" />
                         <ErrMsg msg={fileErrors.healthCertificateUrl} />
                     </div>
                 </section>
@@ -489,9 +492,9 @@ function JockeySetting() {
                     <p className="mt-1 text-[0.85rem] text-[var(--admin-muted)]">Only 8 horse breeds available • each row = 1 breed record</p>
                     <div className="mt-6 grid gap-4">
                         {breedExperiences.map((breed) => (
-                            <article key={breed.breedId} className="flex items-center justify-between rounded-lg border border-[var(--admin-border)] bg-[#fff8f6] p-4 max-[720px]:flex-col max-[720px]:items-start max-[720px]:gap-3">
+                            <article key={breed.breedId} className="flex items-center justify-between rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] p-4 max-[720px]:flex-col max-[720px]:items-start max-[720px]:gap-3">
                                 <div className="flex items-center gap-4">
-                                    <div className="grid h-10 w-10 place-items-center rounded-md bg-white text-[var(--admin-primary)]">
+                                    <div className="grid h-10 w-10 place-items-center rounded-full bg-white text-[var(--admin-primary)]">
                                         <FaPaw />
                                     </div>
                                     <strong>{breed.breedName}</strong>
@@ -500,7 +503,7 @@ function JockeySetting() {
                                     <span className="rounded-full bg-[var(--admin-primary)] px-4 py-1 text-[0.8rem] font-bold text-white">
                                         {breed.experienceLevel}
                                     </span>
-                                    <button onClick={() => removeBreed(breed.breedId)} type="button" className="text-red-600">
+                                    <button onClick={() => removeBreed(breed.breedId)} type="button" className="text-[#a4392f] hover:text-[#7d2b23]">
                                         <FaTrash />
                                     </button>
                                 </div>
@@ -508,9 +511,9 @@ function JockeySetting() {
                         ))}
                     </div>
 
-                    <div className="mt-6 rounded-lg border border-dashed border-[var(--admin-border)] p-5">
+                    <div className="mt-6 rounded-[var(--admin-radius)] border border-dashed border-[var(--admin-border)] p-5">
                         <div className="grid grid-cols-[1fr_1fr_auto] gap-4 max-[980px]:grid-cols-1">
-                            <select value={selectedBreed} onChange={(e) => setSelectedBreed(e.target.value)} className="rounded-md border border-[var(--admin-border)] px-4 py-3">
+                            <select value={selectedBreed} onChange={(e) => setSelectedBreed(e.target.value)} className="rounded-full border border-[var(--admin-border)] px-4 py-3">
                                 <option value="">Choose a breed...</option>
                                 {breeds
                                     .filter(b => !breedExperiences.find(e => e.breedId === b.breedId))
@@ -518,7 +521,7 @@ function JockeySetting() {
                                         <option key={b.breedId} value={b.breedId}>{b.breedName}</option>
                                     ))}
                             </select>
-                            <select value={selectedLevel} onChange={(e) => setSelectedLevel(e.target.value)} className="rounded-md border border-[var(--admin-border)] px-4 py-3">
+                            <select value={selectedLevel} onChange={(e) => setSelectedLevel(e.target.value)} className="rounded-full border border-[var(--admin-border)] px-4 py-3">
                                 <option value="">Choose level...</option>
                                 {options?.breedExperienceLevels?.map((level) => (
                                     <option key={level} value={level}>{level}</option>
@@ -528,7 +531,7 @@ function JockeySetting() {
                                 onClick={addBreed}
                                 disabled={!selectedBreed || !selectedLevel}
                                 type="button"
-                                className="inline-flex items-center justify-center gap-2 rounded-md border border-blue-700 px-5 py-3 font-bold text-blue-700 disabled:opacity-40"
+                                className="inline-flex items-center justify-center gap-2 rounded-full border border-[var(--admin-primary)] px-5 py-3 font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)] disabled:opacity-40"
                             >
                                 <FaPlus /> Add Breed
                             </button>
@@ -538,26 +541,26 @@ function JockeySetting() {
                 <ChangePasswordCard />
                 {/* Error/Success */}
                 {error && (
-                    <div style={{ backgroundColor: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#991b1b', fontWeight: 600 }}>
-                        ⚠️ {error}
+                    <div className="flex items-center gap-2 rounded-full border border-[#d89288] bg-[#f3e1df] px-4 py-3 text-[13px] font-semibold text-[#a4392f]">
+                        <FaExclamationTriangle /> {error}
                     </div>
                 )}
                 {success && (
-                    <div style={{ backgroundColor: '#dcfce7', border: '1px solid #86efac', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#15803d', fontWeight: 600 }}>
-                        ✅ {success}
+                    <div className="flex items-center gap-2 rounded-full border border-[#9fdcb9] bg-[#e8f7ee] px-4 py-3 text-[13px] font-semibold text-[#16864f]">
+                        <FaCheckCircle /> {success}
                     </div>
                 )}
 
                 {/* Actions */}
                 <div className="flex justify-end gap-4">
-                    <button type="button" onClick={handleCancel} className="rounded-md border border-[#b89d36] px-8 py-3 font-bold text-[#8b7515]">
+                    <button type="button" onClick={handleCancel} className="rounded-full border border-[var(--racing-gold-bright)] px-8 py-3 font-bold text-[#8a6209] transition-colors hover:bg-[#faf2e0]">
                         Cancel Changes
                     </button>
                     <button
                         type="button"
                         onClick={handleSave}
                         disabled={saving}
-                        className="inline-flex items-center gap-2 rounded-md bg-[var(--admin-primary)] px-8 py-3 font-bold text-white disabled:opacity-50"
+                        className="inline-flex items-center gap-2 rounded-full bg-[var(--admin-primary)] px-8 py-3 font-bold text-white transition-colors hover:bg-[var(--admin-primary-dark)] disabled:opacity-50"
                     >
                         <FaSave />
                         {saving ? 'Saving...' : 'Save Changes'}

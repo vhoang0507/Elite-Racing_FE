@@ -21,41 +21,43 @@ import { adminApi } from '../../api/adminApi';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 const headingClass = 'flex items-center justify-between gap-[18px] max-[720px]:flex-col max-[720px]:items-stretch';
-const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]';
-const sectionHeadClass = 'flex min-h-[58px] items-center justify-between gap-[18px] border-b border-[var(--admin-border)] px-[22px] max-[720px]:flex-col max-[720px]:items-stretch';
-const sectionActionClass = 'rounded-full bg-[#e8f7ef] px-2.5 py-1.5 text-[0.72rem] font-black uppercase text-[var(--admin-primary)] transition-colors duration-200 hover:bg-[#d7f2e4]';
-const tableHeadClass = 'border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] py-[18px] text-left text-[0.7rem] uppercase text-[#64748b]';
+const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_10px_30px_rgba(11,27,52,0.06)]';
+const sectionHeadClass = 'flex min-h-[58px] items-center justify-between gap-[18px] border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] max-[720px]:flex-col max-[720px]:items-stretch';
+const sectionActionClass = 'action-pill no-underline';
+const tableHeadClass = 'border-b-2 border-[var(--admin-gold)] bg-[var(--admin-surface-strong)] px-[22px] py-4 text-left text-[0.68rem] font-bold uppercase tracking-wider text-[var(--admin-muted)]';
 const tableCellClass = (isLast = false, align = 'left') => [
     isLast ? 'border-b-0' : 'border-b border-[var(--admin-border)]',
     align === 'right' ? 'text-right' : '',
-    'px-[22px] py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]',
+    'px-[22px] py-4 align-middle text-[0.92rem] text-[var(--admin-ink)]',
 ].join(' ');
+const rowHoverClass = 'transition-colors hover:bg-[var(--admin-surface-strong)]';
 const statusClass = {
-    pending: 'border-[#e2cd79] bg-[#f7efcf] text-[#6a520d]',
-    active: 'border-[#afe2c4] bg-[#dff7e9] text-[#118548]',
-    inactive: 'border-[#dbaaa5] bg-[#f5e1df] text-[var(--admin-primary-dark)]',
-    banned: 'border-[#f5b8bf] bg-[#ffe5e7] text-[#c3222c]',
+    pending: 'bg-[#faf2e0] text-[#8a6209]',
+    active: 'bg-[#e8f7ee] text-[#16864f]',
+    inactive: 'bg-[#f3e8e6] text-[#7f645f]',
+    banned: 'bg-[#f3e1df] text-[#a4392f]',
     draft: 'bg-[#f3f4f6] text-[#374151]',
-    openregistration: 'bg-[#dcfce7] text-[#15803d]',
-    closedregistration: 'bg-[#fee2e2] text-[#b91c1c]',
-    ongoing: 'bg-[#dbeafe] text-[#1d4ed8]',
-    completed: 'bg-[#ede9fe] text-[#6d28d9]',
+    openregistration: 'bg-[#e8f7ee] text-[#16864f]',
+    closedregistration: 'bg-[#f3e1df] text-[#a4392f]',
+    ongoing: 'bg-[#faf2e0] text-[#8a6209]',
+    completed: 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]',
     cancelled: 'bg-[#f3f4f6] text-[#6b7280]',
 };
-const tournamentStatusBaseClass = 'inline-flex min-h-6 items-center rounded-full px-2.5 text-[0.72rem] font-extrabold';
+const humanizeLabel = (value) => String(value || '').replace(/([a-z0-9])([A-Z])/g, '$1 $2').trim();
+const tournamentStatusBaseClass = 'inline-flex min-h-6 items-center rounded-full px-3 text-[0.68rem] font-bold uppercase tracking-wide';
 const getTournamentStatusClass = (status) => `${tournamentStatusBaseClass} ${statusClass[statusKey(status)] || statusClass.draft}`;
 const deadlineClass = {
     warning: 'text-[#b45309]',
-    danger: 'text-[#b91c1c]',
+    danger: 'text-[#a4392f]',
 };
 const avatarBaseClass = 'grid h-[42px] w-[42px] flex-none place-items-center overflow-hidden rounded-full text-[0.8rem] font-extrabold text-white';
 const avatarClass = {
-    default: 'bg-[linear-gradient(145deg,#1d3d42,#d2a35a)]',
+    default: 'bg-[linear-gradient(145deg,#16305c,#c8a24a)]',
     owner: 'bg-[linear-gradient(145deg,#5a2d1f,#c79043)]',
-    jockey: 'bg-[linear-gradient(145deg,#1d546d,#5cb8a6)]',
+    jockey: 'bg-[linear-gradient(145deg,#0b1b34,#2f7d5c)]',
     referee: 'bg-[linear-gradient(145deg,#26323b,#9aa8af)]',
     spectator: 'bg-[linear-gradient(145deg,#674861,#d17664)]',
-    admin: 'bg-[linear-gradient(145deg,#0f172a,#5eead4)]',
+    admin: 'bg-[linear-gradient(145deg,#0b1b34,#c8a24a)]',
 };
 
 const statIconByTone = {
@@ -63,6 +65,13 @@ const statIconByTone = {
     tournaments: FaTrophy,
     registrations: FaClipboardCheck,
     results: FaFlagCheckered,
+};
+
+const statAccentByTone = {
+    users: { bg: '#e7efff', ink: '#1f57c7' },
+    tournaments: { bg: '#f3e6c2', ink: '#8a6a1f' },
+    registrations: { bg: '#e6f7ed', ink: '#11734b' },
+    results: { bg: '#f3e1df', ink: '#a4392f' },
 };
 
 const roleAvatarClass = (role = '') => {
@@ -157,13 +166,16 @@ function AdminDashboard() {
             searchValue={query}
         >
                 <section className={pageShellClass}>
-                    <div className={headingClass}>
-                        <div>
-                            <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)] max-[720px]:text-[1.6rem]">
-                                Dashboard Overview
+                    <div className="visual-banner flex items-center justify-between gap-6 px-8 py-7 max-[720px]:flex-col max-[720px]:items-start max-[720px]:gap-3">
+                        <div className="relative z-[1]">
+                            <span className="text-[0.72rem] font-bold uppercase tracking-[0.14em] text-[#c8a24a]">
+                                Admin Console
+                            </span>
+                            <h1 className="m-0 mt-1.5 text-[1.9rem] leading-[1.15] max-[720px]:text-[1.5rem]">
+                                Welcome back, Admin
                             </h1>
-                            <p className="mb-0 mt-1.5 font-[650] text-[var(--admin-muted)]">
-                                Today: {todayLabel}
+                            <p className="mb-0 mt-1.5 font-semibold text-[rgba(246,236,210,0.78)]">
+                                Today is {todayLabel}. Here's what's happening across Elite Racing League.
                             </p>
                         </div>
                     </div>
@@ -175,15 +187,16 @@ function AdminDashboard() {
                     <section aria-label="Summary statistics" className="grid grid-cols-4 gap-5 max-[1280px]:grid-cols-2 max-[720px]:grid-cols-1">
                         {dashboard.stats.map((stat) => {
                             const Icon = statIconByTone[stat.tone] || FaChartLine;
+                            const accent = statAccentByTone[stat.tone] || statAccentByTone.users;
 
                             return (
-                                <article className="grid min-h-[140px] content-start gap-2 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-[22px]" key={stat.label}>
-                                    <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#e8f7ef] text-[var(--admin-primary)]">
+                                <article className="grid min-h-[140px] content-start gap-2 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-[22px] shadow-[0_10px_26px_rgba(11,27,52,0.06)] transition-shadow hover:shadow-[0_14px_32px_rgba(11,27,52,0.12)]" key={stat.label}>
+                                    <div className="grid h-10 w-10 place-items-center rounded-xl" style={{ backgroundColor: accent.bg, color: accent.ink }}>
                                         <Icon aria-hidden="true" />
                                     </div>
-                                    <span className="text-[var(--admin-muted)]">{stat.label}</span>
+                                    <span className="text-[0.82rem] font-semibold text-[var(--admin-muted)]">{stat.label}</span>
                                     <strong className="text-[2rem] leading-[1.1] text-[var(--admin-ink)]">{stat.value}</strong>
-                                    <small className="font-extrabold text-[var(--admin-muted)]">{stat.trend}</small>
+                                    <small className="font-bold text-[var(--admin-muted)]">{stat.trend}</small>
                                 </article>
                             );
                         })}
@@ -214,10 +227,10 @@ function AdminDashboard() {
                                             const deadlineWarning = adminApi.formatters.getTournamentDeadlineWarning(tournament);
 
                                             return (
-                                            <tr key={tournament.name}>
+                                            <tr className={rowHoverClass} key={tournament.name}>
                                                 <td className={tableCellClass(isLast)}>
                                                     <strong className="block">{tournament.name}</strong>
-                                                    <span className="mt-1 block text-[var(--admin-muted)]">{tournament.description}</span>
+                                                    <span className="mt-1 block text-[0.82rem] text-[var(--admin-muted)]">{tournament.description}</span>
                                                 </td>
                                                 <td className={tableCellClass(isLast)}>{adminApi.formatters.toDateLabel(tournament.endDate)}</td>
                                                 <td className={tableCellClass(isLast)}>
@@ -235,7 +248,7 @@ function AdminDashboard() {
                                                     </span>
                                                 </td>
                                                 <td className={tableCellClass(isLast, 'right')}>
-                                                    <button aria-label={`View details for ${tournament.name}`} className="inline-grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-full bg-[#e8f7ef] text-[var(--admin-primary)] hover:bg-[#d7f2e4]" onClick={() => setSelectedTournament(tournament)} type="button">
+                                                    <button aria-label={`View details for ${tournament.name}`} className="inline-grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-transparent text-[var(--admin-muted)] hover:bg-[#f3e6c2] hover:text-[var(--admin-primary)]" onClick={() => setSelectedTournament(tournament)} type="button">
                                                         <FaEye aria-hidden="true" />
                                                     </button>
                                                 </td>
@@ -325,7 +338,7 @@ function AdminDashboard() {
                                             const status = statusKey(user.status);
 
                                             return (
-                                                <tr key={user.id || user.email || user.name}>
+                                                <tr className={rowHoverClass} key={user.id || user.email || user.name}>
                                                     <td className={tableCellClass(isLast)}>
                                                         <div className="flex min-w-[220px] items-center gap-3">
                                                             <div className={`${avatarBaseClass} h-10 w-10 ${roleAvatarClass(user.role)}`}>
@@ -333,24 +346,24 @@ function AdminDashboard() {
                                                             </div>
                                                             <div>
                                                                 <strong className="block">{user.name}</strong>
-                                                                <span className="mt-1 block text-[var(--admin-muted)]">{user.id}</span>
+                                                                <span className="mt-1 block text-[0.82rem] text-[var(--admin-muted)]">{user.id}</span>
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className={tableCellClass(isLast)}>{user.email}</td>
-                                                    <td className={tableCellClass(isLast)}>{user.role}</td>
+                                                    <td className={`${tableCellClass(isLast)} text-[var(--admin-muted)]`}>{user.email}</td>
+                                                    <td className={tableCellClass(isLast)}>{humanizeLabel(user.role)}</td>
                                                     <td className={tableCellClass(isLast)}>
-                                                        <span className={`inline-flex min-h-6 items-center rounded-[5px] border px-2 text-[0.74rem] font-extrabold ${statusClass[status] || statusClass.pending}`}>
-                                                            {user.status}
+                                                        <span className={`inline-flex min-h-6 items-center rounded-full px-3 text-[0.68rem] font-bold uppercase tracking-wide ${statusClass[status] || statusClass.pending}`}>
+                                                            {humanizeLabel(user.status)}
                                                         </span>
                                                     </td>
                                                     <td className={tableCellClass(isLast)}>
-                                                        <span className={`inline-grid h-[22px] w-[22px] place-items-center rounded-full ${user.verified ? 'text-[#0aa15f]' : 'text-[#d71920]'}`}>
-                                                            {user.verified ? <FaCheck aria-hidden="true" /> : <FaTimes aria-hidden="true" />}
+                                                        <span className={`inline-grid h-6 w-6 place-items-center rounded-full ${user.verified ? 'bg-[#e6f7ed] text-[#16864f]' : 'bg-[#f3e1df] text-[#a4392f]'}`}>
+                                                            {user.verified ? <FaCheck aria-hidden="true" className="h-3 w-3" /> : <FaTimes aria-hidden="true" className="h-3 w-3" />}
                                                         </span>
                                                     </td>
                                                     <td className={tableCellClass(isLast, 'right')}>
-                                                        <button aria-label={`View details for ${user.name}`} className="inline-grid h-[30px] w-[30px] cursor-pointer place-items-center rounded-full bg-[#e8f7ef] text-[var(--admin-primary)] hover:bg-[#d7f2e4]" onClick={() => setSelectedUser(user)} type="button">
+                                                        <button aria-label={`View details for ${user.name}`} className="inline-grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-transparent text-[var(--admin-muted)] hover:bg-[#f3e6c2] hover:text-[var(--admin-primary)]" onClick={() => setSelectedUser(user)} type="button">
                                                             <FaEye aria-hidden="true" />
                                                         </button>
                                                     </td>
@@ -393,11 +406,11 @@ function AdminDashboard() {
                                     </div>
                                     <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
                                         <span className="text-[0.7rem] font-black uppercase text-[#64748b]">Role</span>
-                                        <strong>{selectedUser.role}</strong>
+                                        <strong>{humanizeLabel(selectedUser.role)}</strong>
                                     </div>
                                     <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
                                         <span className="text-[0.7rem] font-black uppercase text-[#64748b]">Status</span>
-                                        <strong className={statusKey(selectedUser.status) === 'active' ? 'text-[#0aa15f]' : 'text-[var(--admin-primary)]'}>{selectedUser.status}</strong>
+                                        <strong className={statusKey(selectedUser.status) === 'active' ? 'text-[#16864f]' : 'text-[var(--admin-primary)]'}>{humanizeLabel(selectedUser.status)}</strong>
                                     </div>
                                     <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
                                         <span className="text-[0.7rem] font-black uppercase text-[#64748b]">Verified</span>

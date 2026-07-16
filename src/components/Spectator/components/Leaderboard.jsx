@@ -10,7 +10,7 @@ function WinRateBar({ rate = 0 }) {
     return (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 80, height: 6, borderRadius: 99, background: '#dce5ef', overflow: 'hidden' }}>
-                <div style={{ height: '100%', background: '#0b7f5a', borderRadius: 99, width: `${Math.min(100, rate)}%` }} />
+                <div style={{ height: '100%', background: '#16305c', borderRadius: 99, width: `${Math.min(100, rate)}%` }} />
             </div>
             <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--admin-muted)' }}>{rate}%</span>
         </div>
@@ -66,7 +66,7 @@ export default function Leaderboard() {
                 <div className="surface-card p-5">
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
-                            <div className="stat-icon bg-[#fff3cd] text-[#856404]">
+                            <div className="stat-icon bg-[#faf2e0] text-[#8a6209]">
                                 <FaStar aria-hidden="true" />
                             </div>
                             <div>
@@ -110,10 +110,10 @@ export default function Leaderboard() {
                                     onClick={() => setActiveTab(t.key)}
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: 6,
-                                        padding: '7px 16px', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                                        border: activeTab === t.key ? 'none' : '1px solid #dce5ef',
-                                        background: activeTab === t.key ? '#0b7f5a' : '#fff8f6',
-                                        color: activeTab === t.key ? '#fff' : '#0b7f5a',
+                                        padding: '7px 16px', borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                                        border: activeTab === t.key ? 'none' : '1px solid var(--admin-border)',
+                                        background: activeTab === t.key ? '#16305c' : 'var(--admin-surface-strong)',
+                                        color: activeTab === t.key ? '#fff' : '#16305c',
                                     }}
                                 >
                                     <Icon /> {t.label}
@@ -147,7 +147,7 @@ export default function Leaderboard() {
                                         <tr key={o.ownerId ?? o.rank}>
                                             <td><span style={{ fontWeight: 900, fontSize: '1.1rem' }}>{MEDAL[o.rank] ?? `#${o.rank}`}</span></td>
                                             <td><span style={{ fontWeight: 700 }}>{o.ownerName}</span></td>
-                                            <td><span style={{ fontWeight: 900, color: '#0b7f5a' }}>{o.wins ?? 0}</span></td>
+                                            <td><span style={{ fontWeight: 900, color: '#16305c' }}>{o.wins ?? 0}</span></td>
                                             <td style={{ color: 'var(--admin-muted)' }}>{o.totalRaces ?? 0}</td>
                                             <td style={{ color: '#1565c0', fontWeight: 700 }}>{o.top3Finishes ?? 0}</td>
                                             <td><WinRateBar rate={o.winRate ?? 0} /></td>
@@ -180,7 +180,7 @@ export default function Leaderboard() {
                                         <tr key={j.jockeyId ?? j.rank}>
                                             <td><span style={{ fontWeight: 900, fontSize: '1.1rem' }}>{MEDAL[j.rank] ?? `#${j.rank}`}</span></td>
                                             <td><span style={{ fontWeight: 700 }}>{j.jockeyName}</span></td>
-                                            <td><span style={{ fontWeight: 900, color: '#0b7f5a' }}>{j.wins ?? 0}</span></td>
+                                            <td><span style={{ fontWeight: 900, color: '#16305c' }}>{j.wins ?? 0}</span></td>
                                             <td style={{ color: 'var(--admin-muted)' }}>{j.totalRaces ?? 0}</td>
                                             <td style={{ color: '#1565c0', fontWeight: 700 }}>{j.top3Finishes ?? 0}</td>
                                             <td><WinRateBar rate={j.winRate ?? 0} /></td>
@@ -222,7 +222,7 @@ export default function Leaderboard() {
                                                 </div>
                                             </td>
                                             <td style={{ color: 'var(--admin-muted)' }}>{h.ownerName ?? '—'}</td>
-                                            <td><span style={{ fontWeight: 900, color: '#0b7f5a' }}>{h.wins ?? 0}</span></td>
+                                            <td><span style={{ fontWeight: 900, color: '#16305c' }}>{h.wins ?? 0}</span></td>
                                             <td style={{ color: 'var(--admin-muted)' }}>{h.totalRaces ?? 0}</td>
                                             <td><WinRateBar rate={h.winRate ?? 0} /></td>
                                         </tr>
@@ -259,10 +259,10 @@ export default function Leaderboard() {
                                                 <td>
                                                     <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                                         {p.spectatorName}
-                                                        {isMe && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: '#e8f7ef', color: '#0b7f5a' }}>You</span>}
+                                                        {isMe && <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 10, background: '#e8f7ef', color: '#16305c' }}>You</span>}
                                                     </span>
                                                 </td>
-                                                <td><span style={{ fontWeight: 900, color: '#0b7f5a' }}>{p.points ?? 0} pts</span></td>
+                                                <td><span style={{ fontWeight: 900, color: '#16305c' }}>{p.points ?? 0} pts</span></td>
                                                 <td style={{ color: '#118548', fontWeight: 700 }}>{p.correctPredictions ?? 0}</td>
                                                 <td><WinRateBar rate={p.accuracy ?? 0} /></td>
                                             </tr>

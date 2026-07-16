@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FaCalendarCheck, FaBan, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaCalendarCheck, FaBan, FaChevronLeft, FaChevronRight, FaMapMarkerAlt, FaHorseHead, FaClock, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import JockeyLayout from './JockeyLayout';
 import { jockeyApi } from '../../api/jockeyApi';
 
@@ -167,7 +167,7 @@ export default function JockeyCalendar() {
                 </div>
 
                 {error && (
-                    <div style={styles.errorBar}>⚠️ {error}</div>
+                    <div style={styles.errorBar}><FaExclamationTriangle style={{ marginRight: 8 }} />{error}</div>
                 )}
 
                 {availabilityMessage && (
@@ -178,13 +178,13 @@ export default function JockeyCalendar() {
                 <div style={styles.summaryGrid}>
                     <SummaryCard
                         icon={<FaCalendarCheck />}
-                        iconBg="#dcfce7" iconColor="#15803d"
+                        iconBg="#e8f7ee" iconColor="#16864f"
                         label="Available Days"
                         value={calendarData?.availableDays ?? '—'}
                     />
                     <SummaryCard
                         icon={<FaBan />}
-                        iconBg="#fee2e2" iconColor="#dc2626"
+                        iconBg="#f3e1df" iconColor="#a4392f"
                         label="Racing Days"
                         value={calendarData?.racingDays ?? '—'}
                     />
@@ -239,9 +239,9 @@ export default function JockeyCalendar() {
                                     const isTod = isToday(day);
 
                                     let cellBg = '#fff';
-                                    if (isSel) cellBg = '#fdf4f4';
-                                    else if (isRacing) cellBg = '#f0fdf4';
-                                    else if (isUnavailable) cellBg = '#fef2f2';
+                                    if (isSel) cellBg = '#edf2fa';
+                                    else if (isRacing) cellBg = '#faf2e0';
+                                    else if (isUnavailable) cellBg = '#f3e1df';
 
                                     return (
                                         <div
@@ -250,18 +250,18 @@ export default function JockeyCalendar() {
                                                 ...styles.dayCell,
                                                 backgroundColor: cellBg,
                                                 border: isSel
-                                                    ? '2px solid #610000'
+                                                    ? '2px solid #16305c'
                                                     : isTod
-                                                    ? '2px solid #3b82f6'
-                                                    : '1px solid #f0ebe8',
+                                                    ? '2px solid #16305c'
+                                                    : '1px solid #efe8d6',
                                                 cursor: 'pointer',
                                             }}
                                             onClick={() => setSelectedDay(isSel ? null : day)}
                                         >
                                             <span style={{
                                                 ...styles.dayNum,
-                                                backgroundColor: isTod ? '#3b82f6' : 'transparent',
-                                                color: isTod ? '#fff' : isRacing ? '#15803d' : isUnavailable ? '#dc2626' : '#374151',
+                                                backgroundColor: isTod ? '#16305c' : 'transparent',
+                                                color: isTod ? '#fff' : isRacing ? '#8a6209' : isUnavailable ? '#a4392f' : '#374151',
                                                 borderRadius: isTod ? '50%' : 0,
                                                 width: isTod ? 22 : 'auto',
                                                 height: isTod ? 22 : 'auto',
@@ -281,10 +281,10 @@ export default function JockeyCalendar() {
                                             {races.length > 2 && (
                                                 <span style={styles.moreTag}>+{races.length - 2} more</span>
                                             )}
-                                            {isUnavailable && races.length === 0 && (
+                            {isUnavailable && races.length === 0 && (
                                                 <div style={styles.unavailPill}>
                                                     <span style={styles.unavailDot} />
-                                                    <span style={{ fontSize: 9, color: '#dc2626', fontWeight: 700 }}>Unavailable</span>
+                                                    <span style={{ fontSize: 9, color: '#a4392f', fontWeight: 700 }}>Unavailable</span>
                                                 </div>
                                             )}
                                         </div>
@@ -300,9 +300,9 @@ export default function JockeyCalendar() {
 
                         {/* Legend */}
                         <div style={styles.legend}>
-                            <LegendDot color="#3b82f6" label="Today" />
-                            <LegendDot color="#16a34a" label="Race Day" />
-                            <LegendDot color="#dc2626" label="Unavailable" />
+                            <LegendDot color="#16305c" label="Today" />
+                            <LegendDot color="#c8a24a" label="Race Day" />
+                            <LegendDot color="#a4392f" label="Unavailable" />
                         </div>
                     </div>
 
@@ -341,16 +341,16 @@ export default function JockeyCalendar() {
                                     selectedDayData.races.map((race, i) => (
                                         <div key={i} style={styles.detailRace}>
                                             <p style={styles.detailRaceName}>{race.raceName}</p>
-                                            {race.location && <p style={styles.detailMeta}>📍 {race.location}</p>}
-                                            {race.horseName && <p style={styles.detailMeta}>🐴 {race.horseName}</p>}
-                                            <p style={styles.detailMeta}>📅 {new Date(race.raceDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                            {race.location && <p style={styles.detailMeta}><FaMapMarkerAlt style={{ marginRight: 5 }} />{race.location}</p>}
+                                            {race.horseName && <p style={styles.detailMeta}><FaHorseHead style={{ marginRight: 5 }} />{race.horseName}</p>}
+                                            <p style={styles.detailMeta}><FaClock style={{ marginRight: 5 }} />{new Date(race.raceDate).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
                                         </div>
                                     ))
                                 ) : (
-                                    <p style={styles.detailEmpty}>
+                                    <p style={{ ...styles.detailEmpty, display: 'flex', alignItems: 'center', gap: 6 }}>
                                         {selectedDayData?.status === 'Unavailable'
-                                            ? '🔴 Marked as unavailable'
-                                            : '✅ Available — no races scheduled'}
+                                            ? <><FaBan style={{ color: '#a4392f' }} /> Marked as unavailable</>
+                                            : <><FaCheckCircle style={{ color: '#16864f' }} /> Available — no races scheduled</>}
                                     </p>
                                 )}
                             </div>
@@ -361,7 +361,7 @@ export default function JockeyCalendar() {
                             <p style={styles.sidebarTitle}>Upcoming Races</p>
                             {!calendarData?.nextRaces || calendarData.nextRaces.length === 0 ? (
                                 <div style={styles.emptyNext}>
-                                    <span style={{ fontSize: 28 }}>🏇</span>
+                                    <FaHorseHead style={{ fontSize: 28, color: 'var(--racing-gold-bright)' }} />
                                     <p style={styles.emptyNextText}>No upcoming races confirmed yet.</p>
                                 </div>
                             ) : (
@@ -378,8 +378,8 @@ export default function JockeyCalendar() {
                                             </div>
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <p style={styles.nextRaceName}>{race.raceName}</p>
-                                                {race.horseName && <p style={styles.nextRaceMeta}>🐴 {race.horseName}</p>}
-                                                {race.location && <p style={styles.nextRaceMeta}>📍 {race.location}</p>}
+                                                {race.horseName && <p style={styles.nextRaceMeta}><FaHorseHead style={{ marginRight: 4 }} />{race.horseName}</p>}
+                                                {race.location && <p style={styles.nextRaceMeta}><FaMapMarkerAlt style={{ marginRight: 4 }} />{race.location}</p>}
                                             </div>
                                         </div>
                                     ))}
@@ -417,54 +417,54 @@ function LegendDot({ color, label }) {
 const styles = {
     page: { padding: '36px 44px', display: 'grid', gap: 24 },
     pageHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' },
-    pageTitle: { margin: 0, fontSize: '1.9rem', fontWeight: 800, color: '#610000' },
-    pageSubtitle: { margin: '4px 0 0', fontSize: 14, color: '#64748b' },
-    errorBar: { backgroundColor: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#991b1b', fontWeight: 600 },
-    successBar: { backgroundColor: '#dcfce7', border: '1px solid #86efac', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#15803d', fontWeight: 700 },
+    pageTitle: { margin: 0, fontSize: '1.9rem', fontWeight: 800, color: '#0a1930' },
+    pageSubtitle: { margin: '4px 0 0', fontSize: 14, color: '#6b6456' },
+    errorBar: { display: 'flex', alignItems: 'center', backgroundColor: '#f3e1df', border: '1px solid #d89288', borderRadius: 999, padding: '10px 16px', fontSize: 13, color: '#a4392f', fontWeight: 600 },
+    successBar: { backgroundColor: '#e8f7ee', border: '1px solid #9fdcb9', borderRadius: 999, padding: '10px 16px', fontSize: 13, color: '#16864f', fontWeight: 700 },
     summaryGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
-    summaryCard: { display: 'flex', alignItems: 'center', gap: 14, backgroundColor: '#fff', border: '1px solid #e8ddd9', borderRadius: 12, padding: '16px 20px' },
-    summaryIcon: { width: 42, height: 42, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 },
-    summaryLabel: { margin: 0, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#94a3b8' },
-    summaryValue: { margin: '2px 0 0', fontSize: 28, fontWeight: 800, color: '#0f172a', lineHeight: 1.1 },
+    summaryCard: { display: 'flex', alignItems: 'center', gap: 14, backgroundColor: '#fff', border: '1px solid #ded2ad', borderRadius: 12, padding: '16px 20px', boxShadow: '0 8px 22px rgba(15,23,42,0.05)' },
+    summaryIcon: { width: 42, height: 42, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 },
+    summaryLabel: { margin: 0, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6b6456' },
+    summaryValue: { margin: '2px 0 0', fontSize: 28, fontWeight: 800, color: '#0a1930', lineHeight: 1.1 },
     mainGrid: { display: 'grid', gridTemplateColumns: '1fr 260px', gap: 20, alignItems: 'start' },
-    calPanel: { backgroundColor: '#fff', borderRadius: 14, border: '1px solid #e8ddd9', overflow: 'hidden' },
-    calNav: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid #f0ebe8' },
-    navBtn: { width: 30, height: 30, borderRadius: 8, border: '1px solid #e8ddd9', backgroundColor: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' },
-    monthLabel: { fontSize: 15, fontWeight: 700, color: '#1e293b', minWidth: 160, textAlign: 'center' },
-    todayBtn: { border: '1px solid #e8ddd9', borderRadius: 8, backgroundColor: '#fff', padding: '5px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: '#374151' },
-    dayHeaderRow: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', backgroundColor: '#faf7f5', borderBottom: '1px solid #f0ebe8' },
-    dayHeader: { padding: '8px 4px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' },
+    calPanel: { backgroundColor: '#fff', borderRadius: 14, border: '1px solid #ded2ad', overflow: 'hidden' },
+    calNav: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', borderBottom: '1px solid #efe8d6' },
+    navBtn: { width: 30, height: 30, borderRadius: 999, border: '1px solid #ded2ad', backgroundColor: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b6456' },
+    monthLabel: { fontSize: 15, fontWeight: 700, color: '#0a1930', minWidth: 160, textAlign: 'center' },
+    todayBtn: { border: '1px solid #ded2ad', borderRadius: 999, backgroundColor: '#fff', padding: '5px 14px', fontSize: 12, fontWeight: 700, cursor: 'pointer', color: '#16305c' },
+    dayHeaderRow: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', backgroundColor: '#faf7ee', borderBottom: '1px solid #efe8d6' },
+    dayHeader: { padding: '8px 4px', textAlign: 'center', fontSize: 11, fontWeight: 700, color: '#6b6456', textTransform: 'uppercase' },
     loadingBox: { display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 0' },
-    loadingText: { fontSize: 13, color: '#94a3b8' },
+    loadingText: { fontSize: 13, color: '#6b6456' },
     calGrid: { display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' },
-    dayCell: { minHeight: 80, padding: '6px 8px', borderRight: '1px solid #f0ebe8', borderBottom: '1px solid #f0ebe8', display: 'flex', flexDirection: 'column', gap: 3, boxSizing: 'border-box' },
-    otherCell: { minHeight: 80, padding: '6px 8px', backgroundColor: '#fafafa', borderRight: '1px solid #f0ebe8', borderBottom: '1px solid #f0ebe8' },
+    dayCell: { minHeight: 80, padding: '6px 8px', borderRight: '1px solid #efe8d6', borderBottom: '1px solid #efe8d6', display: 'flex', flexDirection: 'column', gap: 3, boxSizing: 'border-box' },
+    otherCell: { minHeight: 80, padding: '6px 8px', backgroundColor: '#faf9f5', borderRight: '1px solid #efe8d6', borderBottom: '1px solid #efe8d6' },
     dayNum: { fontSize: 12, fontWeight: 600, lineHeight: 1, padding: 2 },
-    otherDayNum: { fontSize: 11, color: '#cbd5e1' },
-    racePill: { display: 'flex', alignItems: 'center', gap: 4, backgroundColor: '#dcfce7', borderRadius: 4, padding: '2px 5px' },
-    raceDot: { width: 5, height: 5, borderRadius: '50%', backgroundColor: '#16a34a', flexShrink: 0 },
-    raceText: { fontSize: 9, fontWeight: 700, color: '#15803d', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-    moreTag: { fontSize: 9, color: '#64748b', fontWeight: 600 },
-    unavailPill: { display: 'flex', alignItems: 'center', gap: 4, backgroundColor: '#fee2e2', borderRadius: 4, padding: '2px 5px' },
-    unavailDot: { width: 5, height: 5, borderRadius: '50%', backgroundColor: '#dc2626', flexShrink: 0 },
-    legend: { display: 'flex', gap: 16, padding: '10px 16px', borderTop: '1px solid #f0ebe8', backgroundColor: '#faf7f5' },
+    otherDayNum: { fontSize: 11, color: '#d8cfb8' },
+    racePill: { display: 'flex', alignItems: 'center', gap: 4, backgroundColor: '#faf2e0', borderRadius: 999, padding: '2px 5px' },
+    raceDot: { width: 5, height: 5, borderRadius: '50%', backgroundColor: '#c8a24a', flexShrink: 0 },
+    raceText: { fontSize: 9, fontWeight: 700, color: '#8a6209', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+    moreTag: { fontSize: 9, color: '#6b6456', fontWeight: 600 },
+    unavailPill: { display: 'flex', alignItems: 'center', gap: 4, backgroundColor: '#f3e1df', borderRadius: 999, padding: '2px 5px' },
+    unavailDot: { width: 5, height: 5, borderRadius: '50%', backgroundColor: '#a4392f', flexShrink: 0 },
+    legend: { display: 'flex', gap: 16, padding: '10px 16px', borderTop: '1px solid #efe8d6', backgroundColor: '#faf7ee' },
     sidebar: { display: 'flex', flexDirection: 'column', gap: 16 },
-    detailCard: { backgroundColor: '#fff', border: '1px solid #e8ddd9', borderRadius: 12, padding: 16 },
-    detailTitle: { margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: '#610000' },
+    detailCard: { backgroundColor: '#fff', border: '1px solid #ded2ad', borderRadius: 12, padding: 16 },
+    detailTitle: { margin: '0 0 12px', fontSize: 14, fontWeight: 700, color: '#0a1930' },
     availabilityActionRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: 12 },
-    availabilityStatus: { fontSize: 12, fontWeight: 800, color: '#64748b' },
-    availabilityButton: { border: '1px solid #0b7f5a', backgroundColor: '#0b7f5a', color: '#fff', borderRadius: 8, padding: '7px 10px', fontSize: 11, fontWeight: 800 },
-    detailRace: { backgroundColor: '#f0fdf4', border: '1px solid #86efac', borderRadius: 8, padding: '10px 12px', marginBottom: 8 },
-    detailRaceName: { margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: '#15803d' },
-    detailMeta: { margin: '2px 0 0', fontSize: 12, color: '#64748b' },
-    detailEmpty: { fontSize: 13, color: '#64748b', margin: 0 },
-    sidebarTitle: { margin: '0 0 10px', fontSize: 14, fontWeight: 700, color: '#1e293b' },
-    emptyNext: { backgroundColor: '#faf7f5', border: '1px solid #e8ddd9', borderRadius: 12, padding: '24px 16px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 },
-    emptyNextText: { margin: 0, fontSize: 13, color: '#64748b' },
-    nextRaceCard: { display: 'flex', gap: 12, alignItems: 'flex-start', backgroundColor: '#fff', border: '1px solid #e8ddd9', borderRadius: 12, padding: '12px 14px' },
-    nextRaceDateBadge: { display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#610000', borderRadius: 8, padding: '6px 10px', flexShrink: 0 },
+    availabilityStatus: { fontSize: 12, fontWeight: 800, color: '#6b6456' },
+    availabilityButton: { border: '1px solid #16305c', backgroundColor: '#16305c', color: '#fff', borderRadius: 999, padding: '7px 12px', fontSize: 11, fontWeight: 800 },
+    detailRace: { backgroundColor: '#faf2e0', border: '1px solid #e6c473', borderRadius: 8, padding: '10px 12px', marginBottom: 8 },
+    detailRaceName: { margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: '#8a6209' },
+    detailMeta: { display: 'flex', alignItems: 'center', margin: '2px 0 0', fontSize: 12, color: '#6b6456' },
+    detailEmpty: { fontSize: 13, color: '#6b6456', margin: 0 },
+    sidebarTitle: { margin: '0 0 10px', fontSize: 14, fontWeight: 700, color: '#0a1930' },
+    emptyNext: { backgroundColor: '#faf7ee', border: '1px solid #ded2ad', borderRadius: 12, padding: '24px 16px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 },
+    emptyNextText: { margin: 0, fontSize: 13, color: '#6b6456' },
+    nextRaceCard: { display: 'flex', gap: 12, alignItems: 'flex-start', backgroundColor: '#fff', border: '1px solid #ded2ad', borderRadius: 12, padding: '12px 14px' },
+    nextRaceDateBadge: { display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#16305c', borderRadius: 8, padding: '6px 10px', flexShrink: 0 },
     nextRaceDay: { fontSize: 18, fontWeight: 800, color: '#fff', lineHeight: 1 },
     nextRaceMon: { fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
-    nextRaceName: { margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: '#1e293b' },
-    nextRaceMeta: { margin: '2px 0 0', fontSize: 11, color: '#64748b' },
+    nextRaceName: { margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: '#0a1930' },
+    nextRaceMeta: { display: 'flex', alignItems: 'center', margin: '2px 0 0', fontSize: 11, color: '#6b6456' },
 };

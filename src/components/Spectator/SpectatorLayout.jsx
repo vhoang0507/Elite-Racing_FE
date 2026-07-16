@@ -17,13 +17,13 @@ import { spectatorApi } from '../../api/spectatorApi';
 import { clearAuthSession, getAuthUser } from '../../utils/tokenStorage';
 
 const navigation = [
-    { key: 'dashboard', label: 'Dashboard', icon: FaChartLine, path: '/spectator/dashboard' },
-    { key: 'tournaments', label: 'Tournaments', icon: FaTrophy, path: '/spectator/tournaments' },
-    { key: 'leaderboard', label: 'Leaderboard', icon: FaListOl, path: '/spectator/leaderboard' },
-    { key: 'predictions', label: 'Predictions', icon: FaBullseye, path: '/spectator/predictions' },
-    { key: 'results', label: 'Result & Reward', icon: FaMedal, path: '/spectator/results' },
-    { key: 'notifications', label: 'Notifications', icon: FaBell, path: '/spectator/notifications' },
-    { key: 'settings', label: 'Settings', icon: FaCog, path: '/spectator/settings' },
+    { key: 'dashboard', label: 'Dashboard', icon: FaChartLine, path: '/spectator/dashboard', section: 'Overview' },
+    { key: 'tournaments', label: 'Tournaments', icon: FaTrophy, path: '/spectator/tournaments', section: 'Racing' },
+    { key: 'leaderboard', label: 'Leaderboard', icon: FaListOl, path: '/spectator/leaderboard', section: 'Racing' },
+    { key: 'predictions', label: 'Predictions', icon: FaBullseye, path: '/spectator/predictions', section: 'Racing' },
+    { key: 'results', label: 'Result & Reward', icon: FaMedal, path: '/spectator/results', section: 'Racing' },
+    { key: 'notifications', label: 'Notifications', icon: FaBell, path: '/spectator/notifications', section: 'Account' },
+    { key: 'settings', label: 'Settings', icon: FaCog, path: '/spectator/settings', section: 'Account' },
 ];
 
 const shellClasses = [
@@ -75,21 +75,26 @@ function SpectatorLayout({ activeKey, children }) {
                 </div>
 
                 <nav className="role-nav">
-                    {navigation.map((item) => {
+                    {navigation.map((item, index) => {
                         const Icon = item.icon;
                         const isActive = item.key === activeKey;
+                        const showSectionLabel = item.section && item.section !== navigation[index - 1]?.section;
                         return (
-                            <Link
-                                key={item.key}
-                                to={item.path}
-                                className={[
-                                    'role-nav-item',
-                                    isActive ? 'is-active' : '',
-                                ].join(' ')}
-                            >
-                                <Icon className="h-4 w-4 flex-none" />
-                                <span>{item.label}</span>
-                            </Link>
+                            <div key={item.key} className="contents">
+                                {showSectionLabel && (
+                                    <div className="role-nav-section-label">{item.section}</div>
+                                )}
+                                <Link
+                                    to={item.path}
+                                    className={[
+                                        'role-nav-item',
+                                        isActive ? 'is-active' : '',
+                                    ].join(' ')}
+                                >
+                                    <Icon className="h-4 w-4 flex-none" />
+                                    <span>{item.label}</span>
+                                </Link>
+                            </div>
                         );
                     })}
                 </nav>

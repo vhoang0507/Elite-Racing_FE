@@ -17,7 +17,7 @@ export default function NewTournament() {
     return (
         <section style={styles.section}>
             <div style={styles.header}>
-                <h3 style={{ margin: 0 }}>New Tournament</h3>
+                <h3 style={{ margin: 0, color: "#0a1930" }}>New Tournament</h3>
                 <span style={styles.badge}>{tournaments.length} New</span>
             </div>
             <button style={styles.viewAll} onClick={() => navigate('/owner/registrations')}>View All Tournament</button>
@@ -48,16 +48,16 @@ export default function NewTournament() {
 }
 
 const styles = {
-    section: { backgroundColor: "#e8f7ef", borderRadius: "8px", padding: "20px", border: "1px solid #dce5ef", boxShadow: "0 12px 28px rgba(91, 26, 19, 0.05)" },
+    section: { backgroundColor: "#efe8d6", borderRadius: "12px", padding: "20px", border: "1px solid #ded2ad", boxShadow: "0 8px 22px rgba(15,23,42,0.06)" },
     header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" },
-    badge: { backgroundColor: "#0b7f5a", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "999px", fontWeight: 700 },
-    viewAll: { background: "none", border: "none", color: "#0b7f5a", cursor: "pointer", fontSize: "13px", marginBottom: "16px", padding: 0, fontWeight: "bold" },
+    badge: { backgroundColor: "#16305c", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "999px", fontWeight: 700 },
+    viewAll: { background: "none", border: "none", color: "#16305c", cursor: "pointer", fontSize: "13px", marginBottom: "16px", padding: 0, fontWeight: "bold" },
     list: { display: "flex", flexDirection: "column", gap: "12px" },
-    card: { backgroundColor: "#fffefd", borderRadius: "8px", padding: "14px", border: "1px solid #dce5ef" },
+    card: { backgroundColor: "#fff", borderRadius: "10px", padding: "14px", border: "1px solid #ded2ad" },
     cardTop: { display: "flex", justifyContent: "space-between", alignItems: "center" },
-    name: { margin: 0, fontWeight: "bold", fontSize: "14px", color: "#2d2020" },
-    date: { fontSize: "12px", color: "#64748b" },
-    season: { margin: "6px 0 2px", fontSize: "12px", color: "#0b7f5a", fontWeight: 700 },
-    location: { margin: "4px 0 10px", fontSize: "12px", color: "#64748b" },
-    detailBtn: { width: "100%", padding: "8px", border: "1px solid #dce5ef", borderRadius: "8px", background: "#fffefd", cursor: "pointer", fontSize: "13px", color: "#2d2020", fontWeight: 700 },
+    name: { margin: 0, fontWeight: "bold", fontSize: "14px", color: "#1b2333" },
+    date: { fontSize: "12px", color: "#6b6456" },
+    season: { margin: "6px 0 2px", fontSize: "12px", color: "#16305c", fontWeight: 700 },
+    location: { margin: "4px 0 10px", fontSize: "12px", color: "#6b6456" },
+    detailBtn: { width: "100%", padding: "8px", border: "1px solid #ded2ad", borderRadius: "999px", background: "#fff", cursor: "pointer", fontSize: "13px", color: "#1b2333", fontWeight: 700 },
 };

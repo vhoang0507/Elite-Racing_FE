@@ -58,7 +58,7 @@ export default function ResultReward() {
             await ownerApi.claimReward(prizeAwardId);
             loadRewards();
             loadSummary();
-            showToast('🏆 Reward claimed successfully!', 'success', 'Claim Reward');
+            showToast('Reward claimed successfully!', 'success', 'Claim Reward');
         } catch (err) {
             const msg = err.message || 'Failed to claim reward. Please try again.';
             setError(msg);

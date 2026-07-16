@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+import { FaCheckCircle, FaEnvelope, FaHorseHead, FaHourglassHalf } from "react-icons/fa";
 import { ownerApi } from "../../../../api/ownerApi";
 import { resolveFileUrl } from "../../../../api/uploadApi";
 
 const HEALTH_CONFIG = {
-    Fit:       { bg: '#dcfce7', color: '#15803d', dot: '#16a34a' },
-    Suspended: { bg: '#fef9c3', color: '#92400e', dot: '#ca8a04' },
-    Injured:   { bg: '#fee2e2', color: '#991b1b', dot: '#dc2626' },
+    Fit:       { bg: '#e8f7ee', color: '#16864f', dot: '#16864f' },
+    Suspended: { bg: '#faf2e0', color: '#8a6209', dot: '#8a6209' },
+    Injured:   { bg: '#f3e1df', color: '#a4392f', dot: '#a4392f' },
 };
 
 export default function JockeyGrid({ registrationId, search = '', healthStatus = '', onInvite, disableInvite = false, refreshKey = 0 }) {
@@ -47,14 +48,14 @@ export default function JockeyGrid({ registrationId, search = '', healthStatus =
             {error && <p style={styles.errorMsg}>{error}</p>}
             {loading && (
                 <div style={styles.stateBox}>
-                    <span style={{ fontSize: 24 }}>⏳</span>
+                    <FaHourglassHalf aria-hidden="true" style={{ fontSize: 22, color: '#94a3b8' }} />
                     <p style={styles.stateText}>Loading candidates...</p>
                 </div>
             )}
 
             {!loading && uninvited.length === 0 && (
                 <div style={styles.stateBox}>
-                    <span style={{ fontSize: 32 }}>🏇</span>
+                    <FaHorseHead aria-hidden="true" style={{ fontSize: 32, color: '#94a3b8' }} />
                     <p style={styles.stateText}>
                         {candidates.length > 0
                             ? 'All jockeys have been invited. Check responses below.'
@@ -72,7 +73,7 @@ export default function JockeyGrid({ registrationId, search = '', healthStatus =
                             {/* Image */}
                             <div style={styles.imgWrap}>
                                 {imgErrors[jockey.jockeyId] ? (
-                                    <div style={styles.imgFallback}>🏇</div>
+                                    <div style={styles.imgFallback}><FaHorseHead aria-hidden="true" /></div>
                                 ) : (
                                     <img
                                         src={jockey.profileImageUrl ? resolveFileUrl(jockey.profileImageUrl) : '/Jockey1.jpg'}
@@ -107,7 +108,7 @@ export default function JockeyGrid({ registrationId, search = '', healthStatus =
                                 <button
                                     style={{
                                         ...styles.inviteBtn,
-                                        backgroundColor: canInvite ? '#610000' : '#e2d9d6',
+                                        backgroundColor: canInvite ? '#16305c' : '#e2d9d6',
                                         color: canInvite ? '#fff' : '#a38f8f',
                                         cursor: canInvite ? 'pointer' : 'not-allowed',
                                     }}
@@ -116,7 +117,11 @@ export default function JockeyGrid({ registrationId, search = '', healthStatus =
                                     onClick={() => canInvite && onInvite(jockey)}
                                     type="button"
                                 >
-                                    {canInvite ? '✉️ Send Invitation' : '✓ Invited'}
+                                    {canInvite ? (
+                                        <><FaEnvelope aria-hidden="true" style={{ marginRight: 6 }} />Send Invitation</>
+                                    ) : (
+                                        <><FaCheckCircle aria-hidden="true" style={{ marginRight: 6 }} />Invited</>
+                                    )}
                                 </button>
                             </div>
                         </div>
@@ -149,8 +154,8 @@ const styles = {
     header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid #f0ebe8', backgroundColor: '#faf7f5' },
     headerTitle: { margin: 0, fontSize: 15, fontWeight: 700, color: '#1e293b' },
     headerSub: { margin: '2px 0 0', fontSize: 12, color: '#94a3b8' },
-    viewAllBtn: { background: 'none', border: '1px solid #ddd0cb', borderRadius: 8, padding: '5px 12px', fontSize: 12, fontWeight: 700, color: '#610000', cursor: 'pointer' },
-    errorMsg: { margin: '12px 20px', fontSize: 13, color: '#991b1b', backgroundColor: '#fee2e2', borderRadius: 8, padding: '8px 12px' },
+    viewAllBtn: { background: 'none', border: '1px solid #ded2ad', borderRadius: 999, padding: '5px 12px', fontSize: 12, fontWeight: 700, color: '#16305c', cursor: 'pointer' },
+    errorMsg: { margin: '12px 20px', fontSize: 13, color: '#a4392f', backgroundColor: '#f3e1df', borderRadius: 10, padding: '8px 12px' },
     stateBox: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: '40px 20px', textAlign: 'center' },
     stateText: { margin: 0, fontSize: 13, color: '#64748b' },
     grid: { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, padding: 16 },
@@ -163,5 +168,5 @@ const styles = {
     name: { margin: 0, fontWeight: 700, fontSize: 14, color: '#1e293b' },
     statsRow: { display: 'flex', gap: 6 },
     skillsRow: { display: 'flex', flexWrap: 'wrap', gap: 5 },
-    inviteBtn: { width: '100%', padding: '9px 0', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, marginTop: 4 },
+    inviteBtn: { width: '100%', padding: '9px 0', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, marginTop: 4 },
 };

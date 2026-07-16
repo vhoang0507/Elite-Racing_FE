@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaEdit, FaEye, FaTrashAlt } from "react-icons/fa";
 import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
 import { resolveFileUrl } from "../../../../api/uploadApi";
 import { getCompactPaginationItems } from "../../../../utils/pagination";
 
 const healthColor = {
-    Healthy: { bg: "#d4edda", color: "#155724" },
-    Injured: { bg: "#f8d7da", color: "#721c24" },
-    UnderTraining: { bg: "#fff3cd", color: "#856404" },
+    Healthy: { bg: "#e8f7ee", color: "#16864f" },
+    Injured: { bg: "#f3e1df", color: "#a4392f" },
+    UnderTraining: { bg: "#faf2e0", color: "#8a6209" },
 };
 
 export default function HorseTable() {
@@ -114,83 +115,77 @@ export default function HorseTable() {
                 </select>
             </div>
 
-            {/* Table */}
+            {/* Cards */}
             {loading ? (
                 <p style={{ textAlign: "center", color: "#999" }}>Loading...</p>
+            ) : horses.length === 0 ? (
+                <div style={styles.emptyBox}>No horses found</div>
             ) : (
-                <table style={styles.table}>
-                    <thead>
-                        <tr>
-                            {["Horse Name", "Breed", "Age", "Height", "Weight", "Health Status", "Status", "Action"].map(h => (
-                                <th key={h} style={styles.th}>{h}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {horses.map((horse, i) => (
-                            <tr key={horse.horseId ?? i} style={styles.tr}>
-                                <td style={styles.td}>
-                                    <div style={styles.horseName}>
-                                        <img
-                                            src={horse.imageUrl ? resolveFileUrl(horse.imageUrl) : "/Horse1.jpg"}
-                                            alt={horse.horseName}
-                                            style={styles.horseImg}
-                                        />
-                                        <span>{horse.horseName}</span>
-                                    </div>
-                                </td>
-                                <td style={styles.td}>{horse.breedName}</td>
-                                <td style={styles.td}>{horse.age}y</td>
-                                <td style={styles.td}>{horse.heightCm ? `${horse.heightCm} cm` : "-"}</td>
-                                <td style={styles.td}>{horse.weightKg} kg</td>
-                                <td style={styles.td}>
+                <div style={styles.grid}>
+                    {horses.map((horse, i) => (
+                        <article key={horse.horseId ?? i} style={styles.card}>
+                            <div style={styles.cardImgWrap}>
+                                <img
+                                    src={horse.imageUrl ? resolveFileUrl(horse.imageUrl) : "/Horse1.jpg"}
+                                    alt={horse.horseName}
+                                    style={styles.cardImg}
+                                />
+                                <span style={{
+                                    ...styles.cardStatusBadge,
+                                    backgroundColor: horse.isActive ? "#e8f7ee" : "#f3e1df",
+                                    color: horse.isActive ? "#16864f" : "#a4392f",
+                                }}>
+                                    {horse.isActive ? "ACTIVE" : "INACTIVE"}
+                                </span>
+                            </div>
+
+                            <div style={styles.cardBody}>
+                                <div>
+                                    <strong style={styles.cardName}>{horse.horseName}</strong>
+                                    <span style={styles.cardBreed}>{horse.breedName}</span>
+                                </div>
+
+                                <div style={styles.cardInfoGrid}>
+                                    <span>Age</span>
+                                    <span style={styles.cardInfoValue}>{horse.age}y</span>
+                                    <span>Height</span>
+                                    <span style={styles.cardInfoValue}>{horse.heightCm ? `${horse.heightCm} cm` : "-"}</span>
+                                    <span>Weight</span>
+                                    <span style={styles.cardInfoValue}>{horse.weightKg} kg</span>
+                                </div>
+
+                                <div style={styles.cardFooter}>
                                     <span style={{ ...styles.badge, ...(healthColor[horse.healthStatus] ?? {}) }}>
                                         {horse.healthStatus}
                                     </span>
-                                </td>
-                                <td style={styles.td}>
-                                    <span style={{
-                                        ...styles.badge,
-                                        backgroundColor: horse.isActive ? "#d4edda" : "#f8d7da",
-                                        color: horse.isActive ? "#155724" : "#721c24",
-                                    }}>
-                                        {horse.isActive ? "ACTIVE" : "INACTIVE"}
-                                    </span>
-                                </td>
-                                <td style={styles.td}>
-                                    <button
-                                        title="View"
-                                        onClick={() => navigate(`/owner/horses/${horse.horseId}`)}
-                                        style={styles.iconBtn}
-                                    >
-                                        👁
-                                    </button>
-                                    <button
-                                        title="Edit"
-                                        onClick={() => navigate(`/owner/horses/${horse.horseId}/edit`)}
-                                        style={{ ...styles.iconBtn, color: "#1a73e8" }}
-                                    >
-                                        ✏️
-                                    </button>
-                                    <button
-                                        title="Delete"
-                                        onClick={() => handleDeleteHorse(horse.horseId)}
-                                        style={{ ...styles.iconBtn, color: "#d32f2f" }}
-                                    >
-                                        🗑️
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                        {horses.length === 0 && (
-                            <tr>
-                                <td colSpan={8} style={{ textAlign: "center", padding: "24px", color: "#999" }}>
-                                    No horses found
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+                                    <div style={styles.cardActions}>
+                                        <button
+                                            title="View"
+                                            onClick={() => navigate(`/owner/horses/${horse.horseId}`)}
+                                            style={styles.iconBtn}
+                                        >
+                                            <FaEye />
+                                        </button>
+                                        <button
+                                            title="Edit"
+                                            onClick={() => navigate(`/owner/horses/${horse.horseId}/edit`)}
+                                            style={{ ...styles.iconBtn, color: "#16305c" }}
+                                        >
+                                            <FaEdit />
+                                        </button>
+                                        <button
+                                            title="Delete"
+                                            onClick={() => handleDeleteHorse(horse.horseId)}
+                                            style={{ ...styles.iconBtn, color: "#a4392f" }}
+                                        >
+                                            <FaTrashAlt />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    ))}
+                </div>
             )}
 
             {/* Pagination */}
@@ -222,24 +217,54 @@ export default function HorseTable() {
 }
 
 const styles = {
-    wrapper: { backgroundColor: "#fff", borderRadius: "12px", padding: "20px", border: "1px solid #eee" },
+    wrapper: { backgroundColor: "#fff", borderRadius: "12px", padding: "20px", border: "1px solid #ded2ad", boxShadow: "0 8px 22px rgba(15,23,42,0.06)" },
     filterBar: { display: "flex", gap: "10px", marginBottom: "16px", flexWrap: "wrap" },
-    search: { padding: "8px 12px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "13px", flex: 1 },
-    select: { padding: "8px 12px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "13px", cursor: "pointer" },
-    filterBtn: { padding: "8px 16px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "13px", cursor: "pointer", backgroundColor: "#fff" },
-    table: { width: "100%", borderCollapse: "collapse" },
-    th: { textAlign: "left", padding: "10px 12px", fontSize: "12px", color: "#999", fontWeight: "600", textTransform: "uppercase", borderBottom: "1px solid #eee" },
-    tr: { borderBottom: "1px solid #f5f5f5" },
-    td: { padding: "12px", fontSize: "14px" },
-    horseName: { display: "flex", alignItems: "center", gap: "10px" },
-    horseImg: { width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover" },
-    badge: { padding: "3px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: "500" },
-    iconBtn: { background: "none", border: "none", cursor: "pointer", fontSize: "16px", marginRight: "4px" },
-    toggleBtn: { border: "none", borderRadius: "6px", padding: "4px 10px", cursor: "pointer", fontSize: "12px", fontWeight: "500" },
+    search: { padding: "8px 14px", borderRadius: "999px", border: "1px solid #ded2ad", fontSize: "13px", flex: 1 },
+    select: { padding: "8px 14px", borderRadius: "999px", border: "1px solid #ded2ad", fontSize: "13px", cursor: "pointer" },
+    filterBtn: { padding: "8px 18px", borderRadius: "999px", border: "0", fontSize: "13px", fontWeight: "700", cursor: "pointer", backgroundColor: "#16305c", color: "#fff" },
+    emptyBox: { textAlign: "center", padding: "40px 20px", color: "#94a3b8", fontSize: "14px", fontWeight: 600 },
+    grid: {
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+        gap: "18px",
+    },
+    card: {
+        display: "flex",
+        flexDirection: "column",
+        borderRadius: "14px",
+        border: "1px solid #ded2ad",
+        backgroundColor: "#fff",
+        overflow: "hidden",
+        boxShadow: "0 8px 20px rgba(15,23,42,0.06)",
+        transition: "box-shadow 0.2s",
+    },
+    cardImgWrap: { position: "relative", aspectRatio: "4 / 3" },
+    cardImg: { width: "100%", height: "100%", objectFit: "cover", display: "block" },
+    cardStatusBadge: {
+        position: "absolute", top: "10px", right: "10px",
+        padding: "3px 10px", borderRadius: "999px", fontSize: "11px", fontWeight: 700,
+        boxShadow: "0 2px 6px rgba(0,0,0,0.18)",
+    },
+    cardBody: { display: "flex", flexDirection: "column", gap: "12px", padding: "14px 16px" },
+    cardName: { display: "block", fontSize: "1rem", color: "#1b2333" },
+    cardBreed: { display: "block", marginTop: "2px", fontSize: "0.78rem", fontWeight: 600, color: "#6b6456" },
+    cardInfoGrid: {
+        display: "grid", gridTemplateColumns: "1fr 1fr", rowGap: "4px", columnGap: "8px",
+        fontSize: "0.78rem", fontWeight: 600, color: "#6b6456",
+    },
+    cardInfoValue: { color: "#1b2333", fontWeight: 700, textAlign: "right" },
+    cardFooter: {
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        borderTop: "1px solid #f0ece0", paddingTop: "10px",
+    },
+    cardActions: { display: "flex", alignItems: "center" },
+    badge: { padding: "3px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: "700" },
+    iconBtn: { background: "none", border: "none", cursor: "pointer", fontSize: "15px", marginLeft: "2px", color: "#64748b" },
+    toggleBtn: { border: "none", borderRadius: "999px", padding: "4px 10px", cursor: "pointer", fontSize: "12px", fontWeight: "500" },
     pagination: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "16px" },
-    pageInfo: { fontSize: "13px", color: "#999" },
+    pageInfo: { fontSize: "13px", color: "#6b6456", fontWeight: "600" },
     pages: { display: "flex", gap: "6px" },
-    pageBtn: { width: "32px", height: "32px", borderRadius: "6px", border: "1px solid #ddd", background: "#fff", cursor: "pointer", fontSize: "13px" },
-    pageEllipsis: { color: "#64748b", cursor: "default", display: "inline-flex", alignItems: "center", justifyContent: "center" },
-    activePage: { backgroundColor: "#e8f7ef", color: "#064e3b", border: "1px solid #0b7f5a", fontWeight: "700" },
+    pageBtn: { width: "32px", height: "32px", borderRadius: "999px", border: "1px solid #ded2ad", background: "#fff", cursor: "pointer", fontSize: "13px", fontWeight: "700", color: "#16305c" },
+    pageEllipsis: { color: "#6b6456", cursor: "default", display: "inline-flex", alignItems: "center", justifyContent: "center" },
+    activePage: { backgroundColor: "#16305c", color: "#fff", border: "1px solid #16305c", fontWeight: "700" },
 };

@@ -16,14 +16,14 @@ import {
 import { clearAuthSession, getAuthUser } from '../../utils/tokenStorage';
 
 const navigation = [
-    { key: 'dashboard', label: 'Dashboard', icon: FaChartLine, path: '/owner/dashboard' },
-    { key: 'my-horse', label: 'My Horse', icon: FaHorseHead, path: '/owner/my-horse' },
-    { key: 'register-horse', label: 'Register Horse', icon: FaPlusCircle, path: '/owner/register-horse' },
-    { key: 'registrations', label: 'My Registrations', icon: FaClipboardList, path: '/owner/registrations' },
-    { key: 'jockey', label: 'Jockey Assignment', icon: FaUserFriends, path: '/owner/jockey' },
-    { key: 'rewards', label: 'Result & Reward', icon: FaTrophy, path: '/owner/rewards' },
-    { key: 'notifications', label: 'Notifications', icon: FaBell, path: '/owner/notifications' },
-    { key: 'settings', label: 'Settings', icon: FaCog, path: '/owner/settings' },
+    { key: 'dashboard', label: 'Dashboard', icon: FaChartLine, path: '/owner/dashboard', section: 'Overview' },
+    { key: 'my-horse', label: 'My Horse', icon: FaHorseHead, path: '/owner/my-horse', section: 'Stable' },
+    { key: 'register-horse', label: 'Register Horse', icon: FaPlusCircle, path: '/owner/register-horse', section: 'Stable' },
+    { key: 'registrations', label: 'My Registrations', icon: FaClipboardList, path: '/owner/registrations', section: 'Racing' },
+    { key: 'jockey', label: 'Jockey Assignment', icon: FaUserFriends, path: '/owner/jockey', section: 'Racing' },
+    { key: 'rewards', label: 'Result & Reward', icon: FaTrophy, path: '/owner/rewards', section: 'Racing' },
+    { key: 'notifications', label: 'Notifications', icon: FaBell, path: '/owner/notifications', section: 'Account' },
+    { key: 'settings', label: 'Settings', icon: FaCog, path: '/owner/settings', section: 'Account' },
 ];
 
 const shellClasses = [
@@ -66,21 +66,26 @@ function HorseOwnerLayout({ activeKey, children }) {
                 </div>
 
                 <nav className="role-nav">
-                    {navigation.map((item) => {
+                    {navigation.map((item, index) => {
                         const Icon = item.icon;
                         const isActive = item.key === activeKey;
+                        const showSectionLabel = item.section && item.section !== navigation[index - 1]?.section;
                         return (
-                            <Link
-                                key={item.key}
-                                to={item.path}
-                                className={[
-                                    'role-nav-item',
-                                    isActive ? 'is-active' : '',
-                                ].join(' ')}
-                            >
-                                <Icon className="h-4 w-4 flex-none" />
-                                <span>{item.label}</span>
-                            </Link>
+                            <div key={item.key} className="contents">
+                                {showSectionLabel && (
+                                    <div className="role-nav-section-label">{item.section}</div>
+                                )}
+                                <Link
+                                    to={item.path}
+                                    className={[
+                                        'role-nav-item',
+                                        isActive ? 'is-active' : '',
+                                    ].join(' ')}
+                                >
+                                    <Icon className="h-4 w-4 flex-none" />
+                                    <span>{item.label}</span>
+                                </Link>
+                            </div>
                         );
                     })}
                 </nav>

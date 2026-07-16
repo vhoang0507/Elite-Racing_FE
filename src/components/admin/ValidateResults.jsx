@@ -29,11 +29,7 @@ import AdminLayout from './AdminLayout';
 
 const formatClass = (value) => String(value || '').toLowerCase().replace(/\s+/g, '-');
 
-const pageShellClass = [
-    '[--validate-soft-panel:#f8fbff]',
-    '[--validate-table-head:#f1f5ff]',
-    'grid min-h-[calc(100vh-64px)] content-start gap-8 px-[52px] py-14 max-[820px]:px-5 max-[820px]:py-8',
-].join(' ');
+const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-8 px-[52px] py-14 max-[820px]:px-5 max-[820px]:py-8';
 
 const panelWidthClass = 'w-[min(100%,1090px)]';
 
@@ -46,21 +42,23 @@ const raceIconClass = {
 };
 
 const statusClass = {
-    pending: 'border-[#9ab8ff] bg-[#e7f0ff] text-[#1747c2]',
-    draft: 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
-    refereeconfirmed: 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
-    adminapproved: 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
-    returned: 'border-[#93c5fd] bg-[#eff6ff] text-[#075985]',
-    active: 'border-[#a7dfbf] bg-[#e8f8ef] text-[#1a7d49]',
-    inactive: 'border-[#ddd6d3] bg-[#f7f5f4] text-[#6f6360]',
-    banned: 'border-[#cbd5e1] bg-[#f1f5f9] text-[#475569]',
-    refereereport: 'border-[#9ab8ff] bg-[#e7f0ff] text-[#1747c2]',
-    'referee-report': 'border-[#9ab8ff] bg-[#e7f0ff] text-[#1747c2]',
-    violationreport: 'border-[#f1d59b] bg-[#fff7df] text-[#8a5a00]',
-    'violation-report': 'border-[#f1d59b] bg-[#fff7df] text-[#8a5a00]',
-    warning: 'border-[#f1d59b] bg-[#fff7df] text-[#8a5a00]',
-    disqualified: 'border-[#f0b7ae] bg-[#fff1ef] text-[#a11616]',
+    pending: 'bg-[#faf2e0] text-[#8a6209]',
+    draft: 'bg-[#f3f4f6] text-[#374151]',
+    refereeconfirmed: 'bg-[#faf2e0] text-[#8a6209]',
+    adminapproved: 'bg-[#e8f7ee] text-[#16864f]',
+    published: 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]',
+    returned: 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]',
+    active: 'bg-[#e8f7ee] text-[#16864f]',
+    inactive: 'bg-[#f3e8e6] text-[#7f645f]',
+    banned: 'bg-[#f3e1df] text-[#a4392f]',
+    refereereport: 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]',
+    'referee-report': 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]',
+    violationreport: 'bg-[#faf2e0] text-[#8a6209]',
+    'violation-report': 'bg-[#faf2e0] text-[#8a6209]',
+    warning: 'bg-[#faf2e0] text-[#8a6209]',
+    disqualified: 'bg-[#f3e1df] text-[#a4392f]',
 };
+const humanizeLabel = (value) => String(value || '').replace(/([a-z0-9])([A-Z])/g, '$1 $2').trim();
 
 const iconByTone = {
     blue: FaFlagCheckered,
@@ -70,7 +68,7 @@ const iconByTone = {
     orange: FaFileAlt,
 };
 
-const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-white font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]';
+const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-full border border-[var(--admin-border)] bg-white font-bold text-[var(--admin-primary-dark)] transition-colors hover:border-[var(--admin-primary)] hover:bg-[var(--admin-primary)] hover:text-white';
 const pageSize = 5;
 
 const sortPendingFirst = (items, getStatus) => [...items].sort((current, next) => {
@@ -195,14 +193,14 @@ function ValidateResults() {
                         aria-label="Active submissions"
                         className={`${panelWidthClass} overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_16px_34px_rgba(15,23,42,0.08)]`}
                     >
-                        <div className="flex min-h-[58px] items-center justify-between gap-4 border-b border-[var(--admin-border)] bg-[var(--validate-soft-panel)] px-6">
+                        <div className="flex min-h-[58px] items-center justify-between gap-4 border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-6">
                             <h2 className="m-0 text-[1.04rem] font-black text-[var(--admin-ink)]">
                                 Active Result Submissions
                             </h2>
                             <select
                                 value={statusFilter}
                                 onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-                                className="h-8 rounded-md border border-[var(--admin-border)] bg-white px-2 text-[0.78rem] font-bold text-[#475569] outline-none"
+                                className="h-8 rounded-full border border-[var(--admin-border)] bg-white px-3.5 text-[0.78rem] font-bold text-[var(--admin-ink)] outline-none transition-colors hover:border-[var(--admin-gold)]"
                             >
                                 {statusFilterOptions.map(opt => (
                                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -210,75 +208,65 @@ function ValidateResults() {
                             </select>
                         </div>
 
-                        <div className="w-full overflow-x-auto">
-                            <table className="w-full border-collapse max-[820px]:min-w-[840px]">
-                                <thead>
-                                    <tr>
-                                        <th className="border-b border-[var(--admin-border)] bg-[var(--validate-table-head)] px-6 py-[18px] pl-[78px] text-left text-[0.66rem] font-black uppercase tracking-normal text-[var(--admin-muted)] max-[820px]:pl-6">
-                                            Tournament Name
-                                        </th>
-                                        <th className="w-[260px] border-b border-[var(--admin-border)] bg-[var(--validate-table-head)] px-6 py-[18px] text-left text-[0.66rem] font-black uppercase tracking-normal text-[var(--admin-muted)]">
-                                            Status
-                                        </th>
-                                        <th className="w-[300px] border-b border-[var(--admin-border)] bg-[var(--validate-table-head)] px-6 py-[18px] text-center text-[0.66rem] font-black uppercase tracking-normal text-[var(--admin-muted)]">
-                                            Action
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {visibleSubmissions.map((submission) => {
-                                        const Icon = iconByTone[submission.tone] || FaFlagCheckered;
+                        {visibleSubmissions.length === 0 ? (
+                            <div className="px-6 py-12 text-center font-bold text-[var(--admin-muted)]">
+                                No result submissions found.
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-3 gap-5 p-5 max-[1180px]:grid-cols-2 max-[720px]:grid-cols-1">
+                                {visibleSubmissions.map((submission) => {
+                                    const Icon = iconByTone[submission.tone] || FaFlagCheckered;
 
-                                        return (
-                                            <tr key={submission.id || submission.race}>
-                                                <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-6 py-[18px] pl-[78px] align-middle max-[820px]:pl-6">
-                                                    <div className="flex min-w-80 items-center gap-4">
-                                                        <span className={`grid h-9 w-9 flex-none place-items-center rounded-md ${raceIconClass[submission.tone]}`}>
-                                                            <Icon aria-hidden="true" className="h-[17px] w-[17px]" />
-                                                        </span>
-                                                        <div>
-                                                            <strong className="block text-[0.9rem] leading-[1.15] text-[var(--admin-ink)]">
-                                                                {submission.race}
-                                                            </strong>
-                                                            <span className="mt-1 block text-[0.72rem] font-bold text-[#475569]">
-                                                                {submission.detail}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="w-[260px] whitespace-nowrap border-b border-[var(--admin-border)] px-6 py-[18px] align-middle">
-                                                    <span className={`inline-flex min-h-6 items-center rounded-full border px-2.5 text-[0.66rem] font-extrabold ${statusClass[formatClass(submission.status)] || statusClass.pending}`}>
-                                                        {submission.status}
+                                    return (
+                                        <article
+                                            className="flex flex-col overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-white shadow-[0_10px_26px_rgba(11,27,52,0.06)] transition-shadow duration-200 hover:shadow-[0_16px_36px_rgba(11,27,52,0.14)]"
+                                            key={submission.id || submission.race}
+                                        >
+                                            <div className="flex items-center gap-4 border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] p-4">
+                                                <span className={`grid h-11 w-11 flex-none place-items-center rounded-full ${raceIconClass[submission.tone]}`}>
+                                                    <Icon aria-hidden="true" className="h-[18px] w-[18px]" />
+                                                </span>
+                                                <div className="min-w-0">
+                                                    <strong className="block truncate text-[0.94rem] leading-[1.2] text-[var(--admin-ink)]">
+                                                        {submission.race}
+                                                    </strong>
+                                                    <span className="block truncate text-[0.74rem] font-bold text-[var(--admin-muted)]">
+                                                        {submission.detail}
                                                     </span>
-                                                </td>
-                                                <td className="w-[300px] whitespace-nowrap border-b border-[var(--admin-border)] px-6 py-[18px] text-center align-middle">
-                                                    <div className="inline-flex items-center justify-center gap-2">
-                                                        <Link
-                                                            className="inline-flex min-h-[38px] min-w-[140px] cursor-pointer items-center justify-center gap-2 rounded-md border border-[var(--admin-primary)] bg-white text-[0.82rem] font-extrabold text-[var(--admin-primary)] no-underline hover:bg-[var(--admin-primary)] hover:text-white"
-                                                            to={`/admin/results/${submission.slug}`}
-                                                        >
-                                                            <span>View Details</span>
-                                                            <FaChevronRight aria-hidden="true" className="h-3 w-3" />
-                                                        </Link>
-                                                        <button
-                                                            aria-label={`Delete ${submission.race || 'result report'}`}
-                                                            className="grid h-[38px] w-[38px] cursor-pointer place-items-center rounded-md border border-[#f0b7ae] bg-white text-[#a11616] hover:bg-[#fff1ef] disabled:cursor-not-allowed disabled:opacity-50"
-                                                            disabled={deletingId === String(submission.id || submission.slug || submission.resultId)}
-                                                            onClick={() => handleDeleteSubmission(submission)}
-                                                            type="button"
-                                                        >
-                                                            <FaTrashAlt aria-hidden="true" />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
+                                                </div>
+                                            </div>
 
-                        <div className="flex min-h-[68px] items-center justify-between gap-[18px] px-[22px] py-4 text-[0.82rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch">
+                                            <div className="flex flex-1 flex-col gap-4 p-4">
+                                                <span className={`inline-flex w-fit min-h-6 items-center rounded-full px-3 text-[0.66rem] font-bold uppercase tracking-wide ${statusClass[formatClass(submission.status)] || statusClass.pending}`}>
+                                                    {humanizeLabel(submission.status)}
+                                                </span>
+
+                                                <div className="mt-auto flex items-center gap-2 border-t border-[var(--admin-border)] pt-3">
+                                                    <Link
+                                                        className="inline-flex min-h-[38px] flex-1 cursor-pointer items-center justify-center gap-2 rounded-full border border-[var(--admin-primary)] bg-white text-[0.82rem] font-extrabold text-[var(--admin-primary)] no-underline transition-colors hover:bg-[var(--admin-primary)] hover:text-white"
+                                                        to={`/admin/results/${submission.slug}`}
+                                                    >
+                                                        <span>View Details</span>
+                                                        <FaChevronRight aria-hidden="true" className="h-3 w-3" />
+                                                    </Link>
+                                                    <button
+                                                        aria-label={`Delete ${submission.race || 'result report'}`}
+                                                        className="grid h-[38px] w-[38px] flex-none cursor-pointer place-items-center rounded-full bg-[#f3e1df] text-[#a4392f] hover:bg-[#ecd0cc] disabled:cursor-not-allowed disabled:opacity-50"
+                                                        disabled={deletingId === String(submission.id || submission.slug || submission.resultId)}
+                                                        onClick={() => handleDeleteSubmission(submission)}
+                                                        type="button"
+                                                    >
+                                                        <FaTrashAlt aria-hidden="true" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        <div className="flex min-h-[68px] items-center justify-between gap-[18px] border-t border-[var(--admin-border)] px-[22px] py-4 text-[0.82rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch">
                             <span>Showing {firstShown} - {lastShown} of {filteredSubmissions.length} results</span>
 
                             <div className="flex items-center gap-2 max-[820px]:flex-wrap">
@@ -286,7 +274,7 @@ function ValidateResults() {
                                 {getCompactPaginationItems(totalPages, page).map((pageItem) => (
                                     typeof pageItem === 'number' ? (
                                         <button
-                                            className={`${pageButtonClass} ${pageItem === page ? 'border-[var(--admin-primary)] bg-[#e8f7ef] text-[#064e3b] hover:bg-[#d1fae5]' : ''}`}
+                                            className={`${pageButtonClass} ${pageItem === page ? '!border-[var(--admin-primary)] !bg-[var(--admin-primary)] !text-white' : ''}`}
                                             key={pageItem}
                                             onClick={() => setPage(pageItem)}
                                             type="button"
@@ -294,7 +282,7 @@ function ValidateResults() {
                                             {pageItem}
                                         </button>
                                     ) : (
-                                        <span className={`${pageButtonClass} cursor-default text-[var(--admin-muted)] hover:bg-[#fffdfc]`} key={pageItem}>...</span>
+                                        <span className={`${pageButtonClass} cursor-default border-transparent text-[var(--admin-muted)] hover:!border-transparent hover:!bg-transparent hover:!text-[var(--admin-muted)]`} key={pageItem}>...</span>
                                     )
                                 ))}
                                 <button aria-label="Next page" className={pageButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">&gt;</button>

@@ -33,58 +33,60 @@ function PredictionCard({ prediction }) {
     const outcome = getOutcome(prediction);
 
     const accentColor = {
-        correct:   '#155724',
-        wrong:     '#721c24',
-        locked:    '#1e40af',
-        cancelled: '#64748b',
-        pending:   '#856404',
+        correct:   '#16864f',
+        wrong:     '#a4392f',
+        locked:    '#16305c',
+        cancelled: '#6b7280',
+        pending:   '#8a6209',
     }[outcome];
 
     const badgeBg = {
-        correct:   '#d4edda',
-        wrong:     '#f8d7da',
-        locked:    '#dbeafe',
-        cancelled: '#f1f5f9',
-        pending:   '#fff3cd',
+        correct:   '#e8f7ee',
+        wrong:     '#f3e1df',
+        locked:    'var(--admin-surface-strong)',
+        cancelled: '#f1f0ec',
+        pending:   '#faf2e0',
     }[outcome];
 
     const badgeLabel = {
-        correct:   `✓ Correct  +${pointsAwarded ?? 0} pts`,
-        wrong:     `✗ Wrong  -${stakePoints ?? 0} pts`,
-        locked:    '🔒 Locked – Awaiting Evaluation',
-        cancelled: '✕ Cancelled',
-        pending:   '⏳ Awaiting Result',
+        correct:   `Correct  +${pointsAwarded ?? 0} pts`,
+        wrong:     `Wrong  -${stakePoints ?? 0} pts`,
+        locked:    'Locked – Awaiting Evaluation',
+        cancelled: 'Cancelled',
+        pending:   'Awaiting Result',
     }[outcome];
 
     return (
         <article className="surface-card" style={{ overflow: 'hidden', display: 'flex' }}>
             <div style={{ width: 4, background: accentColor, flexShrink: 0 }} />
             <div style={{ flex: 1, padding: '16px 18px', display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 28, flexShrink: 0 }}>🐴</span>
+                <div className="stat-icon h-11 w-11 flex-shrink-0 bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
+                    <FaHorseHead aria-hidden="true" />
+                </div>
                 <div style={{ flex: 1, minWidth: 160 }}>
-                    <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: 700, color: '#0b7f5a', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: 700, color: 'var(--admin-primary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                         {tournamentName ?? 'Tournament'}
                     </p>
-                    <p style={{ margin: '3px 0 0', fontWeight: 700, fontSize: '0.95rem', color: '#2b1b1b' }}>
+                    <p style={{ margin: '3px 0 0', fontWeight: 700, fontSize: '0.95rem', color: 'var(--admin-ink)' }}>
                         {predictedHorseName}
                     </p>
                     {stakePoints != null && (
-                        <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: '#999' }}>
+                        <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: 'var(--admin-muted)' }}>
                             Stake: {stakePoints} pts
                             {netPoints != null && outcome !== 'pending' && outcome !== 'locked' && (
-                                <span style={{ marginLeft: 8, fontWeight: 700, color: netPoints >= 0 ? '#155724' : '#721c24' }}>
+                                <span style={{ marginLeft: 8, fontWeight: 700, color: netPoints >= 0 ? '#16864f' : '#a4392f' }}>
                                     Net: {netPoints >= 0 ? '+' : ''}{netPoints} pts
                                 </span>
                             )}
                         </p>
                     )}
                     {tournamentStatus && (
-                        <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: '#bbb' }}>
+                        <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: 'var(--admin-muted)' }}>
                             Tournament: {tournamentStatus}
                         </p>
                     )}
                 </div>
-                <span style={{ fontSize: 12, fontWeight: 700, padding: '5px 14px', borderRadius: 20, flexShrink: 0, background: badgeBg, color: accentColor }}>
+                <span className="rounded-full" style={{ fontSize: 12, fontWeight: 700, padding: '5px 14px', flexShrink: 0, background: badgeBg, color: accentColor }}>
                     {badgeLabel}
                 </span>
             </div>
@@ -149,7 +151,7 @@ export default function Predictions() {
                     const Icon = s.icon;
                     return (
                         <article key={s.label} className="stat-card min-h-[110px]">
-                            <div className={`stat-icon ${s.tone === 'green' ? 'bg-[#dff7e9] text-[#118548]' : s.tone === 'blue' ? 'bg-[#e3f2fd] text-[#1565c0]' : s.tone === 'gold' ? 'bg-[#fff3cd] text-[#856404]' : s.tone === 'red' ? 'bg-[#f8d7da] text-[#721c24]' : ''}`}>
+                            <div className={`stat-icon ${s.tone === 'green' ? 'bg-[#e8f7ee] text-[#16864f]' : s.tone === 'blue' ? 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]' : s.tone === 'gold' ? 'bg-[#faf2e0] text-[#8a6209]' : s.tone === 'red' ? 'bg-[#f3e1df] text-[#a4392f]' : ''}`}>
                                 <Icon aria-hidden="true" />
                             </div>
                             <small className="stat-label">{s.label}</small>
@@ -164,7 +166,9 @@ export default function Predictions() {
             {/* Empty state */}
             {!loading && total === 0 && (
                 <div className="surface-card p-10 text-center">
-                    <div style={{ fontSize: 48, marginBottom: 12 }}>🐴</div>
+                    <div className="stat-icon mx-auto mb-3 h-14 w-14 bg-[var(--admin-surface-strong)] text-[var(--admin-primary)] text-2xl">
+                        <FaHorseHead aria-hidden="true" />
+                    </div>
                     <h3 className="m-0 text-[1.1rem] font-bold">No predictions yet</h3>
                     <p className="m-0 mt-2 text-[0.9rem] text-[var(--admin-muted)]">
                         Go to Tournaments to browse events and make your first prediction!
@@ -183,7 +187,7 @@ export default function Predictions() {
                 <>
                     {/* How scoring works */}
                     <div className="soft-card flex items-start gap-3 p-4">
-                        <div className="stat-icon h-9 w-9 bg-[#fff3cd] text-[#856404]">
+                        <div className="stat-icon h-9 w-9 bg-[#faf2e0] text-[#8a6209]">
                             <FaTrophy aria-hidden="true" />
                         </div>
                         <p className="m-0 text-[0.85rem] text-[var(--admin-muted)]">
@@ -199,11 +203,12 @@ export default function Predictions() {
                                     key={f.key}
                                     type="button"
                                     onClick={() => setFilter(f.key)}
+                                    className="rounded-full"
                                     style={{
-                                        padding: '6px 14px', borderRadius: 20, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                                        border: filter === f.key ? 'none' : '1px solid #dce5ef',
-                                        background: filter === f.key ? '#0b7f5a' : '#fff8f6',
-                                        color: filter === f.key ? '#fff' : '#0b7f5a',
+                                        padding: '6px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                                        border: filter === f.key ? 'none' : '1px solid var(--admin-border)',
+                                        background: filter === f.key ? 'var(--admin-primary)' : 'var(--admin-surface)',
+                                        color: filter === f.key ? '#fff' : 'var(--admin-primary)',
                                     }}
                                 >
                                     {f.label} ({counts[f.key] ?? 0})

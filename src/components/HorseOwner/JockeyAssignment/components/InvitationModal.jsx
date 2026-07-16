@@ -86,10 +86,10 @@ export default function InvitationModal({ jockey, registrationId, tournamentName
                     />
                 </div>
 
-                {error && <p style={{ color: "#721c24", fontSize: "12px", margin: "0 0 12px" }}>{error}</p>}
+                {error && <p style={{ color: "#a4392f", fontSize: "12px", margin: "0 0 12px" }}>{error}</p>}
 
                 <div style={styles.footer}>
-                    <span style={{ fontWeight: "bold", color: "#610000" }}>Elite Racing League</span>
+                    <span style={{ fontWeight: "bold", color: "#16305c" }}>Elite Racing League</span>
                     <div style={{ display: "flex", gap: "12px" }}>
                         <button style={styles.cancelBtn} onClick={onClose} disabled={sending}>Cancel</button>
                         <button style={styles.sendBtn} onClick={handleSend} disabled={sending}>
@@ -108,15 +108,15 @@ const styles = {
     modal: { backgroundColor: "#fff", borderRadius: "12px", width: "600px", maxWidth: "95vw", padding: "24px" },
     header: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" },
     closeBtn: { background: "none", border: "none", fontSize: "18px", cursor: "pointer", color: "#999" },
-    jockeyCard: { backgroundColor: "#610000", borderRadius: "10px", padding: "16px", display: "flex", gap: "16px", alignItems: "center", marginBottom: "20px", color: "#fff" },
+    jockeyCard: { backgroundColor: "#16305c", borderRadius: "10px", padding: "16px", display: "flex", gap: "16px", alignItems: "center", marginBottom: "20px", color: "#fff" },
     jockeyImg: { width: "60px", height: "60px", borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(255,255,255,0.3)" },
     jockeyName: { margin: 0, fontWeight: "bold", fontSize: "16px" },
     jockeyStats: { display: "flex", gap: "24px", fontSize: "13px", marginTop: "8px" },
     formRow: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" },
     field: { marginBottom: "16px" },
     label: { display: "block", fontSize: "11px", color: "#999", fontWeight: "700", letterSpacing: "1px", marginBottom: "6px" },
-    input: { width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "13px", boxSizing: "border-box" },
-    footer: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px", paddingTop: "16px", borderTop: "1px solid #eee" },
-    cancelBtn: { padding: "10px 20px", backgroundColor: "#fff", border: "1px solid #ddd", borderRadius: "8px", cursor: "pointer", fontSize: "14px" },
-    sendBtn: { padding: "10px 24px", backgroundColor: "#610000", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px", fontWeight: "bold" },
+    input: { width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1px solid #ded2ad", fontSize: "13px", boxSizing: "border-box" },
+    footer: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px", paddingTop: "16px", borderTop: "1px solid #ded2ad" },
+    cancelBtn: { padding: "10px 20px", backgroundColor: "#fff", border: "1px solid #ded2ad", borderRadius: "999px", cursor: "pointer", fontSize: "14px" },
+    sendBtn: { padding: "10px 24px", backgroundColor: "#16305c", color: "#fff", border: "none", borderRadius: "999px", cursor: "pointer", fontSize: "14px", fontWeight: "bold" },
 };

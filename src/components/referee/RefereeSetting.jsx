@@ -64,7 +64,7 @@ function RefereeSetting() {
                     <div className={`${panelClass} h-fit p-3`}>
                         <button
                             type="button"
-                            className="mb-2 flex w-full items-center gap-3 rounded-md bg-[#e8f7ef] px-4 py-3 text-left font-semibold text-[var(--admin-primary)]"
+                            className="mb-2 flex w-full items-center gap-3 rounded-md bg-[var(--admin-surface-strong)] px-4 py-3 text-left font-semibold text-[var(--admin-primary)]"
                         >
                             <FaUser />
                             Profile Settings
@@ -72,7 +72,7 @@ function RefereeSetting() {
 
                         <button
                             type="button"
-                            className="flex w-full items-center gap-3 rounded-md px-4 py-3 text-left font-semibold text-[#475569] hover:bg-[#e8f7ef]"
+                            className="flex w-full items-center gap-3 rounded-md px-4 py-3 text-left font-semibold text-[#475569] hover:bg-[var(--admin-surface-strong)]"
                         >
                             <FaLock />
                             Account Security
@@ -103,7 +103,7 @@ function RefereeSetting() {
                             </div>
 
                             <div className="mb-8 flex items-center gap-5 max-[720px]:flex-col max-[720px]:items-start">
-                                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#e8f7ef] text-[var(--admin-primary)]">
+                                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                                     <FaUserCircle size={70} />
                                 </div>
 
@@ -170,7 +170,7 @@ function SummaryTile({ icon, label, value }) {
 
     return (
         <article className="flex min-w-0 items-center gap-3 rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-4">
-            <div className="grid h-10 w-10 flex-none place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
+            <div className="grid h-10 w-10 flex-none place-items-center rounded-md bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                 <Icon />
             </div>
             <div className="min-w-0">

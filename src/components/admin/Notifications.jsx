@@ -69,7 +69,7 @@ const iconByTone = {
 };
 
 const selectClass = 'h-full w-full min-w-0 cursor-pointer border-0 bg-transparent px-0 pr-6 text-[0.78rem] font-bold text-[#475569] outline-0';
-const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]';
+const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-full border border-[var(--admin-border)] bg-white font-extrabold text-[var(--admin-primary-dark)] transition-colors hover:border-[var(--admin-primary)] hover:bg-[var(--admin-primary)] hover:text-white';
 const pageSize = 4;
 
 const matchesQuery = (notification, query) => {
@@ -242,7 +242,7 @@ function Notifications() {
                                     key={card.label}
                                 >
                                     <div className="flex items-start justify-between gap-4">
-                                        <span className={`grid h-[38px] w-[38px] place-items-center rounded-lg ${summaryIconClass[card.tone]}`}>
+                                        <span className={`grid h-[38px] w-[38px] place-items-center rounded-full ${summaryIconClass[card.tone]}`}>
                                             <Icon aria-hidden="true" className="h-4 w-4" />
                                         </span>
                                         <small className="text-[0.58rem] font-black uppercase text-[#475569]">
@@ -262,7 +262,7 @@ function Notifications() {
                         aria-label="Notification filters"
                         className={`${panelWidthClass} grid min-h-[62px] grid-cols-[minmax(240px,1fr)_180px_180px_180px] items-center gap-4 rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--notifications-soft)] px-[18px] py-3 max-[1180px]:grid-cols-2 max-[820px]:grid-cols-1`}
                     >
-                        <label className="flex h-[38px] items-center gap-2.5 rounded-md border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661]">
+                        <label className="flex h-[38px] items-center gap-2.5 rounded-full border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661] transition-colors hover:border-[var(--admin-gold)]">
                             <FaSearch aria-hidden="true" />
                             <input
                                 className="h-full w-full min-w-0 border-0 bg-transparent p-0 text-[0.78rem] text-[var(--admin-ink)] outline-0"
@@ -273,7 +273,7 @@ function Notifications() {
                             />
                         </label>
 
-                        <label className="flex h-[38px] items-center rounded-md border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661]">
+                        <label className="flex h-[38px] items-center rounded-full border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661] transition-colors hover:border-[var(--admin-gold)]">
                             <select className={selectClass} onChange={handleFilterChange(setTypeFilter)} value={typeFilter}>
                                 <option value="all-types">All Types</option>
                                 <option value="registration">Registration</option>
@@ -283,7 +283,7 @@ function Notifications() {
                             </select>
                         </label>
 
-                        <label className="flex h-[38px] items-center rounded-md border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661]">
+                        <label className="flex h-[38px] items-center rounded-full border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661] transition-colors hover:border-[var(--admin-gold)]">
                             <select className={selectClass} onChange={handleFilterChange(setStatusFilter)} value={statusFilter}>
                                 <option value="all-status">All Status</option>
                                 <option value="unread">Unread</option>
@@ -291,7 +291,7 @@ function Notifications() {
                             </select>
                         </label>
 
-                        <label className="flex h-[38px] items-center rounded-md border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661]">
+                        <label className="flex h-[38px] items-center rounded-full border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661] transition-colors hover:border-[var(--admin-gold)]">
                             <select className={selectClass} onChange={handleFilterChange(setPriorityFilter)} value={priorityFilter}>
                                 <option value="all-priority">All Priority</option>
                                 <option value="critical">Critical</option>
@@ -304,7 +304,7 @@ function Notifications() {
                         <button
                             onClick={handleMarkAllRead}
                             type="button"
-                            className="flex h-[38px] items-center gap-2 rounded-md border border-[var(--admin-primary)] px-4 text-[0.78rem] font-bold text-[var(--admin-primary)] hover:bg-[#e8f7ef]"
+                            className="flex h-[38px] items-center gap-2 rounded-full border border-[var(--admin-primary)] px-4 text-[0.78rem] font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-primary)] hover:text-white"
                         >
                             <FaCheck aria-hidden="true" />
                             Mark All Read
@@ -312,6 +312,14 @@ function Notifications() {
                     </section>
 
                     <section aria-label="Notification list" className={`${panelWidthClass} grid gap-[18px]`}>
+                        {visibleNotifications.length === 0 && (
+                            <div className="grid justify-items-center gap-3 rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-6 py-14 text-center shadow-[0_14px_28px_rgba(15,23,42,0.04)]">
+                                <span className="grid h-12 w-12 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
+                                    <FaBell aria-hidden="true" className="h-5 w-5" />
+                                </span>
+                                <span className="font-bold text-[var(--admin-muted)]">No notifications for this filter.</span>
+                            </div>
+                        )}
                         {visibleNotifications.map((notification) => {
                             const Icon = iconByTone[notification.tone] || FaBell;
 
@@ -350,7 +358,7 @@ function Notifications() {
                                         <div className="mt-5 flex flex-wrap gap-2">
                                             {[notification.type, notification.priority, notification.status].map((tag) => (
                                                 <span
-                                                    className={`inline-flex min-h-5 items-center rounded px-2 text-[0.58rem] font-black uppercase ${tagClass[formatClass(tag)] || tagClass.prediction}`}
+                                                    className={`inline-flex min-h-5 items-center rounded-full px-2 text-[0.58rem] font-black uppercase ${tagClass[formatClass(tag)] || tagClass.prediction}`}
                                                     key={tag}
                                                 >
                                                     {tag}

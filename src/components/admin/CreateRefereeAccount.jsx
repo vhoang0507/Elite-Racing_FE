@@ -46,11 +46,11 @@ const labelClass = 'text-[0.76rem] font-black text-[#5b403c]';
 const inputClass = 'h-10 w-full min-w-0 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.9rem] text-[var(--admin-ink)] outline-0 transition-all duration-200 placeholder:text-[#94a3b8] focus:border-[#0b7f5a] focus:bg-white focus:shadow-[0_0_0_3px_rgba(16,185,129,0.08)]';
 const selectClass = `${inputClass} cursor-pointer`;
 const actionsClass = 'flex items-center justify-end gap-3 border-t border-[var(--admin-border)] px-5 py-4 max-[640px]:flex-col max-[640px]:items-stretch';
-const secondaryButtonClass = 'inline-flex min-h-9 cursor-pointer items-center justify-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-6 text-[0.82rem] font-bold text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]';
-const primaryButtonClass = 'inline-flex min-h-9 cursor-pointer items-center justify-center rounded-md border-0 bg-[var(--admin-primary)] px-6 text-[0.82rem] font-bold text-white hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-70';
+const secondaryButtonClass = 'inline-flex min-h-9 cursor-pointer items-center justify-center rounded-full border border-[var(--admin-border)] bg-white px-6 text-[0.82rem] font-bold text-[var(--admin-primary-dark)] transition-colors hover:border-[var(--admin-gold)]';
+const primaryButtonClass = 'inline-flex min-h-9 cursor-pointer items-center justify-center rounded-full border-0 bg-[var(--admin-primary)] px-6 text-[0.82rem] font-bold text-white hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-70';
 const tableHeadClass = 'border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-5 py-3 text-left text-[0.68rem] uppercase text-[#64748b]';
 const tableCellClass = 'border-b border-[var(--admin-border)] px-5 py-3.5 align-middle text-[0.86rem] text-[var(--admin-ink)]';
-const statusBadgeClass = 'inline-flex min-h-6 items-center rounded border border-[#9fdcb9] bg-[#e8f7ee] px-2.5 text-[0.66rem] font-black uppercase text-[#16864f]';
+const statusBadgeClass = 'inline-flex min-h-6 items-center rounded-full bg-[#e8f7ee] px-2.5 text-[0.66rem] font-black uppercase text-[#16864f]';
 
 const formatClass = (value) => String(value || '').toLowerCase().replace(/\s+/g, '-');
 

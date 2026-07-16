@@ -38,7 +38,7 @@ function SeasonBanner({ season }) {
                         <p className="m-0 text-xs font-black uppercase text-[var(--admin-muted)]">Days Left</p>
                     </div>
                     <div>
-                        <p className="m-0 text-[2rem] font-black text-[#1565c0]">{season.totalPredictors ?? '—'}</p>
+                        <p className="m-0 text-[2rem] font-black text-[#8a6209]">{season.totalPredictors ?? '—'}</p>
                         <p className="m-0 text-xs font-black uppercase text-[var(--admin-muted)]">Predictors</p>
                     </div>
                 </div>
@@ -95,10 +95,15 @@ export default function SpectatorDashboard() {
     return (
         <SpectatorLayout activeKey="dashboard">
             <section className="page-shell">
-                <div className="page-heading border-b border-[var(--admin-border)] pb-5">
-                    <div>
-                        <h1 className="page-title">Dashboard</h1>
-                        <p className="page-subtitle">
+                <div className="visual-banner flex flex-wrap items-end justify-between gap-6 px-7 py-6 max-[720px]:px-5">
+                    <div className="relative z-[1] min-w-0">
+                        <span className="text-[0.72rem] font-black uppercase tracking-[0.08em] text-[var(--racing-gold-bright)]">
+                            Spectator Console
+                        </span>
+                        <h1 className="m-0 mt-1.5 text-[1.9rem] leading-[1.15] max-[720px]:text-[1.5rem]">
+                            {data?.rewardPoints ?? 0} points{data?.myRank ? ` · Rank #${data.myRank}` : ''}
+                        </h1>
+                        <p className="m-0 mt-2 max-w-xl text-[0.92rem] text-[rgba(255,255,255,0.75)]">
                             Predict tournament winners, earn points, and compete with other spectators.
                         </p>
                     </div>
@@ -116,7 +121,7 @@ export default function SpectatorDashboard() {
                                 const Icon = s.icon;
                                 return (
                                     <article key={s.label} className="stat-card">
-                                        <div className={`stat-icon ${s.tone === 'blue' ? 'bg-[#e3f2fd] text-[#1565c0]' : s.tone === 'gold' ? 'bg-[#fff3cd] text-[#856404]' : ''}`}>
+                                        <div className={`stat-icon ${s.tone === 'blue' ? 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]' : s.tone === 'gold' ? 'bg-[#faf2e0] text-[#8a6209]' : ''}`}>
                                             <Icon aria-hidden="true" />
                                         </div>
                                         <small className="stat-label">{s.label}</small>
@@ -132,8 +137,8 @@ export default function SpectatorDashboard() {
                         {openTournaments.length > 0 && (
                             <div className="surface-card">
                                 <div className="section-bar">
-                                    <h2 className="m-0 text-[1.05rem] font-bold">
-                                        🔔 Tournaments Awaiting Your Prediction ({openTournaments.length})
+                                    <h2 className="m-0 flex items-center gap-2 text-[1.05rem] font-bold">
+                                        <FaBullseye className="text-[var(--admin-primary)]" /> Tournaments Awaiting Your Prediction ({openTournaments.length})
                                     </h2>
                                     <button type="button" onClick={() => navigate('/spectator/tournaments')} className="action-pill">
                                         View All
@@ -141,8 +146,8 @@ export default function SpectatorDashboard() {
                                 </div>
                                 {openTournaments.map((t) => (
                                     <div key={t.tournamentId} className="flex items-center gap-4 border-b border-[var(--admin-border)] px-5 py-4 last:border-b-0">
-                                        <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-[#e8f7ef] text-lg">
-                                            🏆
+                                        <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)] text-lg">
+                                            <FaTrophy />
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <p className="m-0 font-bold text-[var(--admin-ink)]">{t.tournamentName}</p>
@@ -154,7 +159,7 @@ export default function SpectatorDashboard() {
                                         <button
                                             type="button"
                                             onClick={() => navigate('/spectator/tournaments')}
-                                            style={{ padding: '7px 16px', borderRadius: 8, border: 'none', background: '#0b7f5a', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                            style={{ padding: '7px 16px', borderRadius: 999, border: 'none', background: '#16305c', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap' }}
                                         >
                                             Predict Now
                                         </button>
@@ -165,7 +170,7 @@ export default function SpectatorDashboard() {
 
                         {openTournaments.length === 0 && (
                             <div className="soft-card flex items-center gap-4 p-5">
-                                <span className="text-[2rem]">✅</span>
+                                <FaCheckCircle className="text-[2rem] text-[#16864f]" />
                                 <div>
                                     <p className="m-0 font-bold">You're all caught up!</p>
                                     <p className="m-0 text-[0.87rem] text-[var(--admin-muted)]">
@@ -198,15 +203,15 @@ export default function SpectatorDashboard() {
                                 ) : (
                                     predictions.map((p) => (
                                         <div key={p.predictionId} className="flex items-center gap-3 border-b border-[var(--admin-border)] px-5 py-3 last:border-b-0">
-                                            <span className="text-xl">🐴</span>
+                                            <span className="grid h-8 w-8 flex-none place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]"><FaTrophy className="text-sm" /></span>
                                             <div className="min-w-0 flex-1">
                                                 <p className="m-0 font-bold text-[0.9rem]">{p.tournamentName ?? '—'}</p>
                                                 <p className="m-0 text-xs text-[var(--admin-muted)]">Pick: {p.predictedHorseName}</p>
                                             </div>
                                             <span style={{
-                                                fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20,
-                                                backgroundColor: p.isCorrect === true ? '#d4edda' : p.isCorrect === false ? '#f8d7da' : '#fff3cd',
-                                                color: p.isCorrect === true ? '#155724' : p.isCorrect === false ? '#721c24' : '#856404',
+                                                fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 999,
+                                                backgroundColor: p.isCorrect === true ? '#e8f7ee' : p.isCorrect === false ? '#f3e1df' : '#faf2e0',
+                                                color: p.isCorrect === true ? '#16864f' : p.isCorrect === false ? '#a4392f' : '#8a6209',
                                             }}>
                                                 {p.isCorrect === true ? `+${p.pointsAwarded} pts` : p.isCorrect === false ? 'Wrong' : 'Pending'}
                                             </span>
@@ -244,16 +249,16 @@ export default function SpectatorDashboard() {
                             <h2 className="m-0 mb-5 text-[1.05rem] font-bold">How It Works</h2>
                             <div className="grid grid-cols-3 gap-5 max-[700px]:grid-cols-1">
                                 {[
-                                    { step: '1', icon: '🏆', title: 'Browse Tournaments', desc: 'Explore upcoming tournaments and view the registered horses.' },
-                                    { step: '2', icon: '🐴', title: 'Make Your Prediction', desc: 'Pick the horse you think will win. One prediction per tournament.' },
-                                    { step: '3', icon: '🪙', title: 'Earn Points & Win', desc: 'Correct predictions earn points. Top predictors at season end win prizes.' },
+                                    { step: '1', icon: FaTrophy, title: 'Browse Tournaments', desc: 'Explore upcoming tournaments and view the registered horses.' },
+                                    { step: '2', icon: FaBullseye, title: 'Make Your Prediction', desc: 'Pick the horse you think will win. One prediction per tournament.' },
+                                    { step: '3', icon: FaCoins, title: 'Earn Points & Win', desc: 'Correct predictions earn points. Top predictors at season end win prizes.' },
                                 ].map((item) => (
                                     <div key={item.step} className="flex gap-3">
-                                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#0b7f5a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 14, flexShrink: 0 }}>
+                                        <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#16305c', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 14, flexShrink: 0 }}>
                                             {item.step}
                                         </div>
                                         <div>
-                                            <p className="m-0 font-bold">{item.icon} {item.title}</p>
+                                            <p className="m-0 flex items-center gap-2 font-bold"><item.icon className="text-[var(--admin-primary)]" /> {item.title}</p>
                                             <p className="m-0 mt-1 text-[0.83rem] text-[var(--admin-muted)]">{item.desc}</p>
                                         </div>
                                     </div>

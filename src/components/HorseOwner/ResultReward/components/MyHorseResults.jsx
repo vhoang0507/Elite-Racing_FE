@@ -76,14 +76,14 @@ export default function MyHorseResults({ results, loading, onLoadMore, canLoadMo
 }
 
 const styles = {
-    card: { backgroundColor: "#fff", borderRadius: "12px", border: "1px solid #eee", padding: "16px" },
-    header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", fontSize: "14px", fontWeight: "600" },
+    card: { backgroundColor: "#fff", borderRadius: "12px", border: "1px solid #ded2ad", padding: "16px", boxShadow: "0 8px 22px rgba(15,23,42,0.06)" },
+    header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", fontSize: "14px", fontWeight: "600", color: "#0a1930" },
     table: { width: "100%", borderCollapse: "collapse" },
-    th: { textAlign: "left", fontSize: "10px", color: "#999", padding: "6px 8px", borderBottom: "1px solid #eee" },
-    td: { padding: "10px 8px", borderBottom: "1px solid #f5f5f5", fontSize: "12px" },
+    th: { textAlign: "left", fontSize: "10px", color: "#64748b", fontWeight: 700, padding: "10px 8px", borderBottom: "2px solid #c8a24a", background: "#efe8d6" },
+    td: { padding: "10px 8px", borderBottom: "1px solid #f0ece0", fontSize: "12px" },
     horseCell: { display: "flex", alignItems: "center", gap: "8px" },
-    avatarPlaceholder: { width: "28px", height: "28px", borderRadius: "8px", backgroundColor: "#610000", color: "#fff", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" },
-    subText: { fontSize: "10px", color: "#999" },
-    detailBtn: { border: "1px solid #ddd", background: "#fff", borderRadius: "6px", padding: "5px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer" },
-    loadMoreBtn: { border: "none", background: "none", color: "#610000", fontWeight: 600, fontSize: "12px", cursor: "pointer" },
+    avatarPlaceholder: { width: "28px", height: "28px", borderRadius: "999px", backgroundColor: "#16305c", color: "#fff", fontSize: "10px", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" },
+    subText: { fontSize: "10px", color: "#94a3b8" },
+    detailBtn: { border: "1px solid #ded2ad", background: "#fff", borderRadius: "999px", padding: "5px 12px", fontSize: "11px", fontWeight: 600, cursor: "pointer", color: "#16305c" },
+    loadMoreBtn: { border: "none", background: "none", color: "#16305c", fontWeight: 600, fontSize: "12px", cursor: "pointer" },
 };

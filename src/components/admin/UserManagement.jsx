@@ -32,6 +32,7 @@ import AdminLayout from './AdminLayout';
 
 const formatClass = (value) => String(value || '').toLowerCase().replace(/\s+/g, '-');
 const isJockeyRole = (role) => formatClass(role) === 'jockey';
+const humanizeLabel = (value) => String(value || '').replace(/([a-z0-9])([A-Z])/g, '$1 $2').trim();
 
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-7 px-11 py-9 max-[780px]:px-5';
 const selectWrapClass = 'relative inline-flex min-w-[86px] items-center';
@@ -42,28 +43,28 @@ const detailLabelClass = 'text-[0.7rem] font-black uppercase text-[#64748b]';
 const documentCardClass = 'grid gap-3 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] p-3';
 
 const summaryIconClass = {
-    users: 'text-[#ff9a8d]',
-    pending: 'text-[#8d6a0d]',
-    reports: 'text-[var(--admin-primary)]',
+    users: { bg: 'bg-[var(--admin-surface-strong)]', ink: 'text-[var(--admin-primary)]' },
+    pending: { bg: 'bg-[#faf2e0]', ink: 'text-[#8a6209]' },
+    reports: { bg: 'bg-[#f3e1df]', ink: 'text-[#a4392f]' },
 };
 
 const roleClass = {
-    admin: 'border-[#b7cbff] bg-[#e7efff] text-[#1f57c7]',
-    'horse-owner': 'border-[#a7dfbf] bg-[#e6f7ed] text-[#11734b]',
-    jockey: 'border-[#ffc78f] bg-[#fff1df] text-[#c55b12]',
-    referee: 'border-[#ffb9c3] bg-[#ffe9ed] text-[#c12e42]',
-    spectator: 'border-[#ebb4ca] bg-[#fce8f0] text-[#874a62]',
+    admin: 'bg-[#e7efff] text-[#1f57c7]',
+    'horse-owner': 'bg-[#e6f7ed] text-[#11734b]',
+    jockey: 'bg-[#fff1df] text-[#c55b12]',
+    referee: 'bg-[#ffe9ed] text-[#c12e42]',
+    spectator: 'bg-[#fce8f0] text-[#874a62]',
 };
 
 const statusClass = {
-    pending: 'border-[#efd06a] bg-[#fff7db] text-[#a17809]',
-    active: 'border-[#9fdcb9] bg-[#e8f7ee] text-[#16864f]',
-    inactive: 'border-[#dbc3bf] bg-[#f3e8e6] text-[#7f645f]',
-    banned: 'border-[#e7a49a] bg-[#e8f7ef] text-[var(--admin-primary)]',
+    pending: 'bg-[#fff7db] text-[#a17809]',
+    active: 'bg-[#e8f7ee] text-[#16864f]',
+    inactive: 'bg-[#f3e8e6] text-[#7f645f]',
+    banned: 'bg-[#f3e1df] text-[#a4392f]',
 };
 
-const badgeClass = 'inline-flex min-h-[22px] items-center rounded border px-2 text-[0.68rem] font-black uppercase';
-const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]';
+const badgeClass = 'inline-flex min-h-[24px] items-center rounded-full px-3 text-[0.68rem] font-bold uppercase tracking-wide';
+const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-full border border-[var(--admin-border)] bg-white font-bold text-[var(--admin-primary-dark)] transition-colors hover:border-[var(--admin-primary)] hover:bg-[var(--admin-primary)] hover:text-white';
 const pageSize = 5;
 
 const activeRoleOrder = {
@@ -517,49 +518,54 @@ function UserManagement() {
                                             {card.detail}
                                         </small>
                                     </div>
-                                    <Icon aria-hidden="true" className={`h-7 w-7 flex-none ${summaryIconClass[card.tone]}`} />
+                                    <span className={`grid h-10 w-10 flex-none place-items-center rounded-xl ${summaryIconClass[card.tone].bg} ${summaryIconClass[card.tone].ink}`}>
+                                        <Icon aria-hidden="true" className="h-4 w-4" />
+                                    </span>
                                 </article>
                             );
                         })}
                     </section>
 
-                    <section className="overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]">
+                    <section className="overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_10px_30px_rgba(11,27,52,0.06)]">
                         <div className="w-full overflow-x-auto">
                             <table className="w-full border-collapse max-[780px]:min-w-[920px]">
                                 <thead>
                                     <tr>
                                         {['Full Name', 'Email', 'Role', 'Status', 'Verified', 'Created At', 'Details'].map((heading) => (
-                                            <th className="whitespace-nowrap border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-5 py-[18px] text-left text-[0.72rem] uppercase text-[#64748b]" key={heading}>
+                                            <th className="whitespace-nowrap border-b-2 border-[var(--admin-gold)] bg-[var(--admin-surface-strong)] px-5 py-4 text-left text-[0.68rem] font-bold uppercase tracking-wider text-[var(--admin-muted)]" key={heading}>
                                                 {heading}
                                             </th>
                                         ))}
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {visibleUsers.map((user) => (
-                                        <tr key={user.id}>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]">
+                                    {visibleUsers.map((user, rowIndex) => (
+                                        <tr
+                                            className={`transition-colors hover:bg-[var(--admin-surface-strong)] ${rowIndex % 2 === 1 ? 'bg-[rgba(200,162,74,0.03)]' : ''}`}
+                                            key={user.id}
+                                        >
+                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-4 align-middle text-[0.92rem] text-[var(--admin-ink)]">
                                                 <strong>{user.name}</strong>
                                             </td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]">{user.email}</td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]">
+                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-4 align-middle text-[0.92rem] text-[var(--admin-muted)]">{user.email}</td>
+                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-4 align-middle text-[0.92rem] text-[var(--admin-ink)]">
                                                 <span className={`${badgeClass} ${roleClass[formatClass(user.role)]}`}>
-                                                    {user.role}
+                                                    {humanizeLabel(user.role)}
                                                 </span>
                                             </td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]">
+                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-4 align-middle text-[0.92rem] text-[var(--admin-ink)]">
                                                 <span className={`${badgeClass} ${statusClass[formatClass(user.status)]}`}>
-                                                    {user.status}
+                                                    {humanizeLabel(user.status)}
                                                 </span>
                                             </td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]">
-                                                <span className={`inline-grid h-[22px] w-[22px] place-items-center rounded-full ${user.verified ? 'text-[#0aa15f]' : 'text-[#d71920]'}`}>
-                                                    {user.verified ? <FaCheck /> : <FaTimes />}
+                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-4 align-middle text-[0.92rem] text-[var(--admin-ink)]">
+                                                <span className={`inline-grid h-6 w-6 place-items-center rounded-full ${user.verified ? 'bg-[#e6f7ed] text-[#16864f]' : 'bg-[#f3e1df] text-[#a4392f]'}`}>
+                                                    {user.verified ? <FaCheck className="h-3 w-3" /> : <FaTimes className="h-3 w-3" />}
                                                 </span>
                                             </td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]">{adminApi.formatters.toDateLabel(user.createdAt)}</td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-[18px] align-middle text-[0.92rem] text-[var(--admin-ink)]">
-                                                <button aria-label={`View details for ${user.name}`} className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border-0 bg-transparent text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={() => handleViewDetails(user)} type="button">
+                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-4 align-middle text-[0.92rem] text-[var(--admin-muted)]">{adminApi.formatters.toDateLabel(user.createdAt)}</td>
+                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-4 align-middle text-[0.92rem] text-[var(--admin-ink)]">
+                                                <button aria-label={`View details for ${user.name}`} className="grid h-9 w-9 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-[var(--admin-primary-dark)] transition-colors hover:bg-[#f3e6c2] hover:text-[var(--admin-primary)]" onClick={() => handleViewDetails(user)} type="button">
                                                     <FaEye aria-hidden="true" />
                                                 </button>
                                             </td>
@@ -569,7 +575,7 @@ function UserManagement() {
                             </table>
                         </div>
 
-                        <div className="flex min-h-[68px] items-center justify-between gap-[18px] px-[22px] py-4 text-[0.82rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch">
+                        <div className="flex min-h-[68px] items-center justify-between gap-[18px] border-t border-[var(--admin-border)] px-[22px] py-4 text-[0.82rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch">
                             <span>Showing {firstShown} - {lastShown} of {filteredUsers.length} entries</span>
 
                             <div className="flex items-center gap-2 max-[820px]:flex-wrap">
@@ -577,7 +583,7 @@ function UserManagement() {
                                 {getCompactPaginationItems(totalPages, page).map((pageItem) => (
                                     typeof pageItem === 'number' ? (
                                         <button
-                                            className={`${paginationButtonClass} ${pageItem === page ? 'border-[var(--admin-primary)] bg-[#e8f7ef] text-[#064e3b] hover:bg-[#d1fae5]' : ''}`}
+                                            className={`${paginationButtonClass} ${pageItem === page ? '!border-[var(--admin-primary)] !bg-[var(--admin-primary)] !text-white' : ''}`}
                                             key={pageItem}
                                             onClick={() => setPage(pageItem)}
                                             type="button"
@@ -585,7 +591,7 @@ function UserManagement() {
                                             {pageItem}
                                         </button>
                                     ) : (
-                                        <span className={`${paginationButtonClass} cursor-default text-[var(--admin-muted)] hover:bg-[#fffdfc]`} key={pageItem}>...</span>
+                                        <span className={`${paginationButtonClass} cursor-default border-transparent text-[var(--admin-muted)] hover:!border-transparent hover:!bg-transparent hover:!text-[var(--admin-muted)]`} key={pageItem}>...</span>
                                     )
                                 ))}
                                 <button aria-label="Next page" className={paginationButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">&gt;</button>
@@ -615,11 +621,11 @@ function UserManagement() {
                                     <DetailItem label="Email">{selectedUser.email}</DetailItem>
                                     <div className={detailItemClass}>
                                         <span className={detailLabelClass}>Role</span>
-                                        <span className={`${badgeClass} w-fit ${roleClass[formatClass(selectedUser.role)]}`}>{selectedUser.role}</span>
+                                        <span className={`${badgeClass} w-fit ${roleClass[formatClass(selectedUser.role)]}`}>{humanizeLabel(selectedUser.role)}</span>
                                     </div>
                                     <div className={detailItemClass}>
                                         <span className={detailLabelClass}>Status</span>
-                                        <span className={`${badgeClass} w-fit ${statusClass[formatClass(selectedUser.status)]}`}>{selectedUser.status}</span>
+                                        <span className={`${badgeClass} w-fit ${statusClass[formatClass(selectedUser.status)]}`}>{humanizeLabel(selectedUser.status)}</span>
                                     </div>
                                     <div className={detailItemClass}>
                                         <span className={detailLabelClass}>Verified</span>

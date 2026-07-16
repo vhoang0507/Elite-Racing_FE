@@ -136,7 +136,7 @@ function JockeyNotifications() {
 
     if (loading) return (
         <JockeyLayout activeKey="notifications">
-            <p style={{ textAlign: 'center', padding: '40px', color: '#999' }}>Loading...</p>
+            <p className="p-10 text-center font-semibold text-[var(--admin-muted)]">Loading...</p>
         </JockeyLayout>
     );
 
@@ -154,7 +154,7 @@ function JockeyNotifications() {
                 <section className="grid grid-cols-3 gap-5 max-[1080px]:grid-cols-1">
                     <article className={panelClass}>
                         <div className="flex items-center gap-4 p-6">
-                            <div className="grid h-12 w-12 place-items-center rounded-lg bg-[#f9e4df] text-[var(--admin-primary)]">
+                            <div className="grid h-12 w-12 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                                 <FaBell />
                             </div>
                             <div>
@@ -166,7 +166,7 @@ function JockeyNotifications() {
 
                     <article className={panelClass}>
                         <div className="flex items-center gap-4 p-6">
-                            <div className="grid h-12 w-12 place-items-center rounded-lg bg-[#f9e4df] text-[var(--admin-primary)]">
+                            <div className="grid h-12 w-12 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                                 <FaEnvelope />
                             </div>
                             <div>
@@ -178,7 +178,7 @@ function JockeyNotifications() {
 
                     <article className={panelClass}>
                         <div className="flex items-center gap-4 p-6">
-                            <div className="grid h-12 w-12 place-items-center rounded-lg bg-[#f6dd81] text-[#7b5d00]">
+                            <div className="grid h-12 w-12 place-items-center rounded-full bg-[#faf2e0] text-[#8a6209]">
                                 <FaEnvelope />
                             </div>
                             <div>
@@ -195,7 +195,7 @@ function JockeyNotifications() {
                         <select
                             value={status}
                             onChange={e => setStatus(e.target.value)}
-                            className="rounded-md border border-[var(--admin-border)] bg-[#fff8f6] px-4 py-2 outline-none"
+                            className="rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-4 py-2 outline-none"
                         >
                             <option value="All">Status: All</option>
                             <option value="Unread">Unread</option>
@@ -206,14 +206,14 @@ function JockeyNotifications() {
                             type="date"
                             value={date}
                             onChange={e => setDate(e.target.value)}
-                            className="rounded-md border border-[var(--admin-border)] bg-[#fff8f6] px-4 py-2 outline-none"
+                            className="rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-4 py-2 outline-none"
                         />
                     </div>
 
                     <div className="flex gap-3">
                         <button
                             onClick={handleMarkAllRead}
-                            className="rounded-md border border-[var(--admin-primary)] px-4 py-2 font-bold text-[var(--admin-primary)]"
+                            className="rounded-full border border-[var(--admin-primary)] px-4 py-2 font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)]"
                         >
                             <FaCheck className="mr-2 inline" />
                             Mark All Read
@@ -222,7 +222,7 @@ function JockeyNotifications() {
                         <select
                             value={sort}
                             onChange={e => setSort(e.target.value)}
-                            className="rounded-md bg-[var(--admin-primary)] px-4 py-2 font-bold text-white outline-none"
+                            className="rounded-full bg-[var(--admin-primary)] px-4 py-2 font-bold text-white outline-none"
                         >
                             <option value="Newest">Newest</option>
                             <option value="Oldest">Oldest</option>
@@ -231,27 +231,27 @@ function JockeyNotifications() {
                 </section>
 
                 {/* Main */}
-                <section className="grid grid-cols-[minmax(0,1fr)_320px] gap-5 max-[1080px]:grid-cols-1">
+                <section className="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-5 max-[1080px]:grid-cols-1">
                     {/* Notifications List */}
                     <div className="grid gap-4 content-start">
                         {notifications.length === 0 ? (
-                            <p style={{ color: '#999', textAlign: 'center', padding: '24px' }}>No notifications</p>
+                            <p className="p-6 text-center text-sm text-[var(--admin-muted)]">No notifications</p>
                         ) : (
                             notifications.map((item) => (
                                 <article
                                     key={item.notificationId}
                                     onClick={() => handleClickNotif(item)}
-                                    className={`${panelClass} cursor-pointer ${!item.isRead ? 'border-l-4 border-l-[var(--admin-primary)]' : ''} ${selectedNotif?.notificationId === item.notificationId ? 'bg-[#fff8f6]' : ''}`}
+                                    className={`${panelClass} cursor-pointer ${!item.isRead ? 'border-l-4 border-l-[var(--admin-primary)]' : ''} ${selectedNotif?.notificationId === item.notificationId ? 'bg-[var(--admin-surface-strong)]' : ''}`}
                                 >
                                     <div className="flex gap-4 p-5">
-                                        <div className="grid h-10 w-10 place-items-center rounded-full bg-[#f9e4df] text-[var(--admin-primary)]">
+                                        <div className="grid h-10 w-10 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                                             <FaEnvelope />
                                         </div>
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-start justify-between gap-4">
                                                 <strong>{item.title}</strong>
                                                 {!item.isRead && (
-                                                    <span className="rounded bg-[#f9e4df] px-2 py-0.5 text-[0.7rem] font-bold text-[var(--admin-primary)] whitespace-nowrap">
+                                                    <span className="rounded-full bg-[var(--admin-surface-strong)] px-2 py-0.5 text-[0.7rem] font-bold text-[var(--admin-primary)] whitespace-nowrap">
                                                         Unread
                                                     </span>
                                                 )}
@@ -266,17 +266,17 @@ function JockeyNotifications() {
                     </div>
 
                     {/* Detail Panel */}
-                    <aside className={panelClass}>
+                    <aside className={`${panelClass} sticky top-6`}>
                         {selectedNotif ? (
                             <div className="p-5">
                                 <h3 className="mb-4 text-lg font-bold">Notification Detail</h3>
                                 {detailLoading && (
-                                    <div className="mb-4 rounded-md border border-[var(--admin-border)] bg-[#fff8f6] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-muted)]">
+                                    <div className="mb-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-muted)]">
                                         Loading notification detail...
                                     </div>
                                 )}
                                 {detailError && (
-                                    <div className="mb-4 rounded-md border border-[#e7a49a] bg-[#e8f7ef] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-primary)]">
+                                    <div className="mb-4 rounded-[var(--admin-radius)] border border-[#d89288] bg-[#f3e1df] px-4 py-3 text-[0.82rem] font-bold text-[#a4392f]">
                                         {detailError}
                                     </div>
                                 )}
@@ -295,12 +295,12 @@ function JockeyNotifications() {
                                     </div>
                                     <div>
                                         <div className="text-[var(--admin-muted)] text-[0.75rem] font-bold uppercase mb-1">Status</div>
-                                        <span className={`rounded px-2 py-0.5 text-[0.75rem] font-bold ${selectedNotif.isRead ? 'bg-[#e8f5e9] text-[#2e7d32]' : 'bg-[#f9e4df] text-[var(--admin-primary)]'}`}>
+                                        <span className={`rounded-full px-2.5 py-0.5 text-[0.75rem] font-bold ${selectedNotif.isRead ? 'bg-[#e8f7ee] text-[#16864f]' : 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]'}`}>
                                             {selectedNotif.isRead ? 'Read' : 'Unread'}
                                         </span>
                                     </div>
                                     {selectedNotif.raceDetail && (
-                                        <div className="rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-4">
+                                        <div className="rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] p-4">
                                             <div className="text-[var(--admin-muted)] text-[0.75rem] font-bold uppercase mb-2">Race Detail</div>
                                             <div className="grid gap-2">
                                                 <strong>{selectedNotif.raceDetail.raceName}</strong>

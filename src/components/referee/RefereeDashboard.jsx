@@ -198,7 +198,7 @@ function RefereeDashboard() {
                         </p>
                     </div>
 
-                    <div className="rounded-full bg-[#e8f7ef] px-4 py-2 text-sm font-bold text-[#0b7f5a]">
+                    <div className="rounded-full bg-[var(--admin-surface-strong)] px-4 py-2 text-sm font-bold text-[var(--admin-primary)]">
                         {new Intl.DateTimeFormat('en-US', {
                             month: 'short',
                             day: '2-digit',
@@ -223,11 +223,11 @@ function RefereeDashboard() {
                             {cards.map((card) => {
                                 const Icon = card.icon;
                                 const toneClass = card.tone === 'green'
-                                    ? 'bg-[#dff7e9] text-[#118548]'
+                                    ? 'bg-[#e8f7ee] text-[#16864f]'
                                     : card.tone === 'gold'
-                                        ? 'bg-[#fff3cd] text-[#856404]'
+                                        ? 'bg-[#faf2e0] text-[#8a6209]'
                                         : card.tone === 'blue'
-                                            ? 'bg-[#e3f2fd] text-[#1565c0]'
+                                            ? 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]'
                                             : '';
 
                                 return (
@@ -263,7 +263,7 @@ function RefereeDashboard() {
                                     type="button"
                                     onClick={() => navigate('/referee/races/post-race', { state: { raceId: priorityRace?.raceId } })}
                                     disabled={!priorityRace}
-                                    className="secondary-button mt-6 border-white bg-white text-[#0b7f5a]"
+                                    className="secondary-button mt-6 border-white bg-white text-[var(--admin-primary)]"
                                 >
                                     Open Race Workflow
                                 </button>
@@ -324,7 +324,7 @@ function RefereeDashboard() {
                                                                 {item.tournamentName}
                                                             </div>
                                                             {item.seasonStatus && (
-                                                                <div className={`mt-1 text-xs font-bold ${item.seasonStatus === 'Active' ? 'text-[#0b7f5a]' : 'text-red-700'}`}>
+                                                                <div className={`mt-1 text-xs font-bold ${item.seasonStatus === 'Active' ? 'text-[var(--admin-primary)]' : 'text-red-700'}`}>
                                                                     Season: {item.seasonStatus}
                                                                 </div>
                                                             )}
@@ -346,7 +346,7 @@ function RefereeDashboard() {
                                                                 onClick={() => navigate(`/referee/races/pre-race/${item.raceId}`, { state: { race: item } })}
                                                                 disabled={!canInspect}
                                                                 title={canInspect ? 'Open inspection registry' : getDisabledReason(item)}
-                                                                className="font-bold text-[#0b7f5a] disabled:cursor-not-allowed disabled:opacity-50"
+                                                                className="font-bold text-[var(--admin-primary)] disabled:cursor-not-allowed disabled:opacity-50"
                                                             >
                                                                 Inspect
                                                             </button>
@@ -399,7 +399,7 @@ function RefereeDashboard() {
                                 <button
                                     type="button"
                                     onClick={() => navigate('/referee/races/post-race')}
-                                    className="w-full border-t border-[var(--admin-border)] p-4 font-bold text-[#0b7f5a]"
+                                    className="w-full border-t border-[var(--admin-border)] p-4 font-bold text-[var(--admin-primary)]"
                                 >
                                     Open Violation Log
                                 </button>

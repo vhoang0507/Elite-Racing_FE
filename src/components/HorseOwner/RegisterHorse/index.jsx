@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { FaCamera, FaExclamationTriangle, FaHorseHead, FaNotesMedical } from "react-icons/fa";
 import HorseOwnerLayout from "../HorseOwnerLayout";
 import { ownerApi } from "../../../api/ownerApi";
 import { uploadFile } from "../../../api/uploadApi";
@@ -69,7 +70,7 @@ function validateHorse(form, horseImageFile, healthCertificateFile) {
 
 function ErrMsg({ msg }) {
     if (!msg) return null;
-    return <p style={{ margin: '4px 0 0', fontSize: 11, color: '#dc2626', fontWeight: 600 }}>{msg}</p>;
+    return <p style={{ margin: '4px 0 0', fontSize: 11, color: '#a4392f', fontWeight: 600 }}>{msg}</p>;
 }
 
 export default function RegisterHorse() {
@@ -197,7 +198,10 @@ export default function RegisterHorse() {
                 <div className="grid grid-cols-2 gap-6 max-[900px]:grid-cols-1">
                     {/* Left Column */}
                     <div className="rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6">
-                        <h3 className="m-0 mb-5 text-[1rem] font-bold text-[var(--admin-ink)]">🐴 Horse Registration Form</h3>
+                        <h3 className="m-0 mb-5 flex items-center gap-2 text-[1rem] font-bold text-[var(--admin-ink)]">
+                            <FaHorseHead aria-hidden="true" className="text-[var(--admin-primary)]" />
+                            Horse Registration Form
+                        </h3>
 
                         <div className="mb-4">
                             <label className={labelClass}>Horse Name <span className="text-red-500">*</span></label>
@@ -245,7 +249,7 @@ export default function RegisterHorse() {
                                 className={`${ic('achievementSummary')} min-h-[100px] resize-y`} />
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                 <ErrMsg msg={fieldErrors.achievementSummary} />
-                                <span style={{ fontSize: 10, color: form.achievementSummary?.length > 500 ? '#dc2626' : '#94a3b8', marginLeft: 'auto' }}>
+                                <span style={{ fontSize: 10, color: form.achievementSummary?.length > 500 ? '#a4392f' : '#94a3b8', marginLeft: 'auto' }}>
                                     {form.achievementSummary?.length ?? 0}/500
                                 </span>
                             </div>
@@ -254,28 +258,32 @@ export default function RegisterHorse() {
 
                     {/* Right Column */}
                     <div className="rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6">
-                        <h3 className="m-0 mb-5 text-[1rem] font-bold text-[var(--admin-ink)]">🏥 Clinical Status</h3>
+                        <h3 className="m-0 mb-5 flex items-center gap-2 text-[1rem] font-bold text-[var(--admin-ink)]">
+                            <FaNotesMedical aria-hidden="true" className="text-[var(--admin-primary)]" />
+                            Clinical Status
+                        </h3>
 
                         <div className="mb-4">
                             <label className={labelClass}>Current Health State</label>
                             <select name="healthStatus" value={form.healthStatus} onChange={handleChange} className={inputOk}>
                                 <option value="Healthy">Healthy</option>
-                                <option value="NeedsCheck">NeedsCheck</option>
+                                <option value="NeedsCheck">Needs Check</option>
                                 <option value="Sick">Sick</option>
                                 <option value="Injured">Injured</option>
                                 <option value="Recovering">Recovering</option>
-                                <option value="UnfitToRace">UnfitToRace</option>
+                                <option value="UnfitToRace">Unfit To Race</option>
                             </select>
                         </div>
 
-                        <div className="mb-5 rounded-[var(--admin-radius)] border border-[#ffc107] bg-[#fff3cd] p-3 text-[0.82rem] text-[#856404]">
-                            ⚠️ Only horses with 'Healthy' status are eligible for Grade 1 stakes races in the upcoming tournament.
+                        <div className="mb-5 flex items-start gap-2 rounded-[var(--admin-radius)] border border-[#ffc107] bg-[#fff3cd] p-3 text-[0.82rem] text-[#856404]">
+                            <FaExclamationTriangle aria-hidden="true" className="mt-0.5 flex-none" />
+                            <span>Only horses with 'Healthy' status are eligible for Grade 1 stakes races in the upcoming tournament.</span>
                         </div>
 
                         <div className="mb-4">
                             <label className={labelClass}>Upload Profile Photo <span className="text-[#bbb]">(max {MAX_FILE_MB} MB)</span></label>
                             <div className="rounded-[var(--admin-radius)] border-2 border-dashed border-[var(--admin-border)] p-6 text-center">
-                                <span className="text-[1.5rem]">📷</span>
+                                <FaCamera aria-hidden="true" className="mx-auto text-[1.5rem] text-[var(--admin-muted)]" />
                                 <p className="m-0 mt-2 text-[0.82rem] text-[var(--admin-muted)]">Upload Profile Photo</p>
                                 <p className="m-0 mt-1 text-[0.72rem] text-[#bbb]">PNG, JPG up to {MAX_FILE_MB}MB</p>
                                 <input type="file" accept="image/*" onChange={handleHorseImageChange} className="mt-3" />
@@ -290,7 +298,7 @@ export default function RegisterHorse() {
                         <div className="mb-4">
                             <label className={labelClass}>Upload Health Certificate <span className="text-[#bbb]">(max {MAX_FILE_MB} MB)</span></label>
                             <div className="rounded-[var(--admin-radius)] border-2 border-dashed border-[var(--admin-border)] p-6 text-center">
-                                <span className="text-[1.5rem]">🏥</span>
+                                <FaNotesMedical aria-hidden="true" className="mx-auto text-[1.5rem] text-[var(--admin-muted)]" />
                                 <p className="m-0 mt-2 text-[0.82rem] text-[var(--admin-muted)]">Upload Health Certificate</p>
                                 <p className="m-0 mt-1 text-[0.72rem] text-[#bbb]">PNG, JPG, WEBP up to {MAX_FILE_MB}MB</p>
                                 <input type="file" accept="image/png,image/jpeg,image/webp"
@@ -307,19 +315,20 @@ export default function RegisterHorse() {
 
                 {/* Buttons */}
                 {error && (
-                    <div style={{ backgroundColor: '#fee2e2', border: '1px solid #fca5a5', borderRadius: 8, padding: '10px 16px', fontSize: 13, color: '#991b1b', fontWeight: 600 }}>
-                        ⚠️ {error}
+                    <div className="flex items-center gap-2 rounded-lg border border-[#e3bcb7] bg-[#f3e1df] px-4 py-2.5 text-[13px] font-semibold text-[#a4392f]">
+                        <FaExclamationTriangle aria-hidden="true" />
+                        {error}
                     </div>
                 )}
                 <div className="flex gap-3">
                     <button onClick={() => navigate("/owner/my-horse")}
-                        className="min-h-[38px] cursor-pointer rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-white px-6 font-bold text-[var(--admin-ink)] hover:bg-[#f5f5f5]">
+                        className="min-h-[38px] cursor-pointer rounded-full border border-[var(--admin-border)] bg-white px-6 font-bold text-[var(--admin-ink)] transition-colors hover:border-[var(--admin-gold)]">
                         Cancel
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={isSubmitting}
-                        className="min-h-[38px] cursor-pointer rounded-[var(--admin-radius)] border-0 bg-[var(--admin-primary)] px-6 font-bold text-white hover:bg-[var(--admin-primary-dark)] disabled:opacity-50"
+                        className="min-h-[38px] cursor-pointer rounded-full border-0 bg-[var(--admin-primary)] px-6 font-bold text-white hover:bg-[var(--admin-primary-dark)] disabled:opacity-50"
                     >
                         {isSubmitting ? 'Registering...' : 'Register Horse'}
                     </button>

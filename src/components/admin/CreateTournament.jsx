@@ -43,7 +43,7 @@ const textareaClass = `${controlBaseClass} min-h-[88px] resize-y px-3 py-3 leadi
 const fileControlClass = `${controlBaseClass} flex min-h-10 cursor-pointer items-center gap-3 px-3 py-2`;
 const twoColumnClass = 'grid min-w-0 grid-cols-[repeat(2,minmax(0,1fr))] gap-3.5 max-[760px]:grid-cols-1';
 const iconClass = 'pointer-events-none absolute top-1/2 h-[15px] w-[15px] -translate-y-1/2 text-[#9b7771]';
-const actionButtonClass = 'inline-flex min-h-[38px] cursor-pointer items-center justify-center gap-2 rounded-md px-[18px] text-[0.78rem] font-[850] no-underline max-[760px]:w-full';
+const actionButtonClass = 'inline-flex min-h-[38px] cursor-pointer items-center justify-center gap-2 rounded-full px-[18px] text-[0.78rem] font-[850] no-underline transition-colors max-[760px]:w-full';
 const locationOptions = [
     'Churchill Downs, Louisville, Kentucky',
     'Pimlico Race Course, Baltimore, Maryland',
@@ -417,7 +417,7 @@ function CreateTournament() {
                                 <label className={fieldClass}>
                                     <span className={labelClass}>Tournament Image</span>
                                     <span className={fileControlClass}>
-                                        <span className="inline-flex min-h-7 flex-none items-center rounded-md bg-[var(--admin-primary)] px-3 text-[0.76rem] font-[850] text-white">
+                                        <span className="inline-flex min-h-7 flex-none items-center rounded-full bg-[var(--admin-primary)] px-3 text-[0.76rem] font-[850] text-white">
                                             Choose File
                                         </span>
                                         <span className="min-w-0 truncate text-[0.86rem] font-semibold text-[#7d6661]">

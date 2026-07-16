@@ -4,10 +4,11 @@ import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
 
 const statusColor = {
-    "ReadyToRace":  { bg: "#d4edda", color: "#155724" },
-    "Approved":     { bg: "#d1ecf1", color: "#0c5460" },
-    "JockeyInvited":{ bg: "#fff3cd", color: "#856404" },
+    "ReadyToRace":  { bg: "#e8f7ee", color: "#16864f" },
+    "Approved":     { bg: "#edf2fa", color: "#16305c" },
+    "JockeyInvited":{ bg: "#faf2e0", color: "#8a6209" },
 };
+const humanizeLabel = (value) => String(value || "").replace(/([a-z0-9])([A-Z])/g, "$1 $2").trim();
 
 export default function ApprovedRegistrations() {
     const navigate = useNavigate();
@@ -50,7 +51,7 @@ export default function ApprovedRegistrations() {
     return (
         <section style={styles.section}>
             <div style={styles.header}>
-                <h3 style={{ margin: 0 }}>Approved Registrations</h3>
+                <h3 style={{ margin: 0, color: "#0a1930" }}>Approved Registrations</h3>
                 <button style={styles.filterBtn} onClick={() => navigate("/owner/registrations")}>
                     View All →
                 </button>
@@ -84,7 +85,7 @@ export default function ApprovedRegistrations() {
                                         backgroundColor: statusColor[row.status]?.bg ?? "#eee",
                                         color: statusColor[row.status]?.color ?? "#333",
                                     }}>
-                                        {row.status}
+                                        {humanizeLabel(row.status)}
                                     </span>
                                 </td>
                                 <td style={styles.td}>
@@ -163,17 +164,17 @@ function RaceInfoModal({ data, onClose }) {
 }
 
 const styles = {
-    section:     { backgroundColor: "#fff", borderRadius: "12px", padding: "20px", border: "1px solid #dce5ef" },
+    section:     { backgroundColor: "#fff", borderRadius: "12px", padding: "20px", border: "1px solid #ded2ad", boxShadow: "0 8px 22px rgba(15,23,42,0.06)" },
     header:      { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" },
-    filterBtn:   { background: "none", border: "1px solid #dce5ef", borderRadius: "6px", padding: "6px 12px", cursor: "pointer", fontSize: "13px", color: "#0b7f5a", fontWeight: 600 },
+    filterBtn:   { background: "none", border: "1px solid #ded2ad", borderRadius: "999px", padding: "6px 14px", cursor: "pointer", fontSize: "13px", color: "#16305c", fontWeight: 600 },
     table:       { width: "100%", borderCollapse: "collapse" },
-    th:          { textAlign: "left", padding: "10px 12px", fontSize: "12px", color: "#999", fontWeight: "600", textTransform: "uppercase", borderBottom: "1px solid #eee" },
-    tr:          { borderBottom: "1px solid #f5f5f5" },
+    th:          { textAlign: "left", padding: "10px 12px", fontSize: "12px", color: "#64748b", fontWeight: "700", textTransform: "uppercase", borderBottom: "2px solid #c8a24a", background: "#efe8d6" },
+    tr:          { borderBottom: "1px solid #f0ece0" },
     td:          { padding: "12px", fontSize: "14px" },
     badge:       { padding: "3px 10px", borderRadius: "20px", fontSize: "12px", fontWeight: "500" },
-    raceBtn:     { backgroundColor: "#0b7f5a", color: "#fff", border: "none", borderRadius: "6px", padding: "6px 14px", cursor: "pointer", fontSize: "13px" },
+    raceBtn:     { backgroundColor: "#16305c", color: "#fff", border: "none", borderRadius: "999px", padding: "6px 14px", cursor: "pointer", fontSize: "13px" },
     disabledBtn: { cursor: "not-allowed", opacity: 0.65 },
-    error:       { margin: "14px 0 0", color: "#0b7f5a", fontSize: "13px", fontWeight: 600 },
+    error:       { margin: "14px 0 0", color: "#16305c", fontSize: "13px", fontWeight: 600 },
     overlay: {
         position: "fixed", inset: 0, zIndex: 50,
         backgroundColor: "rgba(45,32,32,0.45)",
@@ -193,7 +194,7 @@ const styles = {
     closeBtn: {
         width: "34px", height: "34px", borderRadius: "8px",
         border: "1px solid #dce5ef", backgroundColor: "#fff8f6",
-        color: "#0b7f5a", fontSize: "16px", fontWeight: 800, cursor: "pointer",
+        color: "#16305c", fontSize: "16px", fontWeight: 800, cursor: "pointer",
     },
     modalBody: { padding: "20px" },
     infoGrid:  { display: "grid", gap: "12px", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))" },

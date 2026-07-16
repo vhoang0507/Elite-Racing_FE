@@ -21,7 +21,7 @@ export default function MyHorses() {
         <>
         <section style={styles.section}>
             <div style={styles.header}>
-                <h3 style={{ margin: 0 }}>My Horses</h3>
+                <h3 style={{ margin: 0, color: "#0a1930" }}>My Horses</h3>
                 <button style={styles.viewAll} onClick={() => navigate('/owner/my-horse')}>View All</button>
             </div>
 
@@ -39,7 +39,7 @@ export default function MyHorses() {
                                 <span style={{
                                     ...styles.statusBadge,
                                     backgroundColor: horse.healthStatus === "Healthy" ? "#dff7e9" : "#f5e1df",
-                                    color: horse.healthStatus === "Healthy" ? "#118548" : "#0b7f5a",
+                                    color: horse.healthStatus === "Healthy" ? "#118548" : "#16305c",
                                 }}>
                                     {horse.healthStatus}
                                 </span>
@@ -67,17 +67,17 @@ export default function MyHorses() {
 }
 
 const styles = {
-    section: { backgroundColor: "#fffefd", borderRadius: "8px", padding: "20px", border: "1px solid #dce5ef", boxShadow: "0 12px 28px rgba(91, 26, 19, 0.05)" },
+    section: { backgroundColor: "#fff", borderRadius: "12px", padding: "20px", border: "1px solid #ded2ad", boxShadow: "0 8px 22px rgba(15,23,42,0.06)" },
     header: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" },
-    viewAll: { background: "none", border: "none", color: "#0b7f5a", cursor: "pointer", fontSize: "13px", fontWeight: "bold" },
+    viewAll: { background: "none", border: "none", color: "#16305c", cursor: "pointer", fontSize: "13px", fontWeight: "bold" },
     list: { display: "flex", flexDirection: "column", gap: "12px" },
-    card: { display: "flex", gap: "12px", alignItems: "center", padding: "10px", borderRadius: "8px", border: "1px solid #dce5ef", backgroundColor: "#fffaf8" },
+    card: { display: "flex", gap: "12px", alignItems: "center", padding: "10px", borderRadius: "10px", border: "1px solid #ded2ad", backgroundColor: "#faf7f0" },
     info: { display: "flex", flexDirection: "column", gap: "4px" },
-    breed: { fontSize: "11px", color: "#64748b", fontWeight: "600", textTransform: "uppercase" },
-    name: { margin: 0, fontWeight: "bold", fontSize: "15px", color: "#2d2020" },
+    breed: { fontSize: "11px", color: "#6b6456", fontWeight: "600", textTransform: "uppercase" },
+    name: { margin: 0, fontWeight: "bold", fontSize: "15px", color: "#1b2333" },
     tags: { display: "flex", gap: "6px", flexWrap: "wrap" },
     statusBadge: { fontSize: "11px", padding: "2px 8px", borderRadius: "999px", fontWeight: "700" },
-    tag: { fontSize: "11px", padding: "2px 8px", borderRadius: "999px", backgroundColor: "#e8f7ef", color: "#64748b" },
-    certificateLink: { width: "fit-content", color: "#0b7f5a", fontSize: "11px", fontWeight: "700", textDecoration: "none" },
-    certificateMissing: { color: "#9a827d", fontSize: "11px", fontWeight: "700" },
+    tag: { fontSize: "11px", padding: "2px 8px", borderRadius: "999px", backgroundColor: "#efe8d6", color: "#6b6456" },
+    certificateLink: { width: "fit-content", color: "#16305c", fontSize: "11px", fontWeight: "700", textDecoration: "none" },
+    certificateMissing: { color: "#94a3b8", fontSize: "11px", fontWeight: "700" },
 };

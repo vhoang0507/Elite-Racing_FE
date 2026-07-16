@@ -371,7 +371,7 @@ function ValidateResultDetail() {
                     <article className="grid gap-4 px-6 py-5" key={report.id}>
                         <div className="flex items-start justify-between gap-4 max-[820px]:flex-col">
                             <div className="flex items-start gap-3">
-                                <span className="grid h-10 w-10 flex-none place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
+                                <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                                     <FaFileAlt aria-hidden="true" />
                                 </span>
                                 <div>
@@ -422,7 +422,7 @@ function ValidateResultDetail() {
                 <div className={`${panelWidthClass} flex items-start justify-between gap-4 max-[820px]:flex-col`}>
                     <div>
                         <Link
-                            className="mb-4 inline-flex min-h-9 items-center gap-2 rounded-md border border-[var(--admin-border)] bg-white px-3 text-[0.78rem] font-black text-[var(--admin-primary)] no-underline hover:bg-[#e8f7ef]"
+                            className="mb-4 inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--admin-border)] bg-white px-3 text-[0.78rem] font-black text-[var(--admin-primary)] no-underline transition-colors hover:border-[var(--admin-gold)]"
                             to="/admin/results"
                         >
                             <FaArrowLeft aria-hidden="true" className="h-3 w-3" />
@@ -443,7 +443,7 @@ function ValidateResultDetail() {
                                     type="button"
                                     disabled={actionLoading}
                                     onClick={handleReturn}
-                                    className="flex min-h-[38px] cursor-pointer items-center gap-2 rounded-md border border-[#f0b7ae] bg-white px-4 text-[0.78rem] font-black text-[#a11616] hover:bg-[#fff1ef] disabled:opacity-50"
+                                    className="flex min-h-[38px] cursor-pointer items-center gap-2 rounded-full border border-[#d89288] bg-white px-4 text-[0.78rem] font-black text-[#a4392f] transition-colors hover:bg-[#f3e1df] disabled:opacity-50"
                                 >
                                     <FaUndo aria-hidden="true" className="h-3 w-3" />
                                     Return
@@ -452,7 +452,7 @@ function ValidateResultDetail() {
                                     type="button"
                                     disabled={actionLoading || !detail?.raceId}
                                     onClick={handleApprove}
-                                    className="flex min-h-[38px] cursor-pointer items-center gap-2 rounded-md bg-[var(--admin-primary)] px-4 text-[0.78rem] font-black text-white hover:bg-[var(--admin-primary-dark)] disabled:opacity-50"
+                                    className="flex min-h-[38px] cursor-pointer items-center gap-2 rounded-full bg-[var(--admin-primary)] px-4 text-[0.78rem] font-black text-white hover:bg-[var(--admin-primary-dark)] disabled:opacity-50"
                                 >
                                     <FaCheck aria-hidden="true" className="h-3 w-3" />
                                     Approve
@@ -464,7 +464,7 @@ function ValidateResultDetail() {
                                 type="button"
                                 disabled={actionLoading}
                                 onClick={handleRetryPredictionEvaluation}
-                                className="flex min-h-[38px] cursor-pointer items-center gap-2 rounded-md border border-[var(--admin-border)] bg-white px-4 text-[0.78rem] font-black text-[var(--admin-primary)] hover:bg-[#e8f7ef] disabled:opacity-50"
+                                className="flex min-h-[38px] cursor-pointer items-center gap-2 rounded-full border border-[var(--admin-border)] bg-white px-4 text-[0.78rem] font-black text-[var(--admin-primary)] transition-colors hover:border-[var(--admin-gold)] disabled:opacity-50"
                             >
                                 <FaRedoAlt aria-hidden="true" className="h-3 w-3" />
                                 Retry Evaluation
@@ -472,7 +472,7 @@ function ValidateResultDetail() {
                         )}
                         <button
                             aria-label="Refresh referee report"
-                            className="grid h-[38px] w-[38px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]"
+                            className="grid h-[38px] w-[38px] cursor-pointer place-items-center rounded-full border border-[var(--admin-border)] bg-white text-[#64748b] transition-colors hover:border-[var(--admin-gold)] hover:text-[var(--admin-primary)]"
                             disabled={loading}
                             onClick={loadDetail}
                             type="button"
@@ -572,7 +572,7 @@ function ValidateResultDetail() {
                         >
                             <div className="flex min-h-[62px] items-center justify-between gap-4 border-b border-[var(--admin-border)] bg-[var(--validate-soft-panel)] px-6 py-3.5 max-[820px]:flex-col max-[820px]:items-stretch">
                                 <div className="flex items-center gap-3">
-                                    <span className="grid h-9 w-9 place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
+                                    <span className="grid h-9 w-9 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                                         <FaTrophy aria-hidden="true" />
                                     </span>
                                     <h2 className="m-0 text-[1rem] font-black text-[var(--admin-ink)]">Post-Race</h2>

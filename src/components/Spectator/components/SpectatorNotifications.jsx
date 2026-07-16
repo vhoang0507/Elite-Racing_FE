@@ -70,7 +70,7 @@ export default function SpectatorNotifications() {
                     <button
                         onClick={handleMarkAllRead}
                         disabled={markingAll}
-                        className="inline-flex min-h-[36px] cursor-pointer items-center rounded-md border border-[var(--admin-primary)] bg-transparent px-4 text-[0.82rem] font-bold text-[var(--admin-primary)] hover:bg-[#e8f7ef] disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex min-h-[36px] cursor-pointer items-center rounded-full border border-[var(--admin-primary)] bg-transparent px-4 text-[0.82rem] font-bold text-[var(--admin-primary)] hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-50"
                         type="button"
                     >
                         {markingAll ? 'Updating...' : `Mark all read (${unread})`}
@@ -111,7 +111,7 @@ export default function SpectatorNotifications() {
                     notifications.map((n) => (
                         <article
                             key={n.notificationId}
-                            className={`soft-card flex items-start gap-4 p-4 ${!n.isRead ? 'border-l-[3px] border-l-[var(--admin-primary)] bg-[#fff5f5]' : ''}`}
+                            className={`soft-card flex items-start gap-4 p-4 ${!n.isRead ? 'border-l-[3px] border-l-[var(--admin-primary)] bg-[var(--admin-surface-strong)]' : ''}`}
                         >
                             <div className="stat-icon h-10 w-10">
                                 <FaBell aria-hidden="true" />
@@ -119,14 +119,14 @@ export default function SpectatorNotifications() {
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-start justify-between gap-3">
                                     <p className="m-0 font-bold text-[var(--admin-ink)]">{n.title}</p>
-                                    <span className={`status-badge ${n.isRead ? 'bg-[#d4edda] text-[#155724]' : 'bg-[#fff3cd] text-[#856404]'}`}>
+                                    <span className={`status-badge ${n.isRead ? 'bg-[#e8f7ee] text-[#16864f]' : 'bg-[#faf2e0] text-[#8a6209]'}`}>
                                         {n.isRead ? 'Read' : 'Unread'}
                                     </span>
                                 </div>
                                 <p className="m-0 mt-2 text-[0.9rem] text-[var(--admin-muted)]">{n.message}</p>
                                 <div className="mt-3 flex items-center justify-between gap-3 max-[640px]:flex-col max-[640px]:items-start">
                                     <span className="text-[0.76rem] text-[var(--admin-muted)]">
-                                        {new Date(n.createdAt).toLocaleDateString()}
+                                        {new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).format(new Date(n.createdAt))}
                                     </span>
                                     {!n.isRead && (
                                         <button

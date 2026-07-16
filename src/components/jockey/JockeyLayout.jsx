@@ -7,6 +7,7 @@ import {
     FaCog,
     FaEnvelope,
     FaHorseHead,
+    FaLock,
     FaQuestionCircle,
     FaSearch,
     FaSignOutAlt,
@@ -16,12 +17,12 @@ import { clearAuthSession } from '../../utils/tokenStorage';
 import { jockeyApi } from '../../api/jockeyApi';
 
 const navigation = [
-    { key: 'dashboard', label: 'Dashboard', icon: FaChartLine, path: '/jockey/dashboard' },
-    { key: 'invitations', label: 'Pending Invitations', icon: FaEnvelope, path: '/jockey/invitations' },
-    { key: 'accepted', label: 'Accepted Races', icon: FaHorseHead, path: '/jockey/accepted' },
-    { key: 'schedule', label: 'Calendar', icon: FaCalendarAlt, path: '/jockey/schedule' },
-    { key: 'notifications', label: 'Notifications', icon: FaBell, path: '/jockey/notifications' },
-    { key: 'settings', label: 'Settings', icon: FaCog, path: '/jockey/settings' },
+    { key: 'dashboard', label: 'Dashboard', icon: FaChartLine, path: '/jockey/dashboard', section: 'Overview' },
+    { key: 'invitations', label: 'Pending Invitations', icon: FaEnvelope, path: '/jockey/invitations', section: 'Racing' },
+    { key: 'accepted', label: 'Accepted Races', icon: FaHorseHead, path: '/jockey/accepted', section: 'Racing' },
+    { key: 'schedule', label: 'Calendar', icon: FaCalendarAlt, path: '/jockey/schedule', section: 'Racing' },
+    { key: 'notifications', label: 'Notifications', icon: FaBell, path: '/jockey/notifications', section: 'Account' },
+    { key: 'settings', label: 'Settings', icon: FaCog, path: '/jockey/settings', section: 'Account' },
 ];
 
 const shellClasses = [
@@ -90,9 +91,9 @@ function JockeyLayout({
     const statusBadge = () => {
         if (!profile) return null;
         const { nextStep } = profile;
-        if (nextStep === 'WaitForActivation') return { label: 'Pending Review', color: '#856404', bg: '#fff3cd' };
-        if (nextStep === 'GoToDashboard') return { label: 'Approved', color: '#155724', bg: '#d4edda' };
-        if (nextStep === 'AccountBlocked') return { label: 'Rejected', color: '#721c24', bg: '#f8d7da' };
+        if (nextStep === 'WaitForActivation') return { label: 'Pending Review', color: '#8a6209', bg: '#faf2e0' };
+        if (nextStep === 'GoToDashboard') return { label: 'Approved', color: '#16864f', bg: '#e8f7ee' };
+        if (nextStep === 'AccountBlocked') return { label: 'Rejected', color: '#a4392f', bg: '#f3e1df' };
         return null;
     };
 
@@ -117,7 +118,7 @@ function JockeyLayout({
                             JOCKEY
                         </span>
                         {badge && (
-                            <span style={{ backgroundColor: badge.bg, color: badge.color, fontSize: '10px', padding: '2px 8px', borderRadius: '10px', fontWeight: '600' }}>
+                            <span style={{ backgroundColor: badge.bg, color: badge.color, fontSize: '10px', padding: '2px 8px', borderRadius: '999px', fontWeight: '700' }}>
                                 {badge.label}
                             </span>
                         )}
@@ -125,39 +126,48 @@ function JockeyLayout({
                 </div>
 
                 <nav className="role-nav">
-                    {navigation.map((item) => {
+                    {navigation.map((item, index) => {
                         const Icon = item.icon;
                         const isActive = item.key === activeKey;
                         const isDisabled = isSettingsOnly && item.key !== 'settings';
+                        const showSectionLabel = item.section && item.section !== navigation[index - 1]?.section;
 
                         if (isDisabled) {
                             return (
-                                <button
-                                    key={item.key}
-                                    type="button"
-                                    onClick={() => setLockedAlert(true)}
-                                    className="role-nav-item is-disabled"
-                                    style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }}
-                                >
-                                    <Icon className="h-4 w-4 flex-none" />
-                                    <span>{item.label}</span>
-                                    <span style={{ marginLeft: 'auto', fontSize: '10px' }}>🔒</span>
-                                </button>
+                                <div key={item.key} className="contents">
+                                    {showSectionLabel && (
+                                        <div className="role-nav-section-label">{item.section}</div>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => setLockedAlert(true)}
+                                        className="role-nav-item is-disabled"
+                                        style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }}
+                                    >
+                                        <Icon className="h-4 w-4 flex-none" />
+                                        <span>{item.label}</span>
+                                        <FaLock style={{ marginLeft: 'auto', fontSize: '10px' }} />
+                                    </button>
+                                </div>
                             );
                         }
 
                         return (
-                            <Link
-                                key={item.key}
-                                to={item.path}
-                                className={[
-                                    'role-nav-item',
-                                    isActive ? 'is-active' : '',
-                                ].join(' ')}
-                            >
-                                <Icon className="h-4 w-4 flex-none" />
-                                <span>{item.label}</span>
-                            </Link>
+                            <div key={item.key} className="contents">
+                                {showSectionLabel && (
+                                    <div className="role-nav-section-label">{item.section}</div>
+                                )}
+                                <Link
+                                    to={item.path}
+                                    className={[
+                                        'role-nav-item',
+                                        isActive ? 'is-active' : '',
+                                    ].join(' ')}
+                                >
+                                    <Icon className="h-4 w-4 flex-none" />
+                                    <span>{item.label}</span>
+                                </Link>
+                            </div>
                         );
                     })}
                 </nav>
@@ -228,18 +238,18 @@ function JockeyLayout({
                                     </div>
 
                                     <div className="grid gap-2 text-[0.84rem]">
-                                        <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                            <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Email</span>
+                                        <div className="grid gap-1 rounded-[var(--admin-radius)] bg-[var(--admin-surface-strong)] p-3">
+                                            <span className="text-[0.66rem] font-black uppercase text-[var(--admin-muted)]">Email</span>
                                             <strong className="break-words text-[var(--admin-ink)]">{profile?.email}</strong>
                                         </div>
                                         <div className="grid grid-cols-2 gap-2">
-                                            <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                                <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Jockey Code</span>
+                                            <div className="grid gap-1 rounded-[var(--admin-radius)] bg-[var(--admin-surface-strong)] p-3">
+                                                <span className="text-[0.66rem] font-black uppercase text-[var(--admin-muted)]">Jockey Code</span>
                                                 <strong>{profile?.jockeyCode}</strong>
                                             </div>
-                                            <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                                <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Status</span>
-                                                <strong style={{ color: badge?.color ?? '#0aa15f' }}>{badge?.label ?? profile?.status}</strong>
+                                            <div className="grid gap-1 rounded-[var(--admin-radius)] bg-[var(--admin-surface-strong)] p-3">
+                                                <span className="text-[0.66rem] font-black uppercase text-[var(--admin-muted)]">Status</span>
+                                                <strong style={{ color: badge?.color ?? '#16864f' }}>{badge?.label ?? profile?.status}</strong>
                                             </div>
                                         </div>
                                     </div>
@@ -269,10 +279,14 @@ function JockeyLayout({
                         <div style={{
                             backgroundColor: '#fff', borderRadius: '14px', padding: '36px 32px',
                             maxWidth: '420px', width: '100%', textAlign: 'center',
-                            boxShadow: '0 24px 60px rgba(37,18,14,0.3)',
+                            boxShadow: '0 24px 60px rgba(10,25,48,0.3)',
                         }}>
-                            <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🔒</div>
-                            <h3 style={{ margin: '0 0 10px', fontSize: '1.3rem', color: '#0f172a' }}>
+                            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px' }}>
+                                <span style={{ display: 'grid', placeItems: 'center', width: 64, height: 64, borderRadius: '999px', backgroundColor: 'var(--admin-surface-strong)', color: 'var(--admin-primary)', fontSize: '1.8rem' }}>
+                                    <FaLock />
+                                </span>
+                            </div>
+                            <h3 style={{ margin: '0 0 10px', fontSize: '1.3rem', color: '#0a1930' }}>
                                 Access Restricted
                             </h3>
                             <p style={{ margin: '0 0 8px', fontSize: '0.95rem', color: '#555', lineHeight: 1.6 }}>
@@ -289,8 +303,8 @@ function JockeyLayout({
                                 <button
                                     onClick={() => setLockedAlert(false)}
                                     style={{
-                                        padding: '10px 22px', borderRadius: '8px',
-                                        border: '1px solid #dce5ef', backgroundColor: '#fff',
+                                        padding: '10px 22px', borderRadius: '999px',
+                                        border: '1px solid var(--admin-border)', backgroundColor: '#fff',
                                         color: '#555', fontWeight: 600, cursor: 'pointer', fontSize: '0.9rem',
                                     }}
                                 >
@@ -300,8 +314,8 @@ function JockeyLayout({
                                     <button
                                         onClick={() => { setLockedAlert(false); navigate('/jockey/settings'); }}
                                         style={{
-                                            padding: '10px 22px', borderRadius: '8px',
-                                            border: 'none', backgroundColor: '#0b7f5a',
+                                            padding: '10px 22px', borderRadius: '999px',
+                                            border: 'none', backgroundColor: 'var(--admin-primary)',
                                             color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem',
                                         }}
                                     >

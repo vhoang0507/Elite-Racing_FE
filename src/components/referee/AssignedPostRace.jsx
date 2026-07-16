@@ -82,7 +82,7 @@ function getOwnerLabel(registration) {
 function getStatusClass(status) {
     if (['RefereeConfirmed', 'AdminApproved', 'Published'].includes(status)) return 'bg-green-100 text-green-700';
     if (status === 'Returned') return 'bg-red-100 text-red-700';
-    return 'bg-[#e8f7ef] text-[#0b7f5a]';
+    return 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]';
 }
 
 function isSeasonActive(race) {
@@ -106,11 +106,11 @@ function getRaceBlockingReason(race) {
     return '';
 }
 
-const inputClass = "rounded border border-[#dce5ef] px-3 py-2.5 text-sm outline-none focus:border-[#0b7f5a] w-full";
+const inputClass = "rounded border border-[#dce5ef] px-3 py-2.5 text-sm outline-none focus:border-[var(--admin-primary)] w-full";
 const labelClass = "block text-xs font-bold text-[#64748b] uppercase mb-1.5";
-const primaryBtn = "rounded bg-[#0b7f5a] px-5 py-2.5 font-semibold text-white text-sm disabled:cursor-not-allowed disabled:opacity-60 w-full";
+const primaryBtn = "rounded bg-[var(--admin-primary)] px-5 py-2.5 font-semibold text-white text-sm disabled:cursor-not-allowed disabled:opacity-60 w-full";
 const confirmToneClass = {
-    primary: 'bg-[#0b7f5a] hover:bg-[#09664a]',
+    primary: 'bg-[var(--admin-primary)] hover:bg-[#09664a]',
     danger: 'bg-[#b91c1c] hover:bg-[#991b1b]',
 };
 
@@ -652,7 +652,7 @@ function AssignedPostRace() {
                                 onClick={handleStartRace}
                                 disabled={!canStartRace || saving === 'start'}
                                 title={canStartRace ? 'Start race' : selectedRaceBlockingReason || 'Race cannot be started yet.'}
-                                className="rounded bg-[#0b7f5a] px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                className="rounded bg-[var(--admin-primary)] px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {saving === 'start' ? 'Starting...' : '🏁 Start Race'}
                             </button>
@@ -671,7 +671,7 @@ function AssignedPostRace() {
                                 onClick={handleFinishRace}
                                 disabled={!canFinishRace || saving === 'finish'}
                                 title={canFinishRace ? 'Finish race' : selectedRaceBlockingReason || 'Race cannot be finished yet.'}
-                                className="rounded bg-[#0b7f5a] px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                className="rounded bg-[var(--admin-primary)] px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {saving === 'finish' ? 'Finishing...' : 'Finish Race'}
                             </button>
@@ -706,23 +706,23 @@ function AssignedPostRace() {
                                     style={{
                                         display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
                                         padding: '10px 16px', marginRight: 8, borderRadius: 10, cursor: 'pointer',
-                                        border: isSelected ? '2px solid #0b7f5a' : '1px solid #dce5ef',
+                                        border: isSelected ? '2px solid var(--admin-primary)' : '1px solid #dce5ef',
                                         background: isSelected ? '#f8fbff' : '#fff',
                                         flexShrink: 0, minWidth: 180, textAlign: 'left',
                                         transition: 'all 0.15s',
                                     }}
                                 >
-                                    <span style={{ fontWeight: 700, fontSize: 13, color: isSelected ? '#0b7f5a' : '#2b1b1b', lineHeight: 1.3 }}>
+                                    <span style={{ fontWeight: 700, fontSize: 13, color: isSelected ? 'var(--admin-primary)' : '#2b1b1b', lineHeight: 1.3 }}>
                                         {race.raceName}
                                     </span>
                                     <span style={{ fontSize: 11, color: '#999', marginTop: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
                                         <FaMapMarkerAlt /> {race.location || 'N/A'}
                                     </span>
-                                    <span style={{ fontSize: 11, color: isSelected ? '#0b7f5a' : '#aaa', marginTop: 2, fontWeight: 600 }}>
+                                    <span style={{ fontSize: 11, color: isSelected ? 'var(--admin-primary)' : '#aaa', marginTop: 2, fontWeight: 600 }}>
                                         {race.raceStatus}
                                     </span>
                                     {race.seasonStatus && (
-                                        <span style={{ fontSize: 11, color: race.seasonStatus === 'Active' ? '#0b7f5a' : '#b91c1c', marginTop: 2, fontWeight: 600 }}>
+                                        <span style={{ fontSize: 11, color: race.seasonStatus === 'Active' ? 'var(--admin-primary)' : '#b91c1c', marginTop: 2, fontWeight: 600 }}>
                                             Season: {race.seasonStatus}
                                         </span>
                                     )}
@@ -759,11 +759,11 @@ function AssignedPostRace() {
                                     display: 'flex', alignItems: 'center', gap: 7,
                                     padding: '10px 20px',
                                     border: 'none',
-                                    borderBottom: isActive ? '2px solid #0b7f5a' : '2px solid transparent',
+                                    borderBottom: isActive ? '2px solid var(--admin-primary)' : '2px solid transparent',
                                     marginBottom: -2,
                                     background: 'transparent',
                                     fontWeight: isActive ? 800 : 600,
-                                    color: isActive ? '#0b7f5a' : '#64748b',
+                                    color: isActive ? 'var(--admin-primary)' : '#64748b',
                                     fontSize: 14,
                                     cursor: 'pointer',
                                     transition: 'all 0.15s',
@@ -773,7 +773,7 @@ function AssignedPostRace() {
                                 {tab.label}
                                 <span style={{
                                     fontSize: 11, fontWeight: 700,
-                                    backgroundColor: isActive ? '#0b7f5a' : '#dce5ef',
+                                    backgroundColor: isActive ? 'var(--admin-primary)' : '#dce5ef',
                                     color: isActive ? '#fff' : '#64748b',
                                     borderRadius: 20, padding: '1px 7px', marginLeft: 2,
                                 }}>
@@ -796,12 +796,12 @@ function AssignedPostRace() {
                         {/* Form */}
                         <form onSubmit={handleSaveResult} className="surface-card" style={{ padding: 24 }}>
                             <h2 style={{ margin: '0 0 20px', fontSize: '1.1rem', fontWeight: 800, color: '#2b1b1b', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <FaTrophy style={{ color: '#0b7f5a' }} /> Result Entry
+                                <FaTrophy style={{ color: 'var(--admin-primary)' }} /> Result Entry
                             </h2>
 
                             {selectedRace && (
                                 <div style={{ background: '#faf6f5', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#64748b' }}>
-                                    Race: <strong style={{ color: '#0b7f5a' }}>{selectedRace.raceName}</strong>
+                                    Race: <strong style={{ color: 'var(--admin-primary)' }}>{selectedRace.raceName}</strong>
                                 </div>
                             )}
 
@@ -878,7 +878,7 @@ function AssignedPostRace() {
                         <div className="surface-card" style={{ overflow: 'hidden' }}>
                             <div style={{ padding: '16px 20px', borderBottom: '1px solid #dce5ef', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <FaClipboardList style={{ color: '#0b7f5a' }} /> Results
+                                    <FaClipboardList style={{ color: 'var(--admin-primary)' }} /> Results
                                 </h2>
                                 <span style={{ fontSize: 12, color: '#999' }}>{selectedRace?.raceName || 'Select a race'}</span>
                             </div>
@@ -930,12 +930,12 @@ function AssignedPostRace() {
                         {/* Form */}
                         <form onSubmit={handleSaveViolation} className="surface-card" style={{ padding: 24 }}>
                             <h2 style={{ margin: '0 0 20px', fontSize: '1.1rem', fontWeight: 800, color: '#2b1b1b', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <FaGavel style={{ color: '#0b7f5a' }} /> {isEditingViolation ? 'Edit Violation' : 'Log Violation'}
+                                <FaGavel style={{ color: 'var(--admin-primary)' }} /> {isEditingViolation ? 'Edit Violation' : 'Log Violation'}
                             </h2>
 
                             {selectedRace && (
                                 <div style={{ background: '#faf6f5', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#64748b' }}>
-                                    Race: <strong style={{ color: '#0b7f5a' }}>{selectedRace.raceName}</strong>
+                                    Race: <strong style={{ color: 'var(--admin-primary)' }}>{selectedRace.raceName}</strong>
                                 </div>
                             )}
 
@@ -1027,7 +1027,7 @@ function AssignedPostRace() {
                         <div className="surface-card" style={{ overflow: 'hidden' }}>
                             <div style={{ padding: '16px 20px', borderBottom: '1px solid #dce5ef' }}>
                                 <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <FaGavel style={{ color: '#0b7f5a' }} /> Logged Violations
+                                    <FaGavel style={{ color: 'var(--admin-primary)' }} /> Logged Violations
                                 </h2>
                             </div>
                             <div>
@@ -1055,7 +1055,7 @@ function AssignedPostRace() {
                                                     title="Edit violation"
                                                     aria-label="Edit violation"
                                                     disabled={loadingRaceData || Boolean(saving)}
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded border border-[#dce5ef] bg-white text-[#0b7f5a] disabled:cursor-not-allowed disabled:opacity-60"
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded border border-[#dce5ef] bg-white text-[var(--admin-primary)] disabled:cursor-not-allowed disabled:opacity-60"
                                                 >
                                                     <FaEdit />
                                                 </button>
@@ -1084,23 +1084,23 @@ function AssignedPostRace() {
                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap' }}>
                             <div>
                                 <h2 style={{ margin: 0, fontSize: '1.08rem', fontWeight: 800, color: '#2b1b1b', display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <FaClipboardList style={{ color: '#0b7f5a' }} /> Submit Post-Race Report
+                                    <FaClipboardList style={{ color: 'var(--admin-primary)' }} /> Submit Post-Race Report
                                 </h2>
                                 <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13, fontWeight: 600 }}>
                                     {submitReportHint}
                                 </p>
                             </div>
                             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                                <span style={{ border: '1px solid #dce5ef', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 800, color: '#0b7f5a', background: '#f8fbff' }}>
+                                <span style={{ border: '1px solid #dce5ef', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 800, color: 'var(--admin-primary)', background: '#f8fbff' }}>
                                     Results: {results.length}
                                 </span>
-                                <span style={{ border: '1px solid #dce5ef', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 800, color: '#0b7f5a', background: '#f8fbff' }}>
+                                <span style={{ border: '1px solid #dce5ef', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 800, color: 'var(--admin-primary)', background: '#f8fbff' }}>
                                     Draft: {draftResultCount}
                                 </span>
-                                <span style={{ border: '1px solid #dce5ef', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 800, color: '#0b7f5a', background: '#f8fbff' }}>
+                                <span style={{ border: '1px solid #dce5ef', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 800, color: 'var(--admin-primary)', background: '#f8fbff' }}>
                                     Confirmed: {confirmedResultCount}
                                 </span>
-                                <span style={{ border: '1px solid #dce5ef', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 800, color: '#0b7f5a', background: '#f8fbff' }}>
+                                <span style={{ border: '1px solid #dce5ef', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 800, color: 'var(--admin-primary)', background: '#f8fbff' }}>
                                     Violations: {violations.length}
                                 </span>
                             </div>
@@ -1119,7 +1119,7 @@ function AssignedPostRace() {
                             />
                             <div style={{ alignItems: 'center', display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 10 }}>
                                 <button
-                                    className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded border border-[#0b7f5a] bg-white px-4 text-sm font-bold text-[#0b7f5a] disabled:cursor-not-allowed disabled:opacity-60"
+                                    className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded border border-[var(--admin-primary)] bg-white px-4 text-sm font-bold text-[var(--admin-primary)] disabled:cursor-not-allowed disabled:opacity-60"
                                     disabled={saving === 'save-report' || loadingRaceData || !selectedRaceId || !canEnterResults || !trimmedReportContent}
                                     onClick={handleSavePostRaceReport}
                                     type="button"
@@ -1139,7 +1139,7 @@ function AssignedPostRace() {
                             type="button"
                             onClick={handleSubmitPostRaceReport}
                             disabled={submitReportDisabled}
-                            className="mt-5 inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded bg-[#0b7f5a] px-6 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                            className="mt-5 inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded bg-[var(--admin-primary)] px-6 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             <FaCheck />
                             {saving === 'submit-report' ? 'Submitting...' : 'Submit Report to Admin'}
@@ -1170,7 +1170,7 @@ function AssignedPostRace() {
 
                         <div className="flex justify-end gap-3 max-[520px]:flex-col">
                             <button
-                                className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md border border-[#dce5ef] bg-[#fffdfc] px-4 font-black text-[#2b1b1b] hover:bg-[#e8f7ef]"
+                                className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md border border-[#dce5ef] bg-[#fffdfc] px-4 font-black text-[#2b1b1b] hover:bg-[var(--admin-surface-strong)]"
                                 onClick={() => resolveConfirmRequest(false)}
                                 type="button"
                             >

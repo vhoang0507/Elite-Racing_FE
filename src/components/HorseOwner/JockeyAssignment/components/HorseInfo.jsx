@@ -33,7 +33,7 @@ export default function HorseInfo({ context, loading, horseImageUrl, healthCerti
                     <p style={styles.overlayName}>{context.horseName}</p>
                     <p style={styles.overlayBreed}>{context.breedName}</p>
                 </div>
-                <span style={{ ...styles.activeBadge, backgroundColor: isActive ? '#16a34a' : '#dc2626' }}>
+                <span style={{ ...styles.activeBadge, backgroundColor: isActive ? '#16864f' : '#a4392f' }}>
                     {isActive ? '● Active' : '● Inactive'}
                 </span>
             </div>
@@ -43,7 +43,7 @@ export default function HorseInfo({ context, loading, horseImageUrl, healthCerti
                 <StatBox label="Weight" value={`${context.weightKg} kg`} />
                 <StatBox label="Height" value={context.heightCm ? `${context.heightCm} cm` : '—'} />
                 <StatBox label="Age" value={`${context.age} yrs`} />
-                <StatBox label="Health" value={context.healthStatus} color={context.healthStatus === 'Healthy' ? '#15803d' : '#b91c1c'} />
+                <StatBox label="Health" value={context.healthStatus} color={context.healthStatus === 'Healthy' ? '#16864f' : '#a4392f'} />
             </div>
 
             {/* Certificate */}
@@ -111,7 +111,7 @@ const styles = {
     statValue: { margin: '3px 0 0', fontSize: 14, fontWeight: 700 },
     certSection: { padding: '14px 16px', borderBottom: '1px solid #f0ebe8' },
     certLabel: { margin: '0 0 8px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#94a3b8' },
-    certBtn: { display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: '1px solid #e8ddd9', borderRadius: 8, padding: '8px 12px', cursor: 'pointer', width: '100%', color: '#610000', fontWeight: 700, fontSize: 12 },
+    certBtn: { display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: '1px solid #e8ddd9', borderRadius: 10, padding: '8px 12px', cursor: 'pointer', width: '100%', color: '#16305c', fontWeight: 700, fontSize: 12 },
     certThumb: { width: 48, height: 34, borderRadius: 5, objectFit: 'cover', border: '1px solid #e8ddd9' },
     certMissing: { fontSize: 12, color: '#94a3b8', fontWeight: 600 },
     raceSection: { padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 },

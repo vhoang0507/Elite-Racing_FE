@@ -1,5 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+    FaCalendarAlt,
+    FaCoins,
+    FaExclamationTriangle,
+    FaHourglassEnd,
+    FaLayerGroup,
+    FaMapMarkerAlt,
+    FaRulerHorizontal,
+    FaUsers,
+} from "react-icons/fa";
 import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
 import ImageLightbox from "../../../shared/ImageLightbox";
@@ -178,18 +188,19 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                     {/* Left column - Tournament Info */}
                     <div style={styles.infoCol}>
                         {(tournament.seasonName || tournament.seasonStatus) && (
-                            <div style={styles.infoRow}><span>S</span><div><small>SEASON</small><p>{tournament.seasonName || "N/A"}{tournament.seasonStatus ? ` (${tournament.seasonStatus})` : ""}</p></div></div>
+                            <div style={styles.infoRow}><span><FaLayerGroup aria-hidden="true" /></span><div><small>SEASON</small><p>{tournament.seasonName || "N/A"}{tournament.seasonStatus ? ` (${tournament.seasonStatus})` : ""}</p></div></div>
                         )}
                         {tournament.registrationDeadline && (
-                            <div style={styles.infoRow}><span>D</span><div><small>DEADLINE</small><p>{tournament.registrationDeadline}</p></div></div>
+                            <div style={styles.infoRow}><span><FaHourglassEnd aria-hidden="true" /></span><div><small>DEADLINE</small><p>{tournament.registrationDeadline}</p></div></div>
                         )}
-                        <div style={styles.infoRow}><span>📅</span><div><small>DATE</small><p>{tournament.raceDate}</p></div></div>
-                        <div style={styles.infoRow}><span>📍</span><div><small>LOCATION</small><p>{tournament.location}</p></div></div>
-                        <div style={styles.infoRow}><span>👥</span><div><small>SLOTS LEFT</small><p>{tournament.availableSlots} / {tournament.maxHorses}</p></div></div>
-                        <div style={styles.infoRow}><span>📏</span><div><small>DISTANCE</small><p>{tournament.distanceMeters} m</p></div></div>
-                        <div style={styles.infoRow}><span>💰</span><div><small>PRIZE POOL</small><h3 style={{ margin: 0, color: "#0b7f5a" }}>{formatCurrency(tournament.prizePool)}</h3></div></div>
-                        <p style={{ fontSize: "11px", color: "#999", marginTop: "8px" }}>
-                            ⚠️ Registrations require admin approval before race participation.
+                        <div style={styles.infoRow}><span><FaCalendarAlt aria-hidden="true" /></span><div><small>DATE</small><p>{tournament.raceDate}</p></div></div>
+                        <div style={styles.infoRow}><span><FaMapMarkerAlt aria-hidden="true" /></span><div><small>LOCATION</small><p>{tournament.location}</p></div></div>
+                        <div style={styles.infoRow}><span><FaUsers aria-hidden="true" /></span><div><small>SLOTS LEFT</small><p>{tournament.availableSlots} / {tournament.maxHorses}</p></div></div>
+                        <div style={styles.infoRow}><span><FaRulerHorizontal aria-hidden="true" /></span><div><small>DISTANCE</small><p>{tournament.distanceMeters} m</p></div></div>
+                        <div style={styles.infoRow}><span><FaCoins aria-hidden="true" /></span><div><small>PRIZE POOL</small><h3 style={{ margin: 0, color: "#16305c" }}>{formatCurrency(tournament.prizePool)}</h3></div></div>
+                        <p style={{ display: "flex", alignItems: "flex-start", gap: "6px", fontSize: "11px", color: "#999", marginTop: "8px" }}>
+                            <FaExclamationTriangle aria-hidden="true" style={{ marginTop: "1px", flexShrink: 0 }} />
+                            Registrations require admin approval before race participation.
                         </p>
                     </div>
 
@@ -211,7 +222,7 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                                             ...styles.horseCard,
                                             opacity: horse.isEligible ? 1 : 0.5,
                                             cursor: horse.isEligible ? "pointer" : "not-allowed",
-                                            border: selectedHorse?.horseId === horse.horseId ? "2px solid #0b7f5a" : "1px solid #eee",
+                                            border: selectedHorse?.horseId === horse.horseId ? "2px solid #16305c" : "1px solid #ded2ad",
                                         }}
                                     >
                                         <div style={{ flex: 1 }}>
@@ -219,8 +230,8 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                                                 <strong>{horse.horseName}</strong>
                                                 <span style={{
                                                     fontSize: "11px", padding: "2px 8px", borderRadius: "10px",
-                                                    backgroundColor: horse.isEligible ? "#d4edda" : "#f8d7da",
-                                                    color: horse.isEligible ? "#155724" : "#721c24",
+                                                    backgroundColor: horse.isEligible ? "#e8f7ee" : "#f3e1df",
+                                                    color: horse.isEligible ? "#16864f" : "#a4392f",
                                                 }}>
                                                     {horse.isEligible ? "Eligible" : "Ineligible"}
                                                 </span>
@@ -230,7 +241,7 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                                                 <HealthCertificateLink url={horse.healthCertificateImageUrl} />
                                             </div>
                                             {!horse.isEligible && (
-                                                <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#721c24" }}>{horse.ineligibleReason}</p>
+                                                <p style={{ margin: "4px 0 0", fontSize: "11px", color: "#a4392f" }}>{horse.ineligibleReason}</p>
                                             )}
                                         </div>
                                     </div>
@@ -249,8 +260,8 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                         {!isRegistrationOpen && (
                             <p style={styles.closedNotice}>{registrationUnavailableReason}</p>
                         )}
-                        {error && <p style={{ color: "#721c24", fontSize: "13px", marginBottom: "8px" }}>{error}</p>}
-                        {success && <p style={{ color: "#155724", fontSize: "13px", marginBottom: "8px" }}>{success}</p>}
+                        {error && <p style={{ color: "#a4392f", fontSize: "13px", marginBottom: "8px" }}>{error}</p>}
+                        {success && <p style={{ color: "#16864f", fontSize: "13px", marginBottom: "8px" }}>{success}</p>}
 
                         <div style={{ display: "flex", gap: "12px" }}>
                             <button
@@ -275,7 +286,7 @@ const styles = {
     imgWrapper: { position: "relative" },
     img: { width: "100%", height: "160px", objectFit: "cover", borderRadius: "12px 12px 0 0" },
     imgOverlay: { position: "absolute", bottom: "16px", left: "16px" },
-    upcomingBadge: { backgroundColor: "#0b7f5a", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "4px" },
+    upcomingBadge: { backgroundColor: "#16305c", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "4px" },
     tournamentName: { color: "#fff", margin: "4px 0 0", fontSize: "22px", textShadow: "0 1px 3px rgba(0,0,0,0.5)" },
     closeBtn: { position: "absolute", top: "12px", right: "12px", background: "rgba(0,0,0,0.4)", color: "#fff", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", fontSize: "14px" },
     body: { display: "grid", gridTemplateColumns: "240px 1fr", gap: "0" },
@@ -285,10 +296,10 @@ const styles = {
     stepTitle: { fontSize: "11px", color: "#999", fontWeight: "700", letterSpacing: "1px", margin: "0 0 10px" },
     input: { width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "13px", boxSizing: "border-box" },
     horseCard: { display: "flex", gap: "12px", padding: "12px", borderRadius: "8px", marginBottom: "4px" },
-    certificateLink: { display: "inline-flex", alignItems: "center", gap: "7px", color: "#0b7f5a", fontSize: "11px", fontWeight: "700", textDecoration: "none" },
+    certificateLink: { display: "inline-flex", alignItems: "center", gap: "7px", color: "#16305c", fontSize: "11px", fontWeight: "700", textDecoration: "none" },
     certificateThumb: { width: "38px", height: "28px", borderRadius: "6px", border: "1px solid #dce5ef", objectFit: "cover", backgroundColor: "#fff8f6" },
     certificateMissing: { display: "inline-flex", borderRadius: "999px", backgroundColor: "#f4ecea", color: "#64748b", fontSize: "11px", fontWeight: "700", padding: "3px 8px" },
-    closedNotice: { color: "#b91c1c", backgroundColor: "#fee2e2", borderRadius: "8px", fontSize: "13px", fontWeight: 700, marginBottom: "8px", padding: "8px 10px" },
-    submitBtn: { flex: 1, padding: "10px", backgroundColor: "#0b7f5a", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "14px", fontWeight: "bold" },
-    cancelBtn: { padding: "10px 20px", backgroundColor: "#fff", border: "1px solid #ddd", borderRadius: "8px", cursor: "pointer", fontSize: "14px" },
+    closedNotice: { color: "#a4392f", backgroundColor: "#f3e1df", borderRadius: "8px", fontSize: "13px", fontWeight: 700, marginBottom: "8px", padding: "8px 10px" },
+    submitBtn: { flex: 1, padding: "10px", backgroundColor: "#16305c", color: "#fff", border: "none", borderRadius: "999px", cursor: "pointer", fontSize: "14px", fontWeight: "bold" },
+    cancelBtn: { padding: "10px 20px", backgroundColor: "#fff", border: "1px solid #ded2ad", borderRadius: "999px", cursor: "pointer", fontSize: "14px" },
 };

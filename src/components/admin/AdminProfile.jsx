@@ -68,7 +68,7 @@ function ProfileField({
 }) {
     return (
         <article className="grid grid-cols-[48px_minmax(0,1fr)] items-center gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-4 shadow-[0_8px_22px_rgba(15,23,42,0.05)]">
-            <div className="grid h-12 w-12 place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
+            <div className="grid h-12 w-12 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                 {icon ? createElement(icon, { 'aria-hidden': true }) : null}
             </div>
             <div className="min-w-0">
@@ -141,7 +141,7 @@ function AdminProfile() {
 
                 <section className="overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_14px_30px_rgba(15,23,42,0.06)]">
                     <div className="flex items-center gap-5 border-b border-[var(--admin-border)] bg-[#f8fbff] p-6 max-[720px]:flex-col max-[720px]:items-start">
-                        <div className="grid h-20 w-20 flex-none place-items-center rounded-full bg-[linear-gradient(145deg,#0f172a,#0b7f5a)] text-[1.4rem] font-black text-white">
+                        <div className="grid h-20 w-20 flex-none place-items-center rounded-full bg-[linear-gradient(145deg,#0b1b34,#c8a24a)] text-[1.4rem] font-black text-white">
                             {accountInitials}
                         </div>
                         <div className="min-w-0">

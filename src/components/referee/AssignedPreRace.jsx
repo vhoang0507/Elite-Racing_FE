@@ -72,7 +72,7 @@ function CertificatePreviewList({ certificates }) {
                 return (
                     <span
                         key={item.registrationId}
-                        className="inline-flex items-center gap-2 rounded border border-[#dce5ef] bg-white px-2 py-1 text-xs font-bold text-[#0b7f5a]"
+                        className="inline-flex items-center gap-2 rounded border border-[#dce5ef] bg-white px-2 py-1 text-xs font-bold text-[var(--admin-primary)]"
                     >
                         <img
                             src={resolvedUrl}
@@ -84,7 +84,7 @@ function CertificatePreviewList({ certificates }) {
                 );
             })}
             {certificates.length > 3 && (
-                <span className="inline-flex items-center rounded bg-[#e8f7ef] px-2 py-1 text-xs font-bold text-[#0b7f5a]">
+                <span className="inline-flex items-center rounded bg-[var(--admin-surface-strong)] px-2 py-1 text-xs font-bold text-[var(--admin-primary)]">
                     +{certificates.length - 3} more
                 </span>
             )}
@@ -199,11 +199,11 @@ function AssignedPreRace() {
                                 type="button"
                                 key={race.raceId}
                                 onClick={() => openInspectionRegistry(race)}
-                                className="soft-card group cursor-pointer p-6 text-left transition hover:border-[#0b7f5a] hover:shadow-md"
+                                className="soft-card group cursor-pointer p-6 text-left transition hover:border-[var(--admin-primary)] hover:shadow-md"
                             >
                                 <div className="flex justify-between">
                                     <div className="flex flex-wrap gap-2">
-                                        <span className="rounded-full bg-[#e8f7ef] px-3 py-1 text-xs font-semibold">
+                                        <span className="rounded-full bg-[var(--admin-surface-strong)] px-3 py-1 text-xs font-semibold">
                                             {formatStatus(getDisplayStatus(race))}
                                         </span>
                                         {race.seasonStatus && (
@@ -223,7 +223,7 @@ function AssignedPreRace() {
                                 </h2>
 
                                 {race.tournamentName && (
-                                    <p className="mt-1 text-sm font-semibold text-[#0b7f5a]">
+                                    <p className="mt-1 text-sm font-semibold text-[var(--admin-primary)]">
                                         {race.tournamentName}
                                     </p>
                                 )}
@@ -258,13 +258,13 @@ function AssignedPreRace() {
                                 </div>
 
                                 <div className="mt-4 rounded border border-[#dce5ef] bg-[#fff8f6] p-3">
-                                    <div className="text-xs font-bold uppercase text-[#0b7f5a]">
+                                    <div className="text-xs font-bold uppercase text-[var(--admin-primary)]">
                                         Health Certificates ({certificates.length})
                                     </div>
                                     <CertificatePreviewList certificates={certificates} />
                                 </div>
 
-                                <div className="secondary-button mt-6 gap-3 group-hover:bg-[#0b7f5a] group-hover:text-white">
+                                <div className="secondary-button mt-6 gap-3 group-hover:bg-[var(--admin-primary)] group-hover:text-white">
                                     Open Inspection Registry
                                     <FaArrowRight />
                                 </div>

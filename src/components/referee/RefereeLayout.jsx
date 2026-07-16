@@ -21,36 +21,42 @@ const menuItems = [
         label: 'Dashboard',
         icon: FaChartLine,
         path: '/referee/dashboard',
+        section: 'Overview',
     },
     {
         key: 'assigned-races',
         label: 'Assigned Races',
         icon: FaFlagCheckered,
         path: '/referee/races',
+        section: 'Officiating',
     },
     {
         key: 'pre-race',
         label: 'Pre-Race Inspection',
         icon: FaClipboardCheck,
         path: '/referee/races/pre-race',
+        section: 'Officiating',
     },
     {
         key: 'post-race',
         label: 'Post-Race',
         icon: FaGavel,
         path: '/referee/races/post-race',
+        section: 'Officiating',
     },
     {
         key: 'notifications',
         label: 'Notifications',
         icon: FaBell,
         path: '/referee/notifications',
+        section: 'Account',
     },
     {
         key: 'settings',
         label: 'Settings',
         icon: FaCog,
         path: '/referee/settings',
+        section: 'Account',
     },
 ];
 
@@ -82,32 +88,32 @@ function getStatusBadge(profile) {
 
     if (nextStep === 'WaitForActivation' || status === 'Pending') {
         return {
-            bg: '#fff3cd',
-            color: '#856404',
+            bg: '#faf2e0',
+            color: '#8a6209',
             label: 'Pending Review',
         };
     }
 
     if (nextStep === 'GoToDashboard' || status === 'Active') {
         return {
-            bg: '#d4edda',
-            color: '#155724',
+            bg: '#e8f7ee',
+            color: '#16864f',
             label: 'Approved',
         };
     }
 
     if (nextStep === 'AccountBlocked' || status === 'Banned') {
         return {
-            bg: '#f8d7da',
-            color: '#721c24',
+            bg: '#f3e1df',
+            color: '#a4392f',
             label: 'Blocked',
         };
     }
 
     if (nextStep === 'ContactSupport' || status === 'Inactive') {
         return {
-            bg: '#f8d7da',
-            color: '#721c24',
+            bg: '#f3e1df',
+            color: '#a4392f',
             label: 'Inactive',
         };
     }
@@ -226,22 +232,27 @@ function RefereeLayout({
                 </div>
 
                 <nav className="role-nav">
-                    {menuItems.map((item) => {
+                    {menuItems.map((item, index) => {
                         const Icon = item.icon;
                         const isActive = activeKey === item.key;
+                        const showSectionLabel = item.section && item.section !== menuItems[index - 1]?.section;
 
                         return (
-                            <Link
-                                key={item.key}
-                                to={item.path}
-                                className={[
-                                    'role-nav-item',
-                                    isActive ? 'is-active' : '',
-                                ].join(' ')}
-                            >
-                                <Icon className="h-4 w-4 flex-none" />
-                                <span>{item.label}</span>
-                            </Link>
+                            <div key={item.key} className="contents">
+                                {showSectionLabel && (
+                                    <div className="role-nav-section-label">{item.section}</div>
+                                )}
+                                <Link
+                                    to={item.path}
+                                    className={[
+                                        'role-nav-item',
+                                        isActive ? 'is-active' : '',
+                                    ].join(' ')}
+                                >
+                                    <Icon className="h-4 w-4 flex-none" />
+                                    <span>{item.label}</span>
+                                </Link>
+                            </div>
                         );
                     })}
                 </nav>
@@ -321,7 +332,7 @@ function RefereeLayout({
                                             <strong className="block truncate text-[1.05rem] text-[var(--admin-ink)]">
                                                 {fullName}
                                             </strong>
-                                            <span className="mt-1 inline-flex rounded-full bg-[#e8f7ef] px-2.5 py-1 text-[0.66rem] font-black text-[var(--admin-primary)]">
+                                            <span className="mt-1 inline-flex rounded-full bg-[var(--admin-surface-strong)] px-2.5 py-1 text-[0.66rem] font-black text-[var(--admin-primary)]">
                                                 RACE REFEREE
                                             </span>
                                         </div>

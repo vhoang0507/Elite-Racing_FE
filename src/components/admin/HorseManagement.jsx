@@ -56,8 +56,8 @@ const severityClass = {
     medium: 'border-[#e2cd79] bg-[#fff5d3] text-[#8a6209]',
 };
 
-const selectClass = 'h-[38px] min-w-[142px] cursor-pointer rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.78rem] font-bold text-[#475569] outline-0';
-const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]';
+const selectClass = 'h-[38px] min-w-[142px] cursor-pointer rounded-full border border-[var(--admin-border)] bg-white px-3 text-[0.78rem] font-bold text-[#475569] outline-0 hover:border-[var(--admin-gold)]';
+const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-full border border-[var(--admin-border)] bg-white font-extrabold text-[var(--admin-primary-dark)] transition-colors hover:border-[var(--admin-primary)] hover:bg-[var(--admin-primary)] hover:text-white';
 const pageSize = 4;
 const horseApprovalStorageKey = 'adminHorseApprovalStatuses';
 
@@ -467,53 +467,52 @@ function HorseManagement() {
                             </select>
                         </div>
 
-                        <div className="w-full overflow-x-auto">
-                            <table className="w-full border-collapse max-[860px]:min-w-[820px]">
-                                <thead>
-                                    <tr>
-                                        {['Horse & Breed', 'Age/Weight', 'Owner', 'Health Certificate', 'Approval', 'Details'].map((heading) => (
-                                            <th className="whitespace-nowrap border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] py-[18px] text-left text-[0.72rem] uppercase text-[#64748b]" key={heading}>
-                                                {heading}
-                                            </th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {visibleHorses.map((horse) => (
-                                        <tr key={horse.id}>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
-                                                <div className="flex min-w-[220px] items-center gap-3">
-                                                    <img
-                                                        alt={horse.name}
-                                                        className="h-11 w-11 flex-none rounded-md object-cover"
-                                                        src={horse.imageUrl ? resolveFileUrl(horse.imageUrl) : horseRacing}
-                                                    />
-                                                    <div>
-                                                        <strong className="block text-[var(--admin-ink)]">{horse.name}</strong>
-                                                        <span className="mt-1 block text-[0.74rem] font-bold text-[var(--admin-muted)]">{horse.breed}</span>
-                                                    </div>
+                        {visibleHorses.length === 0 ? (
+                            <div className="grid min-h-[180px] place-items-center px-6 py-10 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]">
+                                No horses match the current filters.
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-4 gap-5 p-5 max-[1400px]:grid-cols-3 max-[1080px]:grid-cols-2 max-[560px]:grid-cols-1">
+                                {visibleHorses.map((horse) => (
+                                    <article className="group flex flex-col overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition-shadow hover:shadow-[0_16px_32px_rgba(15,23,42,0.12)]" key={horse.id}>
+                                        <div className="relative aspect-[4/3] overflow-hidden">
+                                            <img
+                                                alt={horse.name}
+                                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                src={horse.imageUrl ? resolveFileUrl(horse.imageUrl) : horseRacing}
+                                            />
+                                            <span className={`absolute right-3 top-3 inline-flex min-h-6 items-center rounded-full px-2.5 text-[0.66rem] font-black uppercase shadow-[0_2px_6px_rgba(0,0,0,0.18)] ${approvalClass[formatClass(horse.approval)]}`}>
+                                                {horse.approval}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex flex-1 flex-col gap-3 p-4">
+                                            <div>
+                                                <strong className="block text-[0.98rem] text-[var(--admin-ink)]">{horse.name}</strong>
+                                                <span className="mt-0.5 block text-[0.76rem] font-bold text-[var(--admin-muted)]">{horse.breed}</span>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[0.78rem] font-semibold text-[#475569]">
+                                                <span>Age/Weight</span>
+                                                <span className="text-right text-[var(--admin-ink)]">{horse.age ?? '-'} yrs / {horse.weight ?? '-'} kg</span>
+                                                <span>Owner</span>
+                                                <span className="text-right text-[var(--admin-ink)]">{horse.owner || '-'}</span>
+                                            </div>
+
+                                            <div className="mt-auto flex items-center justify-between gap-2 border-t border-[var(--admin-border)] pt-3">
+                                                <div className="text-[0.78rem]">
+                                                    <span className="mr-1.5 font-bold text-[var(--admin-muted)]">Health Cert:</span>
+                                                    <HealthCertificateLink url={horse.healthCertificateImageUrl} compact />
                                                 </div>
-                                            </td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">{horse.age ?? '-'} yrs / {horse.weight ?? '-'} kg</td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">{horse.owner || '-'}</td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
-                                                <HealthCertificateLink url={horse.healthCertificateImageUrl} compact />
-                                            </td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
-                                                <span className={`inline-flex min-h-6 items-center rounded border px-2.5 text-[0.68rem] font-black uppercase ${approvalClass[formatClass(horse.approval)]}`}>
-                                                    {horse.approval}
-                                                </span>
-                                            </td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.9rem] font-bold text-[var(--admin-ink)]">
-                                                <button aria-label={`View details for ${horse.name}`} className="grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md bg-transparent text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={() => handleOpenHorseDetail(horse)} type="button">
+                                                <button aria-label={`View details for ${horse.name}`} className="grid h-9 w-9 flex-none cursor-pointer place-items-center rounded-full bg-transparent text-[var(--admin-primary-dark)] transition-colors hover:bg-[var(--admin-gold)] hover:text-white" onClick={() => handleOpenHorseDetail(horse)} type="button">
                                                     <FaEye aria-hidden="true" />
                                                 </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                            </div>
+                                        </div>
+                                    </article>
+                                ))}
+                            </div>
+                        )}
 
                         <div className="flex min-h-[68px] items-center justify-between gap-[18px] px-[22px] py-4 text-[0.82rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch">
                             <span>Showing {firstShown} - {lastShown} of {filteredHorses.length} horses</span>
@@ -555,20 +554,20 @@ function HorseManagement() {
                                             <h3 className="m-0 text-base text-[var(--admin-ink)]">{report.horse}</h3>
                                             <span className="mt-1 block text-[0.78rem] font-bold text-[var(--admin-muted)]">Reported by: {report.reporter}</span>
                                         </div>
-                                        <strong className={`rounded border px-2.5 py-1 text-[0.66rem] font-black uppercase ${severityClass[report.severity.toLowerCase().split(' ')[0]]}`}>
+                                        <strong className={`rounded-full px-2.5 py-1 text-[0.66rem] font-black uppercase ${severityClass[report.severity.toLowerCase().split(' ')[0]]}`}>
                                             {report.severity}
                                         </strong>
                                     </div>
 
-                                    <div className="rounded-md bg-[#fff8f6] p-4">
+                                    <div className="rounded-[var(--admin-radius)] bg-[var(--admin-surface-strong)] p-4">
                                         <span className="text-[0.68rem] font-black uppercase text-[#64748b]">Reason for report</span>
                                         <p className="mt-2 text-[0.84rem] font-semibold leading-[1.5] text-[#475569]">{report.reason}</p>
                                     </div>
 
                                     <div className="flex flex-wrap items-center gap-2">
-                                        <button className="min-h-[36px] cursor-pointer rounded-md bg-[var(--admin-primary)] px-3 font-black text-white hover:bg-[var(--admin-primary-dark)]" onClick={() => handleReviewReport(report)} type="button">Review Report</button>
-                                        <button className="min-h-[36px] cursor-pointer rounded-md border border-[#d89288] bg-white px-3 font-black text-[var(--admin-primary)] hover:bg-[#e8f7ef]" onClick={() => handleSuspendHorse(report)} type="button">Suspend Temporarily</button>
-                                        <button aria-label={`Delete report for ${report.horse}`} className="grid h-9 w-9 cursor-pointer place-items-center rounded-md bg-transparent text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]" onClick={() => handleDeleteReport(report.id)} type="button">
+                                        <button className="min-h-[36px] cursor-pointer rounded-full bg-[var(--admin-primary)] px-3 font-black text-white hover:bg-[var(--admin-primary-dark)]" onClick={() => handleReviewReport(report)} type="button">Review Report</button>
+                                        <button className="min-h-[36px] cursor-pointer rounded-full border border-[var(--admin-border)] bg-white px-3 font-black text-[var(--admin-primary)] hover:border-[var(--admin-gold)]" onClick={() => handleSuspendHorse(report)} type="button">Suspend Temporarily</button>
+                                        <button aria-label={`Delete report for ${report.horse}`} className="grid h-9 w-9 cursor-pointer place-items-center rounded-full bg-transparent text-[#64748b] transition-colors hover:bg-[#f3e1df] hover:text-[#a4392f]" onClick={() => handleDeleteReport(report.id)} type="button">
                                             <FaTrashAlt aria-hidden="true" />
                                         </button>
                                     </div>
@@ -586,7 +585,7 @@ function HorseManagement() {
                                     <h2 id="horse-detail-title" className="m-0 text-[1.35rem] text-[var(--admin-primary-dark)]">{selectedHorse.name}</h2>
                                     <span className="mt-1 block text-[0.82rem] font-bold text-[var(--admin-muted)]">{selectedHorse.breed}</span>
                                 </div>
-                                <button className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[1.15rem] font-black text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={handleCloseHorseDetail} type="button" aria-label="Close horse details">
+                                <button className="grid h-9 w-9 cursor-pointer place-items-center rounded-full border border-[var(--admin-border)] bg-white text-[1.15rem] font-black text-[var(--admin-primary-dark)] transition-colors hover:border-[var(--admin-gold)]" onClick={handleCloseHorseDetail} type="button" aria-label="Close horse details">
                                     ×
                                 </button>
                             </div>
@@ -630,8 +629,8 @@ function HorseManagement() {
                                     </div>
 
                                     <div className="flex flex-wrap justify-end gap-3">
-                                        <button className="min-h-[38px] cursor-pointer rounded-md border border-[#d89288] bg-white px-4 font-black text-[var(--admin-primary)] hover:bg-[#e8f7ef]" onClick={() => handleUpdateHorseApproval(selectedHorse, 'Banned')} type="button">Reject</button>
-                                        <button className="min-h-[38px] cursor-pointer rounded-md bg-[var(--admin-primary)] px-4 font-black text-white hover:bg-[var(--admin-primary-dark)]" onClick={() => handleUpdateHorseApproval(selectedHorse, 'Active')} type="button">Confirm</button>
+                                        <button className="min-h-[38px] cursor-pointer rounded-full border border-[var(--admin-border)] bg-white px-4 font-black text-[var(--admin-primary)] hover:border-[var(--admin-gold)]" onClick={() => handleUpdateHorseApproval(selectedHorse, 'Banned')} type="button">Reject</button>
+                                        <button className="min-h-[38px] cursor-pointer rounded-full bg-[var(--admin-primary)] px-4 font-black text-white hover:bg-[var(--admin-primary-dark)]" onClick={() => handleUpdateHorseApproval(selectedHorse, 'Active')} type="button">Confirm</button>
                                     </div>
                                 </div>
                             </div>

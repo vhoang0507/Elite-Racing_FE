@@ -58,7 +58,7 @@ export default function ResultReward() {
                             const Icon = s.icon;
                             return (
                                 <article key={s.label} className="stat-card min-h-[110px]">
-                                    <div className={`stat-icon ${s.tone === 'gold' ? 'bg-[#fff3cd] text-[#856404]' : s.tone === 'green' ? 'bg-[#dff7e9] text-[#118548]' : s.tone === 'blue' ? 'bg-[#e3f2fd] text-[#1565c0]' : s.tone === 'red' ? 'bg-[#f8d7da] text-[#721c24]' : ''}`}>
+                                    <div className={`stat-icon ${s.tone === 'gold' ? 'bg-[#faf2e0] text-[#8a6209]' : s.tone === 'green' ? 'bg-[#e8f7ee] text-[#16864f]' : s.tone === 'blue' ? 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]' : s.tone === 'red' ? 'bg-[#f3e1df] text-[#a4392f]' : ''}`}>
                                         <Icon aria-hidden="true" />
                                     </div>
                                     <small className="stat-label">{s.label}</small>
@@ -136,7 +136,7 @@ export default function ResultReward() {
                     <div className="surface-card">
                         <div className="section-bar">
                             <h2 className="m-0 text-[1.05rem] font-bold">Bet History</h2>
-                            <span className="font-black" style={{ color: netPoints >= 0 ? '#155724' : '#721c24' }}>
+                            <span className="font-black" style={{ color: netPoints >= 0 ? '#16864f' : '#a4392f' }}>
                                 Net: {netPoints >= 0 ? '+' : ''}{netPoints} pts
                             </span>
                         </div>
@@ -161,7 +161,7 @@ export default function ResultReward() {
                                                 {item.stakePoints > 0 && ` · Stake: ${item.stakePoints} pts`}
                                             </p>
                                         </div>
-                                        <span className="font-black" style={{ color: pending ? '#856404' : net >= 0 ? '#155724' : '#721c24' }}>
+                                        <span className="font-black" style={{ color: pending ? '#8a6209' : net >= 0 ? '#16864f' : '#a4392f' }}>
                                             {pending ? '—' : `${net >= 0 ? '+' : ''}${net} pts`}
                                         </span>
                                     </div>

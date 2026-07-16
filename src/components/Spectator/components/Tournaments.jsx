@@ -16,14 +16,14 @@ import { formatCurrency } from '../../../utils/currency';
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
 const STATUS_BADGE = {
-    OpenRegistration: { bg: '#d4edda', color: '#155724', label: 'Open' },
-    Scheduled:        { bg: '#e3f2fd', color: '#1565c0', label: 'Scheduled' },
-    Ongoing:          { bg: '#fff3cd', color: '#856404', label: 'Ongoing' },
-    Completed:        { bg: '#f1f1f1', color: '#555',    label: 'Completed' },
+    OpenRegistration: { bg: '#e8f7ee', color: '#16864f', label: 'Open' },
+    Scheduled:        { bg: '#edf2fa', color: '#16305c', label: 'Scheduled' },
+    Ongoing:          { bg: '#faf2e0', color: '#8a6209', label: 'Ongoing' },
+    Completed:        { bg: '#efe8d6', color: '#6b6456', label: 'Completed' },
 };
 
 function getStatusStyle(status) {
-    return STATUS_BADGE[status] ?? { bg: '#e8f7ef', color: '#0b7f5a', label: status };
+    return STATUS_BADGE[status] ?? { bg: '#edf2fa', color: '#16305c', label: status };
 }
 
 const RACE_CLOSED_FOR_PREDICTION = ['Ongoing', 'Finished', 'ResultPending', 'Published', 'Cancelled'];
@@ -116,7 +116,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                 {/* ── Header ── */}
                 <div style={{ padding: '22px 28px 18px', borderBottom: '1px solid #f0e8e6', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexShrink: 0, background: '#fdfaf9' }}>
                     <div style={{ minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: 10, fontWeight: 800, color: '#0b7f5a', textTransform: 'uppercase', letterSpacing: '0.07em' }}>🏆 Tournament Prediction</p>
+                        <p style={{ margin: 0, fontSize: 10, fontWeight: 800, color: '#16305c', textTransform: 'uppercase', letterSpacing: '0.07em' }}>🏆 Tournament Prediction</p>
                         <h3 style={{ margin: '5px 0 0', fontSize: '1.1rem', fontWeight: 800, color: '#2b1b1b', lineHeight: 1.3 }}>{tournament.tournamentName}</h3>
                         {/* Meta row */}
                         <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: '4px 14px', fontSize: '0.78rem', color: '#888' }}>
@@ -139,8 +139,8 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                 {wallet && (
                     <div style={{ padding: '12px 28px', background: '#f0faf5', borderBottom: '1px solid #d4edda', flexShrink: 0, display: 'flex', gap: 0, alignItems: 'stretch' }}>
                         <div style={{ flex: 1, borderRight: '1px solid #c3e6cb', paddingRight: 14, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#0b7f5a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>💰 Balance</span>
-                            <span style={{ fontSize: '1rem', fontWeight: 800, color: '#0b7f5a' }}>{wallet.bettingPoints.toLocaleString()} pts</span>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#16305c', textTransform: 'uppercase', letterSpacing: '0.05em' }}>💰 Balance</span>
+                            <span style={{ fontSize: '1rem', fontWeight: 800, color: '#16305c' }}>{wallet.bettingPoints.toLocaleString()} pts</span>
                         </div>
                         <div style={{ flex: 1, paddingLeft: 14, borderRight: '1px solid #c3e6cb', paddingRight: 14, display: 'flex', flexDirection: 'column', gap: 1 }}>
                             <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Min Stake</span>
@@ -148,7 +148,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                         </div>
                         <div style={{ flex: 1, paddingLeft: 14, display: 'flex', flexDirection: 'column', gap: 1 }}>
                             <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em' }}>After Stake</span>
-                            <span style={{ fontSize: '1rem', fontWeight: 800, color: remaining < 0 ? '#721c24' : '#333' }}>
+                            <span style={{ fontSize: '1rem', fontWeight: 800, color: remaining < 0 ? '#a4392f' : '#333' }}>
                                 {remaining !== null ? remaining.toLocaleString() : '—'} pts
                             </span>
                         </div>
@@ -184,14 +184,14 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                                         style={{
                                             display: 'flex', alignItems: 'center', gap: 12,
                                             padding: '12px 14px', borderRadius: 10, cursor: 'pointer',
-                                            border: isSel ? '2px solid #0b7f5a' : '1.5px solid #e8eef5',
+                                            border: isSel ? '2px solid #16305c' : '1.5px solid #e8eef5',
                                             background: isSel ? '#f0fdf7' : '#fff',
                                             textAlign: 'left', width: '100%',
                                             transition: 'border-color 0.15s, background 0.15s',
                                         }}
                                     >
                                         {/* Lane number */}
-                                        <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: isSel ? '#0b7f5a' : '#f0f4f8', color: isSel ? '#fff' : '#888', fontWeight: 800, fontSize: '0.85rem' }}>
+                                        <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: isSel ? '#16305c' : '#f0f4f8', color: isSel ? '#fff' : '#888', fontWeight: 800, fontSize: '0.85rem' }}>
                                             {idx + 1}
                                         </div>
                                         {/* Horse image */}
@@ -212,7 +212,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                                                 {h.jockeyName && <span>🏇 Jockey: <strong style={{ color: '#555' }}>{h.jockeyName}</strong></span>}
                                             </div>
                                         </div>
-                                        {isSel && <FaCheckCircle style={{ color: '#0b7f5a', flexShrink: 0, fontSize: 17 }} />}
+                                        {isSel && <FaCheckCircle style={{ color: '#16305c', flexShrink: 0, fontSize: 17 }} />}
                                     </button>
                                 );
                             })}
@@ -246,7 +246,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                                     if (val > wallet.bettingPoints) return null;
                                     return (
                                         <button key={pct} type="button" onClick={() => setStakePoints(val)}
-                                            style={{ padding: '9px 10px', borderRadius: 8, border: '1.5px solid #dce5ef', background: '#fff', fontSize: '0.73rem', fontWeight: 700, color: '#0b7f5a', cursor: 'pointer' }}>
+                                            style={{ padding: '9px 10px', borderRadius: 8, border: '1.5px solid #dce5ef', background: '#fff', fontSize: '0.73rem', fontWeight: 700, color: '#16305c', cursor: 'pointer' }}>
                                             {pct}%
                                         </button>
                                     );
@@ -259,17 +259,17 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                     {selected && (
                         <div style={{ marginBottom: 10, padding: '10px 14px', background: '#f0fdf7', border: '1.5px solid #c3e6cb', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
                             <div>
-                                <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 700, color: '#0b7f5a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Bet</p>
+                                <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 700, color: '#16305c', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Bet</p>
                                 <p style={{ margin: '1px 0 0', fontSize: '0.88rem', fontWeight: 800, color: '#2b1b1b' }}>🐴 {selected.horseName}</p>
                             </div>
                             <div style={{ textAlign: 'right' }}>
                                 <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Staking</p>
-                                <p style={{ margin: '1px 0 0', fontSize: '0.88rem', fontWeight: 800, color: '#0b7f5a' }}>{stakePoints.toLocaleString()} pts</p>
+                                <p style={{ margin: '1px 0 0', fontSize: '0.88rem', fontWeight: 800, color: '#16305c' }}>{stakePoints.toLocaleString()} pts</p>
                             </div>
                         </div>
                     )}
 
-                    {error && <p style={{ margin: '0 0 10px', fontSize: '0.82rem', color: '#721c24', background: '#f8d7da', padding: '9px 13px', borderRadius: 7 }}>{error}</p>}
+                    {error && <p style={{ margin: '0 0 10px', fontSize: '0.82rem', color: '#a4392f', background: '#f8d7da', padding: '9px 13px', borderRadius: 7 }}>{error}</p>}
 
                     <div style={{ display: 'flex', gap: 10 }}>
                         <button type="button" onClick={onClose} style={{ flex: 1, padding: '11px 0', borderRadius: 9, fontWeight: 600, border: '1.5px solid #dce5ef', background: '#fff', color: '#555', cursor: 'pointer', fontSize: '0.88rem' }}>
@@ -282,7 +282,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                             style={{
                                 flex: 2, padding: '11px 0', borderRadius: 9, fontWeight: 700, fontSize: '0.9rem',
                                 border: 'none',
-                                background: selected && !submitting && stakeValid ? '#0b7f5a' : '#ddd',
+                                background: selected && !submitting && stakeValid ? '#16305c' : '#ddd',
                                 color: selected && !submitting && stakeValid ? '#fff' : '#999',
                                 cursor: selected && !submitting && stakeValid ? 'pointer' : 'not-allowed',
                             }}
@@ -312,7 +312,7 @@ function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
     return (
         <article className="surface-card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             {/* Status stripe */}
-            <div style={{ height: 4, background: hasPredicted ? (isCorrect === true ? '#155724' : isCorrect === false ? '#721c24' : isLocked ? '#1e40af' : '#856404') : (open ? '#0b7f5a' : '#ccc') }} />
+            <div style={{ height: 4, background: hasPredicted ? (isCorrect === true ? '#16864f' : isCorrect === false ? '#a4392f' : isLocked ? '#16305c' : '#8a6209') : (open ? '#16305c' : '#ccc') }} />
 
             <div style={{ padding: '18px 20px', flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {/* Tournament info */}
@@ -347,11 +347,11 @@ function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
                                 </div>
                             </div>
                             <span style={{
-                                fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 20, flexShrink: 0,
-                                background: isCorrect === true ? '#d4edda' : isCorrect === false ? '#f8d7da' : isLocked ? '#dbeafe' : '#fff3cd',
-                                color: isCorrect === true ? '#155724' : isCorrect === false ? '#721c24' : isLocked ? '#1e40af' : '#856404',
+                                fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 999, flexShrink: 0,
+                                background: isCorrect === true ? '#e8f7ee' : isCorrect === false ? '#f3e1df' : isLocked ? '#edf2fa' : '#faf2e0',
+                                color: isCorrect === true ? '#16864f' : isCorrect === false ? '#a4392f' : isLocked ? '#16305c' : '#8a6209',
                             }}>
-                                {isCorrect === true ? `✓ Correct  +${pts} pts` : isCorrect === false ? '✗ Wrong' : isLocked ? '🔒 Locked' : '⏳ Pending Result'}
+                                {isCorrect === true ? `✓ Correct  +${pts} pts` : isCorrect === false ? '✗ Wrong' : isLocked ? 'Locked' : 'Pending Result'}
                             </span>
                         </div>
                     ) : open ? (
@@ -359,7 +359,7 @@ function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
                         <button
                             type="button"
                             onClick={() => onPredict(tournament)}
-                            style={{ width: '100%', padding: '10px 0', borderRadius: 8, border: 'none', background: '#0b7f5a', color: '#fff', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+                            style={{ width: '100%', padding: '10px 0', borderRadius: 8, border: 'none', background: '#16305c', color: '#fff', fontWeight: 700, fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
                         >
                             <FaHorseHead /> Make Prediction
                         </button>
@@ -373,7 +373,7 @@ function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
                         <button
                             type="button"
                             onClick={() => onReplay(tournament.race.raceId)}
-                            style={{ width: '100%', padding: '10px 0', borderRadius: 8, border: '1px solid #0b7f5a', background: '#fff', color: '#0b7f5a', fontWeight: 800, fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+                            style={{ width: '100%', padding: '10px 0', borderRadius: 8, border: '1px solid #16305c', background: '#fff', color: '#16305c', fontWeight: 800, fontSize: '0.88rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
                         >
                             <FaPlay /> Watch Official Replay
                         </button>
@@ -448,9 +448,9 @@ export default function Tournaments() {
             <div className="grid grid-cols-4 gap-4 max-[900px]:grid-cols-2 max-[500px]:grid-cols-1">
                 {[
                     { label: 'Total Tournaments', value: counts.all,      bg: '', color: '' },
-                    { label: 'Open for Prediction', value: counts.open,   bg: '#d4edda', color: '#155724' },
-                    { label: 'You Predicted',       value: counts.predicted, bg: '#e3f2fd', color: '#1565c0' },
-                    { label: 'Completed',           value: counts.completed, bg: '#f1f1f1', color: '#555' },
+                    { label: 'Open for Prediction', value: counts.open,   bg: '#e8f7ee', color: '#16864f' },
+                    { label: 'You Predicted',       value: counts.predicted, bg: '#edf2fa', color: '#16305c' },
+                    { label: 'Completed',           value: counts.completed, bg: '#efe8d6', color: '#6b6456' },
                 ].map(s => (
                     <div key={s.label} className="surface-card p-4">
                         <p className="m-0 text-xs font-black uppercase text-[var(--admin-muted)]">{s.label}</p>
@@ -469,8 +469,8 @@ export default function Tournaments() {
                         style={{
                             padding: '7px 16px', borderRadius: 20, fontSize: 13, fontWeight: 700, cursor: 'pointer',
                             border: filter === f.key ? 'none' : '1px solid #dce5ef',
-                            background: filter === f.key ? '#0b7f5a' : '#fff8f6',
-                            color: filter === f.key ? '#fff' : '#0b7f5a',
+                            background: filter === f.key ? '#16305c' : '#fff8f6',
+                            color: filter === f.key ? '#fff' : '#16305c',
                         }}
                     >
                         {f.label} {counts[f.key] != null ? `(${counts[f.key]})` : ''}

@@ -6,12 +6,14 @@ import {
 
 import {
     FaBolt,
+    FaCalendarAlt,
     FaCheckCircle,
     FaClipboardList,
     FaEdit,
     FaEllipsisV,
     FaEye,
     FaFilter,
+    FaHorseHead,
     FaMapMarkerAlt,
     FaSortAmountDown,
     FaTimes,
@@ -42,33 +44,33 @@ const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-7 px-11 
 const statClass = {
     total: {
         accent: 'before:bg-[var(--admin-primary)]',
-        soft: 'bg-[#e8f7ef]',
+        soft: 'bg-[var(--admin-surface-strong)]',
         ink: 'text-[var(--admin-primary)]',
     },
     active: {
-        accent: 'before:bg-[#23cb74]',
-        soft: 'bg-[#e8fff2]',
-        ink: 'text-[#119b54]',
+        accent: 'before:bg-[#16864f]',
+        soft: 'bg-[#e8f7ee]',
+        ink: 'text-[#16864f]',
     },
     pending: {
-        accent: 'before:bg-[#9b7771]',
-        soft: 'bg-[#f7eeee]',
-        ink: 'text-[#7d615c]',
+        accent: 'before:bg-[#8a6209]',
+        soft: 'bg-[#faf2e0]',
+        ink: 'text-[#8a6209]',
     },
     inactive: {
-        accent: 'before:bg-[#2657d8]',
-        soft: 'bg-[#eef3ff]',
-        ink: 'text-[#2657d8]',
+        accent: 'before:bg-[var(--admin-primary)]',
+        soft: 'bg-[var(--admin-surface-strong)]',
+        ink: 'text-[var(--admin-primary)]',
     },
 };
 
 const statusClass = {
     default: 'bg-[#f3f4f6] text-[#374151]',
     draft: 'bg-[#f3f4f6] text-[#374151]',
-    openregistration: 'bg-[#dcfce7] text-[#15803d]',
-    closedregistration: 'bg-[#fee2e2] text-[#b91c1c]',
-    ongoing: 'bg-[#dbeafe] text-[#1d4ed8]',
-    completed: 'bg-[#ede9fe] text-[#6d28d9]',
+    openregistration: 'bg-[#e8f7ee] text-[#16864f]',
+    closedregistration: 'bg-[#f3e1df] text-[#a4392f]',
+    ongoing: 'bg-[#faf2e0] text-[#8a6209]',
+    completed: 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]',
     cancelled: 'bg-[#f3f4f6] text-[#6b7280]',
 };
 
@@ -182,7 +184,7 @@ const getRefereeNames = (tournament) => {
 };
 
 const filterSelectClass = 'h-full w-full min-w-0 cursor-pointer border-0 bg-transparent p-0 text-[0.8rem] font-extrabold text-[#5b403c] outline-0';
-const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]';
+const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-full border border-[var(--admin-border)] bg-white font-bold text-[var(--admin-primary-dark)] transition-colors hover:border-[var(--admin-primary)] hover:bg-[var(--admin-primary)] hover:text-white';
 const editFieldClass = 'grid gap-1.5';
 const editLabelClass = 'text-[0.72rem] font-black uppercase text-[#64748b]';
 const editControlClass = 'h-10 w-full min-w-0 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.88rem] font-bold text-[var(--admin-ink)] outline-0 focus:border-[#0b7f5a] focus:bg-white focus:shadow-[0_0_0_3px_rgba(16,185,129,0.08)]';
@@ -710,7 +712,7 @@ function RaceManagement() {
                             <h2 className="m-0 text-[1.1rem] text-[var(--admin-ink)]">All Tournaments</h2>
 
                             <div className="flex items-center justify-end gap-2.5 max-[1280px]:justify-start max-[820px]:flex-col max-[820px]:items-stretch">
-                                <label className="flex h-[38px] w-[180px] items-center gap-2 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-2.5 text-[#8a6b66] max-[820px]:w-full">
+                                <label className="flex h-[38px] w-[180px] items-center gap-2 rounded-full border border-[var(--admin-border)] bg-white px-3.5 text-[var(--admin-gold)] transition-colors hover:border-[var(--admin-gold)] max-[820px]:w-full">
                                     <FaFilter aria-hidden="true" />
                                     <select className={filterSelectClass} onChange={handleFilterChange(setStatusFilter)} value={statusFilter}>
                                         <option value="all">Status: All</option>
@@ -723,7 +725,7 @@ function RaceManagement() {
                                     </select>
                                 </label>
 
-                                <label className="flex h-[38px] w-[180px] items-center gap-2 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-2.5 text-[#8a6b66] max-[820px]:w-full">
+                                <label className="flex h-[38px] w-[180px] items-center gap-2 rounded-full border border-[var(--admin-border)] bg-white px-3.5 text-[var(--admin-gold)] transition-colors hover:border-[var(--admin-gold)] max-[820px]:w-full">
                                     <FaSortAmountDown aria-hidden="true" />
                                     <select className={filterSelectClass} onChange={handleFilterChange(setSortBy)} value={sortBy}>
                                         <option value="newest">Sort: Newest First</option>
@@ -734,138 +736,131 @@ function RaceManagement() {
                             </div>
                         </div>
 
-                        <div className="w-full overflow-x-auto">
-                            <table className="w-full border-collapse max-[820px]:min-w-[1220px]">
-                                <thead>
-                                    <tr>
-                                        {['Tournament Name', 'Race Date', 'Registration Deadline', 'Location', 'Max Horses', 'Prize Pool', 'Referee', 'Status', 'Actions'].map((heading) => (
-                                            <th className="whitespace-nowrap border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] py-[18px] text-left text-[0.68rem] uppercase tracking-normal text-[#8b6e68]" key={heading}>
-                                                {heading}
-                                            </th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {visibleTournaments.map((tournament) => {
-                                        const deadlineWarning = adminApi.formatters.getTournamentDeadlineWarning(tournament);
-                                        const statusActions = getTournamentActions(tournament.status);
+                        <div className="grid grid-cols-4 gap-5 p-5 max-[1400px]:grid-cols-3 max-[1080px]:grid-cols-2 max-[560px]:grid-cols-1">
+                            {visibleTournaments.map((tournament) => {
+                                const deadlineWarning = adminApi.formatters.getTournamentDeadlineWarning(tournament);
+                                const statusActions = getTournamentActions(tournament.status);
+                                const referees = getRefereeNames(tournament);
 
-                                        return (
-                                        <tr key={tournament.id}>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
-                                                <div className="flex min-w-[230px] items-center gap-3.5">
-                                                    <img
-                                                        alt=""
-                                                        className="h-12 w-12 flex-none rounded-md object-cover"
-                                                        src={tournament.imageUrl ? resolveFileUrl(tournament.imageUrl) : horseRacing}
-                                                        style={{ objectPosition: tournament.imagePosition }}
-                                                    />
-                                                    <strong className="max-w-[180px] whitespace-normal leading-[1.15] text-[var(--admin-ink)]">{tournament.name}</strong>
-                                                </div>
-                                            </td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
-                                                {getRaceDateLabel(tournament)}
-                                            </td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
-                                                <span className="block">{adminApi.formatters.toDateLabel(tournament.startDate) || '-'}</span>
-                                                {deadlineWarning && (
-                                                    <small className={`mt-1 block text-[0.72rem] font-black ${deadlineClass[deadlineWarning.type] || deadlineClass.warning}`}>
-                                                        {deadlineWarning.text}
-                                                    </small>
-                                                )}
-                                            </td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
-                                                <span className="inline-flex items-center gap-1.5">
-                                                    <FaMapMarkerAlt aria-hidden="true" className="text-[var(--admin-primary)]" />
+                                return (
+                                    <article
+                                        className="group relative flex flex-col overflow-hidden rounded-2xl border border-[var(--admin-border)] bg-white shadow-[0_10px_26px_rgba(11,27,52,0.06)] transition-shadow duration-200 hover:shadow-[0_16px_36px_rgba(11,27,52,0.14)]"
+                                        key={tournament.id}
+                                    >
+                                        <div className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--admin-surface-strong)]">
+                                            <img
+                                                alt=""
+                                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                                src={tournament.imageUrl ? resolveFileUrl(tournament.imageUrl) : horseRacing}
+                                                style={{ objectPosition: tournament.imagePosition }}
+                                            />
+                                            <span className={`absolute right-3 top-3 shadow-[0_4px_10px_rgba(11,27,52,0.22)] ${getStatusClass(tournament.status)}`}>
+                                                {adminApi.formatters.formatTournamentStatus(tournament.status)}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex flex-1 flex-col gap-3 p-4">
+                                            <h3 className="m-0 line-clamp-2 min-h-[2.4em] text-[1rem] font-extrabold leading-snug text-[var(--admin-ink)]">
+                                                {tournament.name}
+                                            </h3>
+
+                                            <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[0.78rem] font-semibold text-[var(--admin-muted)]">
+                                                <span className="inline-flex items-center gap-1.5 truncate">
+                                                    <FaCalendarAlt aria-hidden="true" className="flex-none text-[var(--admin-gold)]" />
+                                                    {getRaceDateLabel(tournament)}
+                                                </span>
+                                                <span className="inline-flex items-center gap-1.5 truncate">
+                                                    <FaMapMarkerAlt aria-hidden="true" className="flex-none text-[var(--admin-primary)]" />
                                                     {tournament.city}
                                                 </span>
-                                            </td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">{tournament.maxHorses}</td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
-                                                <strong className="text-[0.95rem] text-[var(--admin-primary-dark)]">{adminApi.formatters.toMoney(tournament.prizePool)}</strong>
-                                            </td>
-                                            <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
-                                                {getRefereeNames(tournament).length > 0 ? (
-                                                    <div className="flex max-w-[180px] flex-wrap gap-1.5">
-                                                        {getRefereeNames(tournament).map((referee) => (
-                                                            <span className="inline-flex min-h-6 items-center rounded border border-[#e6d3cf] bg-[#fff7f5] px-2 text-[0.68rem] font-black text-[#6e5550]" key={`${tournament.id}-${referee}`}>
-                                                                {referee}
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-[0.76rem] font-extrabold text-[#9a817c]">Unassigned</span>
-                                                )}
-                                            </td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
-                                                <span className={getStatusClass(tournament.status)}>
-                                                    {adminApi.formatters.formatTournamentStatus(tournament.status)}
+                                                <span className="inline-flex items-center gap-1.5 truncate">
+                                                    <FaHorseHead aria-hidden="true" className="flex-none text-[var(--admin-gold)]" />
+                                                    {tournament.maxHorses} horses
                                                 </span>
-                                            </td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-[22px] py-[18px] align-middle text-[0.86rem] font-bold text-[var(--admin-ink)]">
-                                                <div className="relative inline-flex items-center gap-3.5">
-                                                    <button aria-label={`View ${tournament.name}`} className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]" onClick={() => setSelectedTournament(tournament)} type="button">
-                                                        <FaEye aria-hidden="true" />
-                                                    </button>
-                                                    <button
-                                                        aria-label={`Edit ${tournament.name}`}
-                                                        className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]"
-                                                        onClick={() => {
-                                                            setEditTournamentImageName('');
-                                                            setEditingTournament(tournament);
-                                                        }}
-                                                        type="button"
-                                                    >
-                                                        <FaEdit aria-hidden="true" />
-                                                    </button>
-                                                    <button aria-label={`Delete ${tournament.name}`} className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]" onClick={() => handleDelete(tournament)} type="button">
-                                                        <FaTrashAlt aria-hidden="true" />
-                                                    </button>
-                                                    <button
-                                                        aria-expanded={actionMenuId === tournament.id}
-                                                        aria-label={`More actions for ${tournament.name}`}
-                                                        className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-transparent text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)] disabled:cursor-not-allowed disabled:opacity-60"
-                                                        disabled={updatingStatusId === tournament.id}
-                                                        onClick={() => setActionMenuId((current) => (current === tournament.id ? null : tournament.id))}
-                                                        type="button"
-                                                    >
-                                                        <FaEllipsisV aria-hidden="true" />
-                                                    </button>
-                                                    {actionMenuId === tournament.id && (
-                                                        <div className="absolute right-0 top-9 z-30 grid w-56 overflow-hidden rounded-md border border-[var(--admin-border)] bg-white py-1 text-left shadow-[0_14px_34px_rgba(45,32,32,0.18)]">
-                                                            <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#fff6f4]" onClick={() => { setSelectedTournament(tournament); setActionMenuId(null); }} type="button">
-                                                                View Detail
+                                                <strong className="truncate text-[0.86rem] text-[var(--admin-primary-dark)]">
+                                                    {adminApi.formatters.toMoney(tournament.prizePool)}
+                                                </strong>
+                                            </div>
+
+                                            {deadlineWarning && (
+                                                <small className={`-mt-1 block text-[0.72rem] font-black ${deadlineClass[deadlineWarning.type] || deadlineClass.warning}`}>
+                                                    Deadline: {adminApi.formatters.toDateLabel(tournament.startDate) || '-'} · {deadlineWarning.text}
+                                                </small>
+                                            )}
+
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {referees.length > 0 ? (
+                                                    referees.map((referee) => (
+                                                        <span className="inline-flex min-h-6 items-center rounded-full border border-[#e6d3cf] bg-[#fff7f5] px-2.5 text-[0.66rem] font-black text-[#6e5550]" key={`${tournament.id}-${referee}`}>
+                                                            {referee}
+                                                        </span>
+                                                    ))
+                                                ) : (
+                                                    <span className="text-[0.74rem] font-bold text-[#9a817c]">Unassigned referee</span>
+                                                )}
+                                            </div>
+
+                                            <div className="relative mt-auto flex items-center justify-end gap-2 border-t border-[var(--admin-border)] pt-3">
+                                                <button aria-label={`View ${tournament.name}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-transparent text-[var(--admin-muted)] hover:bg-[#f3e6c2] hover:text-[var(--admin-primary)]" onClick={() => setSelectedTournament(tournament)} type="button">
+                                                    <FaEye aria-hidden="true" />
+                                                </button>
+                                                <button
+                                                    aria-label={`Edit ${tournament.name}`}
+                                                    className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-transparent text-[var(--admin-muted)] hover:bg-[#f3e6c2] hover:text-[var(--admin-primary)]"
+                                                    onClick={() => {
+                                                        setEditTournamentImageName('');
+                                                        setEditingTournament(tournament);
+                                                    }}
+                                                    type="button"
+                                                >
+                                                    <FaEdit aria-hidden="true" />
+                                                </button>
+                                                <button aria-label={`Delete ${tournament.name}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-transparent text-[var(--admin-muted)] hover:bg-[#f3e1df] hover:text-[#a4392f]" onClick={() => handleDelete(tournament)} type="button">
+                                                    <FaTrashAlt aria-hidden="true" />
+                                                </button>
+                                                <button
+                                                    aria-expanded={actionMenuId === tournament.id}
+                                                    aria-label={`More actions for ${tournament.name}`}
+                                                    className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-transparent text-[var(--admin-muted)] hover:bg-[#f3e6c2] hover:text-[var(--admin-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+                                                    disabled={updatingStatusId === tournament.id}
+                                                    onClick={() => setActionMenuId((current) => (current === tournament.id ? null : tournament.id))}
+                                                    type="button"
+                                                >
+                                                    <FaEllipsisV aria-hidden="true" />
+                                                </button>
+                                                {actionMenuId === tournament.id && (
+                                                    <div className="absolute bottom-11 right-0 z-30 grid w-56 overflow-hidden rounded-md border border-[var(--admin-border)] bg-white py-1 text-left shadow-[0_14px_34px_rgba(11,27,52,0.18)]">
+                                                        <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#f8f3e2]" onClick={() => { setSelectedTournament(tournament); setActionMenuId(null); }} type="button">
+                                                            View Detail
+                                                        </button>
+                                                        <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#f8f3e2]" onClick={() => { setEditTournamentImageName(''); setEditingTournament(tournament); setActionMenuId(null); }} type="button">
+                                                            Edit Tournament
+                                                        </button>
+                                                        <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#f8f3e2]" onClick={() => { openAssignReferee(tournament); setActionMenuId(null); }} type="button">
+                                                            Assign/Reassign Referee
+                                                        </button>
+                                                        {statusActions.length > 0 && <span className="my-1 h-px bg-[var(--admin-border)]" />}
+                                                        {statusActions.map((nextStatus) => (
+                                                            <button
+                                                                className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#f3e6c2] disabled:cursor-not-allowed disabled:opacity-60"
+                                                                disabled={updatingStatusId === tournament.id}
+                                                                key={nextStatus}
+                                                                onClick={() => handleTournamentStatusChange(tournament, nextStatus)}
+                                                                type="button"
+                                                            >
+                                                                {statusActionLabels[nextStatus] || adminApi.formatters.formatTournamentStatus(nextStatus)}
                                                             </button>
-                                                            <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#fff6f4]" onClick={() => { setEditTournamentImageName(''); setEditingTournament(tournament); setActionMenuId(null); }} type="button">
-                                                                Edit Tournament
-                                                            </button>
-                                                            <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#fff6f4]" onClick={() => { openAssignReferee(tournament); setActionMenuId(null); }} type="button">
-                                                                Assign/Reassign Referee
-                                                            </button>
-                                                            {statusActions.length > 0 && <span className="my-1 h-px bg-[var(--admin-border)]" />}
-                                                            {statusActions.map((nextStatus) => (
-                                                                <button
-                                                                    className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef] disabled:cursor-not-allowed disabled:opacity-60"
-                                                                    disabled={updatingStatusId === tournament.id}
-                                                                    key={nextStatus}
-                                                                    onClick={() => handleTournamentStatusChange(tournament, nextStatus)}
-                                                                    type="button"
-                                                                >
-                                                                    {statusActionLabels[nextStatus] || adminApi.formatters.formatTournamentStatus(nextStatus)}
-                                                                </button>
-                                                            ))}
-                                                            {statusActions.length === 0 && (
-                                                                <span className="px-3 py-2 text-[0.76rem] font-bold text-[var(--admin-muted)]">No status actions</span>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        );
-                                    })}
-                                </tbody>
-                            </table>
+                                                        ))}
+                                                        {statusActions.length === 0 && (
+                                                            <span className="px-3 py-2 text-[0.76rem] font-bold text-[var(--admin-muted)]">No status actions</span>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </article>
+                                );
+                            })}
                         </div>
 
                         <div className="flex min-h-[68px] items-center justify-between gap-[18px] px-[22px] py-4 text-[0.82rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch">
@@ -876,7 +871,7 @@ function RaceManagement() {
                                 {getCompactPaginationItems(totalPages, page).map((pageItem) => (
                                     typeof pageItem === 'number' ? (
                                         <button
-                                            className={`${paginationButtonClass} ${pageItem === page ? 'border-[var(--admin-primary)] bg-[#e8f7ef] text-[#064e3b] hover:bg-[#d1fae5]' : ''}`}
+                                            className={`${paginationButtonClass} ${pageItem === page ? '!border-[var(--admin-primary)] !bg-[var(--admin-primary)] !text-white' : ''}`}
                                             key={pageItem}
                                             onClick={() => setPage(pageItem)}
                                             type="button"
@@ -884,7 +879,7 @@ function RaceManagement() {
                                             {pageItem}
                                         </button>
                                     ) : (
-                                        <span className={`${paginationButtonClass} cursor-default text-[var(--admin-muted)] hover:bg-[#fffdfc]`} key={pageItem}>...</span>
+                                        <span className={`${paginationButtonClass} cursor-default border-transparent text-[var(--admin-muted)] hover:!border-transparent hover:!bg-transparent hover:!text-[var(--admin-muted)]`} key={pageItem}>...</span>
                                     )
                                 ))}
                                 <button aria-label="Next page" className={paginationButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">&gt;</button>

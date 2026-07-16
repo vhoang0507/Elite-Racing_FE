@@ -43,17 +43,17 @@ export default function RewardsCenter() {
 }
 
 const styles = {
-    section: { backgroundColor: "#fff", borderRadius: "12px", padding: "20px", border: "1px solid #eee", marginBottom: "24px" },
+    section: { backgroundColor: "#fff", borderRadius: "var(--admin-radius)", padding: "20px", border: "1px solid var(--admin-border)", marginBottom: "24px", boxShadow: '0 8px 22px rgba(15,23,42,0.05)' },
     header: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" },
     pointsBox: { textAlign: "right" },
-    points: { margin: "2px 0 0", fontWeight: "bold", fontSize: "18px", color: "#0b7f5a" },
+    points: { margin: "2px 0 0", fontWeight: "bold", fontSize: "18px", color: "#16305c" },
     grid: { display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" },
-    card: { backgroundColor: "#faf8f8", borderRadius: "10px", padding: "20px", border: "1px solid #eee" },
-    iconBox: { backgroundColor: "#fff", borderRadius: "8px", padding: "16px", textAlign: "center", marginBottom: "12px" },
+    card: { backgroundColor: "var(--admin-surface-strong)", borderRadius: "var(--admin-radius)", padding: "20px", border: "1px solid var(--admin-border)" },
+    iconBox: { backgroundColor: "#fff", borderRadius: "999px", padding: "16px", textAlign: "center", marginBottom: "12px" },
     rewardName: { margin: "0 0 4px", fontWeight: "bold", fontSize: "14px" },
-    rewardDesc: { margin: "0 0 12px", fontSize: "12px", color: "#999" },
+    rewardDesc: { margin: "0 0 12px", fontSize: "12px", color: "#6b6456" },
     cardFooter: { display: "flex", justifyContent: "space-between", alignItems: "center" },
-    rewardPoints: { fontWeight: "bold", fontSize: "14px", color: "#0b7f5a" },
-    lockedBtn: { fontSize: "12px", color: "#999", backgroundColor: "#eee", padding: "4px 12px", borderRadius: "6px" },
-    redeemBtn: { backgroundColor: "#0b7f5a", color: "#fff", border: "none", borderRadius: "6px", padding: "6px 14px", cursor: "pointer", fontSize: "13px" },
+    rewardPoints: { fontWeight: "bold", fontSize: "14px", color: "#16305c" },
+    lockedBtn: { fontSize: "12px", color: "#6b6456", backgroundColor: "#efe8d6", padding: "4px 12px", borderRadius: "999px" },
+    redeemBtn: { backgroundColor: "#16305c", color: "#fff", border: "none", borderRadius: "999px", padding: "6px 14px", cursor: "pointer", fontSize: "13px" },
 };

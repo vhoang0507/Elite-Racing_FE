@@ -83,7 +83,7 @@ function ChangePasswordCard() {
     return (
         <section className="overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)]">
             <div className="mb-6 flex items-center gap-3">
-                <div className="grid h-11 w-11 place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
+                <div className="grid h-11 w-11 flex-none place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                     <FaLock />
                 </div>
 
@@ -100,13 +100,13 @@ function ChangePasswordCard() {
 
             <form onSubmit={handleSubmit} className="grid gap-5">
                 {error && (
-                    <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                    <div className="rounded-[var(--admin-radius)] border border-[#d89288] bg-[#f3e1df] px-4 py-3 text-sm font-semibold text-[#a4392f]">
                         {error}
                     </div>
                 )}
 
                 {success && (
-                    <div className="rounded-md border border-green-200 bg-green-50 px-4 py-3 text-sm font-semibold text-green-700">
+                    <div className="rounded-[var(--admin-radius)] border border-[#9fdcb9] bg-[#e8f7ee] px-4 py-3 text-sm font-semibold text-[#16864f]">
                         {success}
                     </div>
                 )}
@@ -141,7 +141,7 @@ function ChangePasswordCard() {
                     <button
                         type="submit"
                         disabled={saving}
-                        className="rounded-md bg-[var(--admin-primary)] px-6 py-3 font-bold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+                        className="rounded-full bg-[var(--admin-primary)] px-6 py-3 font-bold text-white shadow-sm transition-colors hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         {saving ? 'Changing...' : 'Change Password'}
                     </button>
@@ -170,7 +170,7 @@ function PasswordInput({
                 onChange={(event) => onChange(event.target.value)}
                 placeholder={placeholder}
                 autoComplete={autoComplete}
-                className="w-full rounded-md border border-[var(--admin-border)] bg-white px-4 py-3 outline-none focus:border-[var(--admin-primary)]"
+                className="w-full rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-white px-4 py-3 outline-none transition-colors focus:border-[var(--admin-primary)]"
             />
         </label>
     );

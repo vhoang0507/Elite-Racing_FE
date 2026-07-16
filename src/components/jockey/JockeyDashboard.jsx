@@ -110,26 +110,33 @@ function JockeyDashboard() {
 
     if (loading) return (
         <JockeyLayout activeKey="dashboard">
-            <p style={{ textAlign: 'center', padding: '40px', color: '#999' }}>Loading...</p>
+            <p className="p-10 text-center font-semibold text-[var(--admin-muted)]">Loading...</p>
         </JockeyLayout>
     );
+
+    const todayLabel = new Intl.DateTimeFormat('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }).format(today);
 
     return (
         <JockeyLayout activeKey="dashboard">
             <section className={pageShellClass}>
-                <div>
-                    <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)] max-[720px]:text-[1.6rem]">
-                        Jockey Dashboard
-                    </h1>
-                    <p className="mb-0 mt-1.5 font-[650] text-[var(--admin-muted)]">
-                        Manage race invitations, availability, upcoming races, and performance statistics.
-                    </p>
+                <div className="visual-banner flex flex-wrap items-end justify-between gap-6 px-7 py-6 max-[720px]:px-5">
+                    <div className="relative z-[1] min-w-0">
+                        <span className="text-[0.72rem] font-black uppercase tracking-[0.08em] text-[var(--racing-gold-bright)]">
+                            Jockey Console
+                        </span>
+                        <h1 className="m-0 mt-1.5 text-[1.9rem] leading-[1.15] max-[720px]:text-[1.5rem]">
+                            {String(dashboard?.upcomingRaces ?? 0).padStart(2, '0')} upcoming race{dashboard?.upcomingRaces === 1 ? '' : 's'}
+                        </h1>
+                        <p className="m-0 mt-2 max-w-xl text-[0.92rem] text-[rgba(255,255,255,0.75)]">
+                            {todayLabel} — manage invitations, availability, and upcoming races.
+                        </p>
+                    </div>
                 </div>
 
                 {/* Summary Cards */}
                 <section className="grid grid-cols-3 gap-5 max-[1280px]:grid-cols-2 max-[720px]:grid-cols-1">
-                    <article className="grid min-h-[140px] content-start gap-2 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-[22px]">
-                        <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#e8f7ef] text-[var(--admin-primary)]">
+                    <article className="grid min-h-[140px] content-start gap-2 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-[22px] shadow-[0_8px_22px_rgba(15,23,42,0.05)]">
+                        <div className="grid h-10 w-10 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                             <FaEnvelope />
                         </div>
                         <span className="text-[0.8rem] font-bold uppercase tracking-wide text-[var(--admin-muted)]">Pending Invitations</span>
@@ -138,8 +145,8 @@ function JockeyDashboard() {
                         </strong>
                     </article>
 
-                    <article className="grid min-h-[140px] content-start gap-2 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-[22px]">
-                        <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#e8f5e9] text-[#2e7d32]">
+                    <article className="grid min-h-[140px] content-start gap-2 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-[22px] shadow-[0_8px_22px_rgba(15,23,42,0.05)]">
+                        <div className="grid h-10 w-10 place-items-center rounded-full bg-[#e8f7ee] text-[#16864f]">
                             <FaCheckCircle />
                         </div>
                         <span className="text-[0.8rem] font-bold uppercase tracking-wide text-[var(--admin-muted)]">Accepted Races</span>
@@ -148,8 +155,8 @@ function JockeyDashboard() {
                         </strong>
                     </article>
 
-                    <article className="grid min-h-[140px] content-start gap-2 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-[22px]">
-                        <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#e3f2fd] text-[#1565c0]">
+                    <article className="grid min-h-[140px] content-start gap-2 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-[22px] shadow-[0_8px_22px_rgba(15,23,42,0.05)]">
+                        <div className="grid h-10 w-10 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                             <FaCalendarAlt />
                         </div>
                         <span className="text-[0.8rem] font-bold uppercase tracking-wide text-[var(--admin-muted)]">Upcoming Races</span>
@@ -174,7 +181,7 @@ function JockeyDashboard() {
 
                         <div className="grid gap-0 divide-y divide-[var(--admin-border)]">
                             {invitations.length === 0 ? (
-                                <p style={{ textAlign: 'center', padding: '24px', color: '#999', fontSize: '14px' }}>No pending invitations</p>
+                                <p className="p-6 text-center text-sm text-[var(--admin-muted)]">No pending invitations</p>
                             ) : (
                                 (showAllInvitations ? invitations : invitations.slice(0, 2)).map((inv) => (
                                     <div key={inv.invitationId} className="flex items-center gap-4 px-[22px] py-4">
@@ -194,14 +201,14 @@ function JockeyDashboard() {
                                         </div>
                                         <div className="flex gap-2">
                                             <button
-                                                className="inline-flex min-h-[34px] cursor-pointer items-center justify-center gap-[6px] rounded-md bg-[var(--admin-primary)] px-4 text-[0.78rem] font-[850] text-white hover:bg-[var(--admin-primary-dark)]"
+                                                className="inline-flex min-h-[34px] cursor-pointer items-center justify-center gap-[6px] rounded-full bg-[var(--admin-primary)] px-4 text-[0.78rem] font-[850] text-white transition-colors hover:bg-[var(--admin-primary-dark)]"
                                                 onClick={() => handleAccept(inv.invitationId)}
                                                 type="button"
                                             >
                                                 Accept
                                             </button>
                                             <button
-                                                className="inline-flex min-h-[34px] cursor-pointer items-center justify-center gap-[6px] rounded-md border border-[var(--admin-border)] bg-white px-4 text-[0.78rem] font-[850] text-[var(--admin-ink)] hover:bg-[#f5f5f5]"
+                                                className="inline-flex min-h-[34px] cursor-pointer items-center justify-center gap-[6px] rounded-full border border-[var(--admin-border)] bg-white px-4 text-[0.78rem] font-[850] text-[var(--admin-ink)] transition-colors hover:bg-[var(--admin-surface-strong)]"
                                                 onClick={() => handleReject(inv.invitationId)}
                                                 type="button"
                                             >
@@ -219,10 +226,10 @@ function JockeyDashboard() {
                         <div className="flex min-h-[50px] items-center justify-between px-[18px] py-3">
                             <h3 className="m-0 text-[0.95rem] font-bold text-[var(--admin-ink)]">Calendar</h3>
                             <div className="flex items-center gap-1">
-                                <button className="grid h-7 w-7 cursor-pointer place-items-center rounded border-0 bg-transparent text-[var(--admin-muted)] hover:bg-[#eef4ff]" onClick={handlePrevMonth} type="button">
+                                <button className="grid h-7 w-7 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-[var(--admin-muted)] hover:bg-[var(--admin-surface-strong)]" onClick={handlePrevMonth} type="button">
                                     <FaChevronLeft className="text-[0.65rem]" />
                                 </button>
-                                <button className="grid h-7 w-7 cursor-pointer place-items-center rounded border-0 bg-transparent text-[var(--admin-muted)] hover:bg-[#eef4ff]" onClick={handleNextMonth} type="button">
+                                <button className="grid h-7 w-7 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-[var(--admin-muted)] hover:bg-[var(--admin-surface-strong)]" onClick={handleNextMonth} type="button">
                                     <FaChevronRight className="text-[0.65rem]" />
                                 </button>
                             </div>
@@ -233,11 +240,11 @@ function JockeyDashboard() {
                                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => <span key={i} className="py-1">{d}</span>)}
                             </div>
                             {calLoading ? (
-                                <p style={{ textAlign: 'center', padding: '16px 0', fontSize: 12, color: '#94a3b8' }}>Loading...</p>
+                                <p className="py-4 text-center text-[0.75rem] text-[var(--admin-muted)]">Loading...</p>
                             ) : (
                                 <div className="grid grid-cols-7 gap-0 text-center text-[0.82rem]">
                                     {leadingDays.map((day, i) => (
-                                        <span key={`lead-${i}`} className="grid h-8 place-items-center text-[#ccc]">{day}</span>
+                                        <span key={`lead-${i}`} className="grid h-8 place-items-center text-[#d8cfb8]">{day}</span>
                                     ))}
                                     {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
                                         const dayData = getDayStatus(day);
@@ -254,8 +261,8 @@ function JockeyDashboard() {
                                                     height: 32,
                                                     placeItems: 'center',
                                                     borderRadius: isTod ? '50%' : 4,
-                                                    backgroundColor: isTod ? '#3b82f6' : isRace ? '#dcfce7' : isUnavail ? '#fee2e2' : 'transparent',
-                                                    color: isTod ? '#fff' : isRace ? '#15803d' : isUnavail ? '#dc2626' : 'inherit',
+                                                    backgroundColor: isTod ? '#16305c' : isRace ? '#faf2e0' : isUnavail ? '#f3e1df' : 'transparent',
+                                                    color: isTod ? '#fff' : isRace ? '#8a6209' : isUnavail ? '#a4392f' : 'inherit',
                                                     fontWeight: isTod || isRace ? 700 : 400,
                                                     position: 'relative',
                                                 }}
@@ -263,7 +270,7 @@ function JockeyDashboard() {
                                             >
                                                 {day}
                                                 {isRace && !isTod && (
-                                                    <span style={{ position: 'absolute', bottom: 2, width: 4, height: 4, borderRadius: '50%', backgroundColor: '#16a34a' }} />
+                                                    <span style={{ position: 'absolute', bottom: 2, width: 4, height: 4, borderRadius: '50%', backgroundColor: '#c8a24a' }} />
                                                 )}
                                             </span>
                                         );
@@ -272,15 +279,15 @@ function JockeyDashboard() {
                             )}
                             <div className="mt-4 flex items-center gap-3 text-[0.72rem] text-[var(--admin-muted)]">
                                 <span className="flex items-center gap-1.5">
-                                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#3b82f6]"></span>
+                                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#16305c]"></span>
                                     Today
                                 </span>
                                 <span className="flex items-center gap-1.5">
-                                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#dcfce7] border border-[#86efac]"></span>
+                                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#faf2e0] border border-[#e6c473]"></span>
                                     Race Day
                                 </span>
                                 <span className="flex items-center gap-1.5">
-                                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#fee2e2] border border-[#fca5a5]"></span>
+                                    <span className="inline-block h-2.5 w-2.5 rounded-full bg-[#f3e1df] border border-[#d89288]"></span>
                                     Unavailable
                                 </span>
                             </div>

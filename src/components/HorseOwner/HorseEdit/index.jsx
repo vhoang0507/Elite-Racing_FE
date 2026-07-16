@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { FaCamera, FaCheckCircle, FaExclamationTriangle, FaHorseHead, FaNotesMedical } from "react-icons/fa";
 import HorseOwnerLayout from "../HorseOwnerLayout";
 import { ownerApi } from "../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../api/handleOwnerAccessError";
@@ -57,7 +58,7 @@ function validateHorse(form, horseImageFile) {
 
 function ErrMsg({ msg }) {
     if (!msg) return null;
-    return <p style={{ margin: '4px 0 0', fontSize: 11, color: '#dc2626', fontWeight: 600 }}>{msg}</p>;
+    return <p style={{ margin: '4px 0 0', fontSize: 11, color: '#a4392f', fontWeight: 600 }}>{msg}</p>;
 }
 
 function Field({ label, children }) {
@@ -191,7 +192,10 @@ export default function HorseEdit() {
                     <div style={styles.grid}>
                         {/* Left */}
                         <div style={styles.card}>
-                            <p style={styles.cardTitle}>🐴 Horse Details</p>
+                            <p style={{ ...styles.cardTitle, display: "flex", alignItems: "center", gap: "8px" }}>
+                                <FaHorseHead aria-hidden="true" style={{ color: "var(--admin-primary)" }} />
+                                Horse Details
+                            </p>
 
                             <Field label="Horse Name *">
                                 <input name="horseName" value={form.horseName} onChange={handleChange}
@@ -239,7 +243,7 @@ export default function HorseEdit() {
                                     style={{ ...inputStyle('achievementSummary'), minHeight: "110px", resize: "vertical" }} />
                                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                     <ErrMsg msg={fieldErrors.achievementSummary} />
-                                    <span style={{ fontSize: 10, color: (form.achievementSummary?.length ?? 0) > 500 ? '#dc2626' : '#94a3b8', marginLeft: 'auto' }}>
+                                    <span style={{ fontSize: 10, color: (form.achievementSummary?.length ?? 0) > 500 ? '#a4392f' : '#94a3b8', marginLeft: 'auto' }}>
                                         {form.achievementSummary?.length ?? 0}/500
                                     </span>
                                 </div>
@@ -248,21 +252,25 @@ export default function HorseEdit() {
 
                         {/* Right */}
                         <div style={styles.card}>
-                            <p style={styles.cardTitle}>🏥 Clinical Status</p>
+                            <p style={{ ...styles.cardTitle, display: "flex", alignItems: "center", gap: "8px" }}>
+                                <FaNotesMedical aria-hidden="true" style={{ color: "var(--admin-primary)" }} />
+                                Clinical Status
+                            </p>
 
                             <Field label="Current Health State">
                                 <select name="healthStatus" value={form.healthStatus} onChange={handleChange} style={styles.input}>
                                     <option value="Healthy">Healthy</option>
-                                    <option value="NeedsCheck">NeedsCheck</option>
+                                    <option value="NeedsCheck">Needs Check</option>
                                     <option value="Sick">Sick</option>
                                     <option value="Injured">Injured</option>
                                     <option value="Recovering">Recovering</option>
-                                    <option value="UnfitToRace">UnfitToRace</option>
+                                    <option value="UnfitToRace">Unfit To Race</option>
                                 </select>
                             </Field>
 
-                            <div style={styles.warningBox}>
-                                ⚠️ Only horses with <strong>Healthy</strong> status are eligible for Grade 1 stakes races.
+                            <div style={{ ...styles.warningBox, display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                                <FaExclamationTriangle aria-hidden="true" style={{ marginTop: "2px", flexShrink: 0 }} />
+                                <span>Only horses with <strong>Healthy</strong> status are eligible for Grade 1 stakes races.</span>
                             </div>
 
                             <Field label={`Profile Photo (max ${MAX_FILE_MB} MB)`}>
@@ -271,7 +279,7 @@ export default function HorseEdit() {
                                         <img src={horseImagePreview} alt="preview" style={styles.previewImg} />
                                     ) : (
                                         <>
-                                            <span style={{ fontSize: "2rem" }}>📷</span>
+                                            <FaCamera aria-hidden="true" style={{ fontSize: "2rem", color: "#94a3b8" }} />
                                             <p style={styles.uploadHint}>Click to upload a new photo</p>
                                             <p style={styles.uploadSub}>PNG, JPG up to {MAX_FILE_MB}MB</p>
                                         </>
@@ -291,8 +299,18 @@ export default function HorseEdit() {
 
                 {!loading && (
                     <div style={styles.actionBar}>
-                        {error   && <span style={styles.errorMsg}>⚠️ {error}</span>}
-                        {success && <span style={styles.successMsg}>✅ Saved! Redirecting...</span>}
+                        {error && (
+                            <span style={{ ...styles.errorMsg, display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                                <FaExclamationTriangle aria-hidden="true" />
+                                {error}
+                            </span>
+                        )}
+                        {success && (
+                            <span style={{ ...styles.successMsg, display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                                <FaCheckCircle aria-hidden="true" />
+                                Saved! Redirecting...
+                            </span>
+                        )}
                         <button onClick={() => navigate(`/owner/horses/${horseId}`)} style={styles.cancelBtn}>Cancel</button>
                         <button onClick={handleSubmit} disabled={isSubmitting}
                             style={{ ...styles.saveBtn, opacity: isSubmitting ? 0.6 : 1 }}>
@@ -307,24 +325,24 @@ export default function HorseEdit() {
 
 const styles = {
     page: { display: "grid", gap: "24px", padding: "36px 44px" },
-    backLink: { background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "1rem", fontWeight: 600, color: "#888", alignSelf: "flex-start" },
-    pageTitle: { margin: 0, fontSize: "2rem", color: "#610000", fontWeight: 700 },
-    pageSubtitle: { margin: "4px 0 0", fontSize: "1rem", color: "#999" },
+    backLink: { background: "none", border: "none", padding: 0, cursor: "pointer", fontSize: "1rem", fontWeight: 600, color: "#6b6456", alignSelf: "flex-start" },
+    pageTitle: { margin: 0, fontSize: "2rem", color: "#0a1930", fontWeight: 700 },
+    pageSubtitle: { margin: "4px 0 0", fontSize: "1rem", color: "#6b6456" },
     grid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" },
-    card: { backgroundColor: "#fff", borderRadius: "12px", border: "1px solid #eee", padding: "26px 28px" },
-    cardTitle: { margin: "0 0 20px", fontSize: "1rem", fontWeight: 700, color: "#610000" },
-    fieldLabel: { display: "block", marginBottom: "6px", fontSize: "0.82rem", fontWeight: 700, color: "#aaa", textTransform: "uppercase", letterSpacing: "0.04em" },
-    input: { width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #e0e0e0", fontSize: "1rem", color: "#2d2020", outline: "none", boxSizing: "border-box", backgroundColor: "#fafafa" },
+    card: { backgroundColor: "#fff", borderRadius: "10px", border: "1px solid #ded2ad", padding: "26px 28px", boxShadow: "0 8px 22px rgba(15,23,42,0.06)" },
+    cardTitle: { margin: "0 0 20px", fontSize: "1rem", fontWeight: 700, color: "#0a1930" },
+    fieldLabel: { display: "block", marginBottom: "6px", fontSize: "0.82rem", fontWeight: 700, color: "#6b6456", textTransform: "uppercase", letterSpacing: "0.04em" },
+    input: { width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid #ded2ad", fontSize: "1rem", color: "#1b2333", outline: "none", boxSizing: "border-box", backgroundColor: "#fefdfd" },
     threeCol: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "0px" },
-    warningBox: { backgroundColor: "#fff8e1", border: "1px solid #ffe082", borderRadius: "8px", padding: "12px 16px", fontSize: "0.9rem", color: "#856404", marginBottom: "18px" },
-    uploadBox: { border: "2px dashed #e0e0e0", borderRadius: "10px", padding: "20px", textAlign: "center", cursor: "pointer", position: "relative", backgroundColor: "#fafafa" },
-    uploadHint: { margin: "8px 0 2px", fontSize: "0.95rem", color: "#888" },
-    uploadSub:  { margin: 0, fontSize: "0.82rem", color: "#bbb" },
+    warningBox: { backgroundColor: "#faf2e0", border: "1px solid #e6c473", borderRadius: "10px", padding: "12px 16px", fontSize: "0.9rem", color: "#7e5f16", marginBottom: "18px" },
+    uploadBox: { border: "2px dashed #ded2ad", borderRadius: "10px", padding: "20px", textAlign: "center", cursor: "pointer", position: "relative", backgroundColor: "#fefdfd" },
+    uploadHint: { margin: "8px 0 2px", fontSize: "0.95rem", color: "#6b6456" },
+    uploadSub:  { margin: 0, fontSize: "0.82rem", color: "#94a3b8" },
     previewImg: { maxHeight: "160px", borderRadius: "8px", objectFit: "cover", display: "block", margin: "0 auto" },
     fileInput: { position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" },
     actionBar: { display: "flex", gap: "12px", alignItems: "center" },
-    errorMsg: { fontSize: "0.9rem", color: "#c62828", marginRight: "auto" },
-    successMsg: { fontSize: "0.9rem", color: "#2e7d32", marginRight: "auto" },
-    cancelBtn: { padding: "11px 26px", borderRadius: "8px", border: "1px solid #ddd", backgroundColor: "#fff", color: "#555", fontWeight: 600, fontSize: "1rem", cursor: "pointer" },
-    saveBtn: { padding: "11px 30px", borderRadius: "8px", border: "none", backgroundColor: "#0b7f5a", color: "#fff", fontWeight: 700, fontSize: "1rem", cursor: "pointer" },
+    errorMsg: { fontSize: "0.9rem", color: "#a4392f", marginRight: "auto" },
+    successMsg: { fontSize: "0.9rem", color: "#16864f", marginRight: "auto" },
+    cancelBtn: { padding: "11px 26px", borderRadius: "999px", border: "1px solid #ded2ad", backgroundColor: "#fff", color: "#1b2333", fontWeight: 600, fontSize: "1rem", cursor: "pointer" },
+    saveBtn: { padding: "11px 30px", borderRadius: "999px", border: "none", backgroundColor: "#16305c", color: "#fff", fontWeight: 700, fontSize: "1rem", cursor: "pointer" },
 };

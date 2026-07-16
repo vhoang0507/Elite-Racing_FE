@@ -1,4 +1,4 @@
-export default function StatCard({ icon, label, value, accent = "#0b7f5a" }) {
+export default function StatCard({ icon: Icon, label, value, accent = "#16305c" }) {
     const lightAccent = accent + "18"; // ~10% opacity version of accent
 
     return (
@@ -8,8 +8,8 @@ export default function StatCard({ icon, label, value, accent = "#0b7f5a" }) {
 
             <div style={styles.body}>
                 {/* Icon badge */}
-                <div style={{ ...styles.iconBadge, backgroundColor: lightAccent }}>
-                    <span style={styles.icon}>{icon}</span>
+                <div style={{ ...styles.iconBadge, backgroundColor: lightAccent, color: accent }}>
+                    {Icon ? <Icon aria-hidden="true" style={styles.icon} /> : null}
                 </div>
 
                 {/* Text */}
@@ -26,11 +26,12 @@ const styles = {
     card: {
         backgroundColor: "#fff",
         borderRadius: "12px",
-        border: "1px solid #dce5ef",
+        border: "1px solid #ded2ad",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        boxShadow: "0 2px 8px rgba(16,185,129,0.06)",
+        boxShadow: "0 8px 20px rgba(15,23,42,0.06)",
+        transition: "box-shadow 0.2s ease, transform 0.2s ease",
     },
     accentBar: {
         height: "4px",
@@ -45,14 +46,14 @@ const styles = {
     iconBadge: {
         width: "52px",
         height: "52px",
-        borderRadius: "12px",
+        borderRadius: "999px",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         flexShrink: 0,
     },
     icon: {
-        fontSize: "26px",
+        fontSize: "22px",
         lineHeight: 1,
     },
     textGroup: {
@@ -62,9 +63,9 @@ const styles = {
     },
     label: {
         margin: 0,
-        fontSize: "0.82rem",
-        color: "#9e8e8a",
-        fontWeight: 500,
+        fontSize: "0.78rem",
+        color: "#6b6456",
+        fontWeight: 700,
         textTransform: "uppercase",
         letterSpacing: "0.04em",
     },

@@ -30,16 +30,21 @@ const formatClass = (value) => String(value || '').toLowerCase();
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-7 px-11 py-10 max-[820px]:px-5 max-[820px]:py-7';
 const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]';
 const panelTitleClass = 'flex min-h-[58px] items-center border-b border-[var(--admin-border)] px-[22px]';
-const selectFieldClass = 'flex h-[42px] items-center gap-2 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[#64748b]';
+const selectFieldClass = 'flex h-[42px] items-center gap-2 rounded-full border border-[var(--admin-border)] bg-white px-3 text-[#64748b] transition-colors hover:border-[var(--admin-gold)]';
 const selectClass = 'h-full w-full min-w-0 cursor-pointer appearance-none border-0 bg-transparent text-[0.8rem] font-bold text-[#475569] outline-0';
 const statusClass = {
-    pending: 'bg-[#fff7db] text-[#a17809] before:bg-[#a17809]',
-    locked: 'bg-[#e9f1ff] text-[#2457a6] before:bg-[#2457a6]',
+    pending: 'bg-[#faf2e0] text-[#8a6209] before:bg-[#8a6209]',
+    locked: 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)] before:bg-[var(--admin-primary)]',
     evaluated: 'bg-[#e8f7ee] text-[#16864f] before:bg-[#16864f]',
-    cancelled: 'bg-[#e8f7ef] text-[var(--admin-primary)] before:bg-[var(--admin-primary)]',
+    cancelled: 'bg-[#f3e1df] text-[#a4392f] before:bg-[#a4392f]',
     active: 'bg-[#e8f7ee] text-[#16864f] before:bg-[#16864f]',
     inactive: 'bg-[#f3e8e6] text-[#7f645f] before:bg-[#7f645f]',
-    banned: 'bg-[#e8f7ef] text-[var(--admin-primary)] before:bg-[var(--admin-primary)]',
+    banned: 'bg-[#f3e1df] text-[#a4392f] before:bg-[#a4392f]',
+};
+const summaryIconTone = {
+    total: { bg: 'bg-[var(--admin-surface-strong)]', ink: 'text-[var(--admin-primary)]' },
+    active: { bg: 'bg-[#faf2e0]', ink: 'text-[#8a6209]' },
+    top: { bg: 'bg-[#e8f7ee]', ink: 'text-[#16864f]' },
 };
 const getPredictionCount = (prediction) => Number(prediction.count ?? 1);
 const getPredictionStatusOptions = (prediction) => {
@@ -64,7 +69,7 @@ const rankClass = {
     bronze: 'bg-[#f3c29a] text-[#79430c]',
 };
 const rankTone = ['gold', 'silver', 'bronze'];
-const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]';
+const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-full border border-[var(--admin-border)] bg-white font-extrabold text-[var(--admin-primary-dark)] transition-colors hover:border-[var(--admin-primary)] hover:bg-[var(--admin-primary)] hover:text-white';
 const pageSize = 4;
 
 const sortPendingFirst = (items, getStatus) => [...items].sort((current, next) => {
@@ -127,16 +132,19 @@ function PredictionManagement() {
                 label: 'Total Predictions',
                 value: totalPredictions.toLocaleString('en-US'),
                 icon: FaRegChartBar,
+                tone: 'total',
             },
             {
                 label: 'Active Events',
                 value: String(activeEvents),
                 icon: FaCalendarAlt,
+                tone: 'active',
             },
             {
                 label: 'Most Predicted',
                 value: topPrediction?.horse || 'No data',
                 icon: FaSquare,
+                tone: 'top',
             },
         ];
     }, [predictions]);
@@ -288,12 +296,14 @@ function PredictionManagement() {
                             const Icon = card.icon;
 
                             return (
-                                <article className="flex min-h-[132px] items-start justify-between rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-6 py-6 shadow-[0_14px_30px_rgba(15,23,42,0.05)]" key={card.label}>
+                                <article className="flex min-h-[132px] items-start justify-between gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-6 py-6 shadow-[0_14px_30px_rgba(15,23,42,0.05)]" key={card.label}>
                                     <div>
                                         <span className="block text-[0.76rem] font-black uppercase text-[#64748b]">{card.label}</span>
                                         <strong className="mt-3 block text-[2rem] leading-none text-[var(--admin-primary-dark)]">{card.value}</strong>
                                     </div>
-                                    <Icon aria-hidden="true" className="h-7 w-7 text-[var(--admin-primary)]" />
+                                    <span className={`grid h-10 w-10 flex-none place-items-center rounded-xl ${summaryIconTone[card.tone].bg} ${summaryIconTone[card.tone].ink}`}>
+                                        <Icon aria-hidden="true" className="h-4 w-4" />
+                                    </span>
                                 </article>
                             );
                         })}
@@ -335,7 +345,7 @@ function PredictionManagement() {
                             <FaChevronDown aria-hidden="true" />
                         </label>
 
-                        <button className="inline-flex h-[42px] cursor-pointer items-center justify-center gap-2 rounded-md bg-[var(--admin-primary)] px-3 font-black text-white hover:bg-[var(--admin-primary-dark)]" onClick={handleSortToggle} type="button">
+                        <button className="inline-flex h-[42px] cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--admin-primary)] px-3 font-black text-white hover:bg-[var(--admin-primary-dark)]" onClick={handleSortToggle} type="button">
                             <FaSortAmountDown aria-hidden="true" />
                             <span>Sort</span>
                         </button>
@@ -358,6 +368,18 @@ function PredictionManagement() {
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    {visiblePredictions.length === 0 && (
+                                        <tr>
+                                            <td className="px-[22px] py-12 text-center" colSpan={5}>
+                                                <div className="grid justify-items-center gap-3">
+                                                    <span className="grid h-12 w-12 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
+                                                        <FaRegChartBar aria-hidden="true" className="h-5 w-5" />
+                                                    </span>
+                                                    <span className="font-bold text-[var(--admin-muted)]">No predictions found.</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
                                     {visiblePredictions.map((prediction) => (
                                         <tr key={prediction.id}>
                                             <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">{prediction.tournament}</td>
@@ -374,13 +396,13 @@ function PredictionManagement() {
                                                 </div>
                                             </td>
                                             <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">
-                                                <span className={`relative inline-flex min-h-6 items-center rounded px-2.5 pl-5 text-[0.68rem] font-black uppercase before:absolute before:left-2 before:h-1.5 before:w-1.5 before:rounded-full before:content-[''] ${statusClass[formatClass(prediction.status)]}`}>
+                                                <span className={`relative inline-flex min-h-6 items-center rounded-full px-2.5 pl-5 text-[0.68rem] font-black uppercase before:absolute before:left-2 before:h-1.5 before:w-1.5 before:rounded-full before:content-[''] ${statusClass[formatClass(prediction.status)]}`}>
                                                     {prediction.status}
                                                 </span>
                                             </td>
                                             <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">
                                                 <div className="relative inline-flex items-center gap-3">
-                                                    <button aria-expanded={actionMenu?.id === prediction.id} aria-haspopup="menu" aria-label={`Actions for ${prediction.horse}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-md bg-transparent text-[#64748b] hover:bg-[#e8f7ef] hover:text-[var(--admin-primary)]" onClick={(event) => handleActionToggle(event, prediction.id)} type="button">
+                                                    <button aria-expanded={actionMenu?.id === prediction.id} aria-haspopup="menu" aria-label={`Actions for ${prediction.horse}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-transparent text-[#64748b] transition-colors hover:bg-[var(--admin-surface-strong)] hover:text-[var(--admin-primary)]" onClick={(event) => handleActionToggle(event, prediction.id)} type="button">
                                                         <FaEllipsisH aria-hidden="true" />
                                                     </button>
                                                     {actionMenu?.id === prediction.id && (
@@ -473,7 +495,7 @@ function PredictionManagement() {
                             ))}
                         </div>
 
-                        <button className="mx-auto mb-5 inline-flex min-h-[38px] cursor-pointer items-center justify-center gap-2 rounded-md bg-[#e8f7ef] px-4 font-black text-[var(--admin-primary)] hover:bg-[#d7f2e4]" type="button">
+                        <button className="mx-auto mb-5 inline-flex min-h-[38px] cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--admin-surface-strong)] px-4 font-black text-[var(--admin-primary)] hover:bg-[#e8f7ef]" type="button">
                             <FaTrophy aria-hidden="true" />
                             <span>View All Participants</span>
                         </button>

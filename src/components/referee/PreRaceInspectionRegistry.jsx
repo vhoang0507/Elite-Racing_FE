@@ -75,7 +75,7 @@ function HealthCertificateCell({ url }) {
 
     return (
         <>
-            <button type="button" className="inline-flex cursor-zoom-in items-center gap-2 border-0 bg-transparent p-0 font-bold text-[#0b7f5a] hover:underline" onClick={() => setLightboxSrc(resolvedUrl)}>
+            <button type="button" className="inline-flex cursor-zoom-in items-center gap-2 border-0 bg-transparent p-0 font-bold text-[var(--admin-primary)] hover:underline" onClick={() => setLightboxSrc(resolvedUrl)}>
                 <img alt="Health certificate" className="h-8 w-11 rounded border border-[#dce5ef] object-cover" src={resolvedUrl} />
                 View
             </button>
@@ -312,7 +312,7 @@ function PreRaceInspectionRegistry() {
                 <button
                     type="button"
                     onClick={() => navigate('/referee/races/pre-race')}
-                    className="mb-6 flex items-center gap-2 font-semibold text-[#0b7f5a]"
+                    className="mb-6 flex items-center gap-2 font-semibold text-[var(--admin-primary)]"
                 >
                     <FaArrowLeft />
                     Back to Pre-Race Tournaments
@@ -330,7 +330,7 @@ function PreRaceInspectionRegistry() {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span className="rounded-full bg-[#e8f7ef] px-4 py-2 text-sm font-bold text-[#0b7f5a]">
+                        <span className="rounded-full bg-[var(--admin-surface-strong)] px-4 py-2 text-sm font-bold text-[var(--admin-primary)]">
                             Race #{raceId}
                         </span>
                         {showMarkReadyButton && (
@@ -339,7 +339,7 @@ function PreRaceInspectionRegistry() {
                                 disabled={markingReady || !markReadyAllowed}
                                 onClick={handleMarkReady}
                                 title={markReadyAllowed ? 'Mark race ready' : getMarkReadyDisabledReason(selectedRace)}
-                                style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: '#0b7f5a', color: '#fff', fontWeight: 700, fontSize: '0.88rem', cursor: markingReady || !markReadyAllowed ? 'not-allowed' : 'pointer', opacity: markingReady || !markReadyAllowed ? 0.7 : 1 }}
+                                style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: 'var(--admin-primary)', color: '#fff', fontWeight: 700, fontSize: '0.88rem', cursor: markingReady || !markReadyAllowed ? 'not-allowed' : 'pointer', opacity: markingReady || !markReadyAllowed ? 0.7 : 1 }}
                             >
                                 {markingReady ? 'Processing...' : '✓ Mark Race Ready'}
                             </button>
@@ -378,13 +378,13 @@ function PreRaceInspectionRegistry() {
                                 </h2>
 
                                 {selectedRace?.tournamentName && (
-                                    <p className="mt-1 font-semibold text-[#0b7f5a]">
+                                    <p className="mt-1 font-semibold text-[var(--admin-primary)]">
                                         {selectedRace.tournamentName}
                                     </p>
                                 )}
 
                                 {selectedRace?.seasonStatus && (
-                                    <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${selectedRace.seasonStatus === 'Active' ? 'bg-[#e8f7ef] text-[#0b7f5a]' : 'bg-red-100 text-red-700'}`}>
+                                    <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${selectedRace.seasonStatus === 'Active' ? 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]' : 'bg-red-100 text-red-700'}`}>
                                         Season: {selectedRace.seasonStatus}
                                     </span>
                                 )}
@@ -468,8 +468,8 @@ function PreRaceInspectionRegistry() {
                                             fontWeight: 700,
                                             cursor: 'pointer',
                                             border: filter === option.key ? 'none' : '1px solid #dce5ef',
-                                            background: filter === option.key ? '#0b7f5a' : '#fff8f6',
-                                            color: filter === option.key ? '#fff' : '#0b7f5a',
+                                            background: filter === option.key ? 'var(--admin-primary)' : '#fff8f6',
+                                            color: filter === option.key ? '#fff' : 'var(--admin-primary)',
                                         }}
                                     >
                                         {option.label} ({count ?? 0})
@@ -596,8 +596,8 @@ function PreRaceInspectionRegistry() {
                                                         <span style={{
                                                             fontSize: 11, fontWeight: 700,
                                                             padding: '2px 9px', borderRadius: 20,
-                                                            backgroundColor: horse.severity === 'HIGH' ? '#f8d7da' : horse.severity === 'MEDIUM' ? '#fff3cd' : '#e3f2fd',
-                                                            color: horse.severity === 'HIGH' ? '#721c24' : horse.severity === 'MEDIUM' ? '#856404' : '#1565c0',
+                                                            backgroundColor: horse.severity === 'HIGH' ? '#f3e1df' : horse.severity === 'MEDIUM' ? '#faf2e0' : 'var(--admin-surface-strong)',
+                                                            color: horse.severity === 'HIGH' ? '#a4392f' : horse.severity === 'MEDIUM' ? '#8a6209' : 'var(--admin-primary)',
                                                         }}>
                                                             {horse.severity}
                                                         </span>
@@ -612,8 +612,8 @@ function PreRaceInspectionRegistry() {
                                                     <span style={{
                                                         fontSize: 11, fontWeight: 700,
                                                         padding: '3px 10px', borderRadius: 20,
-                                                        backgroundColor: horse.outcome === 'ALLOWED' ? '#d4edda' : horse.outcome === 'PROHIBITED' ? '#f8d7da' : '#fff3cd',
-                                                        color: horse.outcome === 'ALLOWED' ? '#155724' : horse.outcome === 'PROHIBITED' ? '#721c24' : '#856404',
+                                                        backgroundColor: horse.outcome === 'ALLOWED' ? '#e8f7ee' : horse.outcome === 'PROHIBITED' ? '#f3e1df' : '#faf2e0',
+                                                        color: horse.outcome === 'ALLOWED' ? '#16864f' : horse.outcome === 'PROHIBITED' ? '#a4392f' : '#8a6209',
                                                     }}>
                                                         {horse.outcome ?? 'PENDING'}
                                                     </span>
@@ -652,7 +652,7 @@ function PreRaceInspectionRegistry() {
                                                             style={{
                                                                 fontSize: 12, fontWeight: 700, padding: '6px 14px',
                                                                 borderRadius: 6, border: 'none', cursor: 'pointer',
-                                                                background: '#0b7f5a', color: '#fff',
+                                                                background: 'var(--admin-primary)', color: '#fff',
                                                                 alignSelf: 'flex-start',
                                                                 opacity: savingId === horse.registrationId ? 0.6 : 1,
                                                             }}

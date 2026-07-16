@@ -4,11 +4,12 @@ import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
 
 const STATUS_CFG = {
-    ReadyToRace:   { bg: "#dcfce7", color: "#15803d", border: "#86efac" },
-    Approved:      { bg: "#dbeafe", color: "#1e40af", border: "#93c5fd" },
-    JockeyInvited: { bg: "#fef9c3", color: "#92400e", border: "#fde68a" },
-    Completed:     { bg: "#f0fdf4", color: "#065f46", border: "#6ee7b7" },
+    ReadyToRace:   { bg: "#e8f7ee", color: "#16864f", border: "#bfe6d0" },
+    Approved:      { bg: "var(--admin-surface-strong)", color: "var(--admin-primary)", border: "var(--admin-border)" },
+    JockeyInvited: { bg: "#faf2e0", color: "#8a6209", border: "#eddcb0" },
+    Completed:     { bg: "#e8f7ee", color: "#16864f", border: "#bfe6d0" },
 };
+const humanizeLabel = (value) => String(value || "").replace(/([a-z0-9])([A-Z])/g, "$1 $2").trim();
 
 export default function ApprovedRegistrations() {
     const navigate = useNavigate();
@@ -108,7 +109,7 @@ export default function ApprovedRegistrations() {
                                 </tr>
                             ) : (
                                 filteredData.map((row, i) => {
-                                    const cfg = STATUS_CFG[row.status] ?? { bg: "#f1f5f9", color: "#64748b", border: "#cbd5e1" };
+                                    const cfg = STATUS_CFG[row.status] ?? { bg: "var(--admin-surface-strong)", color: "var(--admin-primary)", border: "var(--admin-border)" };
                                     return (
                                         <tr key={row.registrationId} style={{ ...styles.row, backgroundColor: i % 2 === 0 ? "#fff" : "#faf7f5" }}>
                                             <td style={styles.td}>
@@ -127,7 +128,7 @@ export default function ApprovedRegistrations() {
                                             <td style={styles.td}><span style={styles.date}>{row.raceDate}</span></td>
                                             <td style={styles.td}>
                                                 <span style={{ ...styles.statusBadge, backgroundColor: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>
-                                                    {row.status}
+                                                    {humanizeLabel(row.status)}
                                                 </span>
                                             </td>
                                             <td style={styles.td}>
@@ -208,13 +209,13 @@ const styles = {
     title: { margin: 0, fontSize: 15, fontWeight: 700, color: "#1e293b" },
     sub: { margin: "2px 0 0", fontSize: 12, color: "#94a3b8" },
     filterRow: { display: "flex", gap: 10, flexWrap: "wrap", padding: "12px 20px", borderBottom: "1px solid #f0ebe8" },
-    searchInput: { height: 34, flex: 1, minWidth: 180, borderRadius: 8, border: "1px solid #e8ddd9", padding: "0 12px", fontSize: "0.82rem", outline: "none" },
-    select: { height: 34, borderRadius: 8, border: "1px solid #e8ddd9", padding: "0 10px", fontSize: "0.82rem", backgroundColor: "#fff" },
+    searchInput: { height: 34, flex: 1, minWidth: 180, borderRadius: 999, border: "1px solid #ded2ad", padding: "0 14px", fontSize: "0.82rem", outline: "none" },
+    select: { height: 34, borderRadius: 999, border: "1px solid #ded2ad", padding: "0 12px", fontSize: "0.82rem", backgroundColor: "#fff" },
     center: { textAlign: "center", color: "#999", padding: "24px 0" },
     tableWrap: { overflowX: "auto" },
     table: { width: "100%", borderCollapse: "collapse" },
-    headRow: { backgroundColor: "#f8f4f2" },
-    th: { textAlign: "left", padding: "10px 16px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#64748b", borderBottom: "1px solid #e8ddd9" },
+    headRow: { backgroundColor: "#efe8d6" },
+    th: { textAlign: "left", padding: "10px 16px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#64748b", borderBottom: "2px solid #c8a24a" },
     row: { borderBottom: "1px solid #f0ebe8" },
     td: { padding: "12px 16px", fontSize: 13, verticalAlign: "middle" },
     bold: { fontWeight: 600, color: "#1e293b" },
@@ -223,20 +224,20 @@ const styles = {
     date: { fontSize: 12, color: "#64748b" },
     statusBadge: { fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "3px 10px", display: "inline-block" },
     emptyCell: { textAlign: "center", padding: "28px", color: "#94a3b8", fontSize: 13 },
-    actionBtn: { borderRadius: 8, padding: "5px 12px", cursor: "pointer", fontSize: 12, fontWeight: 600, border: "none" },
-    primaryBtn: { backgroundColor: "#610000", color: "#fff" },
-    ghostBtn: { backgroundColor: "#fff", color: "#374151", border: "1px solid #e8ddd9" },
+    actionBtn: { borderRadius: 999, padding: "5px 12px", cursor: "pointer", fontSize: 12, fontWeight: 600, border: "none" },
+    primaryBtn: { backgroundColor: "#16305c", color: "#fff" },
+    ghostBtn: { backgroundColor: "#fff", color: "#374151", border: "1px solid #ded2ad" },
     disabledBtn: { cursor: "not-allowed", opacity: 0.65 },
-    error: { margin: "14px 20px 0", color: "#991b1b", fontSize: 13, fontWeight: 600 },
+    error: { margin: "14px 20px 0", color: "#a4392f", fontSize: 13, fontWeight: 600 },
     overlay: { alignItems: "center", backgroundColor: "rgba(45,32,32,0.45)", display: "flex", inset: 0, justifyContent: "center", padding: "20px", position: "fixed", zIndex: 50 },
     modal: { backgroundColor: "#fff", borderRadius: 14, boxShadow: "0 24px 70px rgba(37,18,14,0.28)", maxHeight: "90vh", maxWidth: "760px", overflow: "auto", width: "100%" },
     modalHeader: { alignItems: "flex-start", borderBottom: "1px solid #f0ebe8", display: "flex", gap: "16px", justifyContent: "space-between", padding: "20px" },
     modalTitle: { color: "#0f172a", fontSize: "22px", margin: 0 },
     modalSubtitle: { color: "#64748b", fontSize: "13px", fontWeight: 600, margin: "6px 0 0" },
-    closeBtn: { backgroundColor: "#faf7f5", border: "1px solid #e8ddd9", borderRadius: "8px", color: "#610000", cursor: "pointer", fontSize: "16px", fontWeight: 800, height: "34px", width: "34px" },
+    closeBtn: { backgroundColor: "#faf7f0", border: "1px solid #ded2ad", borderRadius: "999px", color: "#16305c", cursor: "pointer", fontSize: "16px", fontWeight: 800, height: "34px", width: "34px" },
     modalBody: { padding: "20px" },
     infoGrid: { display: "grid", gap: "12px", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))" },
-    infoItem: { backgroundColor: "#faf7f5", border: "1px solid #e8ddd9", borderRadius: "8px", padding: "12px" },
+    infoItem: { backgroundColor: "#faf7f0", border: "1px solid #ded2ad", borderRadius: "10px", padding: "12px" },
     infoLabel: { color: "#64748b", display: "block", fontSize: "11px", fontWeight: 800, textTransform: "uppercase" },
     infoValue: { color: "#1e293b", display: "block", fontSize: "14px", marginTop: "6px", wordBreak: "break-word" },
 };

@@ -22,7 +22,7 @@ import AdminLayout from './AdminLayout';
 
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-7 px-11 py-10 max-[820px]:px-5 max-[820px]:py-7';
 const panelClass = 'rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_14px_32px_rgba(81,31,22,0.07)]';
-const actionButtonClass = 'inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-md px-3.5 text-[0.76rem] font-black disabled:cursor-not-allowed disabled:opacity-60';
+const actionButtonClass = 'inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-full px-3.5 text-[0.76rem] font-black transition-colors disabled:cursor-not-allowed disabled:opacity-60';
 
 const statusOptions = [
     { value: '', label: 'All Status' },
@@ -33,10 +33,11 @@ const statusOptions = [
 ];
 
 const statusClass = {
-    ReadyToClaim: 'bg-[#eff6ff] text-[#1d4ed8]',
-    UnderReview: 'bg-[#fef3c7] text-[#92400e]',
-    Paid: 'bg-[#dcfce7] text-[#15803d]',
-    Rejected: 'bg-[#fee2e2] text-[#b91c1c]',
+    Pending: 'bg-[#faf2e0] text-[#8a6209]',
+    ReadyToClaim: 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]',
+    UnderReview: 'bg-[#faf2e0] text-[#8a6209]',
+    Paid: 'bg-[#e8f7ee] text-[#16864f]',
+    Rejected: 'bg-[#f3e1df] text-[#a4392f]',
 };
 
 function formatDateTime(value) {
@@ -179,7 +180,7 @@ function AdminRewardPayments() {
                                     <span className="block text-[0.72rem] font-black uppercase text-[#64748b]">{stat.label}</span>
                                     <strong className="mt-3 block text-[2rem] leading-none text-[var(--admin-primary-dark)]">{stat.value}</strong>
                                 </div>
-                                <span className="grid h-10 w-10 place-items-center rounded-md bg-[#e8f7ef] text-[var(--admin-primary)]">
+                                <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                                     <FaDollarSign aria-hidden="true" />
                                 </span>
                             </div>
@@ -197,7 +198,7 @@ function AdminRewardPayments() {
                     <div className="flex min-h-[64px] items-center justify-between gap-4 border-b border-[var(--admin-border)] px-5 py-4 max-[720px]:flex-col max-[720px]:items-stretch">
                         <h2 className="m-0 text-[1.05rem] text-[var(--admin-ink)]">Payment Queue</h2>
                         <select
-                            className="h-10 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.82rem] font-bold text-[#5b403c] outline-0"
+                            className="h-10 rounded-full border border-[var(--admin-border)] bg-white px-3 text-[0.82rem] font-bold text-[#5b403c] outline-0 transition-colors hover:border-[var(--admin-gold)]"
                             onChange={(event) => setStatusFilter(event.target.value)}
                             value={statusFilter}
                         >
@@ -250,8 +251,8 @@ function AdminRewardPayments() {
                                                 {adminApi.formatters.toMoney(readRewardField(reward, 'prizeAmount') || 0)}
                                             </td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4">
-                                                <span className={`inline-flex min-h-6 items-center rounded-full px-2.5 text-[0.68rem] font-black ${statusClass[status] || 'bg-[#f3f4f6] text-[#374151]'}`}>
-                                                    {status || '-'}
+                                                <span className={`inline-flex min-h-6 items-center rounded-full px-2.5 text-[0.68rem] font-black ${statusClass[status] || 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]'}`}>
+                                                    {status ? status.replace(/([a-z0-9])([A-Z])/g, '$1 $2') : '-'}
                                                 </span>
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-4 text-[0.82rem] font-bold text-[var(--admin-muted)]">

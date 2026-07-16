@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { FaFire, FaStar, FaStopwatch, FaTrophy } from "react-icons/fa";
 import HorseOwnerLayout from "../HorseOwnerLayout";
 import { ownerApi } from "../../../api/ownerApi";
 import { resolveFileUrl } from "../../../api/uploadApi";
@@ -98,10 +99,10 @@ function HorseProfileCard({ horse }) {
 
 function AchievementsCard({ achievements }) {
     const items = [
-        { icon: "🏆", label: "Title", value: achievements.championTitles > 0 ? `Champion Titles x${achievements.championTitles}` : "No titles yet" },
-        { icon: "⏱", label: "Best Time", value: achievements.bestTime != null ? formatTime(achievements.bestTime) : "—" },
-        { icon: "🔥", label: "Current Streak", value: `${achievements.currentWinStreak} Consecutive Wins` },
-        { icon: "⭐", label: "Award", value: achievements.award || "—" },
+        { icon: FaTrophy, label: "Title", value: achievements.championTitles > 0 ? `Champion Titles x${achievements.championTitles}` : "No titles yet" },
+        { icon: FaStopwatch, label: "Best Time", value: achievements.bestTime != null ? formatTime(achievements.bestTime) : "—" },
+        { icon: FaFire, label: "Current Streak", value: `${achievements.currentWinStreak} Consecutive Wins` },
+        { icon: FaStar, label: "Award", value: achievements.award || "—" },
     ];
 
     return (
@@ -110,7 +111,7 @@ function AchievementsCard({ achievements }) {
             <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {items.map((item, i) => (
                     <div key={i} style={styles.achievementRow}>
-                        <span style={styles.achievementIcon}>{item.icon}</span>
+                        <span style={styles.achievementIcon}><item.icon aria-hidden="true" /></span>
                         <div>
                             <p style={styles.achievementLabel}>{item.label}</p>
                             <p style={styles.achievementValue}>{item.value}</p>
@@ -148,8 +149,8 @@ function RaceHistoryTable({ history }) {
                     <tbody>
                         {history.map((h) => (
                             <tr key={h.resultId}>
-                                <td style={{ ...styles.td, fontWeight: 600, color: "#610000" }}>{h.tournamentName}</td>
-                                <td style={styles.td}>{new Date(h.raceDate).toLocaleDateString()}</td>
+                                <td style={{ ...styles.td, fontWeight: 600, color: "#16305c" }}>{h.tournamentName}</td>
+                                <td style={styles.td}>{new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).format(new Date(h.raceDate))}</td>
                                 <td style={styles.td}>{h.track ?? "—"}</td>
                                 <td style={styles.td}>{h.distanceMeters}m</td>
                                 <td style={styles.td}>{h.jockeyName ?? "—"}</td>
@@ -168,22 +169,22 @@ function RaceHistoryTable({ history }) {
 }
 
 const styles = {
-    card: { backgroundColor: "#fff", borderRadius: "12px", border: "1px solid #eee", padding: "20px" },
-    cardTitle: { margin: 0, fontSize: "14px", fontWeight: 700, color: "#610000" },
+    card: { backgroundColor: "#fff", borderRadius: "12px", border: "1px solid #ded2ad", padding: "20px", boxShadow: "0 8px 22px rgba(15,23,42,0.06)" },
+    cardTitle: { margin: 0, fontSize: "14px", fontWeight: 700, color: "#0a1930" },
     profileRow: { display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", marginBottom: "20px" },
     profileImg: { width: "90px", height: "90px", borderRadius: "50%", objectFit: "cover", marginBottom: "10px" },
-    horseName: { margin: 0, fontWeight: 700, fontSize: "16px" },
-    horseBreed: { margin: "2px 0", fontSize: "12px", color: "#999" },
+    horseName: { margin: 0, fontWeight: 700, fontSize: "16px", color: "#1b2333" },
+    horseBreed: { margin: "2px 0", fontSize: "12px", color: "#6b6456" },
     infoGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" },
-    label: { color: "#999", fontSize: "11px" },
-    value: { margin: "2px 0 0", fontWeight: 600, fontSize: "13px" },
-    certificateMissing: { margin: "6px 0 0", color: "#999", fontSize: "12px", fontWeight: 600 },
+    label: { color: "#6b6456", fontSize: "11px" },
+    value: { margin: "2px 0 0", fontWeight: 600, fontSize: "13px", color: "#1b2333" },
+    certificateMissing: { margin: "6px 0 0", color: "#94a3b8", fontSize: "12px", fontWeight: 600 },
     achievementRow: { display: "flex", alignItems: "center", gap: "10px" },
-    achievementIcon: { width: "32px", height: "32px", borderRadius: "8px", backgroundColor: "#fde2e1", color: "#610000", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px" },
-    achievementLabel: { margin: 0, fontSize: "11px", color: "#999" },
-    achievementValue: { margin: "2px 0 0", fontWeight: 600, fontSize: "13px" },
+    achievementIcon: { width: "32px", height: "32px", borderRadius: "999px", backgroundColor: "#f3e6c2", color: "#8a6a1f", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px" },
+    achievementLabel: { margin: 0, fontSize: "11px", color: "#6b6456" },
+    achievementValue: { margin: "2px 0 0", fontWeight: 600, fontSize: "13px", color: "#1b2333" },
     table: { width: "100%", borderCollapse: "collapse" },
-    th: { textAlign: "left", fontSize: "10px", color: "#999", padding: "6px 8px", borderBottom: "1px solid #eee" },
-    td: { padding: "10px 8px", borderBottom: "1px solid #f5f5f5", fontSize: "12px" },
-    statusBadge: { fontSize: "10px", padding: "3px 8px", borderRadius: "10px", fontWeight: 700, backgroundColor: "#fde2e1", color: "#610000" },
+    th: { textAlign: "left", fontSize: "10px", color: "#64748b", fontWeight: 700, padding: "10px 8px", borderBottom: "2px solid #c8a24a", background: "#efe8d6" },
+    td: { padding: "10px 8px", borderBottom: "1px solid #f0ece0", fontSize: "12px" },
+    statusBadge: { fontSize: "10px", padding: "3px 10px", borderRadius: "999px", fontWeight: 700, backgroundColor: "#edf2fa", color: "#16305c" },
 };
