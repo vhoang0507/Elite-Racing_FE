@@ -321,10 +321,10 @@ function CreateTournament() {
                 <section className={pageShellClass}>
                     <div className={wrapClass}>
                         <div>
-                            <h1 className="m-0 text-[2rem] leading-[1.1] text-[var(--admin-primary-dark)] max-[760px]:text-[1.6rem]">
+                            <h1 className="page-title">
                                 Create Tournament
                             </h1>
-                            <p className="mb-0 mt-1.5 text-[0.9rem] font-[650] text-[var(--admin-muted)]">
+                            <p className="page-subtitle">
                                 Configure parameters for a new premier racing event.
                             </p>
                         </div>

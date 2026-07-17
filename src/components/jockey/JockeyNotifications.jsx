@@ -144,8 +144,8 @@ function JockeyNotifications() {
         <JockeyLayout activeKey="notifications">
             <section className={pageShellClass}>
                 <div>
-                    <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)]">Notifications</h1>
-                    <p className="mt-1.5 font-[650] text-[var(--admin-muted)]">
+                    <h1 className="page-title">Notifications</h1>
+                    <p className="page-subtitle">
                         Monitor system updates, approvals, reports, and important activities.
                     </p>
                 </div>

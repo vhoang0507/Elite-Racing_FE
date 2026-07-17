@@ -396,10 +396,10 @@ function HorseManagement() {
         >
                 <section className={pageShellClass}>
                     <div>
-                        <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)] max-[860px]:text-[1.6rem]">
+                        <h1 className="page-title">
                             Horse Management
                         </h1>
-                        <p className="mt-2 text-[0.92rem] font-semibold text-[var(--admin-muted)]">
+                        <p className="page-subtitle">
                             Manage horse records, registration approvals, and referee reports.
                         </p>
                     </div>

@@ -134,7 +134,7 @@ function AdminProfile() {
                         <FaShieldAlt aria-hidden="true" className="text-[var(--admin-primary)]" />
                         <span>Admin Profile</span>
                     </div>
-                    <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)] max-[720px]:text-[1.6rem]">
+                    <h1 className="page-title">
                         Account Profile
                     </h1>
                 </div>

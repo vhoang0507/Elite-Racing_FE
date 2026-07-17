@@ -442,10 +442,10 @@ function AdminSystemTime() {
                             <FaShieldAlt aria-hidden="true" className="text-[var(--admin-primary)]" />
                             <span>Admin Tools</span>
                         </div>
-                        <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)] max-[860px]:text-[1.6rem]">
+                        <h1 className="page-title">
                             System Time
                         </h1>
-                        <p className="mb-0 mt-1.5 text-[0.92rem] font-semibold text-[var(--admin-muted)]">
+                        <p className="page-subtitle">
                             Test the backend clock and time-based status updates from one Admin-only screen.
                         </p>
                     </div>

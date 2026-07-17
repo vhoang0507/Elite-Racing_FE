@@ -242,8 +242,8 @@ function JockeySetting() {
             <section className={pageShellClass}>
                 {/* Header */}
                 <div>
-                    <h1 className="m-0 text-[2rem] text-[var(--admin-primary-dark)]">Settings</h1>
-                    <p className="mt-1.5 font-[650] text-[var(--admin-muted)]">
+                    <h1 className="page-title">Settings</h1>
+                    <p className="page-subtitle">
                         Manage your profile, horse breed experience and distance preferences.
                     </p>
                 </div>

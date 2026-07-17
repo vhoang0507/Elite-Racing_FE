@@ -107,10 +107,10 @@ function AcceptedRaces() {
         <JockeyLayout activeKey="accepted">
             <section className={pageShellClass}>
                 <div>
-                    <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)]">
+                    <h1 className="page-title">
                         Accepted Races
                     </h1>
-                    <p className="mb-0 mt-1.5 font-[650] text-[var(--admin-muted)]">
+                    <p className="page-subtitle">
                         Track your confirmed races, schedules, and assigned horses.
                     </p>
                 </div>

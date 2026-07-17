@@ -181,10 +181,10 @@ function ValidateResults() {
         >
                 <section className={pageShellClass}>
                     <div className="max-w-[760px]">
-                        <h1 className="m-0 text-[2rem] leading-[1.12] text-[var(--admin-primary-dark)] max-[820px]:text-[1.6rem]">
+                        <h1 className="page-title">
                             Validate Results
                         </h1>
-                        <p className="mt-2 text-[0.95rem] font-semibold leading-[1.45] text-[var(--admin-muted)]">
+                        <p className="page-subtitle leading-[1.45]">
                             Review referee-submitted race results and violations before publishing official race outcomes.
                         </p>
                     </div>

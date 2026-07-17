@@ -80,8 +80,8 @@ function getOwnerLabel(registration) {
 }
 
 function getStatusClass(status) {
-    if (['RefereeConfirmed', 'AdminApproved', 'Published'].includes(status)) return 'bg-green-100 text-green-700';
-    if (status === 'Returned') return 'bg-red-100 text-red-700';
+    if (['RefereeConfirmed', 'AdminApproved', 'Published'].includes(status)) return 'bg-[#e8f7ee] text-[#16864f]';
+    if (status === 'Returned') return 'bg-[#f3e1df] text-[#a4392f]';
     return 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]';
 }
 
@@ -106,12 +106,12 @@ function getRaceBlockingReason(race) {
     return '';
 }
 
-const inputClass = "rounded border border-[#dce5ef] px-3 py-2.5 text-sm outline-none focus:border-[var(--admin-primary)] w-full";
-const labelClass = "block text-xs font-bold text-[#64748b] uppercase mb-1.5";
-const primaryBtn = "rounded bg-[var(--admin-primary)] px-5 py-2.5 font-semibold text-white text-sm disabled:cursor-not-allowed disabled:opacity-60 w-full";
+const inputClass = "rounded-lg border border-[var(--admin-border)] px-3 py-2.5 text-sm outline-none transition-colors focus:border-[var(--admin-primary)] w-full";
+const labelClass = "block text-xs font-bold text-[var(--admin-muted)] uppercase mb-1.5";
+const primaryBtn = "rounded-full bg-[var(--admin-primary)] px-5 py-2.5 font-semibold text-white text-sm transition-colors hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60 w-full";
 const confirmToneClass = {
-    primary: 'bg-[var(--admin-primary)] hover:bg-[#09664a]',
-    danger: 'bg-[#b91c1c] hover:bg-[#991b1b]',
+    primary: 'bg-[var(--admin-primary)] hover:bg-[var(--admin-primary-dark)]',
+    danger: 'bg-[#a4392f] hover:bg-[#8a2e26]',
 };
 
 function AssignedPostRace() {
@@ -626,25 +626,25 @@ function AssignedPostRace() {
 
                 {/* Alerts */}
                 {error && (
-                    <div className="rounded-[8px] border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
+                    <div className="rounded-[8px] border border-[#e3bcb7] bg-[#f3e1df] px-5 py-4 font-semibold text-[#a4392f]">
                         {error}
                     </div>
                 )}
                 {success && (
-                    <div className="rounded-[8px] border border-green-200 bg-green-50 px-5 py-4 font-semibold text-green-700">
+                    <div className="rounded-[8px] border border-[#bfe3cc] bg-[#e8f7ee] px-5 py-4 font-semibold text-[#16864f]">
                         {success}
                     </div>
                 )}
                 {selectedRaceBlockingReason && (
-                    <div className="rounded-[8px] border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
+                    <div className="rounded-[8px] border border-[#e3bcb7] bg-[#f3e1df] px-5 py-4 font-semibold text-[#a4392f]">
                         {selectedRaceBlockingReason}
                     </div>
                 )}
 
                 {selectedRace?.raceStatus === 'RefereeReady' && (
-                    <div className="rounded-[8px] border border-blue-200 bg-blue-50 px-5 py-4">
+                    <div className="rounded-[8px] border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-5 py-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div className="font-semibold text-blue-800">
+                            <div className="font-semibold text-[var(--admin-primary)]">
                                 Race is <strong>Ready</strong>. Start the race when all runners are at the gate.
                             </div>
                             <button
@@ -652,18 +652,19 @@ function AssignedPostRace() {
                                 onClick={handleStartRace}
                                 disabled={!canStartRace || saving === 'start'}
                                 title={canStartRace ? 'Start race' : selectedRaceBlockingReason || 'Race cannot be started yet.'}
-                                className="rounded bg-[var(--admin-primary)] px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                className="inline-flex items-center gap-2 rounded-full bg-[var(--admin-primary)] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                {saving === 'start' ? 'Starting...' : '🏁 Start Race'}
+                                <FaTrophy />
+                                {saving === 'start' ? 'Starting...' : 'Start Race'}
                             </button>
                         </div>
                     </div>
                 )}
 
                 {selectedRace?.raceStatus === 'Ongoing' && (
-                    <div className="rounded-[8px] border border-yellow-200 bg-yellow-50 px-5 py-4">
+                    <div className="rounded-[8px] border border-[#e9d8a6] bg-[#faf2e0] px-5 py-4">
                         <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div className="font-semibold text-yellow-800">
+                            <div className="font-semibold text-[#8a6209]">
                                 Race is currently <strong>Ongoing</strong>. Finish the race before entering results.
                             </div>
                             <button
@@ -671,7 +672,7 @@ function AssignedPostRace() {
                                 onClick={handleFinishRace}
                                 disabled={!canFinishRace || saving === 'finish'}
                                 title={canFinishRace ? 'Finish race' : selectedRaceBlockingReason || 'Race cannot be finished yet.'}
-                                className="rounded bg-[var(--admin-primary)] px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                className="rounded-full bg-[var(--admin-primary)] px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {saving === 'finish' ? 'Finishing...' : 'Finish Race'}
                             </button>
@@ -680,7 +681,7 @@ function AssignedPostRace() {
                 )}
 
                 {selectedRace?.raceStatus === 'ResultPending' && activeTab === 'results' && (
-                    <div className="rounded-[8px] border border-blue-200 bg-blue-50 px-5 py-4 font-semibold text-blue-700">
+                    <div className="rounded-[8px] border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-5 py-4 font-semibold text-[var(--admin-primary)]">
                         Post-race report has already been sent to admin. Current status: <strong>{selectedRace.raceStatus}</strong>
                     </div>
                 )}
@@ -688,13 +689,13 @@ function AssignedPostRace() {
                 {/* ── Race selector ── */}
                 <div className="surface-card" style={{ padding: 0, overflow: 'hidden' }}>
                     <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--admin-border)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontWeight: 700, fontSize: 13, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Select Race</span>
-                        {loadingRaces && <span style={{ fontSize: 12, color: '#999' }}>Loading...</span>}
+                        <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--admin-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Select Race</span>
+                        {loadingRaces && <span style={{ fontSize: 12, color: 'var(--admin-muted)' }}>Loading...</span>}
                     </div>
 
                     <div style={{ display: 'flex', gap: 0, overflowX: 'auto', padding: '12px 16px', flexWrap: 'nowrap' }}>
                         {races.length === 0 && !loadingRaces && (
-                            <span style={{ fontSize: 13, color: '#999', padding: '8px 0' }}>No assigned races.</span>
+                            <span style={{ fontSize: 13, color: 'var(--admin-muted)', padding: '8px 0' }}>No assigned races.</span>
                         )}
                         {races.map((race) => {
                             const isSelected = String(selectedRaceId) === String(race.raceId);
@@ -706,23 +707,23 @@ function AssignedPostRace() {
                                     style={{
                                         display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
                                         padding: '10px 16px', marginRight: 8, borderRadius: 10, cursor: 'pointer',
-                                        border: isSelected ? '2px solid var(--admin-primary)' : '1px solid #dce5ef',
-                                        background: isSelected ? '#f8fbff' : '#fff',
+                                        border: isSelected ? '2px solid var(--admin-primary)' : '1px solid var(--admin-border)',
+                                        background: isSelected ? 'var(--admin-surface-strong)' : '#fff',
                                         flexShrink: 0, minWidth: 180, textAlign: 'left',
                                         transition: 'all 0.15s',
                                     }}
                                 >
-                                    <span style={{ fontWeight: 700, fontSize: 13, color: isSelected ? 'var(--admin-primary)' : '#2b1b1b', lineHeight: 1.3 }}>
+                                    <span style={{ fontWeight: 700, fontSize: 13, color: isSelected ? 'var(--admin-primary)' : 'var(--admin-ink)', lineHeight: 1.3 }}>
                                         {race.raceName}
                                     </span>
-                                    <span style={{ fontSize: 11, color: '#999', marginTop: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <span style={{ fontSize: 11, color: 'var(--admin-muted)', marginTop: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
                                         <FaMapMarkerAlt /> {race.location || 'N/A'}
                                     </span>
-                                    <span style={{ fontSize: 11, color: isSelected ? 'var(--admin-primary)' : '#aaa', marginTop: 2, fontWeight: 600 }}>
+                                    <span style={{ fontSize: 11, color: isSelected ? 'var(--admin-primary)' : 'var(--admin-muted)', marginTop: 2, fontWeight: 600 }}>
                                         {race.raceStatus}
                                     </span>
                                     {race.seasonStatus && (
-                                        <span style={{ fontSize: 11, color: race.seasonStatus === 'Active' ? 'var(--admin-primary)' : '#b91c1c', marginTop: 2, fontWeight: 600 }}>
+                                        <span style={{ fontSize: 11, color: race.seasonStatus === 'Active' ? 'var(--admin-primary)' : '#a4392f', marginTop: 2, fontWeight: 600 }}>
                                             Season: {race.seasonStatus}
                                         </span>
                                     )}
@@ -734,7 +735,7 @@ function AssignedPostRace() {
 
                 {/* No registrations warning */}
                 {registrations.length === 0 && !loadingRaceData && selectedRaceId && (
-                    <div className="flex items-start gap-3 rounded-[8px] border border-yellow-200 bg-yellow-50 p-5 text-yellow-800">
+                    <div className="flex items-start gap-3 rounded-[8px] border border-[#e9d8a6] bg-[#faf2e0] p-5 text-[#8a6209]">
                         <FaExclamationTriangle className="mt-1" />
                         <div>
                             <div className="font-bold">No registrations for this race.</div>
@@ -744,7 +745,7 @@ function AssignedPostRace() {
                 )}
 
                 {/* ── Tab bar ── */}
-                <div style={{ display: 'flex', gap: 4, borderBottom: '2px solid #dce5ef' }}>
+                <div style={{ display: 'flex', gap: 4, borderBottom: '2px solid var(--admin-border)' }}>
                     {TABS.map((tab) => {
                         const Icon = tab.icon;
                         const count = tab.key === 'results' ? results.length
@@ -763,7 +764,7 @@ function AssignedPostRace() {
                                     marginBottom: -2,
                                     background: 'transparent',
                                     fontWeight: isActive ? 800 : 600,
-                                    color: isActive ? 'var(--admin-primary)' : '#64748b',
+                                    color: isActive ? 'var(--admin-primary)' : 'var(--admin-muted)',
                                     fontSize: 14,
                                     cursor: 'pointer',
                                     transition: 'all 0.15s',
@@ -773,8 +774,8 @@ function AssignedPostRace() {
                                 {tab.label}
                                 <span style={{
                                     fontSize: 11, fontWeight: 700,
-                                    backgroundColor: isActive ? 'var(--admin-primary)' : '#dce5ef',
-                                    color: isActive ? '#fff' : '#64748b',
+                                    backgroundColor: isActive ? 'var(--admin-primary)' : 'var(--admin-surface-strong)',
+                                    color: isActive ? '#fff' : 'var(--admin-primary)',
                                     borderRadius: 20, padding: '1px 7px', marginLeft: 2,
                                 }}>
                                     {count}
@@ -795,12 +796,12 @@ function AssignedPostRace() {
                     <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
                         {/* Form */}
                         <form onSubmit={handleSaveResult} className="surface-card" style={{ padding: 24 }}>
-                            <h2 style={{ margin: '0 0 20px', fontSize: '1.1rem', fontWeight: 800, color: '#2b1b1b', display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <h2 style={{ margin: '0 0 20px', fontSize: '1.1rem', fontWeight: 800, color: 'var(--admin-ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <FaTrophy style={{ color: 'var(--admin-primary)' }} /> Result Entry
                             </h2>
 
                             {selectedRace && (
-                                <div style={{ background: '#faf6f5', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#64748b' }}>
+                                <div style={{ background: 'var(--admin-surface-strong)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: 'var(--admin-muted)' }}>
                                     Race: <strong style={{ color: 'var(--admin-primary)' }}>{selectedRace.raceName}</strong>
                                 </div>
                             )}
@@ -827,9 +828,9 @@ function AssignedPostRace() {
                                 </div>
 
                                 {selectedResultRegistration && (
-                                    <div style={{ background: '#fff8f6', border: '1px solid #dce5ef', borderRadius: 8, padding: 12, fontSize: 13 }}>
-                                        <strong style={{ color: '#2b1b1b' }}>{selectedResultRegistration.horseName}</strong>
-                                        <div style={{ color: '#64748b', marginTop: 2 }}>
+                                    <div style={{ background: 'var(--admin-surface-strong)', border: '1px solid var(--admin-border)', borderRadius: 8, padding: 12, fontSize: 13 }}>
+                                        <strong style={{ color: 'var(--admin-ink)' }}>{selectedResultRegistration.horseName}</strong>
+                                        <div style={{ color: 'var(--admin-muted)', marginTop: 2 }}>
                                             Status: {selectedResultRegistration.status || 'N/A'} · Owner {getOwnerLabel(selectedResultRegistration)} · Jockey {selectedResultRegistration.jockeyName || 'N/A'}
                                         </div>
                                     </div>
@@ -876,44 +877,49 @@ function AssignedPostRace() {
 
                         {/* Results table */}
                         <div className="surface-card" style={{ overflow: 'hidden' }}>
-                            <div style={{ padding: '16px 20px', borderBottom: '1px solid #dce5ef', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--admin-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <FaClipboardList style={{ color: 'var(--admin-primary)' }} /> Results
                                 </h2>
-                                <span style={{ fontSize: 12, color: '#999' }}>{selectedRace?.raceName || 'Select a race'}</span>
+                                <span style={{ fontSize: 12, color: 'var(--admin-muted)' }}>{selectedRace?.raceName || 'Select a race'}</span>
                             </div>
-                            <div style={{ overflowX: 'auto' }}>
-                                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
+                            <div className="overflow-x-auto">
+                                <table className="data-table" style={{ minWidth: 600 }}>
                                     <thead>
-                                        <tr style={{ background: '#faf6f5' }}>
-                                            {['Horse', 'Position', 'Time', 'Score', 'Status', 'Note', 'Action'].map(h => (
-                                                <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' }}>{h}</th>
-                                            ))}
+                                        <tr>
+                                            <th>Horse</th>
+                                            <th>Position</th>
+                                            <th>Time</th>
+                                            <th>Score</th>
+                                            <th>Status</th>
+                                            <th>Note</th>
+                                            <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {results.length === 0 ? (
-                                            <tr><td colSpan={7} style={{ padding: 24, textAlign: 'center', color: '#999' }}>No results submitted yet.</td></tr>
+                                            <tr><td colSpan={7} className="p-6 text-center text-[var(--admin-muted)]">No results submitted yet.</td></tr>
                                         ) : results.map((result) => (
-                                            <tr key={result.resultId} style={{ borderTop: '1px solid #f5f5f5' }}>
-                                                <td style={{ padding: '12px 14px' }}>
-                                                    <div style={{ fontWeight: 700, fontSize: 13 }}>{result.horseName}</div>
-                                                    <div style={{ fontSize: 11, color: '#999' }}>REG #{result.registrationId}</div>
+                                            <tr key={result.resultId}>
+                                                <td>
+                                                    <div className="font-bold text-[0.9rem]">{result.horseName}</div>
+                                                    <div className="text-xs text-[var(--admin-muted)]">REG #{result.registrationId}</div>
                                                 </td>
-                                                <td style={{ padding: '12px 14px', fontSize: 13 }}>{result.finishPosition ?? '-'}</td>
-                                                <td style={{ padding: '12px 14px', fontSize: 13 }}>{formatSeconds(result.finishTimeSeconds)}</td>
-                                                <td style={{ padding: '12px 14px', fontSize: 13 }}>{result.score ?? '-'}</td>
-                                                <td style={{ padding: '12px 14px' }}>
-                                                    <span className={`rounded px-3 py-1 text-xs font-bold ${getStatusClass(result.status)}`}>{result.status}</span>
+                                                <td className="text-sm">{result.finishPosition ?? '-'}</td>
+                                                <td className="text-sm">{formatSeconds(result.finishTimeSeconds)}</td>
+                                                <td className="text-sm">{result.score ?? '-'}</td>
+                                                <td>
+                                                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${getStatusClass(result.status)}`}>{result.status}</span>
                                                 </td>
-                                                <td style={{ padding: '12px 14px', fontSize: 12, color: '#64748b', maxWidth: 160 }}>{result.note || '-'}</td>
-                                                <td style={{ padding: '12px 14px' }}>
-                                                    <div style={{ display: 'flex', gap: 6 }}>
-                                                        <button type="button" onClick={() => handleEditResult(result)}
-                                                            style={{ padding: '5px 12px', borderRadius: 6, border: '1px solid #dce5ef', background: '#fff', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
-                                                            Edit
-                                                        </button>
-                                                    </div>
+                                                <td className="text-xs text-[var(--admin-muted)]" style={{ maxWidth: 160 }}>{result.note || '-'}</td>
+                                                <td>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleEditResult(result)}
+                                                        className="rounded-full border border-[var(--admin-border)] bg-white px-3.5 py-1.5 text-xs font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)]"
+                                                    >
+                                                        Edit
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))}
@@ -929,12 +935,12 @@ function AssignedPostRace() {
                     <div className="grid gap-6 xl:grid-cols-[380px_1fr]">
                         {/* Form */}
                         <form onSubmit={handleSaveViolation} className="surface-card" style={{ padding: 24 }}>
-                            <h2 style={{ margin: '0 0 20px', fontSize: '1.1rem', fontWeight: 800, color: '#2b1b1b', display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <h2 style={{ margin: '0 0 20px', fontSize: '1.1rem', fontWeight: 800, color: 'var(--admin-ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <FaGavel style={{ color: 'var(--admin-primary)' }} /> {isEditingViolation ? 'Edit Violation' : 'Log Violation'}
                             </h2>
 
                             {selectedRace && (
-                                <div style={{ background: '#faf6f5', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: '#64748b' }}>
+                                <div style={{ background: 'var(--admin-surface-strong)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 13, color: 'var(--admin-muted)' }}>
                                     Race: <strong style={{ color: 'var(--admin-primary)' }}>{selectedRace.raceName}</strong>
                                 </div>
                             )}
@@ -958,9 +964,9 @@ function AssignedPostRace() {
                                 </div>
 
                                 {selectedViolationRegistration && (
-                                    <div style={{ background: '#fff8f6', border: '1px solid #dce5ef', borderRadius: 8, padding: 12, fontSize: 13 }}>
-                                        <strong style={{ color: '#2b1b1b' }}>{selectedViolationRegistration.horseName}</strong>
-                                        <div style={{ color: '#64748b', marginTop: 2 }}>
+                                    <div style={{ background: 'var(--admin-surface-strong)', border: '1px solid var(--admin-border)', borderRadius: 8, padding: 12, fontSize: 13 }}>
+                                        <strong style={{ color: 'var(--admin-ink)' }}>{selectedViolationRegistration.horseName}</strong>
+                                        <div style={{ color: 'var(--admin-muted)', marginTop: 2 }}>
                                             Status: {selectedViolationRegistration.status || 'N/A'}
                                         </div>
                                     </div>
@@ -1014,7 +1020,7 @@ function AssignedPostRace() {
                                             title="Cancel edit"
                                             aria-label="Cancel edit"
                                             disabled={saving === 'violation'}
-                                            className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded border border-[#dce5ef] bg-white text-[#64748b] disabled:cursor-not-allowed disabled:opacity-60"
+                                            className="inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-[var(--admin-border)] bg-white text-[var(--admin-muted)] transition-colors hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                                         >
                                             <FaTimes />
                                         </button>
@@ -1025,28 +1031,28 @@ function AssignedPostRace() {
 
                         {/* Violations list */}
                         <div className="surface-card" style={{ overflow: 'hidden' }}>
-                            <div style={{ padding: '16px 20px', borderBottom: '1px solid #dce5ef' }}>
+                            <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--admin-border)' }}>
                                 <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <FaGavel style={{ color: 'var(--admin-primary)' }} /> Logged Violations
                                 </h2>
                             </div>
                             <div>
                                 {violations.length === 0 ? (
-                                    <div style={{ padding: 24, textAlign: 'center', color: '#999', fontSize: 13 }}>No violations logged.</div>
+                                    <div className="p-6 text-center text-sm text-[var(--admin-muted)]">No violations logged.</div>
                                 ) : violations.map((v) => (
-                                    <div key={v.violationId} style={{ padding: '16px 20px', borderBottom: '1px solid #f5f5f5' }}>
+                                    <div key={v.violationId} className="border-t border-[var(--admin-border)] px-5 py-4">
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
                                             <div>
-                                                <div style={{ fontWeight: 700, fontSize: 14, color: '#2b1b1b' }}>{v.violationType}</div>
-                                                <div style={{ fontSize: 13, color: '#64748b', marginTop: 3 }}>
+                                                <div className="text-sm font-bold text-[var(--admin-ink)]">{v.violationType}</div>
+                                                <div className="mt-0.5 text-[0.8rem] text-[var(--admin-muted)]">
                                                     {v.horseName} — {v.description || 'No description'}
                                                 </div>
-                                                <div style={{ fontSize: 11, color: '#999', marginTop: 4 }}>
+                                                <div className="mt-1 text-xs text-[var(--admin-muted)]">
                                                     {formatDateTime(v.createdAt)} · Penalty: {v.penaltyPoints ?? 0} pts
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                                                <span style={{ background: '#fde8e8', color: '#b91c1c', fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, flexShrink: 0 }}>
+                                                <span className="inline-flex flex-shrink-0 items-center rounded-full bg-[#f3e1df] px-2.5 py-1 text-[0.68rem] font-bold text-[#a4392f]">
                                                     {v.action}
                                                 </span>
                                                 <button
@@ -1055,7 +1061,7 @@ function AssignedPostRace() {
                                                     title="Edit violation"
                                                     aria-label="Edit violation"
                                                     disabled={loadingRaceData || Boolean(saving)}
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded border border-[#dce5ef] bg-white text-[var(--admin-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--admin-border)] bg-white text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                                                 >
                                                     <FaEdit />
                                                 </button>
@@ -1065,7 +1071,7 @@ function AssignedPostRace() {
                                                     title="Delete violation"
                                                     aria-label="Delete violation"
                                                     disabled={loadingRaceData || Boolean(saving)}
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded border border-red-200 bg-white text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#e3bcb7] bg-white text-[#a4392f] transition-colors hover:bg-[#f3e1df] disabled:cursor-not-allowed disabled:opacity-60"
                                                 >
                                                     <FaTrash />
                                                 </button>
@@ -1083,24 +1089,24 @@ function AssignedPostRace() {
                     <section className="surface-card" style={{ padding: 22 }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 18, flexWrap: 'wrap' }}>
                             <div>
-                                <h2 style={{ margin: 0, fontSize: '1.08rem', fontWeight: 800, color: '#2b1b1b', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <h2 style={{ margin: 0, fontSize: '1.08rem', fontWeight: 800, color: 'var(--admin-ink)', display: 'flex', alignItems: 'center', gap: 8 }}>
                                     <FaClipboardList style={{ color: 'var(--admin-primary)' }} /> Submit Post-Race Report
                                 </h2>
-                                <p style={{ margin: '6px 0 0', color: '#64748b', fontSize: 13, fontWeight: 600 }}>
+                                <p style={{ margin: '6px 0 0', color: 'var(--admin-muted)', fontSize: 13, fontWeight: 600 }}>
                                     {submitReportHint}
                                 </p>
                             </div>
                             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                                <span style={{ border: '1px solid #dce5ef', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 800, color: 'var(--admin-primary)', background: '#f8fbff' }}>
+                                <span className="rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-3 py-2 text-xs font-black text-[var(--admin-primary)]">
                                     Results: {results.length}
                                 </span>
-                                <span style={{ border: '1px solid #dce5ef', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 800, color: 'var(--admin-primary)', background: '#f8fbff' }}>
+                                <span className="rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-3 py-2 text-xs font-black text-[var(--admin-primary)]">
                                     Draft: {draftResultCount}
                                 </span>
-                                <span style={{ border: '1px solid #dce5ef', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 800, color: 'var(--admin-primary)', background: '#f8fbff' }}>
+                                <span className="rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-3 py-2 text-xs font-black text-[var(--admin-primary)]">
                                     Confirmed: {confirmedResultCount}
                                 </span>
-                                <span style={{ border: '1px solid #dce5ef', borderRadius: 8, padding: '8px 12px', fontSize: 12, fontWeight: 800, color: 'var(--admin-primary)', background: '#f8fbff' }}>
+                                <span className="rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-3 py-2 text-xs font-black text-[var(--admin-primary)]">
                                     Violations: {violations.length}
                                 </span>
                             </div>
@@ -1119,7 +1125,7 @@ function AssignedPostRace() {
                             />
                             <div style={{ alignItems: 'center', display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 10 }}>
                                 <button
-                                    className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded border border-[var(--admin-primary)] bg-white px-4 text-sm font-bold text-[var(--admin-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+                                    className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-full border border-[var(--admin-primary)] bg-white px-4 text-sm font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                                     disabled={saving === 'save-report' || loadingRaceData || !selectedRaceId || !canEnterResults || !trimmedReportContent}
                                     onClick={handleSavePostRaceReport}
                                     type="button"
@@ -1128,7 +1134,7 @@ function AssignedPostRace() {
                                     {saving === 'save-report' ? 'Saving...' : isEditingReport ? 'Update Report' : 'Save Report'}
                                 </button>
                                 {isEditingReport && (
-                                    <span style={{ color: '#64748b', fontSize: 12, fontWeight: 700 }}>
+                                    <span style={{ color: 'var(--admin-muted)', fontSize: 12, fontWeight: 700 }}>
                                         Editing report #{editingReportId}
                                     </span>
                                 )}
@@ -1139,7 +1145,7 @@ function AssignedPostRace() {
                             type="button"
                             onClick={handleSubmitPostRaceReport}
                             disabled={submitReportDisabled}
-                            className="mt-5 inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded bg-[var(--admin-primary)] px-6 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                            className="mt-5 inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--admin-primary)] px-6 text-sm font-bold text-white transition-colors hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             <FaCheck />
                             {saving === 'submit-report' ? 'Submitting...' : 'Submit Report to Admin'}
@@ -1156,28 +1162,28 @@ function AssignedPostRace() {
                     role="dialog"
                 >
                     <section
-                        className="grid w-[min(440px,100%)] gap-5 rounded-[8px] border border-[#dce5ef] bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.28)]"
+                        className="grid w-[min(440px,100%)] gap-5 rounded-[8px] border border-[var(--admin-border)] bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.28)]"
                         onClick={(event) => event.stopPropagation()}
                     >
                         <div className="grid gap-2">
-                            <h2 className="m-0 text-[1.15rem] font-black text-[#2b1b1b]">
+                            <h2 className="m-0 text-[1.15rem] font-black text-[var(--admin-ink)]">
                                 {confirmRequest.title}
                             </h2>
-                            <p className="m-0 text-[0.92rem] font-semibold leading-6 text-[#64748b]">
+                            <p className="m-0 text-[0.92rem] font-semibold leading-6 text-[var(--admin-muted)]">
                                 {confirmRequest.message}
                             </p>
                         </div>
 
                         <div className="flex justify-end gap-3 max-[520px]:flex-col">
                             <button
-                                className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md border border-[#dce5ef] bg-[#fffdfc] px-4 font-black text-[#2b1b1b] hover:bg-[var(--admin-surface-strong)]"
+                                className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-full border border-[var(--admin-border)] bg-white px-4 font-black text-[var(--admin-ink)] transition-colors hover:bg-[var(--admin-surface-strong)]"
                                 onClick={() => resolveConfirmRequest(false)}
                                 type="button"
                             >
                                 {confirmRequest.cancelLabel}
                             </button>
                             <button
-                                className={`inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md px-4 font-black text-white ${confirmToneClass[confirmRequest.tone] || confirmToneClass.primary}`}
+                                className={`inline-flex min-h-10 cursor-pointer items-center justify-center rounded-full px-4 font-black text-white transition-colors ${confirmToneClass[confirmRequest.tone] || confirmToneClass.primary}`}
                                 onClick={() => resolveConfirmRequest(true)}
                                 type="button"
                             >

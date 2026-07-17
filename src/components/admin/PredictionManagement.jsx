@@ -286,7 +286,7 @@ function PredictionManagement() {
         >
                 <section className={pageShellClass}>
                     <div>
-                        <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)] max-[820px]:text-[1.6rem]">
+                        <h1 className="page-title">
                             Prediction Management
                         </h1>
                     </div>

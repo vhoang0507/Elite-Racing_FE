@@ -154,10 +154,10 @@ function AdminRewardPayments() {
             <section className={pageShellClass}>
                 <div className="flex items-start justify-between gap-4 max-[820px]:flex-col">
                     <div>
-                        <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)] max-[820px]:text-[1.6rem]">
+                        <h1 className="page-title">
                             Reward Payments
                         </h1>
-                        <p className="mt-2 text-[0.92rem] font-semibold text-[var(--admin-muted)]">
+                        <p className="page-subtitle">
                             Review owner prize claims and mark approved payments as paid.
                         </p>
                     </div>

@@ -428,10 +428,10 @@ function ValidateResultDetail() {
                             <FaArrowLeft aria-hidden="true" className="h-3 w-3" />
                             Return
                         </Link>
-                        <h1 className="m-0 text-[1.9rem] leading-[1.15] text-[var(--admin-primary-dark)] max-[820px]:text-[1.5rem]">
+                        <h1 className="page-title">
                             {heading}
                         </h1>
-                        <p className="mt-2 max-w-[720px] text-[0.92rem] font-semibold leading-[1.45] text-[var(--admin-muted)]">
+                        <p className="page-subtitle max-w-[720px] leading-[1.45]">
                             {description}
                         </p>
                     </div>

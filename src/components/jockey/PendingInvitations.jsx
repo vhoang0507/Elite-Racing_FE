@@ -200,10 +200,10 @@ function PendingInvitations() {
         <JockeyLayout activeKey="invitations">
             <section className={pageShellClass}>
                 <div>
-                    <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)]">
+                    <h1 className="page-title">
                         Pending Invitations
                     </h1>
-                    <p className="mb-0 mt-1.5 font-[650] text-[var(--admin-muted)]">
+                    <p className="page-subtitle">
                         Review race invitations from horse owners and respond before expiration.
                     </p>
                 </div>

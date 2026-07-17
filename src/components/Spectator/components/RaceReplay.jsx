@@ -219,19 +219,20 @@ function RaceTrack({ runners, phase, raceMs, replayKey }) {
                         }
                     `}
                 </style>
+                {/* Straight home-stretch track surface (matches the straight-line horse motion below) */}
                 <div
                     style={{
                         position: 'absolute',
-                        inset: '4% 4%',
-                        borderRadius: 999,
-                        background: '#20282d',
-                        border: '4px solid rgba(255,255,255,0.9)',
-                        boxShadow: 'inset 0 0 0 6px rgba(255,255,255,0.18), inset 0 0 42px rgba(0,0,0,0.55)',
+                        inset: '10% 4%',
+                        borderRadius: 14,
+                        background: 'linear-gradient(180deg, #2b343a 0%, #20282d 55%, #232b30 100%)',
+                        border: '4px solid rgba(255,255,255,0.88)',
+                        boxShadow: 'inset 0 0 0 4px rgba(255,255,255,0.14), inset 0 0 42px rgba(0,0,0,0.5)',
                     }}
                 />
-                <div style={{ position: 'absolute', inset: '10% 7%', borderRadius: 999, border: '2px solid rgba(255,255,255,0.78)' }} />
-                <div style={{ position: 'absolute', inset: '17% 12%', borderRadius: 999, border: '2px solid rgba(255,255,255,0.72)' }} />
-                <div style={{ position: 'absolute', inset: '27% 28%', borderRadius: 999, background: '#172027', opacity: 0.94 }} />
+                {/* Top and bottom running rails */}
+                <div style={{ position: 'absolute', top: '13.5%', left: '5.5%', right: '5.5%', borderTop: '2px solid rgba(255,255,255,0.4)' }} />
+                <div style={{ position: 'absolute', bottom: '13.5%', left: '5.5%', right: '5.5%', borderTop: '2px solid rgba(255,255,255,0.4)' }} />
 
                 <div
                     style={{
@@ -347,8 +348,29 @@ function RaceTrack({ runners, phase, raceMs, replayKey }) {
                                                 ? `spectatorRaceHorseRun ${finishMs}ms linear forwards`
                                                 : 'none',
                                             animationDelay: '0ms',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            gap: 2,
                                         }}
                                     >
+                                        {runner.horseName && (
+                                            <span
+                                                style={{
+                                                    fontSize: 10,
+                                                    fontWeight: 800,
+                                                    color: '#fff',
+                                                    background: 'rgba(0,0,0,0.6)',
+                                                    padding: '1px 7px',
+                                                    borderRadius: 999,
+                                                    whiteSpace: 'nowrap',
+                                                    letterSpacing: 0.2,
+                                                    boxShadow: `0 0 0 1px ${color}`,
+                                                }}
+                                            >
+                                                {runner.horseName}
+                                            </span>
+                                        )}
                                         <HorseSilhouette color={color} />
                                     </div>
                                 </div>

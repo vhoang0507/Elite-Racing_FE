@@ -67,7 +67,7 @@ function HealthCertificateCell({ url }) {
 
     if (!url) {
         return (
-            <span className="inline-flex rounded border border-[#dbc3bf] bg-[#f3e8e6] px-2.5 py-1 text-xs font-bold text-[#7f645f]">
+            <span className="inline-flex rounded-full border border-[#e9d8a6] bg-[#faf2e0] px-2.5 py-1 text-xs font-bold text-[#8a6209]">
                 Not uploaded
             </span>
         );
@@ -76,11 +76,51 @@ function HealthCertificateCell({ url }) {
     return (
         <>
             <button type="button" className="inline-flex cursor-zoom-in items-center gap-2 border-0 bg-transparent p-0 font-bold text-[var(--admin-primary)] hover:underline" onClick={() => setLightboxSrc(resolvedUrl)}>
-                <img alt="Health certificate" className="h-8 w-11 rounded border border-[#dce5ef] object-cover" src={resolvedUrl} />
+                <img alt="Health certificate" className="h-8 w-11 rounded border border-[var(--admin-border)] object-cover" src={resolvedUrl} />
                 View
             </button>
             <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
         </>
+    );
+}
+
+const CHECKLIST_LABELS = ['Docs', 'Status', 'Health', 'Cert'];
+
+function ChecklistSummary({ checklist }) {
+    const items = checklist ?? [];
+    const total = items.length || CHECKLIST_LABELS.length;
+    const passed = items.filter(Boolean).length;
+    const tone =
+        passed === total
+            ? { bg: '#e8f7ee', text: '#16864f' }
+            : passed === 0
+                ? { bg: '#f3e1df', text: '#a4392f' }
+                : { bg: '#faf2e0', text: '#8a6209' };
+
+    return (
+        <div className="flex flex-col gap-1.5">
+            <span
+                className="inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold"
+                style={{ backgroundColor: tone.bg, color: tone.text }}
+            >
+                {passed}/{total} Passed
+            </span>
+            <div className="flex gap-1.5">
+                {items.map((item, idx) => (
+                    <span
+                        key={idx}
+                        title={`${item ? 'Passed' : 'Failed'}: ${CHECKLIST_LABELS[idx] || `Item ${idx + 1}`}`}
+                        className="cursor-help"
+                    >
+                        {item ? (
+                            <FaCheckCircle className="text-[#16864f]" size={13} />
+                        ) : (
+                            <FaTimesCircle className="text-[#a4392f]" size={13} />
+                        )}
+                    </span>
+                ))}
+            </div>
+        </div>
     );
 }
 
@@ -339,39 +379,40 @@ function PreRaceInspectionRegistry() {
                                 disabled={markingReady || !markReadyAllowed}
                                 onClick={handleMarkReady}
                                 title={markReadyAllowed ? 'Mark race ready' : getMarkReadyDisabledReason(selectedRace)}
-                                style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: 'var(--admin-primary)', color: '#fff', fontWeight: 700, fontSize: '0.88rem', cursor: markingReady || !markReadyAllowed ? 'not-allowed' : 'pointer', opacity: markingReady || !markReadyAllowed ? 0.7 : 1 }}
+                                className="inline-flex items-center gap-2 rounded-full bg-[var(--admin-primary)] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                {markingReady ? 'Processing...' : '✓ Mark Race Ready'}
+                                <FaCheckCircle />
+                                {markingReady ? 'Processing...' : 'Mark Race Ready'}
                             </button>
                         )}
                     </div>
                 </div>
 
                 {error && (
-                    <div className="mb-6 rounded-[8px] border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
+                    <div className="mb-6 rounded-[8px] border border-[#e3bcb7] bg-[#f3e1df] px-5 py-4 font-semibold text-[#a4392f]">
                         {error}
                     </div>
                 )}
 
                 {success && (
-                    <div className="mb-6 rounded-[8px] border border-green-200 bg-green-50 px-5 py-4 font-semibold text-green-700">
+                    <div className="mb-6 rounded-[8px] border border-[#bfe3cc] bg-[#e8f7ee] px-5 py-4 font-semibold text-[#16864f]">
                         {success}
                     </div>
                 )}
 
                 <div className="surface-card mb-8 p-6">
                     {loadingRace && !selectedRace ? (
-                        <div className="text-gray-500">
+                        <div className="text-[var(--admin-muted)]">
                             Loading selected race...
                         </div>
                     ) : (
                         <div className="grid gap-6 md:grid-cols-4">
                             <div className="md:col-span-2">
-                                <div className="text-xs font-semibold text-gray-400">
+                                <div className="text-xs font-semibold text-[var(--admin-muted)]">
                                     RACE
                                 </div>
 
-                                <h2 className="mt-1 text-lg font-bold text-[#2b1b1b]">
+                                <h2 className="mt-1 text-lg font-bold text-[var(--admin-ink)]">
                                     {selectedRace?.raceName ||
                                         report?.race?.raceName ||
                                         'Selected race'}
@@ -384,18 +425,18 @@ function PreRaceInspectionRegistry() {
                                 )}
 
                                 {selectedRace?.seasonStatus && (
-                                    <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${selectedRace.seasonStatus === 'Active' ? 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]' : 'bg-red-100 text-red-700'}`}>
+                                    <span className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-bold ${selectedRace.seasonStatus === 'Active' ? 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]' : 'bg-[#f3e1df] text-[#a4392f]'}`}>
                                         Season: {selectedRace.seasonStatus}
                                     </span>
                                 )}
 
                                 {selectedRace?.blockingReason && (
-                                    <p className="mt-2 text-sm font-semibold text-red-700">
+                                    <p className="mt-2 text-sm font-semibold text-[#a4392f]">
                                         {selectedRace.blockingReason}
                                     </p>
                                 )}
 
-                                <div className="mt-2 flex items-center gap-2 text-gray-500">
+                                <div className="mt-2 flex items-center gap-2 text-[var(--admin-muted)]">
                                     <FaMapMarkerAlt />
                                     {selectedRace?.location ||
                                         report?.race?.location ||
@@ -404,7 +445,7 @@ function PreRaceInspectionRegistry() {
                             </div>
 
                             <div>
-                                <div className="text-xs font-semibold text-gray-400">
+                                <div className="text-xs font-semibold text-[var(--admin-muted)]">
                                     TIME
                                 </div>
 
@@ -417,7 +458,7 @@ function PreRaceInspectionRegistry() {
                             </div>
 
                             <div>
-                                <div className="text-xs font-semibold text-gray-400">
+                                <div className="text-xs font-semibold text-[var(--admin-muted)]">
                                     DISTANCE
                                 </div>
 
@@ -461,16 +502,11 @@ function PreRaceInspectionRegistry() {
                                         type="button"
                                         key={option.key}
                                         onClick={() => setFilter(option.key)}
-                                        style={{
-                                            padding: '7px 16px',
-                                            borderRadius: 8,
-                                            fontSize: 13,
-                                            fontWeight: 700,
-                                            cursor: 'pointer',
-                                            border: filter === option.key ? 'none' : '1px solid #dce5ef',
-                                            background: filter === option.key ? 'var(--admin-primary)' : '#fff8f6',
-                                            color: filter === option.key ? '#fff' : 'var(--admin-primary)',
-                                        }}
+                                        className={`rounded-full px-4 py-1.5 text-[0.78rem] font-bold transition-colors ${
+                                            filter === option.key
+                                                ? 'bg-[var(--admin-primary)] text-white'
+                                                : 'border border-[var(--admin-border)] bg-white text-[var(--admin-primary)] hover:bg-[var(--admin-surface-strong)]'
+                                        }`}
                                     >
                                         {option.label} ({count ?? 0})
                                     </button>
@@ -486,12 +522,7 @@ function PreRaceInspectionRegistry() {
                                     <th>Horse</th>
                                     <th>Health Cert</th>
                                     <th>Reg Status</th>
-                                    <th>
-                                        <div>Checklist</div>
-                                        <div style={{ fontSize: 10, fontWeight: 400, color: '#999', marginTop: 4, lineHeight: 1.6 }}>
-                                            ① Docs &nbsp;② Status &nbsp;③ Health &nbsp;④ Cert
-                                        </div>
-                                    </th>
+                                    <th>Checklist</th>
                                     <th>Rule Ref</th>
                                     <th>Severity</th>
                                     <th>Details</th>
@@ -504,7 +535,7 @@ function PreRaceInspectionRegistry() {
                                 {loadingReport ? (
                                     <tr>
                                         <td
-                                            className="p-6 text-center text-gray-500"
+                                            className="p-6 text-center text-[var(--admin-muted)]"
                                             colSpan={9}
                                         >
                                             Loading inspection registry...
@@ -513,7 +544,7 @@ function PreRaceInspectionRegistry() {
                                 ) : rows.length === 0 ? (
                                     <tr>
                                         <td
-                                            className="p-6 text-center text-gray-500"
+                                            className="p-6 text-center text-[var(--admin-muted)]"
                                             colSpan={9}
                                         >
                                             No inspection items for this filter.
@@ -558,33 +589,7 @@ function PreRaceInspectionRegistry() {
                                                 </td>
 
                                                 <td className="px-4 py-3">
-                                                    <div className="flex gap-1">
-                                                        {(horse.checklist ?? []).map(
-                                                            (item, idx) => {
-                                                                const labels = [
-                                                                    'Valid registration documents',
-                                                                    'Registration status (Approved / JockeyInvited / ReadyToRace)',
-                                                                    'Horse health status',
-                                                                    'Health certificate uploaded',
-                                                                ];
-                                                                return item ? (
-                                                                    <FaCheckCircle
-                                                                        key={idx}
-                                                                        className="text-green-600"
-                                                                        title={labels[idx]}
-                                                                        style={{ cursor: 'help' }}
-                                                                    />
-                                                                ) : (
-                                                                    <FaTimesCircle
-                                                                        key={idx}
-                                                                        className="text-red-600"
-                                                                        title={`FAILED: ${labels[idx]}`}
-                                                                        style={{ cursor: 'help' }}
-                                                                    />
-                                                                );
-                                                            }
-                                                        )}
-                                                    </div>
+                                                    <ChecklistSummary checklist={horse.checklist} />
                                                 </td>
 
                                                 <td className="px-4 py-3 text-sm text-[var(--admin-muted)]">
@@ -620,13 +625,13 @@ function PreRaceInspectionRegistry() {
                                                 </td>
 
                                                 <td className="px-4 py-3" style={{ minWidth: 230 }}>
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                    <div className="flex flex-col gap-2">
                                                         <select
                                                             value={draft.status}
                                                             onChange={(event) =>
                                                                 handleDraftChange(horse.registrationId, 'status', event.target.value)
                                                             }
-                                                            style={{ fontSize: 13, padding: '6px 10px', borderRadius: 6, border: '1px solid #dce5ef', outline: 'none', width: '100%' }}
+                                                            className="w-full rounded-lg border border-[var(--admin-border)] px-2.5 py-1.5 text-[0.8rem] outline-none transition-colors focus:border-[var(--admin-primary)]"
                                                         >
                                                             {statusOptions.map((option) => (
                                                                 <option key={option.value} value={option.value}>
@@ -642,20 +647,14 @@ function PreRaceInspectionRegistry() {
                                                                 handleDraftChange(horse.registrationId, 'note', event.target.value)
                                                             }
                                                             placeholder="Inspection note"
-                                                            style={{ fontSize: 13, padding: '6px 10px', borderRadius: 6, border: '1px solid #dce5ef', outline: 'none', width: '100%' }}
+                                                            className="w-full rounded-lg border border-[var(--admin-border)] px-2.5 py-1.5 text-[0.8rem] outline-none transition-colors focus:border-[var(--admin-primary)]"
                                                         />
 
                                                         <button
                                                             type="button"
                                                             onClick={() => handleSaveInspection(horse.registrationId)}
                                                             disabled={savingId === horse.registrationId}
-                                                            style={{
-                                                                fontSize: 12, fontWeight: 700, padding: '6px 14px',
-                                                                borderRadius: 6, border: 'none', cursor: 'pointer',
-                                                                background: 'var(--admin-primary)', color: '#fff',
-                                                                alignSelf: 'flex-start',
-                                                                opacity: savingId === horse.registrationId ? 0.6 : 1,
-                                                            }}
+                                                            className="inline-flex w-fit items-center rounded-full bg-[var(--admin-primary)] px-3.5 py-1.5 text-[0.72rem] font-bold text-white transition-colors hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60"
                                                         >
                                                             {savingId === horse.registrationId ? 'Saving...' : 'Save'}
                                                         </button>

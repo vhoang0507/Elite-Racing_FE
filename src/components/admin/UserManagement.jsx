@@ -467,7 +467,7 @@ function UserManagement() {
         >
                 <section className={pageShellClass}>
                     <div className="flex items-center justify-between gap-5 max-[1180px]:flex-col max-[1180px]:items-stretch">
-                        <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)]">
+                        <h1 className="page-title">
                             User Management
                         </h1>
 

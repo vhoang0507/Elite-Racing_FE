@@ -221,10 +221,10 @@ function Notifications() {
         >
                 <section className={pageShellClass}>
                     <div>
-                        <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)] max-[820px]:text-[1.6rem]">
+                        <h1 className="page-title">
                             Notifications
                         </h1>
-                        <p className="mt-2 max-w-[520px] text-[0.92rem] font-semibold leading-[1.45] text-[var(--admin-muted)]">
+                        <p className="page-subtitle max-w-[520px] leading-[1.45]">
                             Monitor system updates, approvals, reports, and important activities.
                         </p>
                     </div>

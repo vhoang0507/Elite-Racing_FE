@@ -58,7 +58,7 @@ function canOpenPreRace(race) {
 function CertificatePreviewList({ certificates }) {
     if (!certificates?.length) {
         return (
-            <p className="m-0 mt-2 text-xs font-semibold text-gray-500">
+            <p className="m-0 mt-2 text-xs font-semibold text-[var(--admin-muted)]">
                 No health certificates uploaded yet.
             </p>
         );
@@ -72,7 +72,7 @@ function CertificatePreviewList({ certificates }) {
                 return (
                     <span
                         key={item.registrationId}
-                        className="inline-flex items-center gap-2 rounded border border-[#dce5ef] bg-white px-2 py-1 text-xs font-bold text-[var(--admin-primary)]"
+                        className="inline-flex items-center gap-2 rounded-full border border-[var(--admin-border)] bg-white px-2 py-1 text-xs font-bold text-[var(--admin-primary)]"
                     >
                         <img
                             src={resolvedUrl}
@@ -176,18 +176,18 @@ function AssignedPreRace() {
                 </p>
 
                 {error && (
-                    <div className="mt-6 rounded-[8px] border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
+                    <div className="mt-6 rounded-[8px] border border-[#e3bcb7] bg-[#f3e1df] px-5 py-4 font-semibold text-[#a4392f]">
                         {error}
                     </div>
                 )}
 
                 <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                     {loadingRaces ? (
-                        <div className="soft-card p-6 text-gray-500">
+                        <div className="soft-card p-6 text-[var(--admin-muted)]">
                             Loading assigned races...
                         </div>
                     ) : races.length === 0 ? (
-                        <div className="soft-card p-6 text-gray-500">
+                        <div className="soft-card p-6 text-[var(--admin-muted)]">
                             No scheduled races for pre-race inspection.
                         </div>
                     ) : (
@@ -207,18 +207,18 @@ function AssignedPreRace() {
                                             {formatStatus(getDisplayStatus(race))}
                                         </span>
                                         {race.seasonStatus && (
-                                            <span className="rounded-full bg-[#f8fbff] px-3 py-1 text-xs font-semibold text-[#64748b]">
+                                            <span className="rounded-full bg-[var(--admin-surface-strong)] px-3 py-1 text-xs font-semibold text-[var(--admin-primary)]">
                                                 Season: {race.seasonStatus}
                                             </span>
                                         )}
                                     </div>
 
-                                    <span className="font-bold">
+                                    <span className="font-bold text-[var(--admin-ink)]">
                                         #{race.raceId}
                                     </span>
                                 </div>
 
-                                <h2 className="mt-4 text-[1.05rem] font-bold text-[#2b1b1b]">
+                                <h2 className="mt-4 text-[1.05rem] font-bold text-[var(--admin-ink)]">
                                     {race.raceName}
                                 </h2>
 
@@ -228,15 +228,15 @@ function AssignedPreRace() {
                                     </p>
                                 )}
 
-                                <div className="mt-2 flex items-center gap-2 text-gray-500">
+                                <div className="mt-2 flex items-center gap-2 text-[var(--admin-muted)]">
                                     <FaMapMarkerAlt />
                                     {race.location || 'N/A'}
                                 </div>
 
-                                <div className="mt-4 border-t pt-3">
+                                <div className="mt-4 border-t border-[var(--admin-border)] pt-3">
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <div className="text-xs text-gray-400">
+                                            <div className="text-xs text-[var(--admin-muted)]">
                                                 TIME
                                             </div>
 
@@ -246,7 +246,7 @@ function AssignedPreRace() {
                                         </div>
 
                                         <div>
-                                            <div className="text-xs text-gray-400">
+                                            <div className="text-xs text-[var(--admin-muted)]">
                                                 DISTANCE
                                             </div>
 
@@ -257,7 +257,7 @@ function AssignedPreRace() {
                                     </div>
                                 </div>
 
-                                <div className="mt-4 rounded border border-[#dce5ef] bg-[#fff8f6] p-3">
+                                <div className="mt-4 rounded-lg border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] p-3">
                                     <div className="text-xs font-bold uppercase text-[var(--admin-primary)]">
                                         Health Certificates ({certificates.length})
                                     </div>

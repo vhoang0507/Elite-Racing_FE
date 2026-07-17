@@ -127,11 +127,11 @@ function RefereeNotification() {
         >
             <div className="min-h-screen bg-[#faf8f8] p-8">
                 <div className="mb-8">
-                    <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)]">
+                    <h1 className="page-title">
                         Referee Notifications
                     </h1>
 
-                    <p className="mt-2 text-[var(--admin-muted)]">
+                    <p className="page-subtitle">
                         Track race assignments, inspection updates, result submissions, and official race alerts.
                     </p>
                 </div>

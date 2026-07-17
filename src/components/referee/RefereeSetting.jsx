@@ -45,11 +45,11 @@ function RefereeSetting() {
         >
             <section className={pageShellClass}>
                 <div>
-                    <h1 className="m-0 text-[2rem] leading-[1.15] text-[var(--admin-primary-dark)]">
+                    <h1 className="page-title">
                         Settings
                     </h1>
 
-                    <p className="mt-1.5 font-[650] text-[var(--admin-muted)]">
+                    <p className="page-subtitle">
                         Manage referee account preferences, security, notifications, and profile details.
                     </p>
                 </div>
