@@ -1,6 +1,7 @@
 import {
     useEffect,
     useMemo,
+    useRef,
     useState,
 } from 'react';
 
@@ -348,6 +349,7 @@ function RaceManagement() {
     const [editError, setEditError] = useState('');
     const [editTournamentImageName, setEditTournamentImageName] = useState('');
     const [actionMenuId, setActionMenuId] = useState(null);
+    const actionMenuRef = useRef(null);
     const [statusActionError, setStatusActionError] = useState('');
     const [statusActionMessage, setStatusActionMessage] = useState('');
     const [updatingStatusId, setUpdatingStatusId] = useState(null);
@@ -357,6 +359,19 @@ function RaceManagement() {
     const [assignRefereeId, setAssignRefereeId] = useState('');
     const [assignError, setAssignError] = useState('');
     const [savingAssignment, setSavingAssignment] = useState(false);
+
+    useEffect(() => {
+        if (!actionMenuId) return undefined;
+
+        const handleClickOutside = (event) => {
+            if (actionMenuRef.current && !actionMenuRef.current.contains(event.target)) {
+                setActionMenuId(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [actionMenuId]);
 
     useEffect(() => {
         let isMounted = true;
@@ -800,8 +815,8 @@ function RaceManagement() {
                                                 )}
                                             </div>
 
-                                            <div className="relative mt-auto flex items-center justify-end gap-2 border-t border-[var(--admin-border)] pt-3">
-                                                <button aria-label={`View ${tournament.name}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-transparent text-[var(--admin-muted)] hover:bg-[#f3e6c2] hover:text-[var(--admin-primary)]" onClick={() => setSelectedTournament(tournament)} type="button">
+                                            <div className="mt-auto flex items-center justify-end gap-2 border-t border-[var(--admin-border)] pt-3">
+                                                <button aria-label={`View ${tournament.name}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-transparent text-[var(--admin-muted)] hover:bg-[#f3e6c2] hover:text-[var(--admin-primary)]" onClick={() => { setSelectedTournament(tournament); setActionMenuId(null); }} type="button">
                                                     <FaEye aria-hidden="true" />
                                                 </button>
                                                 <button
@@ -810,52 +825,55 @@ function RaceManagement() {
                                                     onClick={() => {
                                                         setEditTournamentImageName('');
                                                         setEditingTournament(tournament);
+                                                        setActionMenuId(null);
                                                     }}
                                                     type="button"
                                                 >
                                                     <FaEdit aria-hidden="true" />
                                                 </button>
-                                                <button aria-label={`Delete ${tournament.name}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-transparent text-[var(--admin-muted)] hover:bg-[#f3e1df] hover:text-[#a4392f]" onClick={() => handleDelete(tournament)} type="button">
+                                                <button aria-label={`Delete ${tournament.name}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-transparent text-[var(--admin-muted)] hover:bg-[#f3e1df] hover:text-[#a4392f]" onClick={() => { handleDelete(tournament); setActionMenuId(null); }} type="button">
                                                     <FaTrashAlt aria-hidden="true" />
                                                 </button>
-                                                <button
-                                                    aria-expanded={actionMenuId === tournament.id}
-                                                    aria-label={`More actions for ${tournament.name}`}
-                                                    className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-transparent text-[var(--admin-muted)] hover:bg-[#f3e6c2] hover:text-[var(--admin-primary)] disabled:cursor-not-allowed disabled:opacity-60"
-                                                    disabled={updatingStatusId === tournament.id}
-                                                    onClick={() => setActionMenuId((current) => (current === tournament.id ? null : tournament.id))}
-                                                    type="button"
-                                                >
-                                                    <FaEllipsisV aria-hidden="true" />
-                                                </button>
-                                                {actionMenuId === tournament.id && (
-                                                    <div className="absolute bottom-11 right-0 z-30 grid w-56 overflow-hidden rounded-md border border-[var(--admin-border)] bg-white py-1 text-left shadow-[0_14px_34px_rgba(11,27,52,0.18)]">
-                                                        <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#f8f3e2]" onClick={() => { setSelectedTournament(tournament); setActionMenuId(null); }} type="button">
-                                                            View Detail
-                                                        </button>
-                                                        <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#f8f3e2]" onClick={() => { setEditTournamentImageName(''); setEditingTournament(tournament); setActionMenuId(null); }} type="button">
-                                                            Edit Tournament
-                                                        </button>
-                                                        <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#f8f3e2]" onClick={() => { openAssignReferee(tournament); setActionMenuId(null); }} type="button">
-                                                            Assign/Reassign Referee
-                                                        </button>
-                                                        {statusActions.length > 0 && <span className="my-1 h-px bg-[var(--admin-border)]" />}
-                                                        {statusActions.map((nextStatus) => (
-                                                            <button
-                                                                className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#f3e6c2] disabled:cursor-not-allowed disabled:opacity-60"
-                                                                disabled={updatingStatusId === tournament.id}
-                                                                key={nextStatus}
-                                                                onClick={() => handleTournamentStatusChange(tournament, nextStatus)}
-                                                                type="button"
-                                                            >
-                                                                {statusActionLabels[nextStatus] || adminApi.formatters.formatTournamentStatus(nextStatus)}
+                                                <div className="relative" ref={actionMenuId === tournament.id ? actionMenuRef : null}>
+                                                    <button
+                                                        aria-expanded={actionMenuId === tournament.id}
+                                                        aria-label={`More actions for ${tournament.name}`}
+                                                        className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-transparent text-[var(--admin-muted)] hover:bg-[#f3e6c2] hover:text-[var(--admin-primary)] disabled:cursor-not-allowed disabled:opacity-60"
+                                                        disabled={updatingStatusId === tournament.id}
+                                                        onClick={() => setActionMenuId((current) => (current === tournament.id ? null : tournament.id))}
+                                                        type="button"
+                                                    >
+                                                        <FaEllipsisV aria-hidden="true" />
+                                                    </button>
+                                                    {actionMenuId === tournament.id && (
+                                                        <div className="absolute bottom-11 right-0 z-30 grid w-56 overflow-hidden rounded-md border border-[var(--admin-border)] bg-white py-1 text-left shadow-[0_14px_34px_rgba(11,27,52,0.18)]">
+                                                            <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#f8f3e2]" onClick={() => { setSelectedTournament(tournament); setActionMenuId(null); }} type="button">
+                                                                View Detail
                                                             </button>
-                                                        ))}
-                                                        {statusActions.length === 0 && (
-                                                            <span className="px-3 py-2 text-[0.76rem] font-bold text-[var(--admin-muted)]">No status actions</span>
-                                                        )}
-                                                    </div>
-                                                )}
+                                                            <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#f8f3e2]" onClick={() => { setEditTournamentImageName(''); setEditingTournament(tournament); setActionMenuId(null); }} type="button">
+                                                                Edit Tournament
+                                                            </button>
+                                                            <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#f8f3e2]" onClick={() => { openAssignReferee(tournament); setActionMenuId(null); }} type="button">
+                                                                Assign/Reassign Referee
+                                                            </button>
+                                                            {statusActions.length > 0 && <span className="my-1 h-px bg-[var(--admin-border)]" />}
+                                                            {statusActions.map((nextStatus) => (
+                                                                <button
+                                                                    className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-primary-dark)] hover:bg-[#f3e6c2] disabled:cursor-not-allowed disabled:opacity-60"
+                                                                    disabled={updatingStatusId === tournament.id}
+                                                                    key={nextStatus}
+                                                                    onClick={() => handleTournamentStatusChange(tournament, nextStatus)}
+                                                                    type="button"
+                                                                >
+                                                                    {statusActionLabels[nextStatus] || adminApi.formatters.formatTournamentStatus(nextStatus)}
+                                                                </button>
+                                                            ))}
+                                                            {statusActions.length === 0 && (
+                                                                <span className="px-3 py-2 text-[0.76rem] font-bold text-[var(--admin-muted)]">No status actions</span>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </article>
@@ -888,7 +906,7 @@ function RaceManagement() {
                     </section>
 
                     {assigningTournament && (
-                        <div className="fixed inset-0 z-20 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={closeAssignReferee} role="presentation">
+                        <div className="fixed inset-0 z-40 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={closeAssignReferee} role="presentation">
                             <form
                                 aria-label={`Assign referee for ${assigningTournament.name}`}
                                 className="grid w-[min(520px,100%)] gap-5 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 shadow-[0_20px_48px_rgba(45,32,32,0.22)]"
@@ -956,7 +974,7 @@ function RaceManagement() {
                     )}
 
                     {selectedTournament && (
-                        <div className="fixed inset-0 z-20 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={() => setSelectedTournament(null)} role="presentation">
+                        <div className="fixed inset-0 z-40 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={() => setSelectedTournament(null)} role="presentation">
                             <section
                                 aria-label={`Details for ${selectedTournament.name}`}
                                 className="grid max-h-[calc(100vh-48px)] w-[min(820px,100%)] gap-5 overflow-y-auto rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 shadow-[0_20px_48px_rgba(45,32,32,0.22)]"
@@ -1047,7 +1065,7 @@ function RaceManagement() {
                     )}
 
                     {editingTournament && (
-                        <div className="fixed inset-0 z-20 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={() => setEditingTournament(null)} role="presentation">
+                        <div className="fixed inset-0 z-40 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={() => setEditingTournament(null)} role="presentation">
                             <form
                                 aria-label={`Edit ${editingTournament.name}`}
                                 className="grid max-h-[calc(100vh-48px)] w-[min(760px,100%)] gap-5 overflow-y-auto rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 shadow-[0_20px_48px_rgba(45,32,32,0.22)]"

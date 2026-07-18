@@ -32,7 +32,6 @@ export default function JockeyAssignment() {
     const [isTournamentModalOpen, setIsTournamentModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [loadingDetail, setLoadingDetail] = useState(false);
-    const [error, setError] = useState('');
     const [search, setSearch] = useState('');
     const [healthStatus, setHealthStatus] = useState('');
     const [gridKey, setGridKey] = useState(0);
@@ -47,7 +46,7 @@ export default function JockeyAssignment() {
                 setRegistrations(list);
                 if (list.length > 0) setSelectedRegistrationId(list[0].registrationId);
             })
-            .catch((err) => { if (mounted) setError(err.message || 'Failed to load registrations'); })
+            .catch((err) => { if (mounted) showToast(err.message || 'Failed to load registrations', 'error'); })
             .finally(() => { if (mounted) setLoading(false); });
         return () => { mounted = false; };
     }, []);
@@ -67,7 +66,7 @@ export default function JockeyAssignment() {
                 setSummary(summaryData ?? { invitedCount: 0, pendingCount: 0, acceptedCount: 0 });
                 setInvitations(invitationsData ?? []);
             })
-            .catch((err) => setError(err.message || 'Failed to load jockey assignment details'))
+            .catch((err) => showToast(err.message || 'Failed to load jockey assignment details', 'error'))
             .finally(() => setLoadingDetail(false));
     }, [selectedRegistrationId]);
 
@@ -108,9 +107,7 @@ export default function JockeyAssignment() {
             ownerApi.getJockeyAssignmentRegistrations().then(setRegistrations).catch(() => {});
             showToast('Jockey officially confirmed! Your registration is ready for the race.', 'success', 'Jockey Confirmed');
         } catch (err) {
-            const msg = err.message || 'Failed to select official jockey';
-            setError(msg);
-            showToast(msg, 'error', 'Failed to Confirm Jockey');
+            showToast(err.message || 'Failed to select official jockey', 'error', 'Failed to Confirm Jockey');
         }
     };
 
@@ -139,10 +136,6 @@ export default function JockeyAssignment() {
                         </button>
                     )}
                 </div>
-
-                {error && (
-                    <div style={styles.errorBar}>{error}</div>
-                )}
 
                 {loading ? (
                     <div style={styles.emptyBox}>

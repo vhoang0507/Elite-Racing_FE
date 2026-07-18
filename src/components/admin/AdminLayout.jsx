@@ -13,7 +13,6 @@ import {
     FaDollarSign,
     FaFlagCheckered,
     FaPlus,
-    FaQuestionCircle,
     FaSearch,
     FaSignOutAlt,
     FaTools,
@@ -272,13 +271,6 @@ function AdminLayout({
                 </Link>
 
                 <div className="role-sidebar-actions">
-                    <button
-                        className="role-sidebar-action"
-                        type="button"
-                    >
-                        <FaQuestionCircle aria-hidden="true" className="h-4 w-4" />
-                        <span>Support</span>
-                    </button>
                     <button
                         className="role-sidebar-action"
                         onClick={handleLogout}

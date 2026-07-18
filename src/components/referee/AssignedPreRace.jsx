@@ -8,6 +8,8 @@ import {
 import { refereeApi } from '../../api/refereeApi';
 import { resolveFileUrl } from '../../api/uploadApi';
 import RefereeLayout from './RefereeLayout';
+import Toast from '../shared/Toast';
+import { useToast } from '../shared/useToast';
 
 function formatDateTime(value) {
     if (!value) return 'N/A';
@@ -98,14 +100,13 @@ function AssignedPreRace() {
     const [races, setRaces] = useState([]);
     const [certificatesByRace, setCertificatesByRace] = useState({});
     const [loadingRaces, setLoadingRaces] = useState(true);
-    const [error, setError] = useState('');
+    const { toast, showToast, hideToast } = useToast();
 
     useEffect(() => {
         let ignore = false;
 
         async function loadRaces() {
             setLoadingRaces(true);
-            setError('');
             setCertificatesByRace({});
 
             try {
@@ -142,7 +143,7 @@ function AssignedPreRace() {
                 });
             } catch (err) {
                 if (!ignore) {
-                    setError(err.message || 'Failed to load assigned races.');
+                    showToast(err.message || 'Failed to load assigned races.', 'error');
                 }
             } finally {
                 if (!ignore) {
@@ -166,6 +167,12 @@ function AssignedPreRace() {
 
     return (
         <RefereeLayout activeKey="pre-race">
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                title={toast.title}
+                onClose={hideToast}
+            />
             <section className="page-shell">
                 <h1 className="page-title">
                     Pre-Race Tournaments
@@ -174,12 +181,6 @@ function AssignedPreRace() {
                 <p className="page-subtitle">
                     Select a tournament race to open its inspection registry on a separate page.
                 </p>
-
-                {error && (
-                    <div className="mt-6 rounded-[8px] border border-[#e3bcb7] bg-[#f3e1df] px-5 py-4 font-semibold text-[#a4392f]">
-                        {error}
-                    </div>
-                )}
 
                 <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                     {loadingRaces ? (

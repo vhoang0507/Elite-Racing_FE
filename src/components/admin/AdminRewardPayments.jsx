@@ -16,6 +16,7 @@ import { adminApi } from '../../api/adminApi';
 import {
     confirmAdminAction,
     showAdminSuccess,
+    showAdminError,
 } from '../../utils/adminFeedback';
 
 import AdminLayout from './AdminLayout';
@@ -70,19 +71,17 @@ function AdminRewardPayments() {
     const [rewards, setRewards] = useState([]);
     const [statusFilter, setStatusFilter] = useState('');
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
     const [actionLoadingId, setActionLoadingId] = useState('');
 
     const loadRewards = useCallback(async () => {
         setLoading(true);
-        setError('');
 
         try {
             const payload = await adminApi.getAdminRewards(statusFilter || undefined);
             setRewards(Array.isArray(payload) ? payload : []);
         } catch (err) {
             setRewards([]);
-            setError(err.message || 'Failed to load reward payments.');
+            showAdminError(err.message || 'Failed to load reward payments.');
         } finally {
             setLoading(false);
         }
@@ -135,7 +134,6 @@ function AdminRewardPayments() {
         }
 
         setActionLoadingId(`${action}-${id}`);
-        setError('');
 
         try {
             const response = await copy.run();
@@ -143,7 +141,7 @@ function AdminRewardPayments() {
             showAdminSuccess(successMessage, action === 'approve' ? 'Approved' : 'Rejected');
             await loadRewards();
         } catch (err) {
-            setError(err.message || `Failed to ${action} reward payment.`);
+            showAdminError(err.message || `Failed to ${action} reward payment.`);
         } finally {
             setActionLoadingId('');
         }
@@ -187,12 +185,6 @@ function AdminRewardPayments() {
                         </article>
                     ))}
                 </section>
-
-                {error && (
-                    <section className="rounded-md border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-[0.86rem] font-bold text-[var(--admin-primary)]">
-                        {error}
-                    </section>
-                )}
 
                 <section className={panelClass}>
                     <div className="flex min-h-[64px] items-center justify-between gap-4 border-b border-[var(--admin-border)] px-5 py-4 max-[720px]:flex-col max-[720px]:items-stretch">

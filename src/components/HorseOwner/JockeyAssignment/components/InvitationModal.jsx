@@ -5,6 +5,8 @@ import {
     formatCurrencyAmount,
     parseCurrency,
 } from "../../../../utils/currency";
+import Toast from "../../../shared/Toast";
+import { useToast } from "../../../shared/useToast";
 
 export default function InvitationModal({ jockey, registrationId, tournamentName, onClose, onSent }) {
     const [feeAmount, setFeeAmount] = useState(formatCurrencyAmount(500));
@@ -12,14 +14,13 @@ export default function InvitationModal({ jockey, registrationId, tournamentName
         `Dear ${jockey?.fullName ?? ''},\n\nWe would love for you to ride our horse in the upcoming race...`
     );
     const [sending, setSending] = useState(false);
-    const [error, setError] = useState('');
+    const { toast, showToast, hideToast } = useToast();
 
     if (!jockey) return null;
 
     const handleSend = async () => {
         if (!registrationId) return;
         setSending(true);
-        setError('');
         try {
             await ownerApi.sendJockeyInvitation(registrationId, {
                 jockeyId: jockey.jockeyId,
@@ -28,7 +29,7 @@ export default function InvitationModal({ jockey, registrationId, tournamentName
             });
             onSent?.(jockey.fullName);
         } catch (err) {
-            setError(err.message || 'Failed to send invitation');
+            showToast(err.message || 'Failed to send invitation', 'error');
         } finally {
             setSending(false);
         }
@@ -36,6 +37,7 @@ export default function InvitationModal({ jockey, registrationId, tournamentName
 
     return (
         <div style={styles.overlay} onClick={onClose}>
+            <Toast message={toast.message} type={toast.type} title={toast.title} onClose={hideToast} />
             <div style={styles.modal} onClick={e => e.stopPropagation()}>
 
                 <div style={styles.header}>
@@ -85,8 +87,6 @@ export default function InvitationModal({ jockey, registrationId, tournamentName
                         style={{ ...styles.input, height: "100px", resize: "vertical" }}
                     />
                 </div>
-
-                {error && <p style={{ color: "#a4392f", fontSize: "12px", margin: "0 0 12px" }}>{error}</p>}
 
                 <div style={styles.footer}>
                     <span style={{ fontWeight: "bold", color: "#16305c" }}>Elite Racing League</span>

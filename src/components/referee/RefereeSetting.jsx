@@ -11,6 +11,8 @@ import {
 
 import { refereeApi } from '../../api/refereeApi';
 import RefereeLayout from './RefereeLayout';
+import Toast from '../shared/Toast';
+import { useToast } from '../shared/useToast';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
 const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]';
@@ -18,17 +20,16 @@ const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-
 function RefereeSetting() {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const { toast, showToast, hideToast } = useToast();
 
     const loadProfile = async () => {
         setLoading(true);
-        setError('');
 
         try {
             const data = await refereeApi.getRefereeProfile();
             setProfile(data);
         } catch (err) {
-            setError(err.message || 'Failed to load account profile.');
+            showToast(err.message || 'Failed to load account profile.', 'error');
         } finally {
             setLoading(false);
         }
@@ -43,6 +44,12 @@ function RefereeSetting() {
             activeKey="settings"
             searchPlaceholder="Search records, horses, races..."
         >
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                title={toast.title}
+                onClose={hideToast}
+            />
             <section className={pageShellClass}>
                 <div>
                     <h1 className="page-title">
@@ -53,12 +60,6 @@ function RefereeSetting() {
                         Manage referee account preferences, security, notifications, and profile details.
                     </p>
                 </div>
-
-                {error && (
-                    <div className="rounded-[var(--admin-radius)] border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
-                        {error}
-                    </div>
-                )}
 
                 <div className="grid grid-cols-[220px_1fr] gap-6 max-lg:grid-cols-1">
                     <div className={`${panelClass} h-fit p-3`}>

@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FaCamera, FaCheckCircle, FaExclamationTriangle, FaHorseHead, FaNotesMedical } from "react-icons/fa";
+import { FaCamera, FaExclamationTriangle, FaHorseHead, FaNotesMedical } from "react-icons/fa";
 import HorseOwnerLayout from "../HorseOwnerLayout";
 import { ownerApi } from "../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../api/handleOwnerAccessError";
 import { uploadFile, resolveFileUrl } from "../../../api/uploadApi";
+import Toast from "../../shared/Toast";
+import { useToast } from "../../shared/useToast";
 
 const MAX_FILE_MB = 5;
 
@@ -89,8 +91,7 @@ export default function HorseEdit() {
     const [horseImagePreview, setHorseImagePreview] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState(false);
+    const { toast, showToast, hideToast } = useToast();
 
     useEffect(() => {
         ownerApi.getHorseBreeds().then(setBreeds).catch(() => { });
@@ -109,7 +110,7 @@ export default function HorseEdit() {
                 if (horse.imageUrl) setHorseImagePreview(resolveFileUrl(horse.imageUrl));
             })
             .catch(err => {
-                if (!handleOwnerAccessError(err, navigate)) setError("Failed to load horse.");
+                if (!handleOwnerAccessError(err, navigate)) showToast("Failed to load horse.", "error");
             })
             .finally(() => setLoading(false));
     }, [horseId]);
@@ -134,12 +135,10 @@ export default function HorseEdit() {
     };
 
     const handleSubmit = async () => {
-        setError("");
-        setSuccess(false);
         const errs = validateHorse(form, horseImageFile);
         setFieldErrors(errs);
         if (Object.keys(errs).length > 0) {
-            setError("Please fix the highlighted errors before saving.");
+            showToast("Please fix the highlighted errors before saving.", "error");
             return;
         }
 
@@ -160,10 +159,10 @@ export default function HorseEdit() {
                 achievementSummary: form.achievementSummary,
                 imageUrl,
             });
-            setSuccess(true);
+            showToast("Saved! Redirecting...", "success");
             setTimeout(() => navigate(`/owner/horses/${horseId}`), 800);
         } catch (err) {
-            setError(err.message || "Failed to update horse.");
+            showToast(err.message || "Failed to update horse.", "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -176,6 +175,7 @@ export default function HorseEdit() {
 
     return (
         <HorseOwnerLayout activeKey="my-horse">
+            <Toast message={toast.message} type={toast.type} title={toast.title} onClose={hideToast} />
             <section style={styles.page}>
                 <button type="button" onClick={() => navigate(`/owner/horses/${horseId}`)} style={styles.backLink}>
                     ← Back to Detail
@@ -299,18 +299,6 @@ export default function HorseEdit() {
 
                 {!loading && (
                     <div style={styles.actionBar}>
-                        {error && (
-                            <span style={{ ...styles.errorMsg, display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                                <FaExclamationTriangle aria-hidden="true" />
-                                {error}
-                            </span>
-                        )}
-                        {success && (
-                            <span style={{ ...styles.successMsg, display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                                <FaCheckCircle aria-hidden="true" />
-                                Saved! Redirecting...
-                            </span>
-                        )}
                         <button onClick={() => navigate(`/owner/horses/${horseId}`)} style={styles.cancelBtn}>Cancel</button>
                         <button onClick={handleSubmit} disabled={isSubmitting}
                             style={{ ...styles.saveBtn, opacity: isSubmitting ? 0.6 : 1 }}>

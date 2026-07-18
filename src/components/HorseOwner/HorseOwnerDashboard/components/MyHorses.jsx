@@ -43,7 +43,7 @@ export default function MyHorses() {
                                 }}>
                                     {horse.healthStatus}
                                 </span>
-                                <span style={styles.tag}>{horse.age} yrs</span>
+                                <span style={styles.tag}>{horse.age} years</span>
                                 <span style={styles.tag}>{horse.weightKg}kg</span>
                             </div>
                             {horse.healthCertificateImageUrl ? (

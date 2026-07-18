@@ -136,8 +136,6 @@ function AssignedPostRace() {
     const [loadingRaces, setLoadingRaces] = useState(true);
     const [loadingRaceData, setLoadingRaceData] = useState(false);
     const [saving, setSaving] = useState('');
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
     const [confirmRequest, setConfirmRequest] = useState(null);
     const { toast, showToast, hideToast } = useToast();
 
@@ -204,7 +202,6 @@ function AssignedPostRace() {
 
     const loadAssignedRaces = useCallback(async (ignoreRef = { current: false }) => {
         setLoadingRaces(true);
-        setError('');
         try {
             const data = await refereeApi.getAssignedRacesWithLifecycle();
             if (ignoreRef.current) return;
@@ -223,17 +220,15 @@ function AssignedPostRace() {
                 return nextRaces[0]?.raceId ?? null;
             });
         } catch (err) {
-            if (!ignoreRef.current) setError(err.message || 'Failed to load races.');
+            if (!ignoreRef.current) showToast(err.message || 'Failed to load races.', 'error');
         } finally {
             if (!ignoreRef.current) setLoadingRaces(false);
         }
-    }, [initialRaceId]);
+    }, [initialRaceId, showToast]);
 
     async function loadRaceWorkflowData(raceId, ignoreRef = { current: false }) {
         if (!raceId) return;
         setLoadingRaceData(true);
-        setError('');
-        setSuccess('');
         try {
             const [registrationData, resultData, violationData, reportData] = await Promise.all([
                 refereeApi.getRaceRegistrations(raceId),
@@ -257,7 +252,7 @@ function AssignedPostRace() {
             setReportContent(postRaceReport?.reportContent ?? '');
             setEditingReportId(postRaceReport?.reportId ? String(postRaceReport.reportId) : '');
         } catch (err) {
-            if (!ignoreRef.current) setError(err.message || 'Failed to load race data.');
+            if (!ignoreRef.current) showToast(err.message || 'Failed to load race data.', 'error');
         } finally {
             if (!ignoreRef.current) setLoadingRaceData(false);
         }
@@ -357,14 +352,12 @@ function AssignedPostRace() {
 
     const handleSavePostRaceReport = async () => {
         setSaving('save-report');
-        setError('');
-        setSuccess('');
 
         try {
             await persistPostRaceReport();
-            setSuccess(isEditingReport ? 'Post-race report updated successfully.' : 'Post-race report saved successfully.');
+            showToast(isEditingReport ? 'Post-race report updated successfully.' : 'Post-race report saved successfully.', 'success');
         } catch (err) {
-            setError(err.message || 'Failed to save post-race report.');
+            showToast(err.message || 'Failed to save post-race report.', 'error');
         } finally {
             setSaving('');
         }
@@ -373,8 +366,6 @@ function AssignedPostRace() {
     const handleStartRace = async () => {
         if (!selectedRaceId) return;
         setSaving('start');
-        setError('');
-        setSuccess('');
         try {
             const updatedLifecycle = await refereeApi.startRace(selectedRaceId);
             setRaces((prev) =>
@@ -393,9 +384,9 @@ function AssignedPostRace() {
                         : race
                 )
             );
-            setSuccess('Race started! Status is now Ongoing.');
+            showToast('Race started! Status is now Ongoing.', 'success');
         } catch (err) {
-            setError(err.message || 'Failed to start race.');
+            showToast(err.message || 'Failed to start race.', 'error');
         } finally {
             setSaving('');
         }
@@ -404,8 +395,6 @@ function AssignedPostRace() {
     const handleFinishRace = async () => {
         if (!selectedRaceId) return;
         setSaving('finish');
-        setError('');
-        setSuccess('');
         try {
             const updatedLifecycle = await refereeApi.finishRace(selectedRaceId);
             setRaces((prev) =>
@@ -425,9 +414,9 @@ function AssignedPostRace() {
                 )
             );
             await loadRaceWorkflowData(selectedRaceId);
-            setSuccess('Race marked as Finished. You can now enter results.');
+            showToast('Race marked as Finished. You can now enter results.', 'success');
         } catch (err) {
-            setError(err.message || 'Failed to finish race.');
+            showToast(err.message || 'Failed to finish race.', 'error');
         } finally {
             setSaving('');
         }
@@ -436,8 +425,8 @@ function AssignedPostRace() {
     const handleSaveResult = async (e) => {
         e.preventDefault();
         const msg = validateResultForm();
-        if (msg) { setError(msg); setSuccess(''); return; }
-        setSaving('result'); setError(''); setSuccess('');
+        if (msg) { showToast(msg, 'error'); return; }
+        setSaving('result');
         try {
             await refereeApi.saveRaceResult(selectedRaceId, {
                 registrationId: Number(resultForm.registrationId),
@@ -449,12 +438,13 @@ function AssignedPostRace() {
             await refreshResults();
             setResultForm((p) => ({ ...emptyResultForm, registrationId: p.registrationId }));
             setEditingResultId('');
-            setSuccess(isEditingResult
+            showToast(isEditingResult
                 ? 'Result draft changes saved. Submit the post-race report to send it to admin.'
-                : 'Result saved as draft. Submit the post-race report to send it to admin.'
+                : 'Result saved as draft. Submit the post-race report to send it to admin.',
+                'success'
             );
         } catch (err) {
-            setError(err.message || 'Failed to save result.');
+            showToast(err.message || 'Failed to save result.', 'error');
         } finally { setSaving(''); }
     };
 
@@ -467,14 +457,13 @@ function AssignedPostRace() {
             score: result.score ?? '',
             note: result.note ?? '',
         });
-        setSuccess('Editing result — update fields and save.');
-        setError('');
+        showToast('Editing result — update fields and save.', 'info');
     };
 
     const handleSaveViolation = async (e) => {
         e.preventDefault();
         const msg = validateViolationForm();
-        if (msg) { setError(msg); setSuccess(''); return; }
+        if (msg) { showToast(msg, 'error'); return; }
 
         if (isEditingViolation) {
             const confirmed = await requestViolationConfirm({
@@ -486,7 +475,7 @@ function AssignedPostRace() {
             if (!confirmed) return;
         }
 
-        setSaving('violation'); setError(''); setSuccess('');
+        setSaving('violation');
         const payload = {
             registrationId: Number(violationForm.registrationId),
             violationType: violationForm.violationType.trim(),
@@ -503,13 +492,13 @@ function AssignedPostRace() {
             await refreshViolations();
             setViolationForm((p) => ({ ...emptyViolationForm, registrationId: p.registrationId }));
             setEditingViolationId('');
-            const successMessage = isEditingViolation ? 'Violation updated successfully.' : 'Violation created.';
-            setSuccess(successMessage);
-            if (isEditingViolation) {
-                showToast(successMessage, 'success', 'Updated');
-            }
+            showToast(
+                isEditingViolation ? 'Violation updated successfully.' : 'Violation created.',
+                'success',
+                isEditingViolation ? 'Updated' : 'Created'
+            );
         } catch (err) {
-            setError(err.message || (isEditingViolation ? 'Failed to update violation.' : 'Failed to create violation.'));
+            showToast(err.message || (isEditingViolation ? 'Failed to update violation.' : 'Failed to create violation.'), 'error');
         } finally { setSaving(''); }
     };
 
@@ -522,15 +511,12 @@ function AssignedPostRace() {
             action: violation.action ?? VIOLATION_ACTIONS.warning,
             penaltyPoints: violation.penaltyPoints ?? '',
         });
-        setSuccess('Editing violation - update fields and save.');
-        setError('');
+        showToast('Editing violation - update fields and save.', 'info');
     };
 
     const handleCancelViolationEdit = () => {
         setViolationForm((p) => ({ ...emptyViolationForm, registrationId: p.registrationId }));
         setEditingViolationId('');
-        setError('');
-        setSuccess('');
     };
 
     const handleDeleteViolation = async (violation) => {
@@ -545,8 +531,6 @@ function AssignedPostRace() {
 
         const savingKey = `delete-violation-${violation.violationId}`;
         setSaving(savingKey);
-        setError('');
-        setSuccess('');
         try {
             await refereeApi.deleteViolation(selectedRaceId, violation.violationId);
             await refreshViolations();
@@ -554,11 +538,9 @@ function AssignedPostRace() {
                 setViolationForm((p) => ({ ...emptyViolationForm, registrationId: p.registrationId }));
                 setEditingViolationId('');
             }
-            const successMessage = 'Violation deleted successfully.';
-            setSuccess(successMessage);
-            showToast(successMessage, 'success', 'Deleted');
+            showToast('Violation deleted successfully.', 'success', 'Deleted');
         } catch (err) {
-            setError(err.message || 'Failed to delete violation.');
+            showToast(err.message || 'Failed to delete violation.', 'error');
         } finally {
             setSaving('');
         }
@@ -567,17 +549,15 @@ function AssignedPostRace() {
     const handleSubmitPostRaceReport = async () => {
         if (!selectedRaceId) return;
         if (results.length === 0) {
-            setError('Save race results before submitting.');
-            setSuccess('');
+            showToast('Save race results before submitting.', 'error');
             return;
         }
         if (!trimmedReportContent) {
-            setError('Write the post-race report content before submitting.');
-            setSuccess('');
+            showToast('Write the post-race report content before submitting.', 'error');
             return;
         }
 
-        setSaving('submit-report'); setError(''); setSuccess('');
+        setSaving('submit-report');
         try {
             await persistPostRaceReport();
             const updatedLifecycle = await refereeApi.confirmAllRaceResults(selectedRaceId);
@@ -599,9 +579,9 @@ function AssignedPostRace() {
             );
             await loadRaceWorkflowData(selectedRaceId);
             setActiveTab('results');
-            setSuccess(`Post-race report submitted to admin with ${results.length} result${results.length === 1 ? '' : 's'} and ${violations.length} violation${violations.length === 1 ? '' : 's'}.`);
+            showToast(`Post-race report submitted to admin with ${results.length} result${results.length === 1 ? '' : 's'} and ${violations.length} violation${violations.length === 1 ? '' : 's'}.`, 'success');
         } catch (err) {
-            setError(err.message || 'Failed to submit post-race report.');
+            showToast(err.message || 'Failed to submit post-race report.', 'error');
         } finally { setSaving(''); }
     };
 
@@ -625,16 +605,6 @@ function AssignedPostRace() {
                 </div>
 
                 {/* Alerts */}
-                {error && (
-                    <div className="rounded-[8px] border border-[#e3bcb7] bg-[#f3e1df] px-5 py-4 font-semibold text-[#a4392f]">
-                        {error}
-                    </div>
-                )}
-                {success && (
-                    <div className="rounded-[8px] border border-[#bfe3cc] bg-[#e8f7ee] px-5 py-4 font-semibold text-[#16864f]">
-                        {success}
-                    </div>
-                )}
                 {selectedRaceBlockingReason && (
                     <div className="rounded-[8px] border border-[#e3bcb7] bg-[#f3e1df] px-5 py-4 font-semibold text-[#a4392f]">
                         {selectedRaceBlockingReason}
@@ -703,7 +673,7 @@ function AssignedPostRace() {
                                 <button
                                     type="button"
                                     key={race.raceId}
-                                    onClick={() => { setSelectedRaceId(race.raceId); setError(''); setSuccess(''); }}
+                                    onClick={() => setSelectedRaceId(race.raceId)}
                                     style={{
                                         display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
                                         padding: '10px 16px', marginRight: 8, borderRadius: 10, cursor: 'pointer',
@@ -755,7 +725,7 @@ function AssignedPostRace() {
                             <button
                                 key={tab.key}
                                 type="button"
-                                onClick={() => { setActiveTab(tab.key); setError(''); setSuccess(''); }}
+                                onClick={() => setActiveTab(tab.key)}
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: 7,
                                     padding: '10px 20px',
@@ -903,7 +873,7 @@ function AssignedPostRace() {
                                             <tr key={result.resultId}>
                                                 <td>
                                                     <div className="font-bold text-[0.9rem]">{result.horseName}</div>
-                                                    <div className="text-xs text-[var(--admin-muted)]">REG #{result.registrationId}</div>
+                                                    <div className="text-xs text-[var(--admin-muted)]">Registration #{result.registrationId}</div>
                                                 </td>
                                                 <td className="text-sm">{result.finishPosition ?? '-'}</td>
                                                 <td className="text-sm">{formatSeconds(result.finishTimeSeconds)}</td>

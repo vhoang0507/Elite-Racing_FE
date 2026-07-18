@@ -4,7 +4,6 @@ import {
     FaBell,
     FaChartLine,
     FaMedal,
-    FaQuestionCircle,
     FaSearch,
     FaSignOutAlt,
     FaTrophy,
@@ -102,9 +101,6 @@ function SpectatorLayout({ activeKey, children }) {
                 <div className="flex-1 max-[980px]:hidden" />
 
                 <div className="role-sidebar-actions">
-                    <button className="role-sidebar-action" type="button">
-                        <FaQuestionCircle className="h-4 w-4" /> <span>Support</span>
-                    </button>
                     <button className="role-sidebar-action" onClick={handleLogout} type="button">
                         <FaSignOutAlt className="h-4 w-4" /> <span>Logout</span>
                     </button>

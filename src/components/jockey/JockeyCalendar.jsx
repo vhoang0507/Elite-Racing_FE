@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { FaCalendarCheck, FaBan, FaChevronLeft, FaChevronRight, FaMapMarkerAlt, FaHorseHead, FaClock, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
+import { FaCalendarCheck, FaBan, FaChevronLeft, FaChevronRight, FaMapMarkerAlt, FaHorseHead, FaClock, FaCheckCircle } from 'react-icons/fa';
 import JockeyLayout from './JockeyLayout';
 import { jockeyApi } from '../../api/jockeyApi';
+import Toast from '../shared/Toast';
+import { useToast } from '../shared/useToast';
 
 const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
 const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
@@ -63,17 +65,14 @@ export default function JockeyCalendar() {
     const [year, setYear] = useState(today.getFullYear());
     const [calendarData, setCalendarData] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [availabilityMessage, setAvailabilityMessage] = useState('');
     const [savingAvailability, setSavingAvailability] = useState(false);
+    const { toast, showToast, hideToast } = useToast();
     const [selectedDay, setSelectedDay] = useState(null);
 
     useEffect(() => {
         let isMounted = true;
 
         setLoading(true);
-        setError('');
-        setAvailabilityMessage('');
         fetchCalendarData(year, month)
             .then(data => {
                 if (isMounted) {
@@ -83,7 +82,7 @@ export default function JockeyCalendar() {
             })
             .catch(err => {
                 if (isMounted) {
-                    setError(err.message || 'Failed to load calendar');
+                    showToast(err.message || 'Failed to load calendar', 'error');
                     setCalendarData(null);
                 }
             })
@@ -135,8 +134,6 @@ export default function JockeyCalendar() {
         const nextStatus = selectedDayIsUnavailable ? 'Available' : 'Unavailable';
 
         setSavingAvailability(true);
-        setError('');
-        setAvailabilityMessage('');
 
         try {
             await jockeyApi.updateJockeyAvailabilities([
@@ -147,9 +144,9 @@ export default function JockeyCalendar() {
             ]);
             const refreshedCalendar = await fetchCalendarData(year, month);
             setCalendarData(refreshedCalendar);
-            setAvailabilityMessage(`Availability updated for ${selectedDateKey}.`);
+            showToast(`Availability updated for ${selectedDateKey}.`, 'success');
         } catch (err) {
-            setError(err.message || 'Failed to update availability.');
+            showToast(err.message || 'Failed to update availability.', 'error');
         } finally {
             setSavingAvailability(false);
         }
@@ -157,6 +154,7 @@ export default function JockeyCalendar() {
 
     return (
         <JockeyLayout activeKey="schedule">
+            <Toast message={toast.message} type={toast.type} title={toast.title} onClose={hideToast} />
             <div style={styles.page}>
                 {/* Header */}
                 <div style={styles.pageHeader}>
@@ -165,14 +163,6 @@ export default function JockeyCalendar() {
                         <p style={styles.pageSubtitle}>Your schedule, availability, and upcoming race assignments.</p>
                     </div>
                 </div>
-
-                {error && (
-                    <div style={styles.errorBar}><FaExclamationTriangle style={{ marginRight: 8 }} />{error}</div>
-                )}
-
-                {availabilityMessage && (
-                    <div style={styles.successBar}>{availabilityMessage}</div>
-                )}
 
                 {/* Summary cards */}
                 <div style={styles.summaryGrid}>

@@ -144,7 +144,7 @@ export default function InvitationResponses({ invitations, loading, onSign }) {
                                             </div>
                                         </td>
                                         <td style={styles.td}>
-                                            <span style={styles.chip}>{inv.experienceYears} yrs</span>
+                                            <span style={styles.chip}>{inv.experienceYears} years</span>
                                         </td>
                                         <td style={styles.td}>
                                             <span style={styles.dateText}>

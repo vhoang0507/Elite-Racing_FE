@@ -51,6 +51,25 @@ export function showAdminSuccess(message, title = 'Success') {
     }
 }
 
+export function showAdminError(message, title = 'Error') {
+    if (typeof window === 'undefined') {
+        return;
+    }
+
+    const detail = {
+        message,
+        title,
+        type: 'error',
+        handled: false,
+    };
+
+    window.dispatchEvent(new CustomEvent(ADMIN_SUCCESS_EVENT, { detail }));
+
+    if (!detail.handled) {
+        window.alert(message);
+    }
+}
+
 export function queueAdminSuccess(message, title = 'Success') {
     if (typeof window === 'undefined') {
         return;

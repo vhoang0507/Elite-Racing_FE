@@ -15,6 +15,8 @@ import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
 import ImageLightbox from "../../../shared/ImageLightbox";
 import { resolveFileUrl } from "../../../../api/uploadApi";
 import { formatCurrency } from "../../../../utils/currency";
+import Toast from "../../../shared/Toast";
+import { useToast } from "../../../shared/useToast";
 
 const getTournamentStatus = (tournament) => tournament.status ?? tournament.Status ?? "OpenRegistration";
 
@@ -88,8 +90,7 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
     const [notes, setNotes] = useState("");
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
+    const { toast, showToast, hideToast } = useToast();
 
     useEffect(() => {
         if (!tournament) return;
@@ -129,34 +130,32 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
     const handleSelectHorse = (horse) => {
         if (!horse.isEligible) return;
         setSelectedHorse(horse);
-        setError("");
     };
 
     const handleSubmit = async () => {
         if (!isRegistrationOpen) {
-            setError(registrationUnavailableReason);
+            showToast(registrationUnavailableReason, 'error');
             return;
         }
 
         if (!selectedHorse) {
-            setError("Please select a horse before registering.");
+            showToast("Please select a horse before registering.", 'error');
             return;
         }
         setSubmitting(true);
-        setError("");
         try {
             await ownerApi.createRegistration({
                 raceId: tournament.raceId,
                 horseId: selectedHorse.horseId,
                 notes,
             });
-            setSuccess("Registration submitted! Pending admin approval.");
+            showToast("Registration submitted! Pending admin approval.", 'success');
             setTimeout(() => {
                 onSuccess?.();
             }, 1500);
         } catch (err) {
             if (!handleOwnerAccessError(err, navigate)) {
-                setError(err.message || "Registration failed.");
+                showToast(err.message || "Registration failed.", 'error');
             }
         } finally {
             setSubmitting(false);
@@ -165,15 +164,16 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
 
     return (
         <div style={styles.overlay} onClick={onClose}>
+            <Toast message={toast.message} type={toast.type} title={toast.title} onClose={hideToast} />
             <div style={styles.modal} onClick={e => e.stopPropagation()}>
 
                 {/* Header */}
                 <div style={styles.imgWrapper}>
                     <img
-                        src={tournament.imageUrl ? resolveFileUrl(tournament.imageUrl) : "/DubaiSprintCup.jpg"}
+                        src={tournament.imageUrl ? resolveFileUrl(tournament.imageUrl) : "/GoldenDerby.jpg"}
                         alt={tournament.tournamentName}
                         style={styles.img}
-                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/DubaiSprintCup.jpg"; }}
+                        onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/GoldenDerby.jpg"; }}
                     />
                     <div style={styles.imgOverlay}>
                         <span style={styles.upcomingBadge}>UPCOMING MAJOR EVENT</span>
@@ -236,7 +236,7 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                                                     {horse.isEligible ? "Eligible" : "Ineligible"}
                                                 </span>
                                             </div>
-                                            <small style={{ color: "#999" }}>{horse.breedName} • {horse.age}y • {horse.weightKg}kg • {horse.healthStatus}</small>
+                                            <small style={{ color: "#999" }}>{horse.breedName} • {horse.age} years • {horse.weightKg} kg • {horse.healthStatus}</small>
                                             <div style={{ marginTop: "6px" }}>
                                                 <HealthCertificateLink url={horse.healthCertificateImageUrl} />
                                             </div>
@@ -260,9 +260,6 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                         {!isRegistrationOpen && (
                             <p style={styles.closedNotice}>{registrationUnavailableReason}</p>
                         )}
-                        {error && <p style={{ color: "#a4392f", fontSize: "13px", marginBottom: "8px" }}>{error}</p>}
-                        {success && <p style={{ color: "#16864f", fontSize: "13px", marginBottom: "8px" }}>{success}</p>}
-
                         <div style={{ display: "flex", gap: "12px" }}>
                             <button
                                 onClick={handleSubmit}

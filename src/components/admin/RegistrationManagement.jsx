@@ -22,6 +22,7 @@ import horseRacing from '../../assets/horse-racing.jpg';
 import {
     confirmAdminAction,
     showAdminSuccess,
+    showAdminError,
 } from '../../utils/adminFeedback';
 import AdminLayout from './AdminLayout';
 
@@ -151,15 +152,12 @@ export default function RegistrationManagement() {
     const [statusFilter, setStatusFilter] = useState('pending');
     const [loading, setLoading] = useState(true);
     const [savingId, setSavingId] = useState(null);
-    const [error, setError] = useState('');
     const [selectedLoading, setSelectedLoading] = useState(false);
-    const [selectedError, setSelectedError] = useState('');
     const [registrationStats, setRegistrationStats] = useState({ pending: 0, approved: 0, rejected: 0 });
 
     const loadRegistrations = useCallback(async (nextStatus = 'pending') => {
         try {
             setLoading(true);
-            setError('');
 
             let data;
             let allData;
@@ -183,7 +181,7 @@ export default function RegistrationManagement() {
                 rejected: statItems.filter((item) => formatClass(item.status) === 'rejected').length,
             });
         } catch (err) {
-            setError(err.message || 'Cannot load registrations.');
+            showAdminError(err.message || 'Cannot load registrations.');
         } finally {
             setLoading(false);
         }
@@ -247,7 +245,7 @@ export default function RegistrationManagement() {
             setSelected(null);
             showAdminSuccess('Race entry confirmed successfully.', 'Confirmed');
         } catch (err) {
-            window.alert(err.message || 'Approve failed.');
+            showAdminError(err.message || 'Approve failed.');
         } finally {
             setSavingId(null);
         }
@@ -281,7 +279,7 @@ export default function RegistrationManagement() {
             setSelected(null);
             showAdminSuccess('Race entry rejected successfully.', 'Rejected');
         } catch (err) {
-            window.alert(err.message || 'Reject failed.');
+            showAdminError(err.message || 'Reject failed.');
         } finally {
             setSavingId(null);
         }
@@ -289,14 +287,13 @@ export default function RegistrationManagement() {
 
     const handleOpenRegistrationDetail = async (registration) => {
         setSelected(registration);
-        setSelectedError('');
         setSelectedLoading(true);
 
         try {
             const detail = await adminApi.getRegistrationById(registration.registrationId);
             setSelected({ ...registration, ...detail });
         } catch (err) {
-            setSelectedError(err.message || 'Cannot load registration detail.');
+            showAdminError(err.message || 'Cannot load registration detail.');
         } finally {
             setSelectedLoading(false);
         }
@@ -382,12 +379,6 @@ export default function RegistrationManagement() {
                             ))}
                         </select>
                     </div>
-
-                    {error && (
-                        <div className="m-4 rounded-md border border-[#e7a49a] bg-[#e8f7ef] p-3 font-bold text-[var(--admin-primary)]">
-                            {error}
-                        </div>
-                    )}
 
                     {loading ? (
                         <div className="p-8 text-center font-bold text-[var(--admin-muted)]">
@@ -513,9 +504,9 @@ export default function RegistrationManagement() {
                             </button>
                         </div>
 
-                        {(selectedLoading || selectedError) && (
-                            <div className={`mx-5 mt-4 rounded-md border px-4 py-3 text-[0.82rem] font-bold ${selectedError ? 'border-[#e7a49a] bg-[#e8f7ef] text-[var(--admin-primary)]' : 'border-[var(--admin-border)] bg-[#fff8f6] text-[var(--admin-muted)]'}`}>
-                                {selectedError || 'Loading race entry detail...'}
+                        {selectedLoading && (
+                            <div className="mx-5 mt-4 rounded-md border border-[var(--admin-border)] bg-[#fff8f6] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-muted)]">
+                                Loading race entry detail...
                             </div>
                         )}
 

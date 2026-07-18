@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     Link,
     useLocation,
@@ -9,6 +9,8 @@ import { login } from '../api/authApi';
 import horseRacing from '../assets/horse-racing.jpg';
 import icon from '../assets/icon.png';
 import { saveAuthSession } from '../utils/tokenStorage';
+import Toast from './shared/Toast';
+import { useToast } from './shared/useToast';
 
 import {
     FaEnvelope,
@@ -36,13 +38,17 @@ const Login = () => {
     const [remember, setRemember] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState(location.state?.message || '');
+    const { toast, showToast, hideToast } = useToast();
+
+    useEffect(() => {
+        if (location.state?.message) {
+            showToast(location.state.message, 'success');
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        setError('');
-        setSuccess('');
         setIsSubmitting(true);
 
         try {
@@ -96,9 +102,9 @@ const Login = () => {
                 return;
             }
 
-            setSuccess('Login successful. This role dashboard is not built in the frontend yet.');
+            showToast('Login successful. This role dashboard is not built in the frontend yet.', 'success');
         } catch (err) {
-            setError(err.message || 'Login failed. Please try again.');
+            showToast(err.message || 'Login failed. Please try again.', 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -106,6 +112,7 @@ const Login = () => {
 
     return (
         <div className="auth-page flex h-screen max-[1024px]:h-auto max-[1024px]:min-h-screen max-[1024px]:flex-col max-[1024px]:overflow-auto">
+            <Toast message={toast.message} type={toast.type} title={toast.title} onClose={hideToast} />
             <div className="relative h-screen flex-1 overflow-hidden max-[1024px]:hidden">
                 <img
                     src={horseRacing}
@@ -209,18 +216,6 @@ const Login = () => {
                                 Remember me
                             </label>
                         </div>
-
-                        {error && (
-                            <div className="mb-4 rounded-[10px] border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-sm font-semibold text-[#b91c1c]">
-                                {error}
-                            </div>
-                        )}
-
-                        {success && (
-                            <div className="mb-4 rounded-[10px] border border-[#b9e5c5] bg-[#f1fff5] px-4 py-3 text-sm font-semibold text-[#1d6b35]">
-                                {success}
-                            </div>
-                        )}
 
                         <button
                             type="submit"

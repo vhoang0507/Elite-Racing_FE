@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Link,
     useLocation,
@@ -11,6 +11,8 @@ import {
 } from '../api/authApi';
 import horseRacing from '../assets/horse-racing.jpg';
 import icon from '../assets/icon.png';
+import Toast from './shared/Toast';
+import { useToast } from './shared/useToast';
 
 const formGroupClass = 'mb-5';
 const labelClass = 'mb-2.5 block text-[0.9rem] font-extrabold text-[#1f3b57]';
@@ -22,10 +24,16 @@ const VerifyEmail = () => {
     const navigate = useNavigate();
     const [email, setEmail] = useState(location.state?.email || '');
     const [code, setCode] = useState('');
-    const [message, setMessage] = useState(location.state?.message || '');
-    const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isResending, setIsResending] = useState(false);
+    const { toast, showToast, hideToast } = useToast();
+
+    useEffect(() => {
+        if (location.state?.message) {
+            showToast(location.state.message, 'success');
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const handleCodeChange = (event) => {
         setCode(event.target.value.replace(/\D/g, '').slice(0, OTP_CODE_LENGTH));
@@ -33,11 +41,9 @@ const VerifyEmail = () => {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        setError('');
-        setMessage('');
 
         if (code.length !== OTP_CODE_LENGTH) {
-            setError(`Please enter the ${OTP_CODE_LENGTH}-digit OTP code.`);
+            showToast(`Please enter the ${OTP_CODE_LENGTH}-digit OTP code.`, 'error');
             return;
         }
 
@@ -55,15 +61,13 @@ const VerifyEmail = () => {
                 },
             });
         } catch (err) {
-            setError(err.message || 'Email verification failed. Please try again.');
+            showToast(err.message || 'Email verification failed. Please try again.', 'error');
         } finally {
             setIsSubmitting(false);
         }
     };
 
     const handleResend = async () => {
-        setError('');
-        setMessage('');
         setIsResending(true);
 
         try {
@@ -71,9 +75,9 @@ const VerifyEmail = () => {
                 Email: email,
             });
 
-            setMessage(response?.message || response?.Message || 'A new OTP has been sent.');
+            showToast(response?.message || response?.Message || 'A new OTP has been sent.', 'success');
         } catch (err) {
-            setError(err.message || 'Could not resend OTP. Please try again.');
+            showToast(err.message || 'Could not resend OTP. Please try again.', 'error');
         } finally {
             setIsResending(false);
         }
@@ -81,6 +85,7 @@ const VerifyEmail = () => {
 
     return (
         <div className="auth-page flex h-screen max-[1024px]:h-auto max-[1024px]:min-h-screen max-[1024px]:flex-col max-[1024px]:overflow-auto">
+            <Toast message={toast.message} type={toast.type} title={toast.title} onClose={hideToast} />
             <div className="flex h-screen w-[58%] items-center justify-center overflow-y-auto bg-[rgba(255,254,253,0.92)] px-[50px] py-[60px] max-[1024px]:min-h-screen max-[1024px]:w-full max-[1024px]:px-6 max-[1024px]:py-[30px]">
                 <div className="w-full max-w-[520px]">
                     <div className="mb-8 flex items-center gap-3">
@@ -134,18 +139,6 @@ const VerifyEmail = () => {
                                 required
                             />
                         </div>
-
-                        {message && (
-                            <div className="mb-4 rounded-[10px] border border-[#b9e5c5] bg-[#f1fff5] px-4 py-3 text-sm font-semibold text-[#1d6b35]">
-                                {message}
-                            </div>
-                        )}
-
-                        {error && (
-                            <div className="mb-4 rounded-[10px] border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-sm font-semibold text-[#b91c1c]">
-                                {error}
-                            </div>
-                        )}
 
                         <button
                             type="submit"

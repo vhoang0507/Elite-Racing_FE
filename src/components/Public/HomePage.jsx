@@ -217,7 +217,7 @@ export default function HomePage() {
                             <table className="w-full min-w-[720px] border-collapse text-left text-sm">
                                 <thead className="bg-[#f1f5ff] text-xs uppercase tracking-wide text-[var(--racing-muted)]">
                                     <tr>
-                                        <th className="px-5 py-3">Pos</th>
+                                        <th className="px-5 py-3">Position</th>
                                         <th className="px-5 py-3">Horse / Jockey</th>
                                         <th className="px-5 py-3">Owner / Stable</th>
                                         <th className="px-5 py-3">Time</th>

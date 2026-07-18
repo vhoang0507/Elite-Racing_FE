@@ -147,7 +147,7 @@ export default function HorseTable() {
 
                                 <div style={styles.cardInfoGrid}>
                                     <span>Age</span>
-                                    <span style={styles.cardInfoValue}>{horse.age}y</span>
+                                    <span style={styles.cardInfoValue}>{horse.age} years</span>
                                     <span>Height</span>
                                     <span style={styles.cardInfoValue}>{horse.heightCm ? `${horse.heightCm} cm` : "-"}</span>
                                     <span>Weight</span>

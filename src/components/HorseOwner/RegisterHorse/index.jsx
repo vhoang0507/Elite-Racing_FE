@@ -89,7 +89,6 @@ export default function RegisterHorse() {
     });
     const [fieldErrors, setFieldErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState('');
     const { toast, showToast, hideToast } = useToast();
     const [horseImageFile, setHorseImageFile] = useState(null);
     const [horseImagePreview, setHorseImagePreview] = useState('');
@@ -135,7 +134,6 @@ export default function RegisterHorse() {
     };
 
     const handleSubmit = async () => {
-        setError('');
         const errs = validateHorse(form, horseImageFile, healthCertificateFile);
         setFieldErrors(errs);
         if (Object.keys(errs).length > 0) {
@@ -170,9 +168,7 @@ export default function RegisterHorse() {
             });
             navigate('/owner/my-horse');
         } catch (err) {
-            const msg = err.message || 'Horse registration failed. Please try again.';
-            setError(msg);
-            showToast(msg, 'error', 'Registration Failed');
+            showToast(err.message || 'Horse registration failed. Please try again.', 'error', 'Registration Failed');
         } finally {
             setIsSubmitting(false);
         }
@@ -223,7 +219,7 @@ export default function RegisterHorse() {
 
                         <div className="mb-4 grid grid-cols-3 gap-3">
                             <div>
-                                <label className={labelClass}>Age (yrs) <span className="text-red-500">*</span></label>
+                                <label className={labelClass}>Age (years) <span className="text-red-500">*</span></label>
                                 <input name="age" value={form.age} onChange={handleChange}
                                     placeholder="1–30" type="number" min="1" max="30" step="1" className={ic('age')} />
                                 <ErrMsg msg={fieldErrors.age} />
@@ -314,12 +310,6 @@ export default function RegisterHorse() {
                 </div>
 
                 {/* Buttons */}
-                {error && (
-                    <div className="flex items-center gap-2 rounded-lg border border-[#e3bcb7] bg-[#f3e1df] px-4 py-2.5 text-[13px] font-semibold text-[#a4392f]">
-                        <FaExclamationTriangle aria-hidden="true" />
-                        {error}
-                    </div>
-                )}
                 <div className="flex gap-3">
                     <button onClick={() => navigate("/owner/my-horse")}
                         className="min-h-[38px] cursor-pointer rounded-full border border-[var(--admin-border)] bg-white px-6 font-bold text-[var(--admin-ink)] transition-colors hover:border-[var(--admin-gold)]">

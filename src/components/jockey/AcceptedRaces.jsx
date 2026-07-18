@@ -266,7 +266,7 @@ function AcceptedRaces() {
 
                                 <div className="grid grid-cols-2 gap-4 max-[560px]:grid-cols-1">
                                     <div className="rounded-[var(--admin-radius)] bg-[var(--admin-surface-strong)] p-4 text-[0.85rem]">
-                                        <h4 className="m-0 mb-2 text-[0.72rem] font-black uppercase text-[var(--admin-primary)]">Race Info</h4>
+                                        <h4 className="m-0 mb-2 text-[0.72rem] font-black uppercase text-[var(--admin-primary)]">Race Information</h4>
                                         <p className="m-0"><strong>Date:</strong> {formatDate(selectedRace.raceDate)}</p>
                                         {selectedRace.location && <p className="m-0 mt-1"><strong>Location:</strong> {selectedRace.location}</p>}
                                     </div>

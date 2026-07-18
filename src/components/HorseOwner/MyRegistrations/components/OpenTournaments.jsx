@@ -42,10 +42,10 @@ export default function OpenTournaments() {
                         <div key={t.tournamentId} style={styles.card} onClick={() => setSelected(t)}>
                             <div style={styles.imgWrapper}>
                                 <img
-                                    src={t.imageUrl ? resolveFileUrl(t.imageUrl) : "/DubaiSprintCup.jpg"}
+                                    src={t.imageUrl ? resolveFileUrl(t.imageUrl) : "/GoldenDerby.jpg"}
                                     alt={t.tournamentName}
                                     style={styles.img}
-                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/DubaiSprintCup.jpg"; }}
+                                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/GoldenDerby.jpg"; }}
                                 />
                                 <span style={styles.prizeBadge}>{formatCurrency(t.prizePool)}+</span>
                             </div>

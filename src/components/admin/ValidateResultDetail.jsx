@@ -23,6 +23,7 @@ import { adminApi } from '../../api/adminApi';
 import {
     confirmAdminAction,
     showAdminSuccess,
+    showAdminError,
 } from '../../utils/adminFeedback';
 
 import AdminLayout from './AdminLayout';
@@ -142,8 +143,6 @@ function ValidateResultDetail() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
-    const [actionError, setActionError] = useState('');
-    const [actionSuccess, setActionSuccess] = useState('');
 
     const loadDetail = async () => {
         setLoading(true);
@@ -201,8 +200,6 @@ function ValidateResultDetail() {
         if (!confirmed) return;
 
         setActionLoading(true);
-        setActionError('');
-        setActionSuccess('');
         try {
             const raceId = detail?.raceId || postRaceResults.find((result) => result?.raceId)?.raceId;
             const approvableResults = postRaceResults.filter((result) => (
@@ -220,11 +217,10 @@ function ValidateResultDetail() {
 
             await adminApi.approveAllResults(raceId);
 
-            setActionSuccess('Results approved and tournament completed.');
             showAdminSuccess('Results approved and tournament completed.', 'Approved');
             setTimeout(() => navigate('/admin/results'), 1500);
         } catch (err) {
-            setActionError(err.message || 'Failed to approve result.');
+            showAdminError(err.message || 'Failed to approve result.');
         } finally {
             setActionLoading(false);
         }
@@ -241,8 +237,6 @@ function ValidateResultDetail() {
         if (!confirmed) return;
 
         setActionLoading(true);
-        setActionError('');
-        setActionSuccess('');
         try {
             const currentResultId = String(resultId || '').replace('result-', '');
             const resultIds = [
@@ -262,11 +256,10 @@ function ValidateResultDetail() {
                 await adminApi.rejectResult(id);
             }
 
-            setActionSuccess('Results returned to referee.');
             showAdminSuccess('Results returned to referee.', 'Returned');
             setTimeout(() => navigate('/admin/results'), 1500);
         } catch (err) {
-            setActionError(err.message || 'Failed to return result.');
+            showAdminError(err.message || 'Failed to return result.');
         } finally {
             setActionLoading(false);
         }
@@ -276,7 +269,7 @@ function ValidateResultDetail() {
         const raceId = detail?.raceId || postRaceResults.find((result) => result?.raceId)?.raceId;
 
         if (!raceId) {
-            setActionError('Race information is missing for prediction evaluation.');
+            showAdminError('Race information is missing for prediction evaluation.');
             return;
         }
 
@@ -289,17 +282,14 @@ function ValidateResultDetail() {
         if (!confirmed) return;
 
         setActionLoading(true);
-        setActionError('');
-        setActionSuccess('');
 
         try {
             const response = await adminApi.evaluateRacePredictions(raceId);
             const successMessage = response?.message || response?.Message || 'Prediction evaluation completed.';
-            setActionSuccess(successMessage);
             showAdminSuccess(successMessage, 'Evaluated');
             await loadDetail();
         } catch (err) {
-            setActionError(err.message || 'Failed to evaluate predictions.');
+            showAdminError(err.message || 'Failed to evaluate predictions.');
         } finally {
             setActionLoading(false);
         }
@@ -481,19 +471,6 @@ function ValidateResultDetail() {
                         </button>
                     </div>
                 </div>
-
-                {actionError && (
-                    <section className={`${panelWidthClass} flex items-start gap-3 rounded-[var(--admin-radius)] border border-[#f0b7ae] bg-[#fff1ef] p-4 text-[#a11616]`}>
-                        <FaExclamationCircle aria-hidden="true" className="mt-0.5 flex-none" />
-                        <p className="m-0 text-[0.88rem] font-bold">{actionError}</p>
-                    </section>
-                )}
-
-                {actionSuccess && (
-                    <section className={`${panelWidthClass} rounded-[var(--admin-radius)] border border-[#a7dfbf] bg-[#e8f8ef] p-4 text-[#1a7d49]`}>
-                        <p className="m-0 text-[0.88rem] font-bold">{actionSuccess}</p>
-                    </section>
-                )}
 
                 {loading ? (
                     <section className={`${panelWidthClass} rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6`}>

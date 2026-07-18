@@ -17,6 +17,7 @@ import { adminApi } from '../../api/adminApi';
 import {
     confirmAdminAction,
     showAdminSuccess,
+    showAdminError,
 } from '../../utils/adminFeedback';
 
 import AdminLayout from './AdminLayout';
@@ -64,8 +65,6 @@ const sortPendingFirst = (items, getStatus) => [...items].sort((current, next) =
 function CreateRefereeAccount() {
     const [form, setForm] = useState(initialForm);
     const [referees, setReferees] = useState([]);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
     const [isSaving, setIsSaving] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -80,7 +79,7 @@ function CreateRefereeAccount() {
             })
             .catch((err) => {
                 if (isMounted) {
-                    setError(err.message || 'Failed to load active referees.');
+                    showAdminError(err.message || 'Failed to load active referees.');
                 }
             })
             .finally(() => {
@@ -104,17 +103,13 @@ function CreateRefereeAccount() {
 
     const clearForm = () => {
         setForm(initialForm);
-        setError('');
-        setSuccess('');
     };
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        setError('');
-        setSuccess('');
 
         if (form.password !== form.confirmPassword) {
-            setError('Confirm password does not match.');
+            showAdminError('Confirm password does not match.');
             return;
         }
 
@@ -144,10 +139,9 @@ function CreateRefereeAccount() {
 
             setReferees((current) => [created, ...current]);
             setForm(initialForm);
-            setSuccess('Referee account created successfully.');
             showAdminSuccess('Referee account created successfully.', 'Created');
         } catch (err) {
-            setError(err.message || 'Failed to create referee account.');
+            showAdminError(err.message || 'Failed to create referee account.');
         } finally {
             setIsSaving(false);
         }
@@ -230,12 +224,6 @@ function CreateRefereeAccount() {
                             <input className={inputClass} minLength={6} name="confirmPassword" onChange={handleChange} required type="password" value={form.confirmPassword} />
                         </label>
                     </div>
-
-                    {(error || success) && (
-                        <div className={`mx-5 mb-4 rounded-md border px-4 py-3 text-[0.84rem] font-semibold ${error ? 'border-[#f0b4b4] bg-[#fff3f3] text-[var(--admin-primary)]' : 'border-[#b9e5c5] bg-[#f1fff5] text-[#1d6b35]'}`}>
-                            {error || success}
-                        </div>
-                    )}
 
                     <div className={actionsClass}>
                         <button className={secondaryButtonClass} onClick={clearForm} type="button">

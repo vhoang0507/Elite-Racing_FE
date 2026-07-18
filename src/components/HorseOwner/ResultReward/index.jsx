@@ -16,32 +16,31 @@ export default function ResultReward() {
     const [loadingRewards, setLoadingRewards] = useState(true);
     const [loadingResults, setLoadingResults] = useState(true);
     const [claimingId, setClaimingId] = useState(null);
-    const [error, setError] = useState('');
     const { toast, showToast, hideToast } = useToast();
 
     const loadSummary = useCallback(() => {
         setLoadingSummary(true);
         ownerApi.getRewardSummary()
             .then(setSummary)
-            .catch((err) => setError(err.message || 'Failed to load reward summary'))
+            .catch((err) => showToast(err.message || 'Failed to load reward summary', 'error'))
             .finally(() => setLoadingSummary(false));
-    }, []);
+    }, [showToast]);
 
     const loadRewards = useCallback(() => {
         setLoadingRewards(true);
         ownerApi.getAvailableRewards(10)
             .then((data) => setRewards(data ?? []))
-            .catch((err) => setError(err.message || 'Failed to load rewards'))
+            .catch((err) => showToast(err.message || 'Failed to load rewards', 'error'))
             .finally(() => setLoadingRewards(false));
-    }, []);
+    }, [showToast]);
 
     const loadResults = useCallback((limit) => {
         setLoadingResults(true);
         ownerApi.getHorseResults({ limit })
             .then((data) => setResults(data ?? []))
-            .catch((err) => setError(err.message || 'Failed to load results'))
+            .catch((err) => showToast(err.message || 'Failed to load results', 'error'))
             .finally(() => setLoadingResults(false));
-    }, []);
+    }, [showToast]);
 
     useEffect(() => {
         loadSummary();
@@ -60,9 +59,7 @@ export default function ResultReward() {
             loadSummary();
             showToast('Reward claimed successfully!', 'success', 'Claim Reward');
         } catch (err) {
-            const msg = err.message || 'Failed to claim reward. Please try again.';
-            setError(msg);
-            showToast(msg, 'error', 'Error');
+            showToast(err.message || 'Failed to claim reward. Please try again.', 'error', 'Error');
         } finally {
             setClaimingId(null);
         }
@@ -81,8 +78,6 @@ export default function ResultReward() {
                         Manage and track your tournament earnings and pending claims.
                     </p>
                 </div>
-
-                {error && <p className="text-[0.82rem] text-red-700">{error}</p>}
 
                 <RewardStats summary={summary} loading={loadingSummary} />
 

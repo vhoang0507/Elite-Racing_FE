@@ -7,6 +7,8 @@ import {
 import { register } from '../api/authApi';
 import horseRacing from '../assets/horse-racing.jpg';
 import icon from '../assets/icon.png';
+import Toast from './shared/Toast';
+import { useToast } from './shared/useToast';
 
 import {
     FaChevronDown,
@@ -30,19 +32,18 @@ const Register = () => {
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [error, setError] = useState('');
+    const { toast, showToast, hideToast } = useToast();
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        setError('');
 
         if (password !== confirmPassword) {
-            setError('Password confirmation does not match.');
+            showToast('Password confirmation does not match.', 'error');
             return;
         }
 
         if (!termsAccepted) {
-            setError('Please accept the terms before creating an account.');
+            showToast('Please accept the terms before creating an account.', 'error');
             return;
         }
 
@@ -66,7 +67,7 @@ const Register = () => {
                 },
             });
         } catch (err) {
-            setError(err.message || 'Registration failed. Please try again.');
+            showToast(err.message || 'Registration failed. Please try again.', 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -74,6 +75,7 @@ const Register = () => {
 
     return (
         <div className="auth-page flex h-screen max-[1024px]:h-auto max-[1024px]:min-h-screen max-[1024px]:flex-col max-[1024px]:overflow-auto">
+            <Toast message={toast.message} type={toast.type} title={toast.title} onClose={hideToast} />
             <div className="flex h-screen w-[58%] items-start justify-center overflow-y-auto bg-[rgba(255,254,253,0.92)] px-[50px] py-[60px] max-[1024px]:min-h-screen max-[1024px]:w-full max-[1024px]:px-6 max-[1024px]:py-[30px] [&::-webkit-scrollbar-thumb]:rounded-[8px] [&::-webkit-scrollbar-thumb]:bg-[#a7b7ca] [&::-webkit-scrollbar]:w-2">
                 <div className="w-full max-w-[520px]">
                     <div className="mb-8 flex items-center gap-3">
@@ -232,12 +234,6 @@ const Register = () => {
                                 <a className="text-[#0b7f5a] no-underline" href="#">Privacy Policy</a>.
                             </label>
                         </div>
-
-                        {error && (
-                            <div className="mb-4 rounded-[10px] border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-sm font-semibold text-[#b91c1c]">
-                                {error}
-                            </div>
-                        )}
 
                         <button
                             type="submit"

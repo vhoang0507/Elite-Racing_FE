@@ -446,7 +446,7 @@ function HorseManagement() {
                             </select>
 
                             <select className={selectClass} onChange={handleFilterChange(setApprovalFilter)} value={approvalFilter}>
-                                <option value="registration">Reg Status</option>
+                                <option value="registration">Registration Status</option>
                                 <option value="pending">Pending</option>
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
@@ -494,14 +494,14 @@ function HorseManagement() {
 
                                             <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[0.78rem] font-semibold text-[#475569]">
                                                 <span>Age/Weight</span>
-                                                <span className="text-right text-[var(--admin-ink)]">{horse.age ?? '-'} yrs / {horse.weight ?? '-'} kg</span>
+                                                <span className="text-right text-[var(--admin-ink)]">{horse.age ?? '-'} years / {horse.weight ?? '-'} kg</span>
                                                 <span>Owner</span>
                                                 <span className="text-right text-[var(--admin-ink)]">{horse.owner || '-'}</span>
                                             </div>
 
                                             <div className="mt-auto flex items-center justify-between gap-2 border-t border-[var(--admin-border)] pt-3">
                                                 <div className="text-[0.78rem]">
-                                                    <span className="mr-1.5 font-bold text-[var(--admin-muted)]">Health Cert:</span>
+                                                    <span className="mr-1.5 font-bold text-[var(--admin-muted)]">Health Certificate:</span>
                                                     <HealthCertificateLink url={horse.healthCertificateImageUrl} compact />
                                                 </div>
                                                 <button aria-label={`View details for ${horse.name}`} className="grid h-9 w-9 flex-none cursor-pointer place-items-center rounded-full bg-transparent text-[var(--admin-primary-dark)] transition-colors hover:bg-[var(--admin-gold)] hover:text-white" onClick={() => handleOpenHorseDetail(horse)} type="button">

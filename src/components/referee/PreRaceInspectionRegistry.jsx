@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
     FaArrowLeft,
     FaCheckCircle,
+    FaChevronDown,
     FaMapMarkerAlt,
     FaTimesCircle,
 } from 'react-icons/fa';
@@ -84,9 +85,14 @@ function HealthCertificateCell({ url }) {
     );
 }
 
-const CHECKLIST_LABELS = ['Docs', 'Status', 'Health', 'Cert'];
+const CHECKLIST_LABELS = [
+    'Registration documents valid',
+    'Registration status meets requirement',
+    'Horse health status',
+    'Health certificate uploaded',
+];
 
-function ChecklistSummary({ checklist }) {
+function ChecklistSummary({ checklist, violation, ruleRef }) {
     const items = checklist ?? [];
     const total = items.length || CHECKLIST_LABELS.length;
     const passed = items.filter(Boolean).length;
@@ -96,31 +102,44 @@ function ChecklistSummary({ checklist }) {
             : passed === 0
                 ? { bg: '#f3e1df', text: '#a4392f' }
                 : { bg: '#faf2e0', text: '#8a6209' };
+    const hasRuleRef = ruleRef && ruleRef !== 'N/A';
 
     return (
-        <div className="flex flex-col gap-1.5">
-            <span
-                className="inline-flex w-fit items-center rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold"
+        <details className="w-fit">
+            <summary
+                className="inline-flex w-fit cursor-pointer list-none items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.68rem] font-bold [&::-webkit-details-marker]:hidden"
                 style={{ backgroundColor: tone.bg, color: tone.text }}
             >
                 {passed}/{total} Passed
-            </span>
-            <div className="flex gap-1.5">
+                <FaChevronDown size={9} />
+            </summary>
+
+            <div className="mt-2 flex w-max min-w-[230px] max-w-[300px] flex-col gap-2 rounded-lg border border-[var(--admin-border)] bg-white p-3 shadow-[0_8px_20px_rgba(15,23,42,0.1)]">
                 {items.map((item, idx) => (
-                    <span
-                        key={idx}
-                        title={`${item ? 'Passed' : 'Failed'}: ${CHECKLIST_LABELS[idx] || `Item ${idx + 1}`}`}
-                        className="cursor-help"
-                    >
+                    <div key={idx} className="flex items-start gap-2">
                         {item ? (
-                            <FaCheckCircle className="text-[#16864f]" size={13} />
+                            <FaCheckCircle className="mt-0.5 shrink-0 text-[#16864f]" size={12} />
                         ) : (
-                            <FaTimesCircle className="text-[#a4392f]" size={13} />
+                            <FaTimesCircle className="mt-0.5 shrink-0 text-[#a4392f]" size={12} />
                         )}
-                    </span>
+                        <div>
+                            <div
+                                className="text-[0.74rem] font-bold"
+                                style={{ color: item ? 'var(--admin-ink)' : '#a4392f' }}
+                            >
+                                {CHECKLIST_LABELS[idx] || `Item ${idx + 1}`}
+                            </div>
+                            {!item && (
+                                <div className="mt-0.5 text-[0.7rem] leading-snug text-[var(--admin-muted)]">
+                                    {violation || 'No reason provided.'}
+                                    {hasRuleRef ? ` (${ruleRef})` : ''}
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 ))}
             </div>
-        </div>
+        </details>
     );
 }
 
@@ -140,8 +159,6 @@ function PreRaceInspectionRegistry() {
     const [loadingReport, setLoadingReport] = useState(false);
     const [savingId, setSavingId] = useState(null);
     const [markingReady, setMarkingReady] = useState(false);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
     const { toast, showToast, hideToast } = useToast();
 
     const selectedRace = useMemo(
@@ -183,7 +200,7 @@ function PreRaceInspectionRegistry() {
                 }
             } catch (err) {
                 if (!ignore) {
-                    setError(err.message || 'Failed to load assigned race.');
+                    showToast(err.message || 'Failed to load assigned race.', 'error');
                 }
             } finally {
                 if (!ignore) {
@@ -209,8 +226,6 @@ function PreRaceInspectionRegistry() {
 
         async function loadInspectionReport() {
             setLoadingReport(true);
-            setError('');
-            setSuccess('');
 
             try {
                 const [reportData, registrationData] = await Promise.all([
@@ -242,7 +257,7 @@ function PreRaceInspectionRegistry() {
                 });
             } catch (err) {
                 if (!ignore) {
-                    setError(err.message || 'Failed to load inspection report.');
+                    showToast(err.message || 'Failed to load inspection report.', 'error');
                 }
             } finally {
                 if (!ignore) {
@@ -276,8 +291,6 @@ function PreRaceInspectionRegistry() {
     const handleMarkReady = async () => {
         if (!raceId || markingReady) return;
         setMarkingReady(true);
-        setError('');
-        setSuccess('');
         try {
             const updatedLifecycle = await refereeApi.markRaceReady(raceId);
             setRaces((previous) =>
@@ -287,10 +300,9 @@ function PreRaceInspectionRegistry() {
                         : race
                 )
             );
-            setSuccess('Race marked as Ready. You can now start the race from the Post-Race panel.');
-            showToast('Race marked as Ready!', 'success');
+            showToast('Race marked as Ready. You can now start the race from the Post-Race panel.', 'success');
         } catch (err) {
-            setError(err.message || 'Failed to mark race as ready.');
+            showToast(err.message || 'Failed to mark race as ready.', 'error');
         } finally {
             setMarkingReady(false);
         }
@@ -305,8 +317,6 @@ function PreRaceInspectionRegistry() {
         };
 
         setSavingId(registrationId);
-        setError('');
-        setSuccess('');
 
         try {
             await refereeApi.saveInspection(raceId, {
@@ -325,12 +335,9 @@ function PreRaceInspectionRegistry() {
             );
 
             setReport(reportData);
-            setSuccess('Inspection saved successfully.');
-            showToast('✅ Inspection saved successfully!', 'success', 'Inspection Saved');
+            showToast('Inspection saved successfully!', 'success', 'Inspection Saved');
         } catch (err) {
-            const msg = err.message || 'Failed to save inspection.';
-            setError(msg);
-            showToast(msg, 'error', 'Save Error');
+            showToast(err.message || 'Failed to save inspection.', 'error', 'Save Error');
         } finally {
             setSavingId(null);
         }
@@ -388,17 +395,6 @@ function PreRaceInspectionRegistry() {
                     </div>
                 </div>
 
-                {error && (
-                    <div className="mb-6 rounded-[8px] border border-[#e3bcb7] bg-[#f3e1df] px-5 py-4 font-semibold text-[#a4392f]">
-                        {error}
-                    </div>
-                )}
-
-                {success && (
-                    <div className="mb-6 rounded-[8px] border border-[#bfe3cc] bg-[#e8f7ee] px-5 py-4 font-semibold text-[#16864f]">
-                        {success}
-                    </div>
-                )}
 
                 <div className="surface-card mb-8 p-6">
                     {loadingRace && !selectedRace ? (
@@ -520,10 +516,10 @@ function PreRaceInspectionRegistry() {
                             <thead>
                                 <tr>
                                     <th>Horse</th>
-                                    <th>Health Cert</th>
-                                    <th>Reg Status</th>
+                                    <th>Health Certificate</th>
+                                    <th>Registration Status</th>
                                     <th>Checklist</th>
-                                    <th>Rule Ref</th>
+                                    <th>Rule Reference</th>
                                     <th>Severity</th>
                                     <th>Details</th>
                                     <th>Outcome</th>
@@ -589,7 +585,11 @@ function PreRaceInspectionRegistry() {
                                                 </td>
 
                                                 <td className="px-4 py-3">
-                                                    <ChecklistSummary checklist={horse.checklist} />
+                                                    <ChecklistSummary
+                                                        checklist={horse.checklist}
+                                                        violation={horse.violation}
+                                                        ruleRef={horse.ruleRef}
+                                                    />
                                                 </td>
 
                                                 <td className="px-4 py-3 text-sm text-[var(--admin-muted)]">

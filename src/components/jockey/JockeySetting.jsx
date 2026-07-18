@@ -9,11 +9,11 @@ import {
     FaPlus,
     FaSave,
     FaFileAlt,
-    FaExclamationTriangle,
-    FaCheckCircle,
 } from 'react-icons/fa';
 
 import ChangePasswordCard from '../shared/ChangePasswordCard';
+import Toast from '../shared/Toast';
+import { useToast } from '../shared/useToast';
 
 import JockeyLayout from './JockeyLayout';
 import { jockeyApi } from '../../api/jockeyApi';
@@ -75,8 +75,7 @@ function JockeySetting() {
     const [breeds, setBreeds] = useState([]);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
+    const { toast, showToast, hideToast } = useToast();
     const [fieldErrors, setFieldErrors] = useState({});
 
     const [distanceExperiences, setDistanceExperiences] = useState([]);
@@ -110,7 +109,7 @@ function JockeySetting() {
                 setBreedExperiences(be);
                 setOriginalBreedExp(be);
             } catch (err) {
-                setError(err.message || 'Failed to load profile');
+                showToast(err.message || 'Failed to load profile', 'error');
             } finally {
                 setLoading(false);
             }
@@ -126,8 +125,6 @@ function JockeySetting() {
         setPreviewUrls({});
         setFileErrors({});
         setFieldErrors({});
-        setError('');
-        setSuccess('');
     };
 
     const handleDistanceSkill = (distanceMeters, skillLevel) => {
@@ -179,13 +176,10 @@ function JockeySetting() {
     };
 
     const handleSave = async () => {
-        setError('');
-        setSuccess('');
-
         const errs = validate(profile, distanceExperiences);
         setFieldErrors(errs);
         if (Object.keys(errs).length > 0) {
-            setError('Please fix the errors above before saving.');
+            showToast('Please fix the errors above before saving.', 'error');
             return;
         }
 
@@ -221,9 +215,9 @@ function JockeySetting() {
             setSelectedFiles({});
             setPreviewUrls({});
             setFieldErrors({});
-            setSuccess('Profile submitted. Please wait for admin approval.');
+            showToast('Profile submitted. Please wait for admin approval.', 'success');
         } catch (err) {
-            setError(err.message || 'Failed to save');
+            showToast(err.message || 'Failed to save', 'error');
         } finally {
             setSaving(false);
         }
@@ -239,6 +233,7 @@ function JockeySetting() {
 
     return (
         <JockeyLayout activeKey="settings">
+            <Toast message={toast.message} type={toast.type} title={toast.title} onClose={hideToast} />
             <section className={pageShellClass}>
                 {/* Header */}
                 <div>
@@ -539,17 +534,6 @@ function JockeySetting() {
                     </div>
                 </section>
                 <ChangePasswordCard />
-                {/* Error/Success */}
-                {error && (
-                    <div className="flex items-center gap-2 rounded-full border border-[#d89288] bg-[#f3e1df] px-4 py-3 text-[13px] font-semibold text-[#a4392f]">
-                        <FaExclamationTriangle /> {error}
-                    </div>
-                )}
-                {success && (
-                    <div className="flex items-center gap-2 rounded-full border border-[#9fdcb9] bg-[#e8f7ee] px-4 py-3 text-[13px] font-semibold text-[#16864f]">
-                        <FaCheckCircle /> {success}
-                    </div>
-                )}
 
                 {/* Actions */}
                 <div className="flex justify-end gap-4">

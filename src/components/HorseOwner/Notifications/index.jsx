@@ -116,7 +116,6 @@ export default function Notifications() {
     const [summary, setSummary] = useState(emptySummary);
     const [notifications, setNotifications] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState("");
     const [reloadKey, setReloadKey] = useState(0);
     const [markingAll, setMarkingAll] = useState(false);
     const [selectedNotification, setSelectedNotification] = useState(null);
@@ -127,7 +126,6 @@ export default function Notifications() {
 
         const loadNotifications = async () => {
             setIsLoading(true);
-            setError("");
 
             try {
                 const [summaryData, listData] = await Promise.all([
@@ -148,7 +146,7 @@ export default function Notifications() {
 
                 setSummary(emptySummary);
                 setNotifications([]);
-                setError(err.message || "Failed to load notifications.");
+                showToast(err.message || "Failed to load notifications.", 'error');
             } finally {
                 if (isMounted) {
                     setIsLoading(false);
@@ -196,7 +194,7 @@ export default function Notifications() {
                     unread: Math.max(0, current.unread - 1),
                 }));
             } catch (err) {
-                setError(err.message || "Failed to update notification.");
+                showToast(err.message || "Failed to update notification.", 'error');
             }
         }
 
@@ -276,12 +274,6 @@ export default function Notifications() {
                         </button>
                     </div>
                 </div>
-
-                {error && (
-                    <div className="rounded-[var(--admin-radius)] border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-[0.85rem] font-semibold text-[var(--admin-primary)]">
-                        {error}
-                    </div>
-                )}
 
                 <div className="grid gap-3">
                     {isLoading ? (

@@ -25,6 +25,7 @@ import {
 import {
     confirmAdminAction,
     queueAdminSuccess,
+    showAdminError,
 } from '../../utils/adminFeedback';
 
 import AdminLayout from './AdminLayout';
@@ -94,7 +95,6 @@ function formatDateOnly(value) {
 function CreateTournament() {
     const navigate = useNavigate();
     const [isSaving, setIsSaving] = useState(false);
-    const [error, setError] = useState('');
     const [referees, setReferees] = useState([]);
     const [isLoadingReferees, setIsLoadingReferees] = useState(true);
     const [refereeError, setRefereeError] = useState('');
@@ -187,7 +187,6 @@ function CreateTournament() {
 
     const persistTournament = async (form, action) => {
         const formData = new FormData(form);
-        setError('');
 
         // Validation
         const name = formData.get('name')?.trim();
@@ -202,27 +201,27 @@ function CreateTournament() {
         const bronzePrize = parseCurrency(formData.get('bronzePrize'));
 
         if (!name) {
-            setError('Tournament name is required.');
+            showAdminError('Tournament name is required.');
             return;
         }
         if (!raceDateTime || !raceDate || !raceStartTime) {
-            setError('Race Date is required.');
+            showAdminError('Race Date is required.');
             return;
         }
         if (!registrationDeadline) {
-            setError('Registration Deadline is required.');
+            showAdminError('Registration Deadline is required.');
             return;
         }
         if (raceDate <= registrationDeadline) {
-            setError('Race Date must be after Registration Deadline.');
+            showAdminError('Race Date must be after Registration Deadline.');
             return;
         }
         if (!distanceOptions.includes(distanceMeters)) {
-            setError('Distance must be 1000, 1500, or 2400 meters.');
+            showAdminError('Distance must be 1000, 1500, or 2400 meters.');
             return;
         }
         if (!seasonError && !isLoadingSeasons && !findSeasonForRaceDate(seasons, raceDate)) {
-            setError('Race Date must belong to a configured season.');
+            showAdminError('Race Date must belong to a configured season.');
             return;
         }
         if (action === 'publish') {
@@ -230,12 +229,20 @@ function CreateTournament() {
             const raceSeasonStatus = readSeasonField(raceSeason, 'status');
 
             if (raceSeason && raceSeasonStatus !== 'Active') {
-                setError('Only tournaments in an Active season can be published. Save as draft or activate the season first.');
+                showAdminError('Only tournaments in an Active season can be published. Save as draft or activate the season first.');
                 return;
             }
         }
         if (maxHorses <= 0) {
-            setError('Max horses must be greater than 0.');
+            showAdminError('Max horses must be greater than 0.');
+            return;
+        }
+        if (goldPrize <= 0 || silverPrize <= 0 || bronzePrize <= 0) {
+            showAdminError('Gold, Silver, and Bronze prizes must all be greater than 0.');
+            return;
+        }
+        if (!(goldPrize > silverPrize && silverPrize > bronzePrize)) {
+            showAdminError('Prize amounts must decrease by rank: Gold prize must be greater than Silver prize, and Silver prize must be greater than Bronze prize.');
             return;
         }
 
@@ -290,7 +297,7 @@ function CreateTournament() {
             );
             navigate('/admin/races');
         } catch (err) {
-            setError(err.message || 'Failed to create tournament. Please try again.');
+            showAdminError(err.message || 'Failed to create tournament. Please try again.');
         } finally {
             setIsSaving(false);
         }
@@ -503,12 +510,6 @@ function CreateTournament() {
                                     )}
                                 </label>
                             </section>
-
-                            {error && (
-                                <div className="rounded-[var(--admin-radius)] border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-[0.85rem] font-semibold text-[var(--admin-primary)]">
-                                    {error}
-                                </div>
-                            )}
 
                             <div className="flex items-center justify-between gap-[18px] pt-0.5 max-[760px]:flex-col max-[760px]:items-stretch">
                                 <Link className={`${actionButtonClass} border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} to="/admin/races">

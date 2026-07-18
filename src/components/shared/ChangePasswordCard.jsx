@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { FaLock } from 'react-icons/fa';
 
 import { changePassword } from '../../api/authApi';
+import Toast from './Toast';
+import { useToast } from './useToast';
 
 const emptyPasswordForm = {
     currentPassword: '',
@@ -12,17 +14,13 @@ const emptyPasswordForm = {
 function ChangePasswordCard() {
     const [form, setForm] = useState(emptyPasswordForm);
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
+    const { toast, showToast, hideToast } = useToast();
 
     const handleChange = (field, value) => {
         setForm((previous) => ({
             ...previous,
             [field]: value,
         }));
-
-        setError('');
-        setSuccess('');
     };
 
     const validate = () => {
@@ -55,14 +53,11 @@ function ChangePasswordCard() {
         const validationMessage = validate();
 
         if (validationMessage) {
-            setError(validationMessage);
-            setSuccess('');
+            showToast(validationMessage, 'error');
             return;
         }
 
         setSaving(true);
-        setError('');
-        setSuccess('');
 
         try {
             const response = await changePassword({
@@ -72,9 +67,9 @@ function ChangePasswordCard() {
             });
 
             setForm(emptyPasswordForm);
-            setSuccess(response?.message || 'Password changed successfully.');
+            showToast(response?.message || 'Password changed successfully.', 'success');
         } catch (err) {
-            setError(err.message || 'Failed to change password.');
+            showToast(err.message || 'Failed to change password.', 'error');
         } finally {
             setSaving(false);
         }
@@ -82,6 +77,7 @@ function ChangePasswordCard() {
 
     return (
         <section className="overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 shadow-[0_14px_30px_rgba(15,23,42,0.06)]">
+            <Toast message={toast.message} type={toast.type} title={toast.title} onClose={hideToast} />
             <div className="mb-6 flex items-center gap-3">
                 <div className="grid h-11 w-11 flex-none place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                     <FaLock />
@@ -99,18 +95,6 @@ function ChangePasswordCard() {
             </div>
 
             <form onSubmit={handleSubmit} className="grid gap-5">
-                {error && (
-                    <div className="rounded-[var(--admin-radius)] border border-[#d89288] bg-[#f3e1df] px-4 py-3 text-sm font-semibold text-[#a4392f]">
-                        {error}
-                    </div>
-                )}
-
-                {success && (
-                    <div className="rounded-[var(--admin-radius)] border border-[#9fdcb9] bg-[#e8f7ee] px-4 py-3 text-sm font-semibold text-[#16864f]">
-                        {success}
-                    </div>
-                )}
-
                 <PasswordInput
                     label="Current Password"
                     value={form.currentPassword}

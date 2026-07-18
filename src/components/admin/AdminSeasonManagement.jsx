@@ -20,6 +20,7 @@ import { adminApi } from '../../api/adminApi';
 import {
     confirmAdminAction,
     showAdminSuccess,
+    showAdminError,
 } from '../../utils/adminFeedback';
 
 import AdminLayout from './AdminLayout';
@@ -118,8 +119,6 @@ function normalizeSeasonRewards(payload) {
 function AdminSeasonManagement() {
     const [seasons, setSeasons] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [message, setMessage] = useState('');
     const [editingSeason, setEditingSeason] = useState(null);
     const [seasonForm, setSeasonForm] = useState(emptySeasonForm);
     const [savingSeason, setSavingSeason] = useState(false);
@@ -136,14 +135,13 @@ function AdminSeasonManagement() {
 
     const loadSeasons = async () => {
         setLoading(true);
-        setError('');
 
         try {
             const payload = await adminApi.getSeasons();
             setSeasons(Array.isArray(payload) ? payload : []);
         } catch (err) {
             setSeasons([]);
-            setError(err.message || 'Failed to load seasons.');
+            showAdminError(err.message || 'Failed to load seasons.');
         } finally {
             setLoading(false);
         }
@@ -167,8 +165,6 @@ function AdminSeasonManagement() {
     const resetSeasonForm = () => {
         setEditingSeason(null);
         setSeasonForm(emptySeasonForm);
-        setError('');
-        setMessage('');
     };
 
     const handleSeasonFieldChange = (field) => (event) => {
@@ -180,7 +176,7 @@ function AdminSeasonManagement() {
 
     const startEditSeason = (season) => {
         if (readSeasonField(season, 'status') !== 'Draft') {
-            setError('Only draft seasons can be edited.');
+            showAdminError('Only draft seasons can be edited.');
             return;
         }
 
@@ -191,32 +187,28 @@ function AdminSeasonManagement() {
             endDate: toDateOnly(readSeasonField(season, 'endDate')),
             pointsPerCorrectPrediction: readSeasonField(season, 'pointsPerCorrectPrediction') || 100,
         });
-        setError('');
-        setMessage('');
     };
 
     const handleSeasonSubmit = async (event) => {
         event.preventDefault();
-        setError('');
-        setMessage('');
 
         if (!seasonForm.seasonName.trim()) {
-            setError('Season name is required.');
+            showAdminError('Season name is required.');
             return;
         }
 
         if (!seasonForm.startDate || !seasonForm.endDate) {
-            setError('Season start and end dates are required.');
+            showAdminError('Season start and end dates are required.');
             return;
         }
 
         if (seasonForm.endDate < seasonForm.startDate) {
-            setError('Season end date must be after start date.');
+            showAdminError('Season end date must be after start date.');
             return;
         }
 
         if (Number(seasonForm.pointsPerCorrectPrediction) <= 0) {
-            setError('Points per correct prediction must be greater than 0.');
+            showAdminError('Points per correct prediction must be greater than 0.');
             return;
         }
 
@@ -230,18 +222,16 @@ function AdminSeasonManagement() {
 
             if (editingSeason) {
                 await adminApi.updateSeason(getSeasonId(editingSeason), payload);
-                setMessage('Season updated successfully.');
                 showAdminSuccess('Season updated successfully.', 'Saved');
             } else {
                 await adminApi.createSeason(payload);
-                setMessage('Season created successfully.');
                 showAdminSuccess('Season created successfully.', 'Created');
             }
 
             resetSeasonForm();
             await loadSeasons();
         } catch (err) {
-            setError(err.message || 'Failed to save season.');
+            showAdminError(err.message || 'Failed to save season.');
         } finally {
             setSavingSeason(false);
         }
@@ -288,17 +278,14 @@ function AdminSeasonManagement() {
         }
 
         setActionLoading(`${action}-${id}`);
-        setError('');
-        setMessage('');
 
         try {
             const response = await copy.run();
             const successMessage = response?.message || response?.Message || 'Season updated successfully.';
-            setMessage(successMessage);
             showAdminSuccess(successMessage, 'Updated');
             await loadSeasons();
         } catch (err) {
-            setError(err.message || 'Failed to update season.');
+            showAdminError(err.message || 'Failed to update season.');
         } finally {
             setActionLoading('');
         }
@@ -306,15 +293,13 @@ function AdminSeasonManagement() {
 
     const configureRewardRules = async (season) => {
         setRuleSeason(season);
-        setError('');
-        setMessage('');
 
         try {
             const payload = await adminApi.getSeasonRewardRules(getSeasonId(season));
             setRewardRules(normalizeRewardRules(payload));
         } catch (err) {
             setRewardRules(defaultRewardRules);
-            setError(err.message || 'Failed to load reward rules.');
+            showAdminError(err.message || 'Failed to load reward rules.');
         }
     };
 
@@ -332,7 +317,7 @@ function AdminSeasonManagement() {
         const status = readSeasonField(season, 'status');
 
         if (!id || !canDeleteSeason(status)) {
-            setDetailError('Only draft or cancelled seasons can be deleted.');
+            showAdminError('Only draft or cancelled seasons can be deleted.');
             return;
         }
 
@@ -348,19 +333,15 @@ function AdminSeasonManagement() {
         }
 
         setActionLoading(`delete-${id}`);
-        setDetailError('');
-        setError('');
-        setMessage('');
 
         try {
             const response = await adminApi.deleteSeason(id);
             const successMessage = response?.message || response?.Message || 'Season deleted successfully.';
-            setMessage(successMessage);
             showAdminSuccess(successMessage, 'Deleted');
             closeSeasonDetail();
             await loadSeasons();
         } catch (err) {
-            setDetailError(err.message || 'Failed to delete season.');
+            showAdminError(err.message || 'Failed to delete season.');
         } finally {
             setActionLoading('');
         }
@@ -422,12 +403,12 @@ function AdminSeasonManagement() {
 
     const saveRewardRules = async () => {
         if (!ruleSeason) {
-            setError('Select a draft season before saving reward rules.');
+            showAdminError('Select a draft season before saving reward rules.');
             return;
         }
 
         if (readSeasonField(ruleSeason, 'status') !== 'Draft') {
-            setError('Reward rules can only be changed while the season is Draft.');
+            showAdminError('Reward rules can only be changed while the season is Draft.');
             return;
         }
 
@@ -439,21 +420,18 @@ function AdminSeasonManagement() {
         }));
 
         if (sanitizedRules.some((rule) => !rule.rankPosition || rule.rankPosition <= 0 || !rule.rewardName || rule.bonusPoints < 0)) {
-            setError('Each reward rule needs a rank, reward name, and non-negative bonus points.');
+            showAdminError('Each reward rule needs a rank, reward name, and non-negative bonus points.');
             return;
         }
 
         setSavingRules(true);
-        setError('');
-        setMessage('');
 
         try {
             await adminApi.upsertSeasonRewardRules(getSeasonId(ruleSeason), sanitizedRules);
-            setMessage('Reward rules saved successfully.');
             showAdminSuccess('Reward rules saved successfully.', 'Saved');
             await loadSeasons();
         } catch (err) {
-            setError(err.message || 'Failed to save reward rules.');
+            showAdminError(err.message || 'Failed to save reward rules.');
         } finally {
             setSavingRules(false);
         }
@@ -516,12 +494,6 @@ function AdminSeasonManagement() {
                         );
                     })}
                 </section>
-
-                {(error || message) && (
-                    <section className={`rounded-md border px-4 py-3 text-[0.86rem] font-bold ${error ? 'border-[#f0b4b4] bg-[#fff3f3] text-[var(--admin-primary)]' : 'border-[#afe2c4] bg-[#effcf4] text-[#15803d]'}`}>
-                        {error || message}
-                    </section>
-                )}
 
                 <section className="grid grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-6 max-[1180px]:grid-cols-1">
                     <form className={panelClass} onSubmit={handleSeasonSubmit}>

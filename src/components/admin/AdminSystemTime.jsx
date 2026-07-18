@@ -6,7 +6,6 @@ import {
 } from 'react';
 
 import {
-    FaCheckCircle,
     FaClock,
     FaDatabase,
     FaEraser,
@@ -14,11 +13,14 @@ import {
     FaForward,
     FaShieldAlt,
     FaSyncAlt,
-    FaTimesCircle,
 } from 'react-icons/fa';
 
 import { adminSystemApi } from '../../api/adminSystemApi';
-import { confirmAdminAction } from '../../utils/adminFeedback';
+import {
+    confirmAdminAction,
+    showAdminSuccess,
+    showAdminError,
+} from '../../utils/adminFeedback';
 import { getAuthUser } from '../../utils/tokenStorage';
 
 import AdminLayout from './AdminLayout';
@@ -186,7 +188,6 @@ function AdminSystemTime() {
     const authUser = getAuthUser();
     const accountRole = readApiField(authUser, 'role') || '';
     const isAdmin = accountRole === 'Admin';
-    const toastTimerRef = useRef(null);
     const clockSnapshotRef = useRef(null);
 
     const [systemTime, setSystemTime] = useState(null);
@@ -194,27 +195,7 @@ function AdminSystemTime() {
     const [advanceForm, setAdvanceForm] = useState(initialAdvanceForm);
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState('');
-    const [error, setError] = useState('');
-    const [toast, setToast] = useState(null);
     const [clockTick, setClockTick] = useState(() => Date.now());
-
-    const showToast = useCallback((message, type = 'success') => {
-        if (toastTimerRef.current) {
-            window.clearTimeout(toastTimerRef.current);
-        }
-
-        setToast({ message, type });
-        toastTimerRef.current = window.setTimeout(() => {
-            setToast(null);
-            toastTimerRef.current = null;
-        }, 3600);
-    }, []);
-
-    useEffect(() => () => {
-        if (toastTimerRef.current) {
-            window.clearTimeout(toastTimerRef.current);
-        }
-    }, []);
 
     useEffect(() => {
         if (!systemTime) {
@@ -241,15 +222,13 @@ function AdminSystemTime() {
             setLoading(true);
         }
 
-        setError('');
-
         try {
             const payload = await adminSystemApi.getSystemTime();
 
             setSystemTime(payload);
             return true;
         } catch (err) {
-            setError(err.message || 'Failed to load system time.');
+            showAdminError(err.message || 'Failed to load system time.');
             return false;
         } finally {
             if (!silent) {
@@ -288,7 +267,7 @@ function AdminSystemTime() {
         const loaded = await loadSystemTime();
 
         if (loaded) {
-            showToast('System time refreshed.');
+            showAdminSuccess('System time refreshed.');
         }
     };
 
@@ -308,10 +287,9 @@ function AdminSystemTime() {
 
     const handleAdvanceSubmit = async (event) => {
         event.preventDefault();
-        setError('');
 
         if (!allowTimeOverride) {
-            setError('Time override is disabled in this environment.');
+            showAdminError('Time override is disabled in this environment.');
             return;
         }
 
@@ -320,7 +298,7 @@ function AdminSystemTime() {
         const minutes = toNonNegativeInt(advanceForm.minutes);
 
         if (days + hours + minutes === 0) {
-            setError('Please enter at least one positive advance value.');
+            showAdminError('Please enter at least one positive advance value.');
             return;
         }
 
@@ -346,17 +324,15 @@ function AdminSystemTime() {
             });
 
             applyTimeResponse(payload);
-            showToast(advanceForm.autoSync ? 'System time advanced and statuses synced.' : 'System time advanced.');
+            showAdminSuccess(advanceForm.autoSync ? 'System time advanced and statuses synced.' : 'System time advanced.');
         } catch (err) {
-            setError(err.message || 'Failed to advance system time.');
+            showAdminError(err.message || 'Failed to advance system time.');
         } finally {
             setActionLoading('');
         }
     };
 
     const handleSyncStatuses = async () => {
-        setError('');
-
         const ok = await confirmAdminAction({
             title: 'Sync statuses',
             message: 'Are you sure you want to sync statuses using the current effective time? This can change real data in the database.',
@@ -374,19 +350,17 @@ function AdminSystemTime() {
             const payload = await adminSystemApi.syncTimeStatuses();
             setSyncResult(payload);
             await loadSystemTime({ silent: true });
-            showToast('Time statuses synchronized.');
+            showAdminSuccess('Time statuses synchronized.');
         } catch (err) {
-            setError(err.message || 'Failed to sync time statuses.');
+            showAdminError(err.message || 'Failed to sync time statuses.');
         } finally {
             setActionLoading('');
         }
     };
 
     const handleClearOverride = async () => {
-        setError('');
-
         if (!allowTimeOverride) {
-            setError('Time override is disabled in this environment.');
+            showAdminError('Time override is disabled in this environment.');
             return;
         }
 
@@ -410,9 +384,9 @@ function AdminSystemTime() {
             const syncPayload = await adminSystemApi.syncTimeStatuses();
             setSyncResult(syncPayload);
             await loadSystemTime({ silent: true });
-            showToast('Time override cleared and statuses synced.');
+            showAdminSuccess('Time override cleared and statuses synced.');
         } catch (err) {
-            setError(err.message || 'Failed to clear time override and sync statuses.');
+            showAdminError(err.message || 'Failed to clear time override and sync statuses.');
         } finally {
             setActionLoading('');
         }
@@ -474,12 +448,6 @@ function AdminSystemTime() {
                         </div>
                     </div>
                 </section>
-
-                {error && (
-                    <div className="rounded-md border border-[#e7a49a] bg-[#e8f7ef] px-4 py-3 text-[0.86rem] font-bold text-[var(--admin-primary)]">
-                        {error}
-                    </div>
-                )}
 
                 <section className={panelClass}>
                     <div className={panelHeaderClass}>
@@ -615,13 +583,6 @@ function AdminSystemTime() {
                     )}
                 </section>
             </section>
-
-            {toast && (
-                <div className={`fixed bottom-6 right-6 z-50 flex max-w-[360px] items-center gap-3 rounded-md px-5 py-3 text-[0.86rem] font-bold text-white shadow-lg ${toast.type === 'error' ? 'bg-red-700' : 'bg-[var(--admin-primary-dark)]'}`}>
-                    {toast.type === 'error' ? <FaTimesCircle aria-hidden="true" /> : <FaCheckCircle aria-hidden="true" />}
-                    <span>{toast.message}</span>
-                </div>
-            )}
         </AdminLayout>
     );
 }

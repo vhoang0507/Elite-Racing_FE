@@ -74,7 +74,7 @@ function HorseProfileCard({ horse }) {
                 </div>
             </div>
             <div style={styles.infoGrid}>
-                <div><small style={styles.label}>AGE</small><p style={styles.value}>{horse.age} yrs</p></div>
+                <div><small style={styles.label}>AGE</small><p style={styles.value}>{horse.age} years</p></div>
                 <div><small style={styles.label}>WEIGHT</small><p style={styles.value}>{horse.weightKg} kg</p></div>
                 <div><small style={styles.label}>OWNER</small><p style={styles.value}>{horse.ownerName}</p></div>
                 <div><small style={styles.label}>ASSIGNED JOCKEY</small><p style={styles.value}>{horse.assignedJockeyName ?? "—"}</p></div>

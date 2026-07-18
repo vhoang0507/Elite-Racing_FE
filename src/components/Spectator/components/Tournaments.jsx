@@ -12,6 +12,8 @@ import {
 import { spectatorApi } from '../../../api/spectatorApi';
 import { resolveFileUrl } from '../../../api/uploadApi';
 import { formatCurrency } from '../../../utils/currency';
+import Toast from '../../shared/Toast';
+import { useToast } from '../../shared/useToast';
 
 // ─── Status helpers ───────────────────────────────────────────────────────────
 
@@ -61,7 +63,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
     const [selected, setSelected] = useState(null);
     const [stakePoints, setStakePoints] = useState(10);
     const [submitting, setSubmitting] = useState(false);
-    const [error, setError] = useState('');
+    const { toast, showToast, hideToast } = useToast();
 
     useEffect(() => {
         Promise.all([
@@ -86,9 +88,8 @@ function PredictModal({ tournament, onClose, onSuccess }) {
 
     const handleSubmit = async () => {
         if (!selected) return;
-        if (!stakeValid) { setError(`Stake must be between ${minStake} and ${maxStake} points.`); return; }
+        if (!stakeValid) { showToast(`Stake must be between ${minStake} and ${maxStake} points.`, 'error'); return; }
         setSubmitting(true);
-        setError('');
         try {
             await spectatorApi.createPrediction({
                 tournamentId: tournament.tournamentId,
@@ -97,7 +98,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
             });
             onSuccess(tournament.tournamentId, selected);
         } catch (err) {
-            setError(err.message || 'Failed to submit prediction. Please try again.');
+            showToast(err.message || 'Failed to submit prediction. Please try again.', 'error');
         } finally {
             setSubmitting(false);
         }
@@ -111,23 +112,37 @@ function PredictModal({ tournament, onClose, onSuccess }) {
             style={{ position: 'fixed', inset: 0, zIndex: 200, backgroundColor: 'rgba(20,10,10,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
             onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
         >
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                title={toast.title}
+                onClose={hideToast}
+            />
             <div style={{ backgroundColor: '#fff', borderRadius: 16, width: '100%', maxWidth: 700, boxShadow: '0 32px 80px rgba(37,18,14,0.3)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '92vh' }}>
 
                 {/* ── Header ── */}
                 <div style={{ padding: '22px 28px 18px', borderBottom: '1px solid #f0e8e6', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexShrink: 0, background: '#fdfaf9' }}>
-                    <div style={{ minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: 10, fontWeight: 800, color: '#16305c', textTransform: 'uppercase', letterSpacing: '0.07em' }}>🏆 Tournament Prediction</p>
-                        <h3 style={{ margin: '5px 0 0', fontSize: '1.1rem', fontWeight: 800, color: '#2b1b1b', lineHeight: 1.3 }}>{tournament.tournamentName}</h3>
-                        {/* Meta row */}
-                        <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: '4px 14px', fontSize: '0.78rem', color: '#888' }}>
-                            {tournament.location && <span>📍 {tournament.location}</span>}
-                            {raceDate && <span>📅 Race: {raceDate}</span>}
-                            {tournament.prizePool > 0 && <span>🏅 Prize: {formatCurrency(tournament.prizePool)}</span>}
-                            {raceStatus && (
-                                <span style={{ fontWeight: 700, color: raceStatus === 'Scheduled' ? '#1565c0' : '#856404' }}>
-                                    ⚑ {raceStatus}
-                                </span>
-                            )}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, minWidth: 0 }}>
+                        <img
+                            src={tournament.imageUrl ? resolveFileUrl(tournament.imageUrl) : '/GoldenDerby.jpg'}
+                            alt={tournament.tournamentName}
+                            style={{ width: 64, height: 64, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }}
+                            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/GoldenDerby.jpg'; }}
+                        />
+                        <div style={{ minWidth: 0 }}>
+                            <p style={{ margin: 0, fontSize: 10, fontWeight: 800, color: '#16305c', textTransform: 'uppercase', letterSpacing: '0.07em' }}>🏆 Tournament Prediction</p>
+                            <h3 style={{ margin: '5px 0 0', fontSize: '1.1rem', fontWeight: 800, color: '#2b1b1b', lineHeight: 1.3 }}>{tournament.tournamentName}</h3>
+                            {/* Meta row */}
+                            <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: '4px 14px', fontSize: '0.78rem', color: '#888' }}>
+                                {tournament.location && <span>📍 {tournament.location}</span>}
+                                {raceDate && <span>📅 Race: {raceDate}</span>}
+                                {tournament.prizePool > 0 && <span>🏅 Prize: {formatCurrency(tournament.prizePool)}</span>}
+                                {raceStatus && (
+                                    <span style={{ fontWeight: 700, color: raceStatus === 'Scheduled' ? '#1565c0' : '#856404' }}>
+                                        ⚑ {raceStatus}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     </div>
                     <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#bbb', fontSize: 18, padding: '2px 4px', lineHeight: 1, flexShrink: 0 }}>
@@ -269,8 +284,6 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                         </div>
                     )}
 
-                    {error && <p style={{ margin: '0 0 10px', fontSize: '0.82rem', color: '#a4392f', background: '#f8d7da', padding: '9px 13px', borderRadius: 7 }}>{error}</p>}
-
                     <div style={{ display: 'flex', gap: 10 }}>
                         <button type="button" onClick={onClose} style={{ flex: 1, padding: '11px 0', borderRadius: 9, fontWeight: 600, border: '1.5px solid #dce5ef', background: '#fff', color: '#555', cursor: 'pointer', fontSize: '0.88rem' }}>
                             Cancel
@@ -313,6 +326,14 @@ function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
         <article className="surface-card" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             {/* Status stripe */}
             <div style={{ height: 4, background: hasPredicted ? (isCorrect === true ? '#16864f' : isCorrect === false ? '#a4392f' : isLocked ? '#16305c' : '#8a6209') : (open ? '#16305c' : '#ccc') }} />
+
+            {/* Tournament image */}
+            <img
+                src={tournament.imageUrl ? resolveFileUrl(tournament.imageUrl) : '/GoldenDerby.jpg'}
+                alt={tournament.tournamentName}
+                style={{ width: '100%', height: 120, objectFit: 'cover', flexShrink: 0 }}
+                onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/GoldenDerby.jpg'; }}
+            />
 
             <div style={{ padding: '18px 20px', flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {/* Tournament info */}

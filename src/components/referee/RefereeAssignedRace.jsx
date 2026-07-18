@@ -8,6 +8,8 @@ import {
 
 import { refereeApi } from '../../api/refereeApi';
 import RefereeLayout from './RefereeLayout';
+import Toast from '../shared/Toast';
+import { useToast } from '../shared/useToast';
 
 function formatDateTime(value) {
     if (!value) return 'N/A';
@@ -91,7 +93,7 @@ function RefereeAssignedRace() {
     const navigate = useNavigate();
     const [races, setRaces] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const { toast, showToast, hideToast } = useToast();
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
 
@@ -111,12 +113,11 @@ function RefereeAssignedRace() {
         let ignore = false;
         async function loadRaces() {
             setLoading(true);
-            setError('');
             try {
                 const data = await refereeApi.getAssignedRacesWithLifecycle();
                 if (!ignore) setRaces(data ?? []);
             } catch (err) {
-                if (!ignore) setError(err.message || 'Failed to load assigned races.');
+                if (!ignore) showToast(err.message || 'Failed to load assigned races.', 'error');
             } finally {
                 if (!ignore) setLoading(false);
             }
@@ -127,6 +128,12 @@ function RefereeAssignedRace() {
 
     return (
         <RefereeLayout activeKey="assigned-races">
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                title={toast.title}
+                onClose={hideToast}
+            />
             <section className="page-shell">
                 <div>
                     <h1 className="page-title">My Assigned Races</h1>
@@ -134,12 +141,6 @@ function RefereeAssignedRace() {
                         Select a race to perform pre-race inspection or manage post-race results and reports.
                     </p>
                 </div>
-
-                {error && (
-                    <div className="rounded-[8px] border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
-                        {error}
-                    </div>
-                )}
 
                 {!loading && races.length > 0 && (
                     <div className="flex flex-wrap gap-3">

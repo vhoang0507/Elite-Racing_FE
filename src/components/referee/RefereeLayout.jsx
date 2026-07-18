@@ -7,7 +7,6 @@ import {
     FaCog,
     FaFlagCheckered,
     FaGavel,
-    FaQuestionCircle,
     FaSearch,
     FaSignOutAlt,
 } from 'react-icons/fa';
@@ -260,14 +259,6 @@ function RefereeLayout({
                 <div className="flex-1 max-[980px]:hidden" />
 
                 <div className="role-sidebar-actions">
-                    <button
-                        type="button"
-                        className="role-sidebar-action"
-                    >
-                        <FaQuestionCircle className="h-4 w-4" />
-                        <span>Support</span>
-                    </button>
-
                     <button
                         type="button"
                         onClick={handleLogout}

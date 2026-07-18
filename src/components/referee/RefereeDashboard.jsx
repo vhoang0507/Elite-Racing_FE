@@ -10,6 +10,8 @@ import {
 
 import { refereeApi } from '../../api/refereeApi';
 import RefereeLayout from './RefereeLayout';
+import Toast from '../shared/Toast';
+import { useToast } from '../shared/useToast';
 
 function formatDateTime(value) {
     if (!value) return 'N/A';
@@ -89,14 +91,13 @@ function RefereeDashboard() {
     const navigate = useNavigate();
     const [dashboard, setDashboard] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const { toast, showToast, hideToast } = useToast();
 
     useEffect(() => {
         let ignore = false;
 
         async function loadDashboard() {
             setLoading(true);
-            setError('');
 
             try {
                 const [data, assignedRaces] = await Promise.all([
@@ -130,7 +131,7 @@ function RefereeDashboard() {
                     });
                 }
             } catch (err) {
-                if (!ignore) setError(err.message || 'Failed to load referee dashboard.');
+                if (!ignore) showToast(err.message || 'Failed to load referee dashboard.', 'error');
             } finally {
                 if (!ignore) setLoading(false);
             }
@@ -189,6 +190,12 @@ function RefereeDashboard() {
             activeKey="dashboard"
             searchPlaceholder="Search records, horses, races..."
         >
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                title={toast.title}
+                onClose={hideToast}
+            />
             <section className="page-shell">
                 <div className="page-heading border-b border-[var(--admin-border)] pb-5">
                     <div>
@@ -206,12 +213,6 @@ function RefereeDashboard() {
                         }).format(new Date())}
                     </div>
                 </div>
-
-                {error && (
-                    <div className="rounded-[8px] border border-red-200 bg-red-50 px-5 py-4 font-semibold text-red-700">
-                        {error}
-                    </div>
-                )}
 
                 {loading ? (
                     <div className="surface-card p-8 text-center font-semibold text-[var(--admin-muted)]">

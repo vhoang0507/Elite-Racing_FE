@@ -104,7 +104,6 @@ function PendingInvitations() {
     const [invitations, setInvitations] = useState([]);
     const [dashboard, setDashboard] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
     const [selectedInvitation, setSelectedInvitation] = useState(null);
     const [loadingDetail, setLoadingDetail] = useState(false);
     const [search, setSearch] = useState('');
@@ -131,7 +130,7 @@ function PendingInvitations() {
                 setInvitations(list);
                 setDashboard(dashData);
             })
-            .catch((err) => setError(err.message || 'Failed to load invitations'))
+            .catch((err) => showToast(err.message || 'Failed to load invitations', 'error'))
             .finally(() => setLoading(false));
     }, []);
 
@@ -207,12 +206,6 @@ function PendingInvitations() {
                         Review race invitations from horse owners and respond before expiration.
                     </p>
                 </div>
-
-                {error && (
-                    <div className="rounded-[var(--admin-radius)] border border-[#d89288] bg-[#f3e1df] px-4 py-3 text-[0.85rem] font-semibold text-[#a4392f]">
-                        {error}
-                    </div>
-                )}
 
                 <div>
                     <input

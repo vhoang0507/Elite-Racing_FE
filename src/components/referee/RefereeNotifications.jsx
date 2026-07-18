@@ -9,6 +9,8 @@ import {
 
 import { refereeApi } from '../../api/refereeApi';
 import RefereeLayout from './RefereeLayout';
+import Toast from '../shared/Toast';
+import { useToast } from '../shared/useToast';
 
 function formatDateTime(value) {
     if (!value) return 'N/A';
@@ -28,7 +30,7 @@ function RefereeNotification() {
     const [filter, setFilter] = useState('all');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState('');
+    const { toast, showToast, hideToast } = useToast();
 
     const selectedNotification = useMemo(
         () => notifications.find((item) => item.notificationId === selectedId) ?? notifications[0] ?? null,
@@ -42,7 +44,6 @@ function RefereeNotification() {
     }, [notifications, filter]);
 
     const loadNotifications = async () => {
-        setError('');
         try {
             const [notificationData, unreadData] = await Promise.all([
                 refereeApi.getNotifications(),
@@ -53,7 +54,7 @@ function RefereeNotification() {
             setUnreadCount(unreadData?.unreadCount ?? 0);
             setSelectedId((current) => current ?? notificationData?.[0]?.notificationId ?? null);
         } catch (err) {
-            setError(err.message || 'Failed to load notifications.');
+            showToast(err.message || 'Failed to load notifications.', 'error');
         }
     };
 
@@ -75,7 +76,7 @@ function RefereeNotification() {
                 setUnreadCount(unreadData?.unreadCount ?? 0);
                 setSelectedId(notificationData?.[0]?.notificationId ?? null);
             } catch (err) {
-                if (!ignore) setError(err.message || 'Failed to load notifications.');
+                if (!ignore) showToast(err.message || 'Failed to load notifications.', 'error');
             } finally {
                 if (!ignore) setLoading(false);
             }
@@ -102,19 +103,19 @@ function RefereeNotification() {
             )));
             setUnreadCount((previous) => Math.max(0, previous - 1));
         } catch (err) {
-            setError(err.message || 'Failed to mark notification as read.');
+            showToast(err.message || 'Failed to mark notification as read.', 'error');
         }
     };
 
     const handleMarkAllRead = async () => {
         setSaving(true);
-        setError('');
 
         try {
             await refereeApi.markAllNotificationsAsRead();
             await loadNotifications();
+            showToast('All notifications marked as read.', 'success');
         } catch (err) {
-            setError(err.message || 'Failed to mark all notifications as read.');
+            showToast(err.message || 'Failed to mark all notifications as read.', 'error');
         } finally {
             setSaving(false);
         }
@@ -125,6 +126,12 @@ function RefereeNotification() {
             activeKey="notifications"
             searchPlaceholder="Search notifications..."
         >
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                title={toast.title}
+                onClose={hideToast}
+            />
             <div className="min-h-screen bg-[#faf8f8] p-8">
                 <div className="mb-8">
                     <h1 className="page-title">
@@ -135,12 +142,6 @@ function RefereeNotification() {
                         Track race assignments, inspection updates, result submissions, and official race alerts.
                     </p>
                 </div>
-
-                {error && (
-                    <div className="mb-6 rounded-[8px] border border-[#e3bcb7] bg-[#f3e1df] px-5 py-4 font-semibold text-[#a4392f]">
-                        {error}
-                    </div>
-                )}
 
                 <div className="mb-8 flex flex-wrap gap-5">
                     <div className="flex w-56 justify-between rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
