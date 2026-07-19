@@ -23,6 +23,7 @@ import { useToast } from '../shared/useToast';
 
 const emptyResultForm = {
     registrationId: '',
+    outcomeStatus: 'Finished',
     finishTimeSeconds: '',
     finishPosition: '',
     score: '',
@@ -46,6 +47,14 @@ const violationTypes = [
 const TABS = [
     { key: 'results',    icon: FaTrophy,      label: 'Results' },
     { key: 'violations', icon: FaGavel,        label: 'Violations' },
+];
+
+const outcomeOptions = [
+    { value: 'Finished', label: 'Finished' },
+    { value: 'DNS', label: 'Did Not Start' },
+    { value: 'DNF', label: 'Did Not Finish' },
+    { value: 'DSQ', label: 'Disqualified' },
+    { value: 'Withdrawn', label: 'Withdrawn' },
 ];
 
 function formatDateTime(value) {
@@ -155,6 +164,7 @@ function AssignedPostRace() {
     const isEditingResult = Boolean(editingResultId);
     const isEditingViolation = Boolean(editingViolationId);
     const isEditingReport = Boolean(editingReportId);
+    const resultFormIsFinished = resultForm.outcomeStatus === 'Finished';
     const trimmedReportContent = reportContent.trim();
     const selectedRaceBlockingReason = getRaceBlockingReason(selectedRace);
 
@@ -226,7 +236,7 @@ function AssignedPostRace() {
         }
     }, [initialRaceId, showToast]);
 
-    async function loadRaceWorkflowData(raceId, ignoreRef = { current: false }) {
+    const loadRaceWorkflowData = useCallback(async (raceId, ignoreRef = { current: false }) => {
         if (!raceId) return;
         setLoadingRaceData(true);
         try {
@@ -256,7 +266,7 @@ function AssignedPostRace() {
         } finally {
             if (!ignoreRef.current) setLoadingRaceData(false);
         }
-    }
+    }, [showToast]);
 
     useEffect(() => {
         const ignoreRef = { current: false };
@@ -269,7 +279,7 @@ function AssignedPostRace() {
         const ignoreRef = { current: false };
         loadRaceWorkflowData(selectedRaceId, ignoreRef);
         return () => { ignoreRef.current = true; };
-    }, [selectedRaceId]);
+    }, [loadRaceWorkflowData, selectedRaceId]);
 
     const refreshResults = async () => { if (selectedRaceId) setResults(await refereeApi.getRaceResults(selectedRaceId) ?? []); };
     const refreshViolations = async () => { if (selectedRaceId) setViolations(await refereeApi.getViolations(selectedRaceId) ?? []); };
@@ -303,11 +313,14 @@ function AssignedPostRace() {
         if (!selectedRaceId) return 'Select a race first.';
         if (!canEnterResults) return 'Race must be Finished before entering results.';
         if (!resultForm.registrationId) return 'Select a registration.';
-        const hasValue = resultForm.finishPosition !== '' || resultForm.finishTimeSeconds !== '' || resultForm.score !== '';
-        if (!hasValue) return 'Enter finish position, time, or score.';
+        if (!outcomeOptions.some((option) => option.value === resultForm.outcomeStatus)) return 'Select a valid outcome.';
+        const isFinished = resultForm.outcomeStatus === 'Finished';
         const pos = nullableNumber(resultForm.finishPosition);
-        if (resultForm.finishPosition !== '' && (!Number.isInteger(pos) || pos < 1)) return 'Finish position must be a positive whole number.';
         const time = nullableNumber(resultForm.finishTimeSeconds);
+        if (isFinished && (!Number.isInteger(pos) || pos < 1)) return 'Finished outcome requires a positive whole-number position.';
+        if (!isFinished && resultForm.finishPosition !== '') return `${resultForm.outcomeStatus} outcome must not have a finish position.`;
+        if (isFinished && (time === null || time <= 0)) return 'Finished outcome requires a finish time greater than 0.';
+        if (!isFinished && resultForm.finishTimeSeconds !== '' && (time === null || time <= 0)) return 'Finish time must be greater than 0 when provided.';
         if (resultForm.finishTimeSeconds !== '' && (time === null || time < 0)) return 'Finish time must be ≥ 0.';
         const score = nullableNumber(resultForm.score);
         if (resultForm.score !== '' && (score === null || score < 0)) return 'Score must be ≥ 0.';
@@ -428,11 +441,13 @@ function AssignedPostRace() {
         if (msg) { showToast(msg, 'error'); return; }
         setSaving('result');
         try {
+            const isFinished = resultForm.outcomeStatus === 'Finished';
             await refereeApi.saveRaceResult(selectedRaceId, {
                 registrationId: Number(resultForm.registrationId),
                 finishTimeSeconds: nullableNumber(resultForm.finishTimeSeconds),
-                finishPosition: nullableNumber(resultForm.finishPosition),
+                finishPosition: isFinished ? nullableNumber(resultForm.finishPosition) : null,
                 score: nullableNumber(resultForm.score),
+                outcomeStatus: resultForm.outcomeStatus,
                 note: resultForm.note?.trim() || null,
             });
             await refreshResults();
@@ -452,6 +467,7 @@ function AssignedPostRace() {
         setEditingResultId(String(result.resultId || result.registrationId || ''));
         setResultForm({
             registrationId: String(result.registrationId),
+            outcomeStatus: result.outcomeStatus ?? result.OutcomeStatus ?? 'Finished',
             finishTimeSeconds: result.finishTimeSeconds ?? '',
             finishPosition: result.finishPosition ?? '',
             score: result.score ?? '',
@@ -806,12 +822,34 @@ function AssignedPostRace() {
                                     </div>
                                 )}
 
+                                <div>
+                                    <label className={labelClass}>Outcome</label>
+                                    <select
+                                        className={inputClass}
+                                        disabled={loadingRaceData}
+                                        onChange={(e) => setResultForm((p) => ({
+                                            ...p,
+                                            outcomeStatus: e.target.value,
+                                            finishPosition: e.target.value === 'Finished' ? p.finishPosition : '',
+                                        }))}
+                                        value={resultForm.outcomeStatus}
+                                    >
+                                        {outcomeOptions.map((option) => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                     <div>
                                         <label className={labelClass}>Finish Position</label>
                                         <input type="number" min="1" step="1" value={resultForm.finishPosition}
                                             onChange={(e) => setResultForm((p) => ({ ...p, finishPosition: e.target.value }))}
-                                            placeholder="e.g. 1" className={inputClass} />
+                                            placeholder={resultFormIsFinished ? 'e.g. 1' : 'Not applicable'}
+                                            disabled={!resultFormIsFinished}
+                                            className={inputClass} />
                                     </div>
                                     <div>
                                         <label className={labelClass}>Time (seconds)</label>
@@ -858,6 +896,7 @@ function AssignedPostRace() {
                                     <thead>
                                         <tr>
                                             <th>Horse</th>
+                                            <th>Outcome</th>
                                             <th>Position</th>
                                             <th>Time</th>
                                             <th>Score</th>
@@ -868,13 +907,14 @@ function AssignedPostRace() {
                                     </thead>
                                     <tbody>
                                         {results.length === 0 ? (
-                                            <tr><td colSpan={7} className="p-6 text-center text-[var(--admin-muted)]">No results submitted yet.</td></tr>
+                                            <tr><td colSpan={8} className="p-6 text-center text-[var(--admin-muted)]">No results submitted yet.</td></tr>
                                         ) : results.map((result) => (
                                             <tr key={result.resultId}>
                                                 <td>
                                                     <div className="font-bold text-[0.9rem]">{result.horseName}</div>
                                                     <div className="text-xs text-[var(--admin-muted)]">Registration #{result.registrationId}</div>
                                                 </td>
+                                                <td className="text-sm font-bold text-[var(--admin-ink)]">{result.outcomeStatus ?? result.OutcomeStatus ?? 'Finished'}</td>
                                                 <td className="text-sm">{result.finishPosition ?? '-'}</td>
                                                 <td className="text-sm">{formatSeconds(result.finishTimeSeconds)}</td>
                                                 <td className="text-sm">{result.score ?? '-'}</td>

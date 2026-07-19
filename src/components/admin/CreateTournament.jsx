@@ -52,6 +52,13 @@ const locationOptions = [
     'Santa Anita Park, Arcadia, California',
 ];
 const distanceOptions = [1000, 1500, 2400];
+const minDate = '2000-01-01';
+const maxDate = '2100-12-31';
+const maxPrizePool = 1000000000;
+const maxTournamentImageSize = 5 * 1024 * 1024;
+const allowedTournamentImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+const allowedTournamentImageExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+const tournamentImageAccept = '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp';
 
 function readSeasonField(season, key) {
     const pascalKey = key[0].toUpperCase() + key.slice(1);
@@ -90,6 +97,31 @@ function formatDateOnly(value) {
         day: '2-digit',
         year: 'numeric',
     }).format(new Date(`${date}T00:00:00`));
+}
+
+function isDateYearInRange(dateValue) {
+    const year = Number(String(dateValue || '').slice(0, 4));
+
+    return Number.isInteger(year) && year >= 2000 && year <= 2100;
+}
+
+function validateTournamentImage(file) {
+    if (!(typeof File !== 'undefined' && file instanceof File) || file.size === 0) {
+        return null;
+    }
+
+    const lowerName = file.name.toLowerCase();
+    const hasAllowedExtension = allowedTournamentImageExtensions.some((extension) => lowerName.endsWith(extension));
+
+    if (!hasAllowedExtension || !allowedTournamentImageTypes.includes(file.type)) {
+        return 'Tournament image must be a JPG, JPEG, PNG, or WEBP file.';
+    }
+
+    if (file.size > maxTournamentImageSize) {
+        return 'Tournament image must be 5MB or smaller.';
+    }
+
+    return null;
 }
 
 function CreateTournament() {
@@ -199,17 +231,42 @@ function CreateTournament() {
         const goldPrize = parseCurrency(formData.get('goldPrize'));
         const silverPrize = parseCurrency(formData.get('silverPrize'));
         const bronzePrize = parseCurrency(formData.get('bronzePrize'));
+        const prizePool = goldPrize + silverPrize + bronzePrize;
+        const description = String(formData.get('description') || '').trim();
+        const location = String(formData.get('location') || '').trim();
+        const rules = String(formData.get('rules') || '').trim();
+        const tournamentImage = formData.get('tournamentImage');
 
         if (!name) {
             showAdminError('Tournament name is required.');
+            return;
+        }
+        if (name.length < 3 || name.length > 200) {
+            showAdminError('Tournament name must be between 3 and 200 characters.');
+            return;
+        }
+        if (description.length > 1000) {
+            showAdminError('Description cannot exceed 1,000 characters.');
+            return;
+        }
+        if (location.length < 3 || location.length > 255) {
+            showAdminError('Location must be between 3 and 255 characters.');
             return;
         }
         if (!raceDateTime || !raceDate || !raceStartTime) {
             showAdminError('Race Date is required.');
             return;
         }
+        if (!isDateYearInRange(raceDate) || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(raceStartTime)) {
+            showAdminError('Race date must be between year 2000 and 2100 and use a valid HH:mm time.');
+            return;
+        }
         if (!registrationDeadline) {
             showAdminError('Registration Deadline is required.');
+            return;
+        }
+        if (!isDateYearInRange(registrationDeadline)) {
+            showAdminError('Registration deadline year must be between 2000 and 2100.');
             return;
         }
         if (raceDate <= registrationDeadline) {
@@ -233,36 +290,48 @@ function CreateTournament() {
                 return;
             }
         }
-        if (maxHorses <= 0) {
-            showAdminError('Max horses must be greater than 0.');
+        if (!Number.isInteger(maxHorses) || maxHorses < 2 || maxHorses > 20) {
+            showAdminError('Max horses must be an integer between 2 and 20.');
             return;
         }
         if (goldPrize <= 0 || silverPrize <= 0 || bronzePrize <= 0) {
             showAdminError('Gold, Silver, and Bronze prizes must all be greater than 0.');
             return;
         }
+        if (prizePool > maxPrizePool) {
+            showAdminError('Prize pool cannot exceed 1,000,000,000.');
+            return;
+        }
         if (!(goldPrize > silverPrize && silverPrize > bronzePrize)) {
             showAdminError('Prize amounts must decrease by rank: Gold prize must be greater than Silver prize, and Silver prize must be greater than Bronze prize.');
+            return;
+        }
+        if (rules.length > 10000) {
+            showAdminError('Rules cannot exceed 10,000 characters.');
+            return;
+        }
+
+        const imageError = validateTournamentImage(tournamentImage);
+
+        if (imageError) {
+            showAdminError(imageError);
             return;
         }
 
         setIsSaving(true);
         try {
             const payload = new FormData();
-            const tournamentImage = formData.get('tournamentImage');
 
             payload.append('TournamentName', name);
-            payload.append('Description', formData.get('description') || '');
-            payload.append('Location', formData.get('location') || '');
+            payload.append('Description', description);
+            payload.append('Location', location);
             payload.append('RaceDate', raceDate);
             payload.append('RaceStartTime', raceStartTime);
             payload.append('RegistrationDeadline', registrationDeadline);
             payload.append('DistanceMeters', String(distanceMeters));
             payload.append('MaxHorses', String(maxHorses));
-            payload.append('PrizePool', String(
-                goldPrize + silverPrize + bronzePrize
-            ));
-            payload.append('Rules', formData.get('rules') || '');
+            payload.append('PrizePool', String(prizePool));
+            payload.append('Rules', rules);
 
             if (typeof File !== 'undefined' && tournamentImage instanceof File && tournamentImage.size > 0) {
                 payload.append('TournamentImage', tournamentImage);
@@ -345,7 +414,7 @@ function CreateTournament() {
 
                                 <label className={fieldClass}>
                                     <span className={labelClass}>Tournament Name</span>
-                                    <input className={inputClass} name="name" placeholder="e.g. The Prestige Cup 2024" required type="text" />
+                                    <input className={inputClass} maxLength={200} minLength={3} name="name" placeholder="e.g. The Prestige Cup 2024" required type="text" />
                                 </label>
 
                                 <div className={twoColumnClass}>
@@ -364,19 +433,19 @@ function CreateTournament() {
 
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Description</span>
-                                        <textarea className={textareaClass} name="description" placeholder="Provide a detailed overview of the race history and significance..." rows="4" />
+                                        <textarea className={textareaClass} maxLength={1000} name="description" placeholder="Provide a detailed overview of the race history and significance..." rows="4" />
                                     </label>
                                 </div>
 
                                 <div className={twoColumnClass}>
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Race Date</span>
-                                        <input className={inputClass} lang="en-US" name="raceDate" onChange={(event) => setRaceDateValue(event.target.value)} type="datetime-local" value={raceDateValue} />
+                                        <input className={inputClass} lang="en-US" max={`${maxDate}T23:59`} min={`${minDate}T00:00`} name="raceDate" onChange={(event) => setRaceDateValue(event.target.value)} type="datetime-local" value={raceDateValue} />
                                     </label>
 
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Registration Deadline</span>
-                                        <input className={inputClass} name="registrationDeadline" type="date" />
+                                        <input className={inputClass} max={maxDate} min={minDate} name="registrationDeadline" type="date" />
                                     </label>
                                 </div>
 
@@ -417,7 +486,7 @@ function CreateTournament() {
 
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Max Horses</span>
-                                        <input className={inputClass} defaultValue="10" name="maxHorses" type="number" />
+                                        <input className={inputClass} defaultValue="10" max="20" min="2" name="maxHorses" required step="1" type="number" />
                                     </label>
                                 </div>
 
@@ -431,7 +500,7 @@ function CreateTournament() {
                                             {tournamentImageName || 'No file chosen'}
                                         </span>
                                     </span>
-                                    <input accept="image/*" className="sr-only" name="tournamentImage" onChange={handleTournamentImageChange} type="file" />
+                                    <input accept={tournamentImageAccept} className="sr-only" name="tournamentImage" onChange={handleTournamentImageChange} type="file" />
                                 </label>
 
                                 {tournamentImagePreview && (
@@ -477,7 +546,7 @@ function CreateTournament() {
 
                                 <label className={fieldClass}>
                                     <span className={labelClass}>Rules</span>
-                                    <textarea className={textareaClass} name="rules" placeholder="Detail all eligibility, track rules, and disciplinary procedures..." rows="6" />
+                                    <textarea className={textareaClass} maxLength={10000} name="rules" placeholder="Detail all eligibility, track rules, and disciplinary procedures..." rows="6" />
                                 </label>
                             </section>
 

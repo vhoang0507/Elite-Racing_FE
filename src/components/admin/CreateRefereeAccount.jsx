@@ -34,6 +34,10 @@ const initialForm = {
 };
 
 const userStatusOptions = ['Active', 'Inactive'];
+const fullNameRegex = /^[\p{L}\p{M}][\p{L}\p{M}\s'.-]*$/u;
+const phoneDisplayRegex = /^\+?[0-9\s().-]+$/;
+const licenseRegex = /^[A-Z0-9][A-Z0-9./-]{2,99}$/;
+const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/;
 
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-5 px-11 py-8 max-[780px]:px-5';
 const breadcrumbClass = 'flex items-center gap-2 text-[0.74rem] font-bold uppercase text-[#64748b]';
@@ -61,6 +65,67 @@ const sortPendingFirst = (items, getStatus) => [...items].sort((current, next) =
 
     return currentRank - nextRank;
 });
+
+const normalizeWhitespace = (value) => String(value || '').trim().replace(/\s+/g, ' ');
+
+function getRefereeValidationError(form) {
+    const fullName = normalizeWhitespace(form.fullName);
+    const email = String(form.email || '').trim();
+    const phone = String(form.phone || '').trim();
+    const licenseNo = String(form.licenseNo || '').trim();
+    const experienceYears = String(form.experienceYears || '').trim();
+    const password = String(form.password || '');
+
+    if (fullName.length < 2 || fullName.length > 150) {
+        return 'Full name must be between 2 and 150 characters.';
+    }
+
+    if (!fullNameRegex.test(fullName)) {
+        return 'Full name can only contain letters, spaces, apostrophes, dots, and hyphens.';
+    }
+
+    if (!email || email.length > 255) {
+        return 'Email is required and cannot exceed 255 characters.';
+    }
+
+    if (phone) {
+        const digitCount = phone.replace(/\D/g, '').length;
+
+        if (!phoneDisplayRegex.test(phone) || digitCount < 9 || digitCount > 15) {
+            return 'Phone must contain 9 to 15 digits and may only use +, spaces, dots, parentheses, or hyphens.';
+        }
+    }
+
+    if (licenseNo && !licenseRegex.test(licenseNo.toUpperCase())) {
+        return 'License number must be 3 to 100 characters and contain only letters, numbers, dots, slashes, or hyphens.';
+    }
+
+    if (experienceYears && (!/^\d+$/.test(experienceYears) || Number(experienceYears) > 60)) {
+        return 'Experience years must be an integer between 0 and 60.';
+    }
+
+    if (!userStatusOptions.includes(form.status)) {
+        return 'Status must be Active or Inactive.';
+    }
+
+    if (password.length < 8 || password.length > 72) {
+        return 'Password must be between 8 and 72 characters.';
+    }
+
+    if (/\s/.test(password)) {
+        return 'Password cannot contain spaces.';
+    }
+
+    if (!strongPasswordRegex.test(password)) {
+        return 'Password must include uppercase, lowercase, number, and special character.';
+    }
+
+    if (password !== form.confirmPassword) {
+        return 'Confirm password does not match.';
+    }
+
+    return null;
+}
 
 function CreateRefereeAccount() {
     const [form, setForm] = useState(initialForm);
@@ -108,8 +173,10 @@ function CreateRefereeAccount() {
     const handleSubmit = async (event) => {
         event.preventDefault();
 
-        if (form.password !== form.confirmPassword) {
-            showAdminError('Confirm password does not match.');
+        const validationError = getRefereeValidationError(form);
+
+        if (validationError) {
+            showAdminError(validationError);
             return;
         }
 
@@ -182,27 +249,27 @@ function CreateRefereeAccount() {
                     <div className={formGridClass}>
                         <label className={fieldClass}>
                             <span className={labelClass}>Full Name *</span>
-                            <input className={inputClass} name="fullName" onChange={handleChange} placeholder="Nguyen Van Referee" required type="text" value={form.fullName} />
+                            <input className={inputClass} maxLength={150} minLength={2} name="fullName" onChange={handleChange} placeholder="Nguyen Van Referee" required type="text" value={form.fullName} />
                         </label>
 
                         <label className={fieldClass}>
                             <span className={labelClass}>Email *</span>
-                            <input className={inputClass} name="email" onChange={handleChange} placeholder="referee01@example.com" required type="email" value={form.email} />
+                            <input className={inputClass} maxLength={255} name="email" onChange={handleChange} placeholder="referee01@example.com" required type="email" value={form.email} />
                         </label>
 
                         <label className={fieldClass}>
                             <span className={labelClass}>Phone</span>
-                            <input className={inputClass} name="phone" onChange={handleChange} placeholder="0900000001" type="tel" value={form.phone} />
+                            <input className={inputClass} maxLength={30} name="phone" onChange={handleChange} placeholder="0900000001" type="tel" value={form.phone} />
                         </label>
 
                         <label className={fieldClass}>
                             <span className={labelClass}>License No</span>
-                            <input className={inputClass} name="licenseNo" onChange={handleChange} placeholder="REF-001" type="text" value={form.licenseNo} />
+                            <input className={inputClass} maxLength={100} minLength={3} name="licenseNo" onChange={handleChange} placeholder="REF-001" type="text" value={form.licenseNo} />
                         </label>
 
                         <label className={fieldClass}>
                             <span className={labelClass}>Experience Years</span>
-                            <input className={inputClass} min="0" name="experienceYears" onChange={handleChange} placeholder="3" type="number" value={form.experienceYears} />
+                            <input className={inputClass} max="60" min="0" name="experienceYears" onChange={handleChange} placeholder="3" step="1" type="number" value={form.experienceYears} />
                         </label>
 
                         <label className={fieldClass}>
@@ -216,12 +283,12 @@ function CreateRefereeAccount() {
 
                         <label className={fieldClass}>
                             <span className={labelClass}>Password *</span>
-                            <input className={inputClass} minLength={6} name="password" onChange={handleChange} required type="password" value={form.password} />
+                            <input className={inputClass} maxLength={72} minLength={8} name="password" onChange={handleChange} required type="password" value={form.password} />
                         </label>
 
                         <label className={fieldClass}>
                             <span className={labelClass}>Confirm Password *</span>
-                            <input className={inputClass} minLength={6} name="confirmPassword" onChange={handleChange} required type="password" value={form.confirmPassword} />
+                            <input className={inputClass} maxLength={72} minLength={8} name="confirmPassword" onChange={handleChange} required type="password" value={form.confirmPassword} />
                         </label>
                     </div>
 

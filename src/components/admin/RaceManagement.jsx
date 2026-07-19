@@ -193,14 +193,70 @@ const editFileControlClass = `${editControlClass} flex min-h-10 cursor-pointer i
 const detailItemClass = 'grid gap-1 rounded-md bg-[#fff8f6] p-3';
 const detailLabelClass = 'text-[0.66rem] font-black uppercase text-[#64748b]';
 const detailValueClass = 'break-words text-[0.9rem] font-bold text-[var(--admin-ink)]';
+const actionButtonClass = 'inline-flex min-h-9 cursor-pointer items-center justify-center gap-2 rounded-full px-3.5 text-[0.76rem] font-black transition-colors disabled:cursor-not-allowed disabled:opacity-60';
 const pageSize = 4;
 const distanceOptions = [1000, 1500, 2400];
+const minDate = '2000-01-01';
+const maxDate = '2100-12-31';
+const maxPrizePool = 1000000000;
+const maxTournamentImageSize = 5 * 1024 * 1024;
+const allowedTournamentImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+const allowedTournamentImageExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+const tournamentImageAccept = '.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp';
+const emptyRaceForm = {
+    raceName: '',
+    raceDate: '',
+    distanceMeters: 1500,
+    location: '',
+    maxHorses: 10,
+    jockeySelectionDeadline: '',
+    predictionDeadline: '',
+    refereeId: '',
+    rowVersion: '',
+};
+
+const raceStatusClass = {
+    scheduled: 'bg-[#f3f4f6] text-[#374151]',
+    assignedreferee: 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]',
+    refereeready: 'bg-[#e8f7ee] text-[#16864f]',
+    ongoing: 'bg-[#faf2e0] text-[#8a6209]',
+    finished: 'bg-[#eef4ff] text-[#1f57c7]',
+    resultpending: 'bg-[#fff7db] text-[#a17809]',
+    published: 'bg-[#e8f7ee] text-[#16864f]',
+    postponed: 'bg-[#f3e1df] text-[#a4392f]',
+    cancelled: 'bg-[#f3f4f6] text-[#6b7280]',
+};
 
 const getDistanceMeters = (tournament) => {
     const distanceMeters = Number(tournament?.distanceMeters ?? tournament?.DistanceMeters ?? tournament?.race?.distanceMeters ?? tournament?.Race?.DistanceMeters ?? 0);
 
     return distanceOptions.includes(distanceMeters) ? distanceMeters : null;
 };
+
+function isDateYearInRange(dateValue) {
+    const year = Number(String(dateValue || '').slice(0, 4));
+
+    return Number.isInteger(year) && year >= 2000 && year <= 2100;
+}
+
+function validateTournamentImage(file) {
+    if (!(typeof File !== 'undefined' && file instanceof File) || file.size === 0) {
+        return null;
+    }
+
+    const lowerName = file.name.toLowerCase();
+    const hasAllowedExtension = allowedTournamentImageExtensions.some((extension) => lowerName.endsWith(extension));
+
+    if (!hasAllowedExtension || !allowedTournamentImageTypes.includes(file.type)) {
+        return 'Tournament image must be a JPG, JPEG, PNG, or WEBP file.';
+    }
+
+    if (file.size > maxTournamentImageSize) {
+        return 'Tournament image must be 5MB or smaller.';
+    }
+
+    return null;
+}
 
 const matchesQuery = (tournament, query) => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -296,6 +352,63 @@ const getRaceTimeInputValue = (tournament) => {
     return raceTime === '-' ? '' : raceTime;
 };
 
+const toDateTimeLocalValue = (value) => {
+    if (!value) {
+        return '';
+    }
+
+    const text = String(value);
+
+    if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(text)) {
+        return text.slice(0, 16);
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+        return `${text}T00:00`;
+    }
+
+    const date = new Date(text);
+
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    const pad = (part) => String(part).padStart(2, '0');
+
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+};
+
+const toRaceDateTimeValue = (dateValue, timeValue = '') => {
+    if (!dateValue) {
+        return '';
+    }
+
+    if (String(dateValue).includes('T')) {
+        return String(dateValue).slice(0, 16);
+    }
+
+    return `${dateValue}T${timeValue || '00:00'}`;
+};
+
+const getRaceFormDefaults = (tournament, race = null) => {
+    const tournamentRaceDate = toRaceDateTimeValue(tournament?.endDate, getRaceTimeInputValue(tournament));
+    const raceDate = race?.raceDate ?? race?.RaceDate ?? tournamentRaceDate;
+
+    return {
+        raceName: race?.raceName ?? race?.RaceName ?? tournament?.name ?? '',
+        raceDate: toDateTimeLocalValue(raceDate),
+        distanceMeters: race?.distanceMeters ?? race?.DistanceMeters ?? getDistanceMeters(tournament) ?? 1500,
+        location: race?.location ?? race?.Location ?? tournament?.location ?? '',
+        maxHorses: race?.maxHorses ?? race?.MaxHorses ?? tournament?.maxHorses ?? 10,
+        jockeySelectionDeadline: toDateTimeLocalValue(race?.jockeySelectionDeadline ?? race?.JockeySelectionDeadline ?? ''),
+        predictionDeadline: toDateTimeLocalValue(race?.predictionDeadline ?? race?.PredictionDeadline ?? ''),
+        refereeId: race?.refereeId ?? race?.RefereeId ?? '',
+        rowVersion: race?.rowVersion ?? race?.RowVersion ?? '',
+    };
+};
+
+const isRaceLockedForEdit = (status) => ['Ongoing', 'Finished', 'ResultPending', 'Published', 'Cancelled'].includes(status);
+
 const buildTournamentRows = async () => {
     const payload = await adminApi.getTournaments();
 
@@ -359,6 +472,15 @@ function RaceManagement() {
     const [assignRefereeId, setAssignRefereeId] = useState('');
     const [assignError, setAssignError] = useState('');
     const [savingAssignment, setSavingAssignment] = useState(false);
+    const [detailRaces, setDetailRaces] = useState([]);
+    const [detailStandings, setDetailStandings] = useState([]);
+    const [detailLoading, setDetailLoading] = useState(false);
+    const [detailError, setDetailError] = useState('');
+    const [raceForm, setRaceForm] = useState(emptyRaceForm);
+    const [editingRace, setEditingRace] = useState(null);
+    const [savingRace, setSavingRace] = useState(false);
+    const [raceActionLoading, setRaceActionLoading] = useState('');
+    const [standingsActionLoading, setStandingsActionLoading] = useState('');
 
     useEffect(() => {
         if (!actionMenuId) return undefined;
@@ -472,6 +594,318 @@ function RaceManagement() {
 
         setTournaments(tournamentRows);
         setPage(1);
+    };
+
+    const loadTournamentDetailData = async (tournamentId) => {
+        setDetailLoading(true);
+        setDetailError('');
+
+        try {
+            const [racesPayload, standingsPayload] = await Promise.all([
+                adminApi.getTournamentRaces(tournamentId),
+                adminApi.getTournamentStandings(tournamentId).catch(() => []),
+            ]);
+
+            setDetailRaces(Array.isArray(racesPayload) ? racesPayload : []);
+            setDetailStandings(Array.isArray(standingsPayload) ? standingsPayload : []);
+        } catch (err) {
+            setDetailRaces([]);
+            setDetailStandings([]);
+            setDetailError(err.message || 'Failed to load tournament race data.');
+        } finally {
+            setDetailLoading(false);
+        }
+    };
+
+    const openTournamentDetail = async (tournament) => {
+        setSelectedTournament(tournament);
+        setRaceForm(getRaceFormDefaults(tournament));
+        setEditingRace(null);
+        if (referees.length === 0) {
+            adminApi.getTournamentReferees()
+                .then((payload) => setReferees(Array.isArray(payload) ? payload : []))
+                .catch(() => {});
+        }
+        await loadTournamentDetailData(tournament.id);
+    };
+
+    const closeTournamentDetail = () => {
+        setSelectedTournament(null);
+        setDetailRaces([]);
+        setDetailStandings([]);
+        setDetailError('');
+        setRaceForm(emptyRaceForm);
+        setEditingRace(null);
+    };
+
+    const resetRaceForm = () => {
+        setEditingRace(null);
+        setRaceForm(getRaceFormDefaults(selectedTournament));
+    };
+
+    const handleRaceFormChange = (field) => (event) => {
+        setRaceForm((current) => ({
+            ...current,
+            [field]: event.target.value,
+        }));
+    };
+
+    const startEditRace = (race) => {
+        setEditingRace(race);
+        setRaceForm(getRaceFormDefaults(selectedTournament, race));
+    };
+
+    const validateRaceForm = () => {
+        const trimmedName = String(raceForm.raceName || '').trim();
+        const trimmedLocation = String(raceForm.location || '').trim();
+        const distanceMeters = Number(raceForm.distanceMeters);
+        const maxHorses = Number(raceForm.maxHorses);
+
+        if (trimmedName.length < 3 || trimmedName.length > 200) {
+            return 'Race name must be between 3 and 200 characters.';
+        }
+
+        if (!raceForm.raceDate || !isDateYearInRange(raceForm.raceDate)) {
+            return 'Race date is required and must be between year 2000 and 2100.';
+        }
+
+        if (trimmedLocation.length > 255) {
+            return 'Race location cannot exceed 255 characters.';
+        }
+
+        if (!distanceOptions.includes(distanceMeters)) {
+            return 'Race distance must be 1000, 1500, or 2400 meters.';
+        }
+
+        if (!Number.isInteger(maxHorses) || maxHorses < 2 || maxHorses > 100) {
+            return 'Race max horses must be an integer between 2 and 100.';
+        }
+
+        if (raceForm.jockeySelectionDeadline && raceForm.jockeySelectionDeadline >= raceForm.raceDate) {
+            return 'Jockey selection deadline must be before race date.';
+        }
+
+        if (raceForm.predictionDeadline && raceForm.predictionDeadline >= raceForm.raceDate) {
+            return 'Prediction deadline must be before race date.';
+        }
+
+        return '';
+    };
+
+    const handleRaceSubmit = async (event) => {
+        event.preventDefault();
+
+        if (!selectedTournament) {
+            return;
+        }
+
+        const validationError = validateRaceForm();
+
+        if (validationError) {
+            setDetailError(validationError);
+            return;
+        }
+
+        const confirmed = await confirmAdminAction({
+            title: editingRace ? 'Update race' : 'Create race',
+            message: editingRace
+                ? `Save changes for "${editingRace.raceName}"?`
+                : `Create a new race for "${selectedTournament.name}"?`,
+            confirmLabel: editingRace ? 'Save Race' : 'Create Race',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        setSavingRace(true);
+        setDetailError('');
+
+        const payload = {
+            raceName: String(raceForm.raceName || '').trim(),
+            raceDate: raceForm.raceDate,
+            distanceMeters: Number(raceForm.distanceMeters),
+            location: String(raceForm.location || '').trim() || null,
+            maxHorses: Number(raceForm.maxHorses),
+            jockeySelectionDeadline: raceForm.jockeySelectionDeadline || null,
+            predictionDeadline: raceForm.predictionDeadline || null,
+            refereeId: raceForm.refereeId || null,
+            rowVersion: raceForm.rowVersion,
+        };
+
+        try {
+            const response = editingRace
+                ? await adminApi.updateRace(editingRace.raceId, payload)
+                : await adminApi.createRace(selectedTournament.id, payload);
+            const successMessage = response?.message || response?.Message || (editingRace ? 'Race updated successfully.' : 'Race created successfully.');
+            showAdminSuccess(successMessage, editingRace ? 'Saved' : 'Created');
+            resetRaceForm();
+            await loadTournamentDetailData(selectedTournament.id);
+            await refreshTournamentRows();
+        } catch (err) {
+            setDetailError(err.message || 'Failed to save race.');
+        } finally {
+            setSavingRace(false);
+        }
+    };
+
+    const handlePostponeRace = async (race) => {
+        const newRaceDate = window.prompt('New race date/time (YYYY-MM-DDTHH:mm):', toDateTimeLocalValue(race.raceDate));
+
+        if (!newRaceDate) {
+            return;
+        }
+
+        const reason = window.prompt('Reason for postponing this race:');
+        const trimmedReason = String(reason || '').trim();
+
+        if (trimmedReason.length < 5 || trimmedReason.length > 1000) {
+            setDetailError('Postpone reason must be between 5 and 1,000 characters.');
+            return;
+        }
+
+        setRaceActionLoading(`postpone-${race.raceId}`);
+        setDetailError('');
+
+        try {
+            const response = await adminApi.postponeRace(race.raceId, {
+                newRaceDate,
+                reason: trimmedReason,
+            });
+            showAdminSuccess(response?.message || response?.Message || 'Race postponed successfully.', 'Postponed');
+            await loadTournamentDetailData(selectedTournament.id);
+            await refreshTournamentRows();
+        } catch (err) {
+            setDetailError(err.message || 'Failed to postpone race.');
+        } finally {
+            setRaceActionLoading('');
+        }
+    };
+
+    const handleResumeRace = async (race) => {
+        const confirmed = await confirmAdminAction({
+            title: 'Resume race',
+            message: `Resume "${race.raceName}" with its current schedule?`,
+            confirmLabel: 'Resume',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        setRaceActionLoading(`resume-${race.raceId}`);
+        setDetailError('');
+
+        try {
+            const response = await adminApi.resumeRace(race.raceId);
+            showAdminSuccess(response?.message || response?.Message || 'Race resumed successfully.', 'Resumed');
+            await loadTournamentDetailData(selectedTournament.id);
+            await refreshTournamentRows();
+        } catch (err) {
+            setDetailError(err.message || 'Failed to resume race.');
+        } finally {
+            setRaceActionLoading('');
+        }
+    };
+
+    const handleCancelRace = async (race) => {
+        const reason = window.prompt('Reason for cancelling this race:');
+        const trimmedReason = String(reason || '').trim();
+
+        if (!trimmedReason) {
+            return;
+        }
+
+        if (trimmedReason.length < 5 || trimmedReason.length > 1000) {
+            setDetailError('Cancel reason must be between 5 and 1,000 characters.');
+            return;
+        }
+
+        const confirmed = await confirmAdminAction({
+            title: 'Cancel race',
+            message: `Cancel "${race.raceName}"? This may refund predictions and notify participants.`,
+            confirmLabel: 'Cancel Race',
+            tone: 'danger',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        setRaceActionLoading(`cancel-${race.raceId}`);
+        setDetailError('');
+
+        try {
+            const response = await adminApi.cancelRace(race.raceId, trimmedReason);
+            showAdminSuccess(response?.message || response?.Message || 'Race cancelled successfully.', 'Cancelled');
+            await loadTournamentDetailData(selectedTournament.id);
+            await refreshTournamentRows();
+        } catch (err) {
+            setDetailError(err.message || 'Failed to cancel race.');
+        } finally {
+            setRaceActionLoading('');
+        }
+    };
+
+    const handleRecalculateStandings = async () => {
+        if (!selectedTournament) {
+            return;
+        }
+
+        setStandingsActionLoading('recalculate');
+        setDetailError('');
+
+        try {
+            const response = await adminApi.recalculateTournamentStandings(selectedTournament.id);
+            showAdminSuccess(response?.message || response?.Message || 'Standings recalculated.', 'Recalculated');
+            await loadTournamentDetailData(selectedTournament.id);
+        } catch (err) {
+            setDetailError(err.message || 'Failed to recalculate standings.');
+        } finally {
+            setStandingsActionLoading('');
+        }
+    };
+
+    const handleFinalizeStandings = async () => {
+        if (!selectedTournament) {
+            return;
+        }
+
+        const note = window.prompt('Confirmation note for final standings:');
+        const trimmedNote = String(note || '').trim();
+
+        if (!trimmedNote) {
+            return;
+        }
+
+        if (trimmedNote.length < 5 || trimmedNote.length > 1000) {
+            setDetailError('Finalization note must be between 5 and 1,000 characters.');
+            return;
+        }
+
+        const confirmed = await confirmAdminAction({
+            title: 'Finalize standings',
+            message: `Finalize standings for "${selectedTournament.name}" and complete this tournament?`,
+            confirmLabel: 'Finalize',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        setStandingsActionLoading('finalize');
+        setDetailError('');
+
+        try {
+            const response = await adminApi.finalizeTournamentStandings(selectedTournament.id, trimmedNote);
+            showAdminSuccess(response?.message || response?.Message || 'Tournament standings finalized.', 'Finalized');
+            await loadTournamentDetailData(selectedTournament.id);
+            await refreshTournamentRows();
+        } catch (err) {
+            setDetailError(err.message || 'Failed to finalize standings.');
+        } finally {
+            setStandingsActionLoading('');
+        }
     };
 
     const handleTournamentStatusChange = async (tournament, action) => {
@@ -624,23 +1058,78 @@ function RaceManagement() {
             startDate: formData.get('startDate'),
             endDate: formData.get('endDate'),
             location: formData.get('location').trim(),
-            city: formData.get('city').trim(),
             distanceMeters: Number(formData.get('distanceMeters') || 0),
             maxHorses: Number(formData.get('maxHorses') || 0),
-            registeredHorses: Number(formData.get('registeredHorses') || 0),
             prizePool: parseCurrency(formData.get('prizePool')),
             raceStartTime: String(formData.get('raceStartTime') || '').trim(),
             rules: formData.get('rules'),
             tournamentImage: typeof File !== 'undefined' && tournamentImage instanceof File && tournamentImage.size > 0 ? tournamentImage : null,
         };
 
+        if (patch.name.length < 3 || patch.name.length > 200) {
+            setEditError('Tournament name must be between 3 and 200 characters.');
+            return;
+        }
+
+        if (patch.description.length > 1000) {
+            setEditError('Description cannot exceed 1,000 characters.');
+            return;
+        }
+
+        if (patch.location.length < 3 || patch.location.length > 255) {
+            setEditError('Location must be between 3 and 255 characters.');
+            return;
+        }
+
+        if (!patch.startDate || !patch.endDate) {
+            setEditError('Race date and registration deadline are required.');
+            return;
+        }
+
+        if (!isDateYearInRange(patch.startDate) || !isDateYearInRange(patch.endDate)) {
+            setEditError('Dates must be between year 2000 and 2100.');
+            return;
+        }
+
+        if (patch.startDate >= patch.endDate) {
+            setEditError('Race Date must be after Registration Deadline.');
+            return;
+        }
+
         if (!distanceOptions.includes(patch.distanceMeters)) {
             setEditError('Distance must be 1000, 1500, or 2400 meters.');
             return;
         }
 
+        if (!Number.isInteger(patch.maxHorses) || patch.maxHorses < 2 || patch.maxHorses > 20) {
+            setEditError('Max horses must be an integer between 2 and 20.');
+            return;
+        }
+
+        if (patch.prizePool < 0 || patch.prizePool > maxPrizePool) {
+            setEditError('Prize pool must be between 0 and 1,000,000,000.');
+            return;
+        }
+
         if (!patch.raceStartTime) {
             setEditError('Race start time is required and must be in HH:mm format. Example: 14:30');
+            return;
+        }
+
+        if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(patch.raceStartTime)) {
+            setEditError('Race start time must be in HH:mm format. Example: 14:30');
+            return;
+        }
+
+        if (String(patch.rules || '').trim().length > 10000) {
+            setEditError('Rules cannot exceed 10,000 characters.');
+            return;
+        }
+
+        const imageError = validateTournamentImage(tournamentImage);
+
+        if (imageError) {
+            setEditError(imageError);
             return;
         }
 
@@ -816,7 +1305,7 @@ function RaceManagement() {
                                             </div>
 
                                             <div className="mt-auto flex items-center justify-end gap-2 border-t border-[var(--admin-border)] pt-3">
-                                                <button aria-label={`View ${tournament.name}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-transparent text-[var(--admin-muted)] hover:bg-[#f3e6c2] hover:text-[var(--admin-primary)]" onClick={() => { setSelectedTournament(tournament); setActionMenuId(null); }} type="button">
+                                                <button aria-label={`View ${tournament.name}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-transparent text-[var(--admin-muted)] hover:bg-[#f3e6c2] hover:text-[var(--admin-primary)]" onClick={() => { openTournamentDetail(tournament); setActionMenuId(null); }} type="button">
                                                     <FaEye aria-hidden="true" />
                                                 </button>
                                                 <button
@@ -847,7 +1336,7 @@ function RaceManagement() {
                                                     </button>
                                                     {actionMenuId === tournament.id && (
                                                         <div className="absolute bottom-11 right-0 z-30 grid w-56 overflow-hidden rounded-md border border-[var(--admin-border)] bg-white py-1 text-left shadow-[0_14px_34px_rgba(11,27,52,0.18)]">
-                                                            <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#f8f3e2]" onClick={() => { setSelectedTournament(tournament); setActionMenuId(null); }} type="button">
+                                                            <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#f8f3e2]" onClick={() => { openTournamentDetail(tournament); setActionMenuId(null); }} type="button">
                                                                 View Detail
                                                             </button>
                                                             <button className="px-3 py-2 text-left text-[0.78rem] font-extrabold text-[var(--admin-ink)] hover:bg-[#f8f3e2]" onClick={() => { setEditTournamentImageName(''); setEditingTournament(tournament); setActionMenuId(null); }} type="button">
@@ -974,7 +1463,7 @@ function RaceManagement() {
                     )}
 
                     {selectedTournament && (
-                        <div className="fixed inset-0 z-40 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={() => setSelectedTournament(null)} role="presentation">
+                        <div className="fixed inset-0 z-40 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={closeTournamentDetail} role="presentation">
                             <section
                                 aria-label={`Details for ${selectedTournament.name}`}
                                 className="grid max-h-[calc(100vh-48px)] w-[min(820px,100%)] gap-5 overflow-y-auto rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 shadow-[0_20px_48px_rgba(45,32,32,0.22)]"
@@ -988,7 +1477,7 @@ function RaceManagement() {
                                             Tournament details and assigned race configuration.
                                         </p>
                                     </div>
-                                    <button aria-label="Close tournament details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={() => setSelectedTournament(null)} type="button">
+                                    <button aria-label="Close tournament details" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={closeTournamentDetail} type="button">
                                         <FaTimes aria-hidden="true" />
                                     </button>
                                 </div>
@@ -1060,6 +1549,201 @@ function RaceManagement() {
                                         <div className={`${detailValueClass} whitespace-pre-wrap leading-relaxed`}>{detailValue(selectedTournament.rules)}</div>
                                     </div>
                                 </div>
+
+                                {detailError && (
+                                    <div className="rounded-md border border-[#f0b4b4] bg-[#fff3f3] px-4 py-3 text-[0.85rem] font-semibold text-[var(--admin-primary)]">
+                                        {detailError}
+                                    </div>
+                                )}
+
+                                <section className="overflow-hidden rounded-md border border-[var(--admin-border)] bg-[#fffdfc]">
+                                    <div className="flex items-center justify-between gap-3 border-b border-[var(--admin-border)] bg-[#f8fbff] px-4 py-3 max-[720px]:flex-col max-[720px]:items-stretch">
+                                        <div>
+                                            <h3 className="m-0 text-[0.98rem] font-black text-[var(--admin-primary-dark)]">Tournament Races</h3>
+                                            <p className="m-0 mt-1 text-[0.76rem] font-bold text-[var(--admin-muted)]">
+                                                Create race schedules and manage lifecycle actions.
+                                            </p>
+                                        </div>
+                                        {editingRace && (
+                                            <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} onClick={resetRaceForm} type="button">
+                                                <FaTimes aria-hidden="true" />
+                                                Cancel Edit
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    <form className="grid gap-3 border-b border-[var(--admin-border)] p-4" onSubmit={handleRaceSubmit}>
+                                        <div className="grid grid-cols-3 gap-3 max-[900px]:grid-cols-1">
+                                            <label className={editFieldClass}>
+                                                <span className={editLabelClass}>Race Name</span>
+                                                <input className={editControlClass} disabled={editingRace && isRaceLockedForEdit(editingRace.status)} maxLength={200} minLength={3} onChange={handleRaceFormChange('raceName')} required type="text" value={raceForm.raceName} />
+                                            </label>
+                                            <label className={editFieldClass}>
+                                                <span className={editLabelClass}>Race Date</span>
+                                                <input className={editControlClass} disabled={editingRace && isRaceLockedForEdit(editingRace.status)} max="2100-12-31T23:59" min="2000-01-01T00:00" onChange={handleRaceFormChange('raceDate')} required type="datetime-local" value={raceForm.raceDate} />
+                                            </label>
+                                            <label className={editFieldClass}>
+                                                <span className={editLabelClass}>Distance</span>
+                                                <select className={editControlClass} disabled={editingRace && isRaceLockedForEdit(editingRace.status)} onChange={handleRaceFormChange('distanceMeters')} value={raceForm.distanceMeters}>
+                                                    {distanceOptions.map((distanceMeters) => (
+                                                        <option key={distanceMeters} value={distanceMeters}>{distanceMeters}m</option>
+                                                    ))}
+                                                </select>
+                                            </label>
+                                        </div>
+
+                                        <div className="grid grid-cols-4 gap-3 max-[900px]:grid-cols-2 max-[640px]:grid-cols-1">
+                                            <label className={editFieldClass}>
+                                                <span className={editLabelClass}>Location</span>
+                                                <input className={editControlClass} disabled={editingRace && isRaceLockedForEdit(editingRace.status)} maxLength={255} onChange={handleRaceFormChange('location')} type="text" value={raceForm.location} />
+                                            </label>
+                                            <label className={editFieldClass}>
+                                                <span className={editLabelClass}>Max Horses</span>
+                                                <input className={editControlClass} disabled={editingRace && isRaceLockedForEdit(editingRace.status)} max="100" min="2" onChange={handleRaceFormChange('maxHorses')} required step="1" type="number" value={raceForm.maxHorses} />
+                                            </label>
+                                            <label className={editFieldClass}>
+                                                <span className={editLabelClass}>Jockey Deadline</span>
+                                                <input className={editControlClass} disabled={editingRace && isRaceLockedForEdit(editingRace.status)} max="2100-12-31T23:59" min="2000-01-01T00:00" onChange={handleRaceFormChange('jockeySelectionDeadline')} type="datetime-local" value={raceForm.jockeySelectionDeadline} />
+                                            </label>
+                                            <label className={editFieldClass}>
+                                                <span className={editLabelClass}>Prediction Deadline</span>
+                                                <input className={editControlClass} disabled={editingRace && isRaceLockedForEdit(editingRace.status)} max="2100-12-31T23:59" min="2000-01-01T00:00" onChange={handleRaceFormChange('predictionDeadline')} type="datetime-local" value={raceForm.predictionDeadline} />
+                                            </label>
+                                        </div>
+
+                                        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-3 max-[720px]:grid-cols-1">
+                                            <label className={editFieldClass}>
+                                                <span className={editLabelClass}>Assign Referee On Create</span>
+                                                <select className={editControlClass} disabled={Boolean(editingRace)} onChange={handleRaceFormChange('refereeId')} value={raceForm.refereeId}>
+                                                    <option value="">No referee selected</option>
+                                                    {referees.map((referee) => (
+                                                        <option key={referee.refereeId} value={referee.refereeId}>
+                                                            {referee.fullName}{referee.email ? ` (${referee.email})` : ''}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </label>
+                                            <button className={`${actionButtonClass} bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary-dark)]`} disabled={savingRace || (editingRace && isRaceLockedForEdit(editingRace.status))} type="submit">
+                                                <FaCheckCircle aria-hidden="true" />
+                                                {savingRace ? 'Saving...' : editingRace ? 'Save Race' : 'Create Race'}
+                                            </button>
+                                        </div>
+                                    </form>
+
+                                    {detailLoading ? (
+                                        <div className="px-4 py-5 text-[0.86rem] font-bold text-[var(--admin-muted)]">Loading races...</div>
+                                    ) : (
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full min-w-[860px] border-collapse">
+                                                <thead>
+                                                    <tr>
+                                                        {['Race', 'Date', 'Distance', 'Entries', 'Status', 'Deadlines', 'Actions'].map((heading) => (
+                                                            <th className="border-b border-[var(--admin-border)] bg-[#fff8f6] px-4 py-3 text-left text-[0.64rem] font-black uppercase text-[#64748b]" key={heading}>{heading}</th>
+                                                        ))}
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {detailRaces.length === 0 ? (
+                                                        <tr>
+                                                            <td className="px-4 py-5 text-center text-[0.86rem] font-bold text-[var(--admin-muted)]" colSpan="7">No races created for this tournament yet.</td>
+                                                        </tr>
+                                                    ) : detailRaces.map((race) => {
+                                                        const raceLocked = isRaceLockedForEdit(race.status);
+                                                        const statusKey = formatClass(race.status);
+
+                                                        return (
+                                                            <tr key={race.raceId}>
+                                                                <td className="border-b border-[var(--admin-border)] px-4 py-3">
+                                                                    <strong className="block text-[0.86rem] text-[var(--admin-ink)]">{race.raceName}</strong>
+                                                                    <span className="text-[0.72rem] font-bold text-[var(--admin-muted)]">Race #{race.raceId}</span>
+                                                                </td>
+                                                                <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-ink)]">{getDateTimeLabel(race.raceDate)}</td>
+                                                                <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-muted)]">{race.distanceMeters}m</td>
+                                                                <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-muted)]">{race.registeredCount}/{race.maxHorses}</td>
+                                                                <td className="border-b border-[var(--admin-border)] px-4 py-3">
+                                                                    <span className={`inline-flex min-h-6 items-center rounded-full px-2.5 text-[0.68rem] font-black ${raceStatusClass[statusKey] || raceStatusClass.scheduled}`}>
+                                                                        {race.status || '-'}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.76rem] font-bold text-[var(--admin-muted)]">
+                                                                    <span className="block">Jockey: {getDateTimeLabel(race.jockeySelectionDeadline)}</span>
+                                                                    <span className="block">Prediction: {getDateTimeLabel(race.predictionDeadline)}</span>
+                                                                </td>
+                                                                <td className="border-b border-[var(--admin-border)] px-4 py-3">
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} disabled={raceLocked || raceActionLoading !== ''} onClick={() => startEditRace(race)} type="button">
+                                                                            <FaEdit aria-hidden="true" />
+                                                                            Edit
+                                                                        </button>
+                                                                        <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} disabled={raceLocked || raceActionLoading !== ''} onClick={() => handlePostponeRace(race)} type="button">
+                                                                            Postpone
+                                                                        </button>
+                                                                        <button className={`${actionButtonClass} bg-[#e8f7ef] text-[var(--admin-primary)] hover:bg-[#d7f2e4]`} disabled={race.status !== 'Postponed' || raceActionLoading !== ''} onClick={() => handleResumeRace(race)} type="button">
+                                                                            Resume
+                                                                        </button>
+                                                                        <button className={`${actionButtonClass} border border-[#f0b4b4] bg-white text-[#b91c1c] hover:bg-[#fff3f3]`} disabled={['Cancelled', 'Published'].includes(race.status) || raceActionLoading !== ''} onClick={() => handleCancelRace(race)} type="button">
+                                                                            Cancel
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </section>
+
+                                <section className="overflow-hidden rounded-md border border-[var(--admin-border)] bg-[#fffdfc]">
+                                    <div className="flex items-center justify-between gap-3 border-b border-[var(--admin-border)] bg-[#f8fbff] px-4 py-3 max-[720px]:flex-col max-[720px]:items-stretch">
+                                        <div>
+                                            <h3 className="m-0 text-[0.98rem] font-black text-[var(--admin-primary-dark)]">Tournament Standings</h3>
+                                            <p className="m-0 mt-1 text-[0.76rem] font-bold text-[var(--admin-muted)]">
+                                                Recalculate provisional standings and finalize the tournament after published results.
+                                            </p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} disabled={standingsActionLoading !== ''} onClick={handleRecalculateStandings} type="button">
+                                                <FaBolt aria-hidden="true" />
+                                                {standingsActionLoading === 'recalculate' ? 'Recalculating...' : 'Recalculate'}
+                                            </button>
+                                            <button className={`${actionButtonClass} bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary-dark)]`} disabled={standingsActionLoading !== '' || detailStandings.length === 0} onClick={handleFinalizeStandings} type="button">
+                                                <FaCheckCircle aria-hidden="true" />
+                                                {standingsActionLoading === 'finalize' ? 'Finalizing...' : 'Finalize'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full min-w-[760px] border-collapse">
+                                            <thead>
+                                                <tr>
+                                                    {['Rank', 'Horse', 'Owner', 'Jockey', 'Points', 'Wins', 'Completed', 'Final'].map((heading) => (
+                                                        <th className="border-b border-[var(--admin-border)] bg-[#fff8f6] px-4 py-3 text-left text-[0.64rem] font-black uppercase text-[#64748b]" key={heading}>{heading}</th>
+                                                    ))}
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {detailStandings.length === 0 ? (
+                                                    <tr>
+                                                        <td className="px-4 py-5 text-center text-[0.86rem] font-bold text-[var(--admin-muted)]" colSpan="8">No standings calculated yet.</td>
+                                                    </tr>
+                                                ) : detailStandings.map((standing) => (
+                                                    <tr key={`${readTournamentField(standing, 'finalRank', 'FinalRank')}-${readTournamentField(standing, 'horseId', 'HorseId')}`}>
+                                                        <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.84rem] font-black text-[var(--admin-primary-dark)]">#{readTournamentField(standing, 'finalRank', 'FinalRank')}</td>
+                                                        <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.84rem] font-bold text-[var(--admin-ink)]">{readTournamentField(standing, 'horseName', 'HorseName')}</td>
+                                                        <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.84rem] font-bold text-[var(--admin-muted)]">{readTournamentField(standing, 'ownerName', 'OwnerName')}</td>
+                                                        <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.84rem] font-bold text-[var(--admin-muted)]">{readTournamentField(standing, 'jockeyName', 'JockeyName') || '-'}</td>
+                                                        <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.84rem] font-black text-[var(--admin-ink)]">{readTournamentField(standing, 'totalPoints', 'TotalPoints') ?? 0}</td>
+                                                        <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.84rem] font-bold text-[var(--admin-muted)]">{readTournamentField(standing, 'wins', 'Wins') ?? 0}</td>
+                                                        <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.84rem] font-bold text-[var(--admin-muted)]">{readTournamentField(standing, 'completedRaces', 'CompletedRaces') ?? 0}</td>
+                                                        <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.84rem] font-bold text-[var(--admin-muted)]">{readTournamentField(standing, 'isFinal', 'IsFinal') ? 'Yes' : 'No'}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </section>
                             </section>
                         </div>
                     )}
@@ -1084,12 +1768,12 @@ function RaceManagement() {
                                 <div className="grid grid-cols-2 gap-4 max-[720px]:grid-cols-1">
                                     <label className={`${editFieldClass} col-span-2 max-[720px]:col-span-1`}>
                                         <span className={editLabelClass}>Tournament Name</span>
-                                        <input className={editControlClass} defaultValue={editingTournament.name} name="name" required type="text" />
+                                        <input className={editControlClass} defaultValue={editingTournament.name} maxLength={200} minLength={3} name="name" required type="text" />
                                     </label>
 
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Description</span>
-                                        <input className={editControlClass} defaultValue={editingTournament.description || editingTournament.className} name="description" type="text" />
+                                        <input className={editControlClass} defaultValue={editingTournament.description || editingTournament.className} maxLength={1000} name="description" type="text" />
                                     </label>
 
                                     <label className={editFieldClass}>
@@ -1105,34 +1789,24 @@ function RaceManagement() {
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Race Date</span>
                                         <div className="grid grid-cols-[minmax(0,1fr)_132px] gap-3 max-[720px]:grid-cols-1">
-                                            <input className={editControlClass} defaultValue={editingTournament.endDate} name="endDate" required type="date" />
+                                            <input className={editControlClass} defaultValue={editingTournament.endDate} max={maxDate} min={minDate} name="endDate" required type="date" />
                                             <input aria-label="Race start time" className={editControlClass} defaultValue={getRaceTimeInputValue(editingTournament)} name="raceStartTime" required type="time" />
                                         </div>
                                     </label>
 
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Registration Deadline</span>
-                                        <input className={editControlClass} defaultValue={editingTournament.startDate} name="startDate" required type="date" />
+                                        <input className={editControlClass} defaultValue={editingTournament.startDate} max={maxDate} min={minDate} name="startDate" required type="date" />
                                     </label>
 
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Location</span>
-                                        <input className={editControlClass} defaultValue={editingTournament.location} name="location" type="text" />
-                                    </label>
-
-                                    <label className={editFieldClass}>
-                                        <span className={editLabelClass}>City</span>
-                                        <input className={editControlClass} defaultValue={editingTournament.city} name="city" required type="text" />
+                                        <input className={editControlClass} defaultValue={editingTournament.location} maxLength={255} minLength={3} name="location" required type="text" />
                                     </label>
 
                                     <label className={editFieldClass}>
                                         <span className={editLabelClass}>Max Horses</span>
-                                        <input className={editControlClass} defaultValue={editingTournament.maxHorses} min="0" name="maxHorses" type="number" />
-                                    </label>
-
-                                    <label className={editFieldClass}>
-                                        <span className={editLabelClass}>Registered Horses</span>
-                                        <input className={editControlClass} defaultValue={editingTournament.registeredHorses} min="0" name="registeredHorses" type="number" />
+                                        <input className={editControlClass} defaultValue={editingTournament.maxHorses} max="20" min="2" name="maxHorses" required step="1" type="number" />
                                     </label>
 
                                     <label className={editFieldClass}>
@@ -1150,12 +1824,12 @@ function RaceManagement() {
                                                 {editTournamentImageName || 'No file chosen'}
                                             </span>
                                         </span>
-                                        <input accept="image/*" className="sr-only" name="tournamentImage" onChange={handleEditTournamentImageChange} type="file" />
+                                        <input accept={tournamentImageAccept} className="sr-only" name="tournamentImage" onChange={handleEditTournamentImageChange} type="file" />
                                     </label>
 
                                     <label className={`${editFieldClass} col-span-2 max-[720px]:col-span-1`}>
                                         <span className={editLabelClass}>Rules</span>
-                                        <textarea className={`${editControlClass} min-h-[96px] py-2`} defaultValue={editingTournament.rules || ''} name="rules" />
+                                        <textarea className={`${editControlClass} min-h-[96px] py-2`} defaultValue={editingTournament.rules || ''} maxLength={10000} name="rules" />
                                     </label>
                                 </div>
 

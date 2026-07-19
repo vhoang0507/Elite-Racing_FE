@@ -112,6 +112,13 @@ export async function getRegistrationJourney(registrationId) {
     return apiRequest(`/owner/registrations/${registrationId}/journey`);
 }
 
+export async function withdrawRegistration(registrationId, reason) {
+    return apiRequest(`/owner/registrations/${registrationId}/withdraw`, {
+        method: 'POST',
+        body: JSON.stringify({ reason }),
+    });
+}
+
 // ─── Jockey Assignment ───────────────────────────────────────────────────────
 
 export async function getJockeyAssignmentRegistrations() {
@@ -240,6 +247,7 @@ export const ownerApi = {
     getApprovedRegistrationsList,
     getRegistrationDetail,
     getRegistrationJourney,
+    withdrawRegistration,
     getJockeyAssignmentRegistrations,
     getJockeyAssignmentContext,
     getJockeyAssignmentSummary,

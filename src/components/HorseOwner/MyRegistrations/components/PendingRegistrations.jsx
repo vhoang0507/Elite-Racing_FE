@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaHourglassHalf } from "react-icons/fa";
 import { ownerApi } from "../../../../api/ownerApi";
@@ -17,8 +17,9 @@ export default function PendingRegistrations({ onViewStatus }) {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState("");
+    const [actionId, setActionId] = useState(null);
 
-    useEffect(() => {
+    const loadData = useCallback(() => {
         setLoading(true);
         ownerApi.getPendingRegistrations()
             .then(setData)
@@ -26,7 +27,37 @@ export default function PendingRegistrations({ onViewStatus }) {
                 if (!handleOwnerAccessError(err, navigate)) setData([]);
             })
             .finally(() => setLoading(false));
-    }, []);
+    }, [navigate]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
+
+    const handleWithdraw = async (row) => {
+        const reason = window.prompt(`Reason for withdrawing ${row.horseName || "this registration"}:`);
+        const trimmedReason = String(reason || "").trim();
+
+        if (!trimmedReason) return;
+
+        if (trimmedReason.length < 5 || trimmedReason.length > 500) {
+            window.alert("Withdraw reason must be between 5 and 500 characters.");
+            return;
+        }
+
+        setActionId(row.registrationId);
+
+        try {
+            await ownerApi.withdrawRegistration(row.registrationId, trimmedReason);
+            window.alert("Registration withdrawn successfully.");
+            loadData();
+        } catch (err) {
+            if (!handleOwnerAccessError(err, navigate)) {
+                window.alert(err.message || "Failed to withdraw registration.");
+            }
+        } finally {
+            setActionId(null);
+        }
+    };
 
     const filteredData = search.trim()
         ? data.filter(row =>
@@ -107,6 +138,14 @@ export default function PendingRegistrations({ onViewStatus }) {
                                                 >
                                                     View Status
                                                 </button>
+                                                <button
+                                                    disabled={actionId === row.registrationId}
+                                                    onClick={() => handleWithdraw(row)}
+                                                    style={{ ...styles.withdrawBtn, ...(actionId === row.registrationId ? styles.disabledBtn : {}) }}
+                                                    type="button"
+                                                >
+                                                    {actionId === row.registrationId ? "Withdrawing..." : "Withdraw"}
+                                                </button>
                                             </td>
                                         </tr>
                                     );
@@ -141,4 +180,6 @@ const styles = {
     statusBadge: { fontSize: 11, fontWeight: 700, borderRadius: 20, padding: "3px 10px", display: "inline-block" },
     emptyCell: { textAlign: "center", padding: "28px", color: "#94a3b8", fontSize: 13 },
     viewBtn: { border: "1px solid #ded2ad", borderRadius: 999, backgroundColor: "#fff", padding: "5px 14px", cursor: "pointer", fontSize: 12, fontWeight: 600, color: "#16305c" },
+    withdrawBtn: { border: "1px solid #e3bcb7", borderRadius: 999, backgroundColor: "#fff", color: "#a4392f", cursor: "pointer", fontSize: 12, fontWeight: 600, marginLeft: 6, padding: "5px 14px" },
+    disabledBtn: { cursor: "not-allowed", opacity: 0.65 },
 };

@@ -69,9 +69,19 @@ function readRewardField(reward, key) {
 
 function AdminRewardPayments() {
     const [rewards, setRewards] = useState([]);
+    const [inventory, setInventory] = useState([]);
     const [statusFilter, setStatusFilter] = useState('');
     const [loading, setLoading] = useState(true);
+    const [inventoryLoading, setInventoryLoading] = useState(true);
     const [actionLoadingId, setActionLoadingId] = useState('');
+    const [inventoryActionLoadingId, setInventoryActionLoadingId] = useState('');
+    const [inventoryForm, setInventoryForm] = useState({
+        name: '',
+        sku: '',
+        initialStock: 0,
+        description: '',
+        imageUrl: '',
+    });
 
     const loadRewards = useCallback(async () => {
         setLoading(true);
@@ -90,6 +100,24 @@ function AdminRewardPayments() {
     useEffect(() => {
         loadRewards();
     }, [loadRewards]);
+
+    const loadInventory = useCallback(async () => {
+        setInventoryLoading(true);
+
+        try {
+            const payload = await adminApi.getRewardInventory();
+            setInventory(Array.isArray(payload) ? payload : []);
+        } catch (err) {
+            setInventory([]);
+            showAdminError(err.message || 'Failed to load reward inventory.');
+        } finally {
+            setInventoryLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        loadInventory();
+    }, [loadInventory]);
 
     const stats = useMemo(() => {
         const countByStatus = (status) => rewards.filter((reward) => readRewardField(reward, 'status') === status).length;
@@ -147,6 +175,158 @@ function AdminRewardPayments() {
         }
     };
 
+    const handleInventoryFormChange = (field) => (event) => {
+        setInventoryForm((current) => ({
+            ...current,
+            [field]: event.target.value,
+        }));
+    };
+
+    const handleCreateInventoryItem = async (event) => {
+        event.preventDefault();
+
+        const name = inventoryForm.name.trim();
+        const sku = inventoryForm.sku.trim();
+        const initialStock = Number(inventoryForm.initialStock);
+
+        if (!name || name.length > 200) {
+            showAdminError('Reward item name is required and cannot exceed 200 characters.');
+            return;
+        }
+
+        if (!sku || sku.length > 80) {
+            showAdminError('Reward SKU is required and cannot exceed 80 characters.');
+            return;
+        }
+
+        if (!Number.isInteger(initialStock) || initialStock < 0 || initialStock > 1000000) {
+            showAdminError('Initial stock must be an integer between 0 and 1,000,000.');
+            return;
+        }
+
+        if (inventoryForm.description.length > 1000 || inventoryForm.imageUrl.length > 500) {
+            showAdminError('Inventory description or image URL is too long.');
+            return;
+        }
+
+        setInventoryActionLoadingId('create');
+
+        try {
+            const response = await adminApi.createRewardInventoryItem({
+                ...inventoryForm,
+                name,
+                sku,
+                initialStock,
+            });
+            showAdminSuccess(response?.message || response?.Message || 'Reward item created.', 'Created');
+            setInventoryForm({
+                name: '',
+                sku: '',
+                initialStock: 0,
+                description: '',
+                imageUrl: '',
+            });
+            await loadInventory();
+        } catch (err) {
+            showAdminError(err.message || 'Failed to create reward item.');
+        } finally {
+            setInventoryActionLoadingId('');
+        }
+    };
+
+    const handleAdjustInventory = async (item) => {
+        const itemId = readRewardField(item, 'rewardItemId');
+        const quantityText = window.prompt('Quantity delta. Use negative number to reduce stock:', '1');
+
+        if (!quantityText) {
+            return;
+        }
+
+        const quantityDelta = Number(quantityText);
+
+        if (!Number.isInteger(quantityDelta) || quantityDelta === 0 || quantityDelta < -1000000 || quantityDelta > 1000000) {
+            showAdminError('Quantity delta must be a non-zero integer between -1,000,000 and 1,000,000.');
+            return;
+        }
+
+        const note = window.prompt('Inventory adjustment note:');
+        const trimmedNote = String(note || '').trim();
+
+        if (note === null) {
+            return;
+        }
+
+        if (trimmedNote.length < 3 || trimmedNote.length > 500) {
+            showAdminError('Inventory note must be between 3 and 500 characters.');
+            return;
+        }
+
+        setInventoryActionLoadingId(`adjust-${itemId}`);
+
+        try {
+            const response = await adminApi.adjustRewardInventory(itemId, {
+                quantityDelta,
+                note: trimmedNote,
+            });
+            showAdminSuccess(response?.message || response?.Message || 'Inventory adjusted.', 'Adjusted');
+            await loadInventory();
+        } catch (err) {
+            showAdminError(err.message || 'Failed to adjust inventory.');
+        } finally {
+            setInventoryActionLoadingId('');
+        }
+    };
+
+    const handleSetInventoryActive = async (item, value) => {
+        const itemId = readRewardField(item, 'rewardItemId');
+        const confirmed = await confirmAdminAction({
+            title: value ? 'Activate reward item' : 'Deactivate reward item',
+            message: `${value ? 'Activate' : 'Deactivate'} "${readRewardField(item, 'name')}"?`,
+            confirmLabel: value ? 'Activate' : 'Deactivate',
+            tone: value ? 'primary' : 'danger',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        setInventoryActionLoadingId(`active-${itemId}`);
+
+        try {
+            const response = await adminApi.setRewardInventoryActive(itemId, value);
+            showAdminSuccess(response?.message || response?.Message || 'Reward item status updated.', 'Updated');
+            await loadInventory();
+        } catch (err) {
+            showAdminError(err.message || 'Failed to update reward item status.');
+        } finally {
+            setInventoryActionLoadingId('');
+        }
+    };
+
+    const handleExpireOverdueRewards = async () => {
+        const confirmed = await confirmAdminAction({
+            title: 'Expire overdue rewards',
+            message: 'Process all eligible rewards whose claim deadline has passed?',
+            confirmLabel: 'Expire Overdue',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        setInventoryActionLoadingId('expire');
+
+        try {
+            const response = await adminApi.expireOverdueRewards();
+            showAdminSuccess(response?.message || response?.Message || 'Overdue rewards processed.', 'Processed');
+            await Promise.all([loadInventory(), loadRewards()]);
+        } catch (err) {
+            showAdminError(err.message || 'Failed to expire overdue rewards.');
+        } finally {
+            setInventoryActionLoadingId('');
+        }
+    };
+
     return (
         <AdminLayout activeKey="rewards" searchPlaceholder="Search reward payments...">
             <section className={pageShellClass}>
@@ -161,8 +341,11 @@ function AdminRewardPayments() {
                     </div>
                     <button
                         className={`${actionButtonClass} border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`}
-                        disabled={loading}
-                        onClick={loadRewards}
+                        disabled={loading || inventoryLoading}
+                        onClick={() => {
+                            loadRewards();
+                            loadInventory();
+                        }}
                         type="button"
                     >
                         <FaSyncAlt aria-hidden="true" />
@@ -184,6 +367,97 @@ function AdminRewardPayments() {
                             </div>
                         </article>
                     ))}
+                </section>
+
+                <section className={panelClass}>
+                    <div className="flex min-h-[64px] items-center justify-between gap-4 border-b border-[var(--admin-border)] px-5 py-4 max-[720px]:flex-col max-[720px]:items-stretch">
+                        <div>
+                            <h2 className="m-0 text-[1.05rem] text-[var(--admin-ink)]">Reward Inventory</h2>
+                            <p className="m-0 mt-1 text-[0.78rem] font-bold text-[var(--admin-muted)]">
+                                Manage physical season reward items and available stock.
+                            </p>
+                        </div>
+                        <button
+                            className={`${actionButtonClass} border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`}
+                            disabled={inventoryActionLoadingId === 'expire'}
+                            onClick={handleExpireOverdueRewards}
+                            type="button"
+                        >
+                            <FaSyncAlt aria-hidden="true" />
+                            {inventoryActionLoadingId === 'expire' ? 'Processing...' : 'Expire Overdue'}
+                        </button>
+                    </div>
+
+                    <form className="grid grid-cols-[minmax(0,1fr)_120px_110px_minmax(0,1fr)_minmax(0,1fr)_auto] gap-3 border-b border-[var(--admin-border)] p-5 max-[1180px]:grid-cols-2 max-[720px]:grid-cols-1" onSubmit={handleCreateInventoryItem}>
+                        <input className="h-10 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.84rem] font-bold outline-0" maxLength={200} onChange={handleInventoryFormChange('name')} placeholder="Reward item name" required type="text" value={inventoryForm.name} />
+                        <input className="h-10 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.84rem] font-bold uppercase outline-0" maxLength={80} onChange={handleInventoryFormChange('sku')} placeholder="SKU" required type="text" value={inventoryForm.sku} />
+                        <input className="h-10 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.84rem] font-bold outline-0" max="1000000" min="0" onChange={handleInventoryFormChange('initialStock')} required step="1" type="number" value={inventoryForm.initialStock} />
+                        <input className="h-10 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.84rem] font-bold outline-0" maxLength={1000} onChange={handleInventoryFormChange('description')} placeholder="Description" type="text" value={inventoryForm.description} />
+                        <input className="h-10 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.84rem] font-bold outline-0" maxLength={500} onChange={handleInventoryFormChange('imageUrl')} placeholder="Image URL" type="url" value={inventoryForm.imageUrl} />
+                        <button className={`${actionButtonClass} bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary-dark)]`} disabled={inventoryActionLoadingId === 'create'} type="submit">
+                            <FaCheck aria-hidden="true" />
+                            {inventoryActionLoadingId === 'create' ? 'Creating...' : 'Create'}
+                        </button>
+                    </form>
+
+                    <div className="w-full overflow-x-auto">
+                        <table className="w-full border-collapse max-[980px]:min-w-[920px]">
+                            <thead>
+                                <tr>
+                                    {['Item', 'SKU', 'Stock', 'Reserved', 'Delivered', 'Available', 'Status', 'Actions'].map((heading) => (
+                                        <th className="border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-5 py-4 text-left text-[0.68rem] font-black uppercase text-[#64748b]" key={heading}>
+                                            {heading}
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {inventoryLoading ? (
+                                    <tr>
+                                        <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="8">Loading inventory...</td>
+                                    </tr>
+                                ) : inventory.length === 0 ? (
+                                    <tr>
+                                        <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="8">No reward inventory items found.</td>
+                                    </tr>
+                                ) : inventory.map((item) => {
+                                    const itemId = readRewardField(item, 'rewardItemId');
+                                    const isActive = Boolean(readRewardField(item, 'isActive'));
+
+                                    return (
+                                        <tr key={itemId}>
+                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.88rem] font-black text-[var(--admin-ink)]">
+                                                {readRewardField(item, 'name') || '-'}
+                                                {readRewardField(item, 'description') && (
+                                                    <span className="mt-1 block text-[0.72rem] font-bold text-[var(--admin-muted)]">{readRewardField(item, 'description')}</span>
+                                                )}
+                                            </td>
+                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-muted)]">{readRewardField(item, 'sku') || '-'}</td>
+                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-ink)]">{readRewardField(item, 'stockQuantity') ?? 0}</td>
+                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-muted)]">{readRewardField(item, 'reservedQuantity') ?? 0}</td>
+                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-muted)]">{readRewardField(item, 'deliveredQuantity') ?? 0}</td>
+                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-black text-[var(--admin-primary-dark)]">{readRewardField(item, 'availableQuantity') ?? 0}</td>
+                                            <td className="border-b border-[var(--admin-border)] px-5 py-4">
+                                                <span className={`inline-flex min-h-6 items-center rounded-full px-2.5 text-[0.68rem] font-black ${isActive ? 'bg-[#e8f7ee] text-[#16864f]' : 'bg-[#f3e1df] text-[#a4392f]'}`}>
+                                                    {isActive ? 'Active' : 'Inactive'}
+                                                </span>
+                                            </td>
+                                            <td className="border-b border-[var(--admin-border)] px-5 py-4">
+                                                <div className="flex flex-wrap gap-2">
+                                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} disabled={inventoryActionLoadingId !== ''} onClick={() => handleAdjustInventory(item)} type="button">
+                                                        Adjust
+                                                    </button>
+                                                    <button className={`${actionButtonClass} ${isActive ? 'border border-[#f0b4b4] bg-white text-[#b91c1c] hover:bg-[#fff3f3]' : 'bg-[#e8f7ef] text-[var(--admin-primary)] hover:bg-[#d7f2e4]'}`} disabled={inventoryActionLoadingId !== ''} onClick={() => handleSetInventoryActive(item, !isActive)} type="button">
+                                                        {isActive ? 'Deactivate' : 'Activate'}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 </section>
 
                 <section className={panelClass}>

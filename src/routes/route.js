@@ -10,6 +10,7 @@ import ProtectedRoute from '../components/shared/ProtectedRoute';
 import HomePage from '../components/Public/HomePage';
 import ExploreTournaments from '../components/Public/ExploreTournaments';
 import GlobalRankings from '../components/Public/GlobalRankings';
+import PublicDetailPage from '../components/Public/PublicDetailPage';
 
 import SpectatorDashboard from '../components/Spectator';
 import SpectatorLeaderboard from '../components/Spectator/SpectatorLeaderboard';
@@ -78,6 +79,11 @@ const appRoutes = [
     { path: '/', element: createElement(HomePage) },
     { path: '/home', element: createElement(HomePage) },
     { path: '/explore-tournaments', element: createElement(ExploreTournaments) },
+    { path: '/public/tournaments/:id', element: createElement(PublicDetailPage) },
+    { path: '/public/races/:id', element: createElement(PublicDetailPage) },
+    { path: '/public/horses/:id', element: createElement(PublicDetailPage) },
+    { path: '/public/jockeys/:id', element: createElement(PublicDetailPage) },
+    { path: '/public/owners/:id', element: createElement(PublicDetailPage) },
     { path: '/global-rankings', element: createElement(GlobalRankings) },
     { path: '/login', element: createElement(Login) },
     { path: '/register', element: createElement(Register) },

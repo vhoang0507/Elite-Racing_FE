@@ -86,6 +86,17 @@ export async function getSpectatorRewards() {
     return apiRequest('/spectator/rewards');
 }
 
+export async function claimSeasonReward(rewardId, payload) {
+    return apiRequest(`/spectator/rewards/${rewardId}/claim`, {
+        method: 'POST',
+        body: JSON.stringify({
+            receiverName: payload.receiverName ?? payload.ReceiverName ?? '',
+            receiverPhone: payload.receiverPhone ?? payload.ReceiverPhone ?? '',
+            deliveryAddress: payload.deliveryAddress ?? payload.DeliveryAddress ?? '',
+        }),
+    });
+}
+
 // ─── Notifications ───────────────────────────────────────────────────────────
 
 export async function getSpectatorNotifications() {
@@ -120,6 +131,7 @@ export const spectatorApi = {
     getPredictorLeaderboard,
     getCurrentSeason,
     getSpectatorRewards,
+    claimSeasonReward,
     getSpectatorNotifications,
     getSpectatorUnreadCount,
     markSpectatorNotificationAsRead,
