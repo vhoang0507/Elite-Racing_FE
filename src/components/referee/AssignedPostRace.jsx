@@ -57,6 +57,21 @@ const outcomeOptions = [
     { value: 'Withdrawn', label: 'Withdrawn' },
 ];
 
+function normalizeOutcomeStatus(value) {
+    const normalized = String(value || '').trim();
+    const aliases = {
+        Disqualified: 'DSQ',
+        DidNotStart: 'DNS',
+        DidNotFinish: 'DNF',
+    };
+    return aliases[normalized] || normalized || 'Finished';
+}
+
+function getOutcomeLabel(value) {
+    const normalized = normalizeOutcomeStatus(value);
+    return outcomeOptions.find((option) => option.value === normalized)?.label || normalized;
+}
+
 function formatDateTime(value) {
     if (!value) return 'N/A';
     return new Intl.DateTimeFormat('en-US', {
@@ -478,13 +493,14 @@ function AssignedPostRace() {
         if (msg) { showToast(msg, 'error'); return; }
         setSaving('result');
         try {
-            const isFinished = resultForm.outcomeStatus === 'Finished';
+            const normalizedOutcome = normalizeOutcomeStatus(resultForm.outcomeStatus);
+            const isFinished = normalizedOutcome === 'Finished';
             await refereeApi.saveRaceResult(selectedRaceId, {
                 registrationId: Number(resultForm.registrationId),
-                finishTimeSeconds: nullableNumber(resultForm.finishTimeSeconds),
+                finishTimeSeconds: isFinished ? nullableNumber(resultForm.finishTimeSeconds) : null,
                 finishPosition: isFinished ? nullableNumber(resultForm.finishPosition) : null,
                 score: nullableNumber(resultForm.score),
-                outcomeStatus: resultForm.outcomeStatus,
+                outcomeStatus: normalizedOutcome,
                 note: resultForm.note?.trim() || null,
             });
             await refreshResults();
@@ -506,12 +522,15 @@ function AssignedPostRace() {
             return;
         }
 
+        const normalizedOutcome = normalizeOutcomeStatus(result.outcomeStatus ?? result.OutcomeStatus);
+        const isFinished = normalizedOutcome === 'Finished';
+
         setEditingResultId(String(result.resultId || result.registrationId || ''));
         setResultForm({
             registrationId: String(result.registrationId),
-            outcomeStatus: result.outcomeStatus ?? result.OutcomeStatus ?? 'Finished',
-            finishTimeSeconds: result.finishTimeSeconds ?? '',
-            finishPosition: result.finishPosition ?? '',
+            outcomeStatus: normalizedOutcome,
+            finishTimeSeconds: isFinished ? (result.finishTimeSeconds ?? '') : '',
+            finishPosition: isFinished ? (result.finishPosition ?? '') : '',
             score: result.score ?? '',
             note: result.note ?? '',
         });
@@ -917,6 +936,7 @@ function AssignedPostRace() {
                                             ...p,
                                             outcomeStatus: e.target.value,
                                             finishPosition: e.target.value === 'Finished' ? p.finishPosition : '',
+                                            finishTimeSeconds: e.target.value === 'Finished' ? p.finishTimeSeconds : '',
                                         }))}
                                         value={resultForm.outcomeStatus}
                                     >
@@ -941,7 +961,9 @@ function AssignedPostRace() {
                                         <label className={labelClass}>Time (seconds)</label>
                                         <input type="number" step="0.01" min="0" value={resultForm.finishTimeSeconds}
                                             onChange={(e) => setResultForm((p) => ({ ...p, finishTimeSeconds: e.target.value }))}
-                                            placeholder="e.g. 92.45" className={inputClass} />
+                                            placeholder={resultFormIsFinished ? 'e.g. 92.45' : 'Not applicable'}
+                                            disabled={!resultFormIsFinished}
+                                            className={inputClass} />
                                     </div>
                                 </div>
 
@@ -1000,9 +1022,9 @@ function AssignedPostRace() {
                                                     <div className="font-bold text-[0.9rem]">{result.horseName}</div>
                                                     <div className="text-xs text-[var(--admin-muted)]">Registration #{result.registrationId}</div>
                                                 </td>
-                                                <td className="text-sm font-bold text-[var(--admin-ink)]">{result.outcomeStatus ?? result.OutcomeStatus ?? 'Finished'}</td>
-                                                <td className="text-sm">{result.finishPosition ?? '-'}</td>
-                                                <td className="text-sm">{formatSeconds(result.finishTimeSeconds)}</td>
+                                                <td className="text-sm font-bold text-[var(--admin-ink)]">{getOutcomeLabel(result.outcomeStatus ?? result.OutcomeStatus)}</td>
+                                                <td className="text-sm">{normalizeOutcomeStatus(result.outcomeStatus ?? result.OutcomeStatus) === 'Finished' ? (result.finishPosition ?? '-') : '-'}</td>
+                                                <td className="text-sm">{normalizeOutcomeStatus(result.outcomeStatus ?? result.OutcomeStatus) === 'Finished' ? formatSeconds(result.finishTimeSeconds) : '-'}</td>
                                                 <td className="text-sm">{result.score ?? '-'}</td>
                                                 <td>
                                                     <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${getStatusClass(result.status)}`}>{result.status}</span>

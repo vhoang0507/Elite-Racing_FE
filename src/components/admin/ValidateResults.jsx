@@ -45,6 +45,8 @@ const statusClass = {
     pending: 'bg-[#faf2e0] text-[#8a6209]',
     draft: 'bg-[#f3f4f6] text-[#374151]',
     refereeconfirmed: 'bg-[#faf2e0] text-[#8a6209]',
+    submitted: 'bg-[#faf2e0] text-[#8a6209]',
+    approved: 'bg-[#e8f7ee] text-[#16864f]',
     adminapproved: 'bg-[#e8f7ee] text-[#16864f]',
     published: 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]',
     returned: 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]',
@@ -72,8 +74,9 @@ const pageButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-cente
 const pageSize = 5;
 
 const sortPendingFirst = (items, getStatus) => [...items].sort((current, next) => {
-    const currentRank = formatClass(getStatus(current)) === 'pending' ? 0 : 1;
-    const nextRank = formatClass(getStatus(next)) === 'pending' ? 0 : 1;
+    const pendingStatuses = new Set(['pending', 'submitted', 'refereeconfirmed']);
+    const currentRank = pendingStatuses.has(formatClass(getStatus(current))) ? 0 : 1;
+    const nextRank = pendingStatuses.has(formatClass(getStatus(next))) ? 0 : 1;
 
     return currentRank - nextRank;
 });
@@ -99,6 +102,7 @@ const matchesQuery = (submission, query) => {
 const statusFilterOptions = [
     { value: 'all', label: 'All Status' },
     { value: 'pending', label: 'Pending' },
+    { value: 'submitted', label: 'Report Submitted' },
     { value: 'refereeconfirmed', label: 'Referee Confirmed' },
     { value: 'adminapproved', label: 'Admin Approved' },
     { value: 'returned', label: 'Returned' },
@@ -249,15 +253,17 @@ function ValidateResults() {
                                                         <span>View Details</span>
                                                         <FaChevronRight aria-hidden="true" className="h-3 w-3" />
                                                     </Link>
-                                                    <button
-                                                        aria-label={`Delete ${submission.race || 'result report'}`}
-                                                        className="grid h-[38px] w-[38px] flex-none cursor-pointer place-items-center rounded-full bg-[#f3e1df] text-[#a4392f] hover:bg-[#ecd0cc] disabled:cursor-not-allowed disabled:opacity-50"
-                                                        disabled={deletingId === String(submission.id || submission.slug || submission.resultId)}
-                                                        onClick={() => handleDeleteSubmission(submission)}
-                                                        type="button"
-                                                    >
-                                                        <FaTrashAlt aria-hidden="true" />
-                                                    </button>
+                                                    {!submission.reportOnly && (
+                                                        <button
+                                                            aria-label={`Delete ${submission.race || 'result report'}`}
+                                                            className="grid h-[38px] w-[38px] flex-none cursor-pointer place-items-center rounded-full bg-[#f3e1df] text-[#a4392f] hover:bg-[#ecd0cc] disabled:cursor-not-allowed disabled:opacity-50"
+                                                            disabled={deletingId === String(submission.id || submission.slug || submission.resultId)}
+                                                            onClick={() => handleDeleteSubmission(submission)}
+                                                            type="button"
+                                                        >
+                                                            <FaTrashAlt aria-hidden="true" />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </div>
                                         </article>

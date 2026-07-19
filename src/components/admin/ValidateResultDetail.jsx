@@ -235,15 +235,15 @@ function ValidateResultDetail() {
                 throw new Error('The final report was returned and must be resubmitted before approval.');
             }
 
-            if (finalReport.status === 'Submitted') {
-                await adminApi.approveRefereeReport(finalReport.reportId);
-            } else if (finalReport.status !== 'Approved') {
+            if (!['Submitted', 'Approved'].includes(finalReport.status)) {
                 throw new Error(`The final report cannot be approved from status ${finalReport.status || 'N/A'}.`);
             }
 
+            // One BE endpoint now validates everything first, then approves the
+            // final report and publishes every result in a single transaction.
             await adminApi.approveAllResults(raceId);
 
-            showAdminSuccess('Final report and race results approved. Tournament completed.', 'Approved');
+            showAdminSuccess('Final report and all race results approved together.', 'Approved');
             setTimeout(() => navigate('/admin/results'), 1500);
         } catch (err) {
             showAdminError(err.message || 'Failed to approve result.');
@@ -285,35 +285,22 @@ function ValidateResultDetail() {
                 throw new Error('The final post-race report is missing.');
             }
 
-            if (finalReport.status === 'Submitted') {
+            if (!['Submitted', 'Approved', 'Returned'].includes(finalReport.status)) {
+                throw new Error(`The final report cannot be returned from status ${finalReport.status || 'N/A'}.`);
+            }
+
+            if (finalReport.status !== 'Returned') {
+                // One BE endpoint returns the report, every race result, and the
+                // race status together. It also repairs the old partial state
+                // where the report was Approved but the results were not published.
                 await adminApi.returnRefereeReport(
                     finalReport.reportId,
                     trimmedReason,
                     'Other'
                 );
-            } else if (finalReport.status !== 'Returned') {
-                throw new Error(`The final report cannot be returned from status ${finalReport.status || 'N/A'}.`);
             }
 
-            const currentResultId = String(resultId || '').replace('result-', '');
-            const resultIds = [
-                ...new Set([
-                    ...postRaceResults
-                        .filter((result) => result?.resultId && result.status === 'RefereeConfirmed')
-                        .map((result) => String(result.resultId)),
-                    /^\d+$/.test(currentResultId) ? currentResultId : '',
-                ].filter(Boolean)),
-            ];
-
-            if (resultIds.length === 0) {
-                throw new Error('No referee-confirmed results to return.');
-            }
-
-            for (const id of resultIds) {
-                await adminApi.rejectResult(id, trimmedReason);
-            }
-
-            showAdminSuccess('Final report and results returned to referee.', 'Returned');
+            showAdminSuccess('Final report and all results returned to referee.', 'Returned');
             setTimeout(() => navigate('/admin/results'), 1500);
         } catch (err) {
             showAdminError(err.message || 'Failed to return result.');

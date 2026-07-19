@@ -786,9 +786,10 @@ const getResultSubmissionStatus = (results) => {
 };
 
 async function getResultSubmissions() {
-    const [resultsPayload, registrationsPayload] = await Promise.all([
+    const [resultsPayload, registrationsPayload, reportsPayload] = await Promise.all([
         apiRequest('/admin/results').catch(() => []),
         getRegistrations().catch(() => []),
+        getReports().catch(() => []),
     ]);
     const registrationContextById = new Map(
         (Array.isArray(registrationsPayload) ? registrationsPayload : [])
@@ -841,7 +842,51 @@ async function getResultSubmissions() {
         };
     });
 
-    return resultSubmissions
+    const existingSubmissionKeys = new Set(
+        resultSubmissions.map((submission) => (
+            `${Number(submission.raceId) || 0}-${Number(submission.enteredByRefereeId) || 0}`
+        ))
+    );
+
+    /*
+     * Keep final reports visible even when legacy/inconsistent data still has
+     * Draft results. New BE validation prevents this state, but showing the
+     * report here makes the problem visible to Admin instead of silently
+     * returning an empty Validate Results page.
+     */
+    const reportOnlySubmissions = normalizeReports(reportsPayload)
+        .filter((report) => getReportPhase(report) === 'PostRace')
+        .filter((report) => ['Submitted', 'Returned', 'Approved'].includes(report.status))
+        .filter((report) => {
+            const key = `${Number(report.raceId) || 0}-${Number(report.refereeId) || 0}`;
+            return !existingSubmissionKeys.has(key);
+        })
+        .map((report) => {
+            const mappedReport = mapRefereeReport(report);
+            const raceName = mappedReport.tournamentName
+                || mappedReport.raceName
+                || `Race #${mappedReport.raceId || '-'}`;
+
+            return {
+                ...mappedReport,
+                id: mappedReport.id,
+                slug: mappedReport.id,
+                race: raceName,
+                name: raceName,
+                detail: 'Final report submitted; race results are not referee-confirmed yet',
+                position: '0 confirmed results',
+                tone: 'orange',
+                resultIds: [],
+                resultCount: 0,
+                reportOnly: true,
+                canDelete: false,
+                enteredByRefereeId: mappedReport.refereeId,
+                createdAt: mappedReport.submittedAt,
+                updatedAt: mappedReport.submittedAt,
+            };
+        });
+
+    return [...resultSubmissions, ...reportOnlySubmissions]
         .sort((current, next) => {
             const currentDate = new Date(current.submittedAt || current.updatedAt || current.createdAt || 0).getTime();
             const nextDate = new Date(next.submittedAt || next.updatedAt || next.createdAt || 0).getTime();
