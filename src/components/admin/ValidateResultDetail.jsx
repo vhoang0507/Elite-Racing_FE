@@ -188,6 +188,16 @@ function ValidateResultDetail() {
         };
     }, [resultId]);
 
+    const getFinalPostRaceReport = () => {
+        const reports = detail?.postRace?.reports || detail?.reports || [];
+
+        return reports.find((report) => (
+            report?.reportPhase === 'PostRace'
+            && report?.sourceType !== 'Violation'
+            && report?.reportId
+        )) || null;
+    };
+
     const handleApprove = async () => {
         const confirmed = await confirmAdminAction({
             title: 'Approve result report',
@@ -215,9 +225,25 @@ function ValidateResultDetail() {
                 throw new Error('No referee-confirmed results to approve.');
             }
 
+            const finalReport = getFinalPostRaceReport();
+
+            if (!finalReport) {
+                throw new Error('The final post-race report is missing.');
+            }
+
+            if (finalReport.status === 'Returned') {
+                throw new Error('The final report was returned and must be resubmitted before approval.');
+            }
+
+            if (finalReport.status === 'Submitted') {
+                await adminApi.approveRefereeReport(finalReport.reportId);
+            } else if (finalReport.status !== 'Approved') {
+                throw new Error(`The final report cannot be approved from status ${finalReport.status || 'N/A'}.`);
+            }
+
             await adminApi.approveAllResults(raceId);
 
-            showAdminSuccess('Results approved and tournament completed.', 'Approved');
+            showAdminSuccess('Final report and race results approved. Tournament completed.', 'Approved');
             setTimeout(() => navigate('/admin/results'), 1500);
         } catch (err) {
             showAdminError(err.message || 'Failed to approve result.');
@@ -227,9 +253,23 @@ function ValidateResultDetail() {
     };
 
     const handleReturn = async () => {
+        const reason = window.prompt(
+            'Reason for returning this submission to the referee? (minimum 10 characters)'
+        );
+        const trimmedReason = String(reason || '').trim();
+
+        if (!trimmedReason) {
+            return;
+        }
+
+        if (trimmedReason.length < 10 || trimmedReason.length > 1000) {
+            showAdminError('Return reason must be between 10 and 1,000 characters.');
+            return;
+        }
+
         const confirmed = await confirmAdminAction({
             title: 'Return result report',
-            message: 'Are you sure you want to return this result to the referee for correction?',
+            message: 'Return the final report and all referee-confirmed results for correction?',
             confirmLabel: 'Return',
             tone: 'danger',
         });
@@ -237,7 +277,24 @@ function ValidateResultDetail() {
         if (!confirmed) return;
 
         setActionLoading(true);
+
         try {
+            const finalReport = getFinalPostRaceReport();
+
+            if (!finalReport?.reportId) {
+                throw new Error('The final post-race report is missing.');
+            }
+
+            if (finalReport.status === 'Submitted') {
+                await adminApi.returnRefereeReport(
+                    finalReport.reportId,
+                    trimmedReason,
+                    'Other'
+                );
+            } else if (finalReport.status !== 'Returned') {
+                throw new Error(`The final report cannot be returned from status ${finalReport.status || 'N/A'}.`);
+            }
+
             const currentResultId = String(resultId || '').replace('result-', '');
             const resultIds = [
                 ...new Set([
@@ -253,10 +310,10 @@ function ValidateResultDetail() {
             }
 
             for (const id of resultIds) {
-                await adminApi.rejectResult(id);
+                await adminApi.rejectResult(id, trimmedReason);
             }
 
-            showAdminSuccess('Results returned to referee.', 'Returned');
+            showAdminSuccess('Final report and results returned to referee.', 'Returned');
             setTimeout(() => navigate('/admin/results'), 1500);
         } catch (err) {
             showAdminError(err.message || 'Failed to return result.');

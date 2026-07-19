@@ -152,6 +152,16 @@ export async function updateRefereeReport(raceId, reportId, reportContent, repor
     });
 }
 
+export async function resubmitFinalReport(raceId, reportId, reportContent) {
+    return apiRequest(`/referee/races/${raceId}/reports/${reportId}/resubmit`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            reportContent,
+            reportType: 'PostRace',
+        }),
+    });
+}
+
 export async function getRefereeReports(raceId) {
     return apiRequest(`/referee/races/${raceId}/reports`);
 }
@@ -206,6 +216,7 @@ export const refereeApi = {
     getRaceResults,
     createRefereeReport,
     updateRefereeReport,
+    resubmitFinalReport,
     getRefereeReports,
     getNotifications,
     getUnreadCount,
