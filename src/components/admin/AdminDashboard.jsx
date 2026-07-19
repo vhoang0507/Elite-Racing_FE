@@ -20,7 +20,6 @@ import AdminLayout from './AdminLayout';
 import { adminApi } from '../../api/adminApi';
 
 const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
-const headingClass = 'flex items-center justify-between gap-[18px] max-[720px]:flex-col max-[720px]:items-stretch';
 const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_10px_30px_rgba(11,27,52,0.06)]';
 const sectionHeadClass = 'flex min-h-[58px] items-center justify-between gap-[18px] border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] max-[720px]:flex-col max-[720px]:items-stretch';
 const sectionActionClass = 'action-pill no-underline';
@@ -44,6 +43,22 @@ const statusClass = {
     cancelled: 'bg-[#f3f4f6] text-[#6b7280]',
 };
 const humanizeLabel = (value) => String(value || '').replace(/([a-z0-9])([A-Z])/g, '$1 $2').trim();
+const readField = (item, key) => {
+    const pascalKey = key[0].toUpperCase() + key.slice(1);
+    return item?.[key] ?? item?.[pascalKey];
+};
+const formatDateTime = (value) => {
+    if (!value) return '-';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return String(value);
+    return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(date);
+};
 const tournamentStatusBaseClass = 'inline-flex min-h-6 items-center rounded-full px-3 text-[0.68rem] font-bold uppercase tracking-wide';
 const getTournamentStatusClass = (status) => `${tournamentStatusBaseClass} ${statusClass[statusKey(status)] || statusClass.draft}`;
 const deadlineClass = {
@@ -110,7 +125,10 @@ function AdminDashboard() {
         tournaments: [],
         approvals: [],
         users: [],
+        nextRaces: [],
+        recentActivities: [],
     });
+    const [auditLogs, setAuditLogs] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [query, setQuery] = useState('');
     const [selectedTournament, setSelectedTournament] = useState(null);
@@ -125,9 +143,17 @@ function AdminDashboard() {
     useEffect(() => {
         let isMounted = true;
 
-        adminApi.getDashboard().then((payload) => {
+        Promise.all([
+            adminApi.getDashboard(),
+            adminApi.getAuditLogs({ page: 1, pageSize: 5 }).catch(() => ({ items: [] })),
+        ]).then(([payload, auditPayload]) => {
             if (isMounted) {
                 setDashboard(payload);
+                setAuditLogs(readField(auditPayload, 'items') || []);
+                setIsLoading(false);
+            }
+        }).catch(() => {
+            if (isMounted) {
                 setIsLoading(false);
             }
         });
@@ -200,6 +226,43 @@ function AdminDashboard() {
                                 </article>
                             );
                         })}
+                    </section>
+
+                    <section className="grid grid-cols-2 gap-7 max-[980px]:grid-cols-1">
+                        <div className={panelClass}>
+                            <div className={sectionHeadClass}>
+                                <h2 className="m-0 text-[1.05rem] text-[var(--admin-ink)]">Upcoming Races</h2>
+                                <button className={sectionActionClass} onClick={handleViewAllTournaments} type="button">Manage</button>
+                            </div>
+                            <div className="divide-y divide-[var(--admin-border)]">
+                                {(dashboard.nextRaces || []).length === 0 ? (
+                                    <div className="px-[22px] py-6 text-[0.9rem] font-bold text-[var(--admin-muted)]">No upcoming races.</div>
+                                ) : (dashboard.nextRaces || []).slice(0, 5).map((race) => (
+                                    <div className="grid gap-1 px-[22px] py-4" key={readField(race, 'raceId') || `${readField(race, 'raceName')}-${readField(race, 'raceDate')}`}>
+                                        <strong className="text-[0.92rem] text-[var(--admin-ink)]">{readField(race, 'raceName') || '-'}</strong>
+                                        <span className="text-[0.78rem] font-bold text-[var(--admin-muted)]">{readField(race, 'tournamentName') || '-'} | {formatDateTime(readField(race, 'raceDate'))}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className={panelClass}>
+                            <div className={sectionHeadClass}>
+                                <h2 className="m-0 text-[1.05rem] text-[var(--admin-ink)]">Recent Audit Logs</h2>
+                            </div>
+                            <div className="divide-y divide-[var(--admin-border)]">
+                                {auditLogs.length === 0 ? (
+                                    <div className="px-[22px] py-6 text-[0.9rem] font-bold text-[var(--admin-muted)]">No audit logs found.</div>
+                                ) : auditLogs.map((log) => (
+                                    <div className="grid gap-1 px-[22px] py-4" key={readField(log, 'auditLogId')}>
+                                        <strong className="text-[0.92rem] text-[var(--admin-ink)]">{humanizeLabel(readField(log, 'action'))} {readField(log, 'entityType')}</strong>
+                                        <span className="text-[0.78rem] font-bold text-[var(--admin-muted)]">
+                                            {readField(log, 'userName') || `User #${readField(log, 'userId') || '-'}`} | {formatDateTime(readField(log, 'createdAt'))}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </section>
 
                     <section className="grid grid-cols-1 items-start gap-7">

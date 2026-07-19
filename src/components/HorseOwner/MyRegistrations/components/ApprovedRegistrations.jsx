@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
@@ -20,6 +20,7 @@ export default function ApprovedRegistrations() {
     const [infoError, setInfoError] = useState("");
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
+    const [actionId, setActionId] = useState(null);
 
     const filteredData = useMemo(() => {
         const q = search.trim().toLowerCase();
@@ -31,7 +32,7 @@ export default function ApprovedRegistrations() {
         });
     }, [data, search, statusFilter]);
 
-    useEffect(() => {
+    const loadData = useCallback(() => {
         setLoading(true);
         ownerApi.getApprovedRegistrationsList()
             .then(setData)
@@ -40,6 +41,38 @@ export default function ApprovedRegistrations() {
             })
             .finally(() => setLoading(false));
     }, [navigate]);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
+
+    const canWithdraw = (status) => !["Rejected", "Cancelled", "Withdrawn", "Completed"].includes(status);
+
+    const handleWithdraw = async (row) => {
+        const reason = window.prompt(`Reason for withdrawing ${row.horseName || "this registration"}:`);
+        const trimmedReason = String(reason || "").trim();
+
+        if (!trimmedReason) return;
+
+        if (trimmedReason.length < 5 || trimmedReason.length > 500) {
+            window.alert("Withdraw reason must be between 5 and 500 characters.");
+            return;
+        }
+
+        setActionId(row.registrationId);
+
+        try {
+            await ownerApi.withdrawRegistration(row.registrationId, trimmedReason);
+            window.alert("Registration withdrawn successfully.");
+            loadData();
+        } catch (err) {
+            if (!handleOwnerAccessError(err, navigate)) {
+                window.alert(err.message || "Failed to withdraw registration.");
+            }
+        } finally {
+            setActionId(null);
+        }
+    };
 
     const openRaceInfo = async (row) => {
         setInfoLoadingId(row.registrationId);
@@ -141,6 +174,14 @@ export default function ApprovedRegistrations() {
                                                     >
                                                         {infoLoadingId === row.registrationId ? "Loading..." : "Race Info"}
                                                     </button>
+                                                    <button
+                                                        disabled={!canWithdraw(row.status) || actionId === row.registrationId}
+                                                        onClick={() => handleWithdraw(row)}
+                                                        style={{ ...styles.actionBtn, ...styles.dangerBtn, ...((!canWithdraw(row.status) || actionId === row.registrationId) ? styles.disabledBtn : {}) }}
+                                                        type="button"
+                                                    >
+                                                        {actionId === row.registrationId ? "Withdrawing..." : "Withdraw"}
+                                                    </button>
 
                                                 </div>
                                             </td>
@@ -226,6 +267,7 @@ const styles = {
     emptyCell: { textAlign: "center", padding: "28px", color: "#94a3b8", fontSize: 13 },
     actionBtn: { borderRadius: 999, padding: "5px 12px", cursor: "pointer", fontSize: 12, fontWeight: 600, border: "none" },
     primaryBtn: { backgroundColor: "#16305c", color: "#fff" },
+    dangerBtn: { backgroundColor: "#fff", border: "1px solid #e3bcb7", color: "#a4392f" },
     ghostBtn: { backgroundColor: "#fff", color: "#374151", border: "1px solid #ded2ad" },
     disabledBtn: { cursor: "not-allowed", opacity: 0.65 },
     error: { margin: "14px 20px 0", color: "#a4392f", fontSize: 13, fontWeight: 600 },

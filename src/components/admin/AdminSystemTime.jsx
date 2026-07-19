@@ -31,6 +31,11 @@ const initialAdvanceForm = {
     minutes: '5',
     autoSync: true,
 };
+const advanceLimits = {
+    days: 365,
+    hours: 23,
+    minutes: 59,
+};
 
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] content-start gap-6 px-11 py-9 max-[860px]:px-5 max-[860px]:py-7';
 const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] shadow-[0_14px_30px_rgba(15,23,42,0.05)]';
@@ -134,10 +139,17 @@ function buildLiveSystemTime(systemTime, elapsedMs) {
     };
 }
 
-function toNonNegativeInt(value) {
-    const parsed = Number.parseInt(value, 10);
+function parseAdvanceValue(value, max) {
+    const rawValue = String(value ?? '').trim();
+    const normalizedValue = rawValue === '' ? '0' : rawValue;
 
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+    if (!/^\d+$/.test(normalizedValue)) {
+        return null;
+    }
+
+    const parsed = Number(normalizedValue);
+
+    return parsed >= 0 && parsed <= max ? parsed : null;
 }
 
 function StatusBadge({
@@ -293,9 +305,14 @@ function AdminSystemTime() {
             return;
         }
 
-        const days = toNonNegativeInt(advanceForm.days);
-        const hours = toNonNegativeInt(advanceForm.hours);
-        const minutes = toNonNegativeInt(advanceForm.minutes);
+        const days = parseAdvanceValue(advanceForm.days, advanceLimits.days);
+        const hours = parseAdvanceValue(advanceForm.hours, advanceLimits.hours);
+        const minutes = parseAdvanceValue(advanceForm.minutes, advanceLimits.minutes);
+
+        if (days === null || hours === null || minutes === null) {
+            showAdminError('Advance duration must use whole numbers: 0-365 days, 0-23 hours, and 0-59 minutes.');
+            return;
+        }
 
         if (days + hours + minutes === 0) {
             showAdminError('Please enter at least one positive advance value.');
@@ -498,8 +515,10 @@ function AdminSystemTime() {
                                         <input
                                             className={`${inputClass} h-12 text-[1rem]`}
                                             disabled={!allowTimeOverride || isBusy}
+                                            max={advanceLimits[name]}
                                             min="0"
                                             name={name}
+                                            step="1"
                                             type="number"
                                             value={advanceForm[name]}
                                             onChange={handleAdvanceChange}

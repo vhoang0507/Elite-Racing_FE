@@ -295,6 +295,48 @@ function ValidateResultDetail() {
         }
     };
 
+    const handleReopenPublishedResults = async () => {
+        const raceId = detail?.raceId || postRaceResults.find((result) => result?.raceId)?.raceId;
+
+        if (!raceId) {
+            showAdminError('Race information is missing for result correction.');
+            return;
+        }
+
+        const reason = window.prompt('Reason for reopening published results?');
+        const trimmedReason = String(reason || '').trim();
+
+        if (!trimmedReason) {
+            return;
+        }
+
+        if (trimmedReason.length < 10 || trimmedReason.length > 1000) {
+            showAdminError('Reopen reason must be between 10 and 1,000 characters.');
+            return;
+        }
+
+        const confirmed = await confirmAdminAction({
+            title: 'Reopen published results',
+            message: 'This will move published results back to referee-confirmed status for correction.',
+            confirmLabel: 'Reopen',
+            tone: 'danger',
+        });
+
+        if (!confirmed) return;
+
+        setActionLoading(true);
+
+        try {
+            const response = await adminApi.reopenPublishedRaceResults(raceId, trimmedReason);
+            showAdminSuccess(response?.message || response?.Message || 'Published results reopened for correction.', 'Reopened');
+            await loadDetail();
+        } catch (err) {
+            showAdminError(err.message || 'Failed to reopen published results.');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
     const isStandaloneReport = detail?.detailType === 'admin-report';
     const heading = isStandaloneReport
         ? `${formatReportType(detail?.sourceType)}: ${detail?.raceName || 'Race report'}`
@@ -304,6 +346,10 @@ function ValidateResultDetail() {
         : 'Official race results and logged violations submitted by the race referee for admin review.';
     const tournamentName = detail?.tournamentName || detail?.raceName || '-';
     const postRaceResults = detail?.postRace?.results || [];
+    const canReopenPublishedResults = !isStandaloneReport && (
+        detail?.status === 'Published'
+        || postRaceResults.some((result) => result?.status === 'Published')
+    );
     const postRaceReports = detail?.postRace?.reports || detail?.reports || [];
     const postRaceViolations = postRaceReports.filter(isViolationReport);
     const disqualifiedViolations = postRaceViolations.filter(isDisqualifiedViolation);
@@ -460,6 +506,17 @@ function ValidateResultDetail() {
                                 Retry Evaluation
                             </button>
                         )}
+                        {!loading && !error && canReopenPublishedResults && (
+                            <button
+                                type="button"
+                                disabled={actionLoading}
+                                onClick={handleReopenPublishedResults}
+                                className="flex min-h-[38px] cursor-pointer items-center gap-2 rounded-full border border-[#d89288] bg-white px-4 text-[0.78rem] font-black text-[#a4392f] transition-colors hover:bg-[#f3e1df] disabled:opacity-50"
+                            >
+                                <FaUndo aria-hidden="true" className="h-3 w-3" />
+                                Reopen
+                            </button>
+                        )}
                         <button
                             aria-label="Refresh referee report"
                             className="grid h-[38px] w-[38px] cursor-pointer place-items-center rounded-full border border-[var(--admin-border)] bg-white text-[#64748b] transition-colors hover:border-[var(--admin-gold)] hover:text-[var(--admin-primary)]"
@@ -566,7 +623,7 @@ function ValidateResultDetail() {
                                         <table className="w-full min-w-[760px] border-collapse bg-white">
                                             <thead>
                                                 <tr>
-                                                    {['Rank', 'Horse', 'Registration', 'Time', 'Score', 'Status', 'Note'].map((label) => (
+                                                    {['Rank', 'Horse', 'Registration', 'Outcome', 'Time', 'Score', 'Status', 'Note'].map((label) => (
                                                         <th className="border-b border-[var(--admin-border)] bg-[#f8fbff] px-4 py-3 text-left text-[0.62rem] font-black uppercase tracking-normal text-[#64748b]" key={label}>
                                                             {label}
                                                         </th>
@@ -596,6 +653,9 @@ function ValidateResultDetail() {
                                                         </td>
                                                         <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-muted)]">
                                                             #{result.registrationId || '-'}
+                                                        </td>
+                                                        <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-ink)]">
+                                                            {result.outcomeStatus || 'Finished'}
                                                         </td>
                                                         <td className="border-b border-[var(--admin-border)] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-ink)]">
                                                             {result.finishTime}

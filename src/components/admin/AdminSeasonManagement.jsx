@@ -32,6 +32,12 @@ const fieldClass = 'grid gap-1.5';
 const labelClass = 'text-[0.68rem] font-black uppercase text-[#64748b]';
 const controlClass = 'h-10 w-full rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.86rem] font-bold text-[var(--admin-ink)] outline-0 focus:border-[#0b7f5a] focus:bg-white focus:shadow-[0_0_0_3px_rgba(16,185,129,0.08)]';
 const actionButtonClass = 'inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-full px-4 text-[0.78rem] font-black transition-colors disabled:cursor-not-allowed disabled:opacity-60';
+const minDate = '2000-01-01';
+const maxDate = '2100-12-31';
+const maxPredictionPoints = 1000000;
+const maxRewardRules = 100;
+const maxRewardBonusPoints = 1000000;
+const maxSeasonDurationDays = 3660;
 
 const emptySeasonForm = {
     seasonName: '',
@@ -41,9 +47,9 @@ const emptySeasonForm = {
 };
 
 const defaultRewardRules = [
-    { rankPosition: 1, rewardName: 'Champion Bonus', rewardDescription: '', bonusPoints: 300 },
-    { rankPosition: 2, rewardName: 'Runner-up Bonus', rewardDescription: '', bonusPoints: 200 },
-    { rankPosition: 3, rewardName: 'Third Place Bonus', rewardDescription: '', bonusPoints: 100 },
+    { rankPosition: 1, rewardName: 'Champion Bonus', rewardDescription: '', bonusPoints: 300, rewardItemId: '', quantity: 1 },
+    { rankPosition: 2, rewardName: 'Runner-up Bonus', rewardDescription: '', bonusPoints: 200, rewardItemId: '', quantity: 1 },
+    { rankPosition: 3, rewardName: 'Third Place Bonus', rewardDescription: '', bonusPoints: 100, rewardItemId: '', quantity: 1 },
 ];
 
 const statusClass = {
@@ -51,6 +57,12 @@ const statusClass = {
     Active: 'bg-[#e8f7ee] text-[#16864f]',
     Closed: 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]',
     Cancelled: 'bg-[#f3e1df] text-[#a4392f]',
+};
+
+const rewardStatusTransitions = {
+    Claimed: ['Approved', 'Rejected'],
+    Approved: ['Preparing', 'Rejected'],
+    Preparing: ['Delivered', 'Rejected'],
 };
 
 function readSeasonField(season, key) {
@@ -81,6 +93,19 @@ function formatDate(value) {
     }).format(new Date(`${date}T00:00:00`));
 }
 
+function isDateYearInRange(dateValue) {
+    const year = Number(String(dateValue || '').slice(0, 4));
+
+    return Number.isInteger(year) && year >= 2000 && year <= 2100;
+}
+
+function getDateDiffDays(startDate, endDate) {
+    const start = new Date(`${startDate}T00:00:00`);
+    const end = new Date(`${endDate}T00:00:00`);
+
+    return Math.round((end.getTime() - start.getTime()) / 86400000);
+}
+
 function formatStatus(status) {
     return status || '-';
 }
@@ -101,6 +126,8 @@ function normalizeRewardRules(payload) {
         rewardName: readSeasonField(rule, 'rewardName') ?? '',
         rewardDescription: readSeasonField(rule, 'rewardDescription') ?? '',
         bonusPoints: readSeasonField(rule, 'bonusPoints') ?? 0,
+        rewardItemId: readSeasonField(rule, 'rewardItemId') ?? '',
+        quantity: readSeasonField(rule, 'quantity') ?? 1,
     }));
 }
 
@@ -132,6 +159,8 @@ function AdminSeasonManagement() {
     const [seasonRewards, setSeasonRewards] = useState([]);
     const [detailLoading, setDetailLoading] = useState(false);
     const [detailError, setDetailError] = useState('');
+    const [rewardItems, setRewardItems] = useState([]);
+    const [rewardStatusLoadingId, setRewardStatusLoadingId] = useState('');
 
     const loadSeasons = async () => {
         setLoading(true);
@@ -147,8 +176,18 @@ function AdminSeasonManagement() {
         }
     };
 
+    const loadRewardItems = async () => {
+        try {
+            const payload = await adminApi.getRewardInventory();
+            setRewardItems(Array.isArray(payload) ? payload : []);
+        } catch {
+            setRewardItems([]);
+        }
+    };
+
     useEffect(() => {
         loadSeasons();
+        loadRewardItems();
     }, []);
 
     const stats = useMemo(() => {
@@ -197,8 +236,18 @@ function AdminSeasonManagement() {
             return;
         }
 
+        if (seasonForm.seasonName.trim().length < 3 || seasonForm.seasonName.trim().length > 200) {
+            showAdminError('Season name must be between 3 and 200 characters.');
+            return;
+        }
+
         if (!seasonForm.startDate || !seasonForm.endDate) {
             showAdminError('Season start and end dates are required.');
+            return;
+        }
+
+        if (!isDateYearInRange(seasonForm.startDate) || !isDateYearInRange(seasonForm.endDate)) {
+            showAdminError('Season years must be between 2000 and 2100.');
             return;
         }
 
@@ -207,8 +256,15 @@ function AdminSeasonManagement() {
             return;
         }
 
-        if (Number(seasonForm.pointsPerCorrectPrediction) <= 0) {
-            showAdminError('Points per correct prediction must be greater than 0.');
+        if (getDateDiffDays(seasonForm.startDate, seasonForm.endDate) > maxSeasonDurationDays) {
+            showAdminError('Season duration cannot exceed 3,660 days.');
+            return;
+        }
+
+        const pointsPerCorrectPrediction = Number(seasonForm.pointsPerCorrectPrediction);
+
+        if (!Number.isInteger(pointsPerCorrectPrediction) || pointsPerCorrectPrediction < 1 || pointsPerCorrectPrediction > maxPredictionPoints) {
+            showAdminError('Points per correct prediction must be an integer between 1 and 1,000,000.');
             return;
         }
 
@@ -217,7 +273,7 @@ function AdminSeasonManagement() {
         try {
             const payload = {
                 ...seasonForm,
-                pointsPerCorrectPrediction: Number(seasonForm.pointsPerCorrectPrediction),
+                pointsPerCorrectPrediction,
             };
 
             if (editingSeason) {
@@ -390,11 +446,13 @@ function AdminSeasonManagement() {
             ...current,
             {
                 rankPosition: current.length + 1,
-                rewardName: '',
-                rewardDescription: '',
-                bonusPoints: 0,
-            },
-        ]);
+            rewardName: '',
+            rewardDescription: '',
+            bonusPoints: 0,
+            rewardItemId: '',
+            quantity: 1,
+        },
+    ]);
     };
 
     const removeRewardRule = (index) => {
@@ -417,10 +475,52 @@ function AdminSeasonManagement() {
             rewardName: String(rule.rewardName || '').trim(),
             rewardDescription: String(rule.rewardDescription || '').trim(),
             bonusPoints: Number(rule.bonusPoints || 0),
+            rewardItemId: rule.rewardItemId ? Number(rule.rewardItemId) : null,
+            quantity: Number(rule.quantity || 1),
         }));
 
-        if (sanitizedRules.some((rule) => !rule.rankPosition || rule.rankPosition <= 0 || !rule.rewardName || rule.bonusPoints < 0)) {
-            showAdminError('Each reward rule needs a rank, reward name, and non-negative bonus points.');
+        if (sanitizedRules.length === 0 || sanitizedRules.length > maxRewardRules) {
+            showAdminError('A season must have 1 to 100 reward rules.');
+            return;
+        }
+
+        if (sanitizedRules.some((rule) => !Number.isInteger(rule.rankPosition) || rule.rankPosition < 1 || rule.rankPosition > maxRewardRules)) {
+            showAdminError('Reward ranks must be integers between 1 and 100.');
+            return;
+        }
+
+        const sortedRanks = sanitizedRules.map((rule) => rule.rankPosition).sort((a, b) => a - b);
+        const duplicateRank = sortedRanks.find((rank, index) => index > 0 && rank === sortedRanks[index - 1]);
+
+        if (duplicateRank) {
+            showAdminError(`Duplicate reward rule for rank ${duplicateRank}.`);
+            return;
+        }
+
+        const missingRankIndex = sortedRanks.findIndex((rank, index) => rank !== index + 1);
+
+        if (missingRankIndex !== -1) {
+            showAdminError(`Reward ranks must be consecutive from 1. Missing or invalid rank: ${missingRankIndex + 1}.`);
+            return;
+        }
+
+        if (sanitizedRules.some((rule) => !rule.rewardName || rule.rewardName.length > 200)) {
+            showAdminError('Reward name is required and cannot exceed 200 characters.');
+            return;
+        }
+
+        if (sanitizedRules.some((rule) => rule.rewardDescription.length > 1000)) {
+            showAdminError('Reward description cannot exceed 1,000 characters.');
+            return;
+        }
+
+        if (sanitizedRules.some((rule) => !Number.isInteger(rule.bonusPoints) || rule.bonusPoints < 0 || rule.bonusPoints > maxRewardBonusPoints)) {
+            showAdminError('Bonus points must be an integer between 0 and 1,000,000.');
+            return;
+        }
+
+        if (sanitizedRules.some((rule) => !Number.isInteger(rule.quantity) || rule.quantity < 1 || rule.quantity > 1000000)) {
+            showAdminError('Reward quantity must be an integer between 1 and 1,000,000.');
             return;
         }
 
@@ -434,6 +534,45 @@ function AdminSeasonManagement() {
             showAdminError(err.message || 'Failed to save reward rules.');
         } finally {
             setSavingRules(false);
+        }
+    };
+
+    const handleSeasonRewardStatus = async (reward, status) => {
+        const rewardId = readSeasonField(reward, 'seasonRewardId');
+        const rewardName = readSeasonField(reward, 'rewardName') || 'this reward';
+        const note = window.prompt(`Admin note for ${status.toLowerCase()} "${rewardName}"?`, '');
+        const adminNote = String(note || '').trim();
+
+        if (note === null) {
+            return;
+        }
+
+        const confirmed = await confirmAdminAction({
+            title: 'Update reward status',
+            message: `Move "${rewardName}" to ${status}?`,
+            confirmLabel: status,
+            tone: status === 'Rejected' ? 'danger' : 'primary',
+        });
+
+        if (!confirmed) {
+            return;
+        }
+
+        setRewardStatusLoadingId(`${rewardId}-${status}`);
+
+        try {
+            const response = await adminApi.updateSeasonRewardStatus(rewardId, {
+                status,
+                adminNote: adminNote || null,
+            });
+            showAdminSuccess(response?.message || response?.Message || 'Season reward status updated.', 'Updated');
+            if (detailSeason) {
+                await openSeasonDetail(detailSeason);
+            }
+        } catch (err) {
+            showAdminError(err.message || 'Failed to update season reward status.');
+        } finally {
+            setRewardStatusLoadingId('');
         }
     };
 
@@ -516,23 +655,23 @@ function AdminSeasonManagement() {
                         <div className="grid gap-4 p-5">
                             <label className={fieldClass}>
                                 <span className={labelClass}>Season Name</span>
-                                <input className={controlClass} onChange={handleSeasonFieldChange('seasonName')} required type="text" value={seasonForm.seasonName} />
+                                <input className={controlClass} maxLength={200} minLength={3} onChange={handleSeasonFieldChange('seasonName')} required type="text" value={seasonForm.seasonName} />
                             </label>
 
                             <div className="grid grid-cols-2 gap-4 max-[720px]:grid-cols-1">
                                 <label className={fieldClass}>
                                     <span className={labelClass}>Start Date</span>
-                                    <input className={controlClass} onChange={handleSeasonFieldChange('startDate')} required type="date" value={seasonForm.startDate} />
+                                    <input className={controlClass} max={maxDate} min={minDate} onChange={handleSeasonFieldChange('startDate')} required type="date" value={seasonForm.startDate} />
                                 </label>
                                 <label className={fieldClass}>
                                     <span className={labelClass}>End Date</span>
-                                    <input className={controlClass} onChange={handleSeasonFieldChange('endDate')} required type="date" value={seasonForm.endDate} />
+                                    <input className={controlClass} max={maxDate} min={minDate} onChange={handleSeasonFieldChange('endDate')} required type="date" value={seasonForm.endDate} />
                                 </label>
                             </div>
 
                             <label className={fieldClass}>
                                 <span className={labelClass}>Points Per Correct Prediction</span>
-                                <input className={controlClass} min="1" onChange={handleSeasonFieldChange('pointsPerCorrectPrediction')} required type="number" value={seasonForm.pointsPerCorrectPrediction} />
+                                <input className={controlClass} max={maxPredictionPoints} min="1" onChange={handleSeasonFieldChange('pointsPerCorrectPrediction')} required step="1" type="number" value={seasonForm.pointsPerCorrectPrediction} />
                             </label>
 
                             <button
@@ -567,18 +706,33 @@ function AdminSeasonManagement() {
 
                         <div className="grid gap-3 p-5">
                             {rewardRules.map((rule, index) => (
-                                <div className="grid grid-cols-[82px_minmax(0,1fr)_120px_38px] gap-3 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] p-3 max-[720px]:grid-cols-1" key={`${index}-${rule.rankPosition}`}>
+                                <div className="grid grid-cols-[82px_minmax(0,1fr)_120px_minmax(130px,0.65fr)_92px_38px] gap-3 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] p-3 max-[1180px]:grid-cols-3 max-[720px]:grid-cols-1" key={`${index}-${rule.rankPosition}`}>
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Rank</span>
-                                        <input className={controlClass} min="1" onChange={handleRewardRuleChange(index, 'rankPosition')} type="number" value={rule.rankPosition} />
+                                        <input className={controlClass} max={maxRewardRules} min="1" onChange={handleRewardRuleChange(index, 'rankPosition')} step="1" type="number" value={rule.rankPosition} />
                                     </label>
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Reward</span>
-                                        <input className={controlClass} onChange={handleRewardRuleChange(index, 'rewardName')} type="text" value={rule.rewardName} />
+                                        <input className={controlClass} maxLength={200} onChange={handleRewardRuleChange(index, 'rewardName')} type="text" value={rule.rewardName} />
                                     </label>
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Bonus Points</span>
-                                        <input className={controlClass} min="0" onChange={handleRewardRuleChange(index, 'bonusPoints')} type="number" value={rule.bonusPoints} />
+                                        <input className={controlClass} max={maxRewardBonusPoints} min="0" onChange={handleRewardRuleChange(index, 'bonusPoints')} step="1" type="number" value={rule.bonusPoints} />
+                                    </label>
+                                    <label className={fieldClass}>
+                                        <span className={labelClass}>Inventory Item</span>
+                                        <select className={controlClass} onChange={handleRewardRuleChange(index, 'rewardItemId')} value={rule.rewardItemId || ''}>
+                                            <option value="">No item</option>
+                                            {rewardItems.map((item) => (
+                                                <option key={readSeasonField(item, 'rewardItemId')} value={readSeasonField(item, 'rewardItemId')}>
+                                                    {readSeasonField(item, 'name')} ({readSeasonField(item, 'availableQuantity') ?? 0} left)
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                    <label className={fieldClass}>
+                                        <span className={labelClass}>Qty</span>
+                                        <input className={controlClass} max="1000000" min="1" onChange={handleRewardRuleChange(index, 'quantity')} step="1" type="number" value={rule.quantity || 1} />
                                     </label>
                                     <button
                                         aria-label="Remove reward rule"
@@ -589,9 +743,9 @@ function AdminSeasonManagement() {
                                     >
                                         <FaTrashAlt aria-hidden="true" />
                                     </button>
-                                    <label className={`${fieldClass} col-span-4 max-[720px]:col-span-1`}>
+                                    <label className={`${fieldClass} col-span-6 max-[1180px]:col-span-3 max-[720px]:col-span-1`}>
                                         <span className={labelClass}>Description</span>
-                                        <input className={controlClass} onChange={handleRewardRuleChange(index, 'rewardDescription')} type="text" value={rule.rewardDescription} />
+                                        <input className={controlClass} maxLength={1000} onChange={handleRewardRuleChange(index, 'rewardDescription')} type="text" value={rule.rewardDescription} />
                                     </label>
                                 </div>
                             ))}
@@ -801,6 +955,11 @@ function AdminSeasonManagement() {
                                                     <div className="grid gap-1 px-4 py-3" key={readSeasonField(rule, 'seasonRewardRuleId') || readSeasonField(rule, 'rankPosition')}>
                                                         <strong className="text-[0.86rem] text-[var(--admin-ink)]">#{readSeasonField(rule, 'rankPosition')} - {readSeasonField(rule, 'rewardName')}</strong>
                                                         <span className="text-[0.78rem] font-bold text-[var(--admin-muted)]">{readSeasonField(rule, 'bonusPoints')} bonus points</span>
+                                                        {(readSeasonField(rule, 'rewardItemName') || readSeasonField(rule, 'quantity')) && (
+                                                            <span className="text-[0.78rem] font-bold text-[var(--admin-muted)]">
+                                                                Item: {readSeasonField(rule, 'rewardItemName') || 'Inventory item'} x{readSeasonField(rule, 'quantity') || 1}
+                                                            </span>
+                                                        )}
                                                         {readSeasonField(rule, 'rewardDescription') && (
                                                             <span className="text-[0.78rem] font-semibold text-[var(--admin-muted)]">{readSeasonField(rule, 'rewardDescription')}</span>
                                                         )}
@@ -816,17 +975,48 @@ function AdminSeasonManagement() {
                                             <div className="divide-y divide-[var(--admin-border)]">
                                                 {seasonRewards.length === 0 ? (
                                                     <div className="px-4 py-5 text-[0.86rem] font-bold text-[var(--admin-muted)]">No season rewards awarded yet.</div>
-                                                ) : seasonRewards.map((reward) => (
-                                                    <div className="grid gap-1 px-4 py-3" key={readSeasonField(reward, 'seasonRewardId') || `${readSeasonField(reward, 'rankPosition')}-${readSeasonField(reward, 'spectatorId')}`}>
-                                                        <strong className="text-[0.86rem] text-[var(--admin-ink)]">#{readSeasonField(reward, 'rankPosition')} - {readSeasonField(reward, 'spectatorName')}</strong>
-                                                        <span className="text-[0.78rem] font-bold text-[var(--admin-muted)]">
-                                                            {readSeasonField(reward, 'rewardName')} | {readSeasonField(reward, 'bonusPoints')} bonus points
-                                                        </span>
-                                                        <span className="text-[0.78rem] font-semibold text-[var(--admin-muted)]">
-                                                            Final points: {readSeasonField(reward, 'finalPoints')} | Status: {readSeasonField(reward, 'status')}
-                                                        </span>
-                                                    </div>
-                                                ))}
+                                                ) : seasonRewards.map((reward) => {
+                                                    const rewardId = readSeasonField(reward, 'seasonRewardId');
+                                                    const rewardStatus = readSeasonField(reward, 'status');
+                                                    const transitions = rewardStatusTransitions[rewardStatus] || [];
+
+                                                    return (
+                                                        <div className="grid gap-2 px-4 py-3" key={rewardId || `${readSeasonField(reward, 'rankPosition')}-${readSeasonField(reward, 'spectatorId')}`}>
+                                                            <strong className="text-[0.86rem] text-[var(--admin-ink)]">#{readSeasonField(reward, 'rankPosition')} - {readSeasonField(reward, 'spectatorName')}</strong>
+                                                            <span className="text-[0.78rem] font-bold text-[var(--admin-muted)]">
+                                                                {readSeasonField(reward, 'rewardName')} | {readSeasonField(reward, 'bonusPoints')} bonus points
+                                                            </span>
+                                                            {(readSeasonField(reward, 'rewardItemName') || readSeasonField(reward, 'quantity')) && (
+                                                                <span className="text-[0.78rem] font-bold text-[var(--admin-muted)]">
+                                                                    Item: {readSeasonField(reward, 'rewardItemName') || 'Inventory item'} x{readSeasonField(reward, 'quantity') || 1}
+                                                                </span>
+                                                            )}
+                                                            <span className="text-[0.78rem] font-semibold text-[var(--admin-muted)]">
+                                                                Final points: {readSeasonField(reward, 'finalPoints')} | Status: {rewardStatus}
+                                                            </span>
+                                                            {(readSeasonField(reward, 'receiverName') || readSeasonField(reward, 'deliveryAddress')) && (
+                                                                <span className="text-[0.74rem] font-semibold text-[var(--admin-muted)]">
+                                                                    Receiver: {readSeasonField(reward, 'receiverName') || '-'} | Phone: {readSeasonField(reward, 'receiverPhone') || '-'} | Address: {readSeasonField(reward, 'deliveryAddress') || '-'}
+                                                                </span>
+                                                            )}
+                                                            {transitions.length > 0 && (
+                                                                <div className="flex flex-wrap gap-2">
+                                                                    {transitions.map((nextStatus) => (
+                                                                        <button
+                                                                            className={`${actionButtonClass} ${nextStatus === 'Rejected' ? 'border border-[#f0b4b4] bg-white text-[#b91c1c] hover:bg-[#fff3f3]' : 'bg-[#e8f7ef] text-[var(--admin-primary)] hover:bg-[#d7f2e4]'}`}
+                                                                            disabled={rewardStatusLoadingId !== ''}
+                                                                            key={nextStatus}
+                                                                            onClick={() => handleSeasonRewardStatus(reward, nextStatus)}
+                                                                            type="button"
+                                                                        >
+                                                                            {rewardStatusLoadingId === `${rewardId}-${nextStatus}` ? 'Saving...' : nextStatus}
+                                                                        </button>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     </section>

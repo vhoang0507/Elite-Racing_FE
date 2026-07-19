@@ -13,6 +13,7 @@ import {
     FaFlagCheckered,
     FaSearch,
     FaTh,
+    FaTimes,
     FaTrophy,
 } from 'react-icons/fa';
 
@@ -82,7 +83,6 @@ const matchesQuery = (notification, query) => {
     return [
         notification.title,
         notification.type,
-        notification.status,
         notification.priority,
         notification.message,
     ].some((value) => String(value).toLowerCase().includes(normalizedQuery));
@@ -104,11 +104,35 @@ const highlightMessage = (message, highlight) => {
     );
 };
 
+const detailValue = (value) => (
+    value === undefined || value === null || value === '' ? '-' : value
+);
+
+const formatDateTime = (value) => {
+    if (!value) {
+        return '-';
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return String(value);
+    }
+
+    return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(date);
+};
+
 function Notifications() {
     const [notifications, setNotifications] = useState([]);
+    const [selectedNotification, setSelectedNotification] = useState(null);
     const [query, setQuery] = useState('');
     const [typeFilter, setTypeFilter] = useState('all-types');
-    const [statusFilter, setStatusFilter] = useState('all-status');
     const [priorityFilter, setPriorityFilter] = useState('all-priority');
     const [page, setPage] = useState(1);
     const { toast, showToast, hideToast } = useToast();
@@ -136,25 +160,21 @@ function Notifications() {
             icon: FaBell,
         },
         {
-            marker: 'Action Required',
-            value: String(notifications.filter((notification) => formatClass(notification.status) === 'pending').length),
-            label: 'Pending Notifications',
+            marker: 'Unread',
+            value: String(notifications.filter((notification) => !notification.isRead).length),
+            label: 'Unread Notifications',
             tone: 'action',
             icon: FaCalendarCheck,
         },
     ], [notifications]);
 
     const filteredNotifications = useMemo(() => notifications.filter((notification) => {
-        const statusMatch = statusFilter === 'all-status'
-            || (statusFilter === 'unread' && !notification.isRead)
-            || (statusFilter === 'read' && notification.isRead);
         return (
             matchesQuery(notification, query)
             && (typeFilter === 'all-types' || formatClass(notification.type) === typeFilter)
-            && statusMatch
             && (priorityFilter === 'all-priority' || formatClass(notification.priority) === priorityFilter)
         );
-    }), [notifications, priorityFilter, query, statusFilter, typeFilter]);
+    }), [notifications, priorityFilter, query, typeFilter]);
 
     const totalPages = Math.max(1, Math.ceil(filteredNotifications.length / pageSize));
     const visibleNotifications = filteredNotifications.slice((page - 1) * pageSize, page * pageSize);
@@ -171,13 +191,24 @@ function Notifications() {
         setPage(1);
     };
 
-    const handleMarkRead = async (id) => {
+    const handleOpenNotification = async (notification) => {
+        const openedNotification = { ...notification, isRead: true, status: 'Read' };
+        setSelectedNotification(openedNotification);
+
+        if (notification.isRead) {
+            return;
+        }
+
+        const prev = notifications;
+        setNotifications((current) => current.map((item) => (
+            item.id === notification.id ? { ...item, isRead: true, status: 'Read' } : item
+        )));
+
         try {
-            await adminApi.markNotificationRead(id);
-            setNotifications((current) => current.map((notification) => (
-                notification.id === id ? { ...notification, isRead: true, status: 'Read' } : notification
-            )));
+            await adminApi.markNotificationRead(notification.id);
         } catch (err) {
+            setNotifications(prev);
+            setSelectedNotification(notification);
             showToast(err.message || 'Failed to mark as read.', 'error', 'Error');
         }
     };
@@ -204,10 +235,10 @@ function Notifications() {
         }
     };
 
-    const handleKeyDown = (event, id) => {
+    const handleKeyDown = (event, notification) => {
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
-            handleMarkRead(id);
+            handleOpenNotification(notification);
         }
     };
 
@@ -260,7 +291,7 @@ function Notifications() {
 
                     <section
                         aria-label="Notification filters"
-                        className={`${panelWidthClass} grid min-h-[62px] grid-cols-[minmax(240px,1fr)_180px_180px_180px] items-center gap-4 rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--notifications-soft)] px-[18px] py-3 max-[1180px]:grid-cols-2 max-[820px]:grid-cols-1`}
+                        className={`${panelWidthClass} grid min-h-[62px] grid-cols-[minmax(240px,1fr)_180px_180px_auto] items-center gap-4 rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--notifications-soft)] px-[18px] py-3 max-[1180px]:grid-cols-2 max-[820px]:grid-cols-1`}
                     >
                         <label className="flex h-[38px] items-center gap-2.5 rounded-full border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661] transition-colors hover:border-[var(--admin-gold)]">
                             <FaSearch aria-hidden="true" />
@@ -280,14 +311,6 @@ function Notifications() {
                                 <option value="race-result">Race Result</option>
                                 <option value="report">Report</option>
                                 <option value="prediction">Prediction</option>
-                            </select>
-                        </label>
-
-                        <label className="flex h-[38px] items-center rounded-full border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661] transition-colors hover:border-[var(--admin-gold)]">
-                            <select className={selectClass} onChange={handleFilterChange(setStatusFilter)} value={statusFilter}>
-                                <option value="all-status">All Status</option>
-                                <option value="unread">Unread</option>
-                                <option value="read">Read</option>
                             </select>
                         </label>
 
@@ -327,12 +350,12 @@ function Notifications() {
                                 <article
                                     className={[
                                         'relative grid min-h-[146px] cursor-pointer grid-cols-[auto_minmax(0,1fr)] gap-[18px] rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-[22px] py-[22px] shadow-[0_14px_28px_rgba(15,23,42,0.04)] max-[820px]:grid-cols-1',
-                                        notification.tone === 'urgent' && formatClass(notification.status) === 'pending' ? 'before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:rounded-full before:bg-[#e42121] before:content-[""]' : '',
-                                        formatClass(notification.status) === 'active' ? 'opacity-75' : '',
+                                        notification.tone === 'urgent' && !notification.isRead ? 'before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:rounded-full before:bg-[#e42121] before:content-[""]' : '',
+                                        notification.isRead ? 'opacity-75' : '',
                                     ].join(' ')}
                                     key={notification.id}
-                                    onClick={() => handleMarkRead(notification.id)}
-                                    onKeyDown={(event) => handleKeyDown(event, notification.id)}
+                                    onClick={() => handleOpenNotification(notification)}
+                                    onKeyDown={(event) => handleKeyDown(event, notification)}
                                     role="button"
                                     tabIndex="0"
                                 >
@@ -356,7 +379,7 @@ function Notifications() {
                                         </p>
 
                                         <div className="mt-5 flex flex-wrap gap-2">
-                                            {[notification.type, notification.priority, notification.status].map((tag) => (
+                                            {[notification.type, notification.priority].map((tag) => (
                                                 <span
                                                     className={`inline-flex min-h-5 items-center rounded-full px-2 text-[0.58rem] font-black uppercase ${tagClass[formatClass(tag)] || tagClass.prediction}`}
                                                     key={tag}
@@ -393,6 +416,82 @@ function Notifications() {
                             <button aria-label="Next page" className={paginationButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">&gt;</button>
                         </div>
                     </div>
+
+                    {selectedNotification && (
+                        <div className="fixed inset-0 z-40 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={() => setSelectedNotification(null)} role="presentation">
+                            <section
+                                aria-label={`Notification detail for ${selectedNotification.title}`}
+                                className="grid max-h-[calc(100vh-48px)] w-[min(760px,100%)] gap-5 overflow-y-auto rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--admin-surface)] p-6 shadow-[0_20px_48px_rgba(45,32,32,0.22)]"
+                                onClick={(event) => event.stopPropagation()}
+                                role="dialog"
+                            >
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="flex min-w-0 items-start gap-4">
+                                        {(() => {
+                                            const Icon = iconByTone[selectedNotification.tone] || FaBell;
+
+                                            return (
+                                                <span className={`grid h-[46px] w-[46px] flex-none place-items-center rounded-full ${notificationIconClass[selectedNotification.tone] || notificationIconClass.registration}`}>
+                                                    <Icon aria-hidden="true" className="h-4 w-4" />
+                                                </span>
+                                            );
+                                        })()}
+                                        <div className="min-w-0">
+                                            <h2 className="m-0 text-[1.3rem] leading-[1.2] text-[var(--admin-primary-dark)]">
+                                                {selectedNotification.title}
+                                            </h2>
+                                            <time className="mt-2 inline-flex items-center gap-[6px] text-[0.78rem] font-bold text-[#6f5a56]">
+                                                <FaClock aria-hidden="true" className="h-[11px] w-[11px]" />
+                                                <span>{detailValue(selectedNotification.time)}</span>
+                                            </time>
+                                        </div>
+                                    </div>
+                                    <button aria-label="Close notification detail" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--notifications-line)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={() => setSelectedNotification(null)} type="button">
+                                        <FaTimes aria-hidden="true" />
+                                    </button>
+                                </div>
+
+                                <div className="rounded-md border border-[var(--notifications-line)] bg-[var(--notifications-soft)] px-4 py-4 text-[0.92rem] font-semibold leading-relaxed text-[#334155]">
+                                    {selectedNotification.message}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3 max-[680px]:grid-cols-1">
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Notification ID</span>
+                                        <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{detailValue(selectedNotification.id)}</strong>
+                                    </div>
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Created At</span>
+                                        <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{formatDateTime(selectedNotification.createdAt)}</strong>
+                                    </div>
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Type</span>
+                                        <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{detailValue(selectedNotification.type)}</strong>
+                                    </div>
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Priority</span>
+                                        <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{detailValue(selectedNotification.priority)}</strong>
+                                    </div>
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Related Type</span>
+                                        <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{detailValue(selectedNotification.relatedType)}</strong>
+                                    </div>
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Related ID</span>
+                                        <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{detailValue(selectedNotification.relatedId)}</strong>
+                                    </div>
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Action Type</span>
+                                        <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{detailValue(selectedNotification.actionType)}</strong>
+                                    </div>
+                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
+                                        <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Action Link</span>
+                                        <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{detailValue(selectedNotification.actionUrl)}</strong>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    )}
                 </section>
             <Toast
                 message={toast.message}
