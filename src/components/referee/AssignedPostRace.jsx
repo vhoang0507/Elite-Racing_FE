@@ -123,6 +123,8 @@ const confirmToneClass = {
     danger: 'bg-[#a4392f] hover:bg-[#8a2e26]',
 };
 
+const getPostRaceDraftKey = (raceId) => `erl:post-race-report-draft:${raceId}`;
+
 function AssignedPostRace() {
     const location = useLocation();
     const initialRaceId = location.state?.raceId;
@@ -163,10 +165,16 @@ function AssignedPostRace() {
     const selectedViolationRegistration = registrationById.get(String(violationForm.registrationId));
     const isEditingResult = Boolean(editingResultId);
     const isEditingViolation = Boolean(editingViolationId);
-    const isEditingReport = Boolean(editingReportId);
     const resultFormIsFinished = resultForm.outcomeStatus === 'Finished';
     const trimmedReportContent = reportContent.trim();
     const selectedRaceBlockingReason = getRaceBlockingReason(selectedRace);
+    const postRaceReport = useMemo(
+        () => reports.find((report) => report.reportType === 'PostRace') ?? null,
+        [reports]
+    );
+    const postRaceReportStatus = postRaceReport?.status || '';
+    const finalReportIsReturned = postRaceReportStatus === 'Returned';
+    const finalReportIsLocked = ['Submitted', 'Approved'].includes(postRaceReportStatus);
 
     const canStartRace =
         isSeasonActive(selectedRace) &&
@@ -180,35 +188,54 @@ function AssignedPostRace() {
 
     const canEnterResults =
         isSeasonActive(selectedRace) &&
+        !finalReportIsLocked &&
         (selectedRace?.allowedActions?.canEnterResults ||
             selectedRace?.raceStatus === 'Finished');
 
+    const canEditFinalReport =
+        isSeasonActive(selectedRace) &&
+        !finalReportIsLocked &&
+        ['Finished', 'ResultPending'].includes(selectedRace?.raceStatus);
+
     const draftResultCount = results.filter((result) => result.status === 'Draft').length;
+    const returnedResultCount = results.filter((result) => result.status === 'Returned').length;
     const confirmedResultCount = results.filter((result) => result.status === 'RefereeConfirmed').length;
+    const canSubmitFromFinished =
+        selectedRace?.raceStatus === 'Finished' &&
+        (draftResultCount > 0 || returnedResultCount > 0);
+    const canSubmitFromPending =
+        selectedRace?.raceStatus === 'ResultPending' &&
+        !postRaceReport;
+    const canResubmitReturnedReport =
+        finalReportIsReturned &&
+        ['Finished', 'ResultPending'].includes(selectedRace?.raceStatus);
+
     const submitReportDisabled =
         saving === 'submit-report' ||
         loadingRaceData ||
         !selectedRaceId ||
-        !canEnterResults ||
         results.length === 0 ||
-        draftResultCount === 0 ||
-        !trimmedReportContent;
+        !trimmedReportContent ||
+        finalReportIsLocked ||
+        !(canSubmitFromFinished || canSubmitFromPending || canResubmitReturnedReport);
 
     const submitReportHint = !selectedRaceId
         ? 'Select a race before submitting.'
         : selectedRaceBlockingReason
             ? selectedRaceBlockingReason
-        : selectedRace?.raceStatus === 'ResultPending'
-            ? 'Post-race report has already been sent to admin.'
-            : !canEnterResults
-                ? `Race must be Finished before submission. Current status: ${selectedRace?.raceStatus || 'N/A'}.`
-                : results.length === 0
-                    ? 'Save race results before submitting.'
-                    : !trimmedReportContent
-                        ? 'Write the post-race report content before submitting.'
-                        : draftResultCount === 0
-                            ? 'No draft results waiting for submission.'
-                            : `${draftResultCount} draft result${draftResultCount === 1 ? '' : 's'} ready to submit.`;
+            : finalReportIsLocked
+                ? `Final report is ${postRaceReportStatus} and is locked.`
+                : finalReportIsReturned
+                    ? 'The admin returned this final report. Revise it, then resubmit.'
+                    : selectedRace?.raceStatus === 'ResultPending' && !postRaceReport
+                        ? 'Results are confirmed. Submit the final report to complete the admin submission.'
+                        : selectedRace?.raceStatus !== 'Finished'
+                            ? `Race must be Finished before submission. Current status: ${selectedRace?.raceStatus || 'N/A'}.`
+                            : results.length === 0
+                                ? 'Save race results before submitting.'
+                                : !trimmedReportContent
+                                    ? 'Write the post-race report content before submitting.'
+                                    : `${draftResultCount + returnedResultCount} result${draftResultCount + returnedResultCount === 1 ? '' : 's'} ready to submit.`;
 
     const loadAssignedRaces = useCallback(async (ignoreRef = { current: false }) => {
         setLoadingRaces(true);
@@ -259,7 +286,8 @@ function AssignedPostRace() {
             setEditingResultId('');
             setViolationForm({ ...emptyViolationForm, registrationId: firstId });
             setEditingViolationId('');
-            setReportContent(postRaceReport?.reportContent ?? '');
+            const localDraft = window.localStorage.getItem(getPostRaceDraftKey(raceId)) || '';
+            setReportContent(postRaceReport?.reportContent ?? localDraft);
             setEditingReportId(postRaceReport?.reportId ? String(postRaceReport.reportId) : '');
         } catch (err) {
             if (!ignoreRef.current) showToast(err.message || 'Failed to load race data.', 'error');
@@ -287,9 +315,9 @@ function AssignedPostRace() {
         if (!selectedRaceId) return [];
 
         const nextReports = await refereeApi.getRefereeReports(selectedRaceId) ?? [];
-        const postRaceReport = nextReports.find((report) => report.reportType === 'PostRace');
+        const nextPostRaceReport = nextReports.find((report) => report.reportType === 'PostRace');
         setReports(nextReports);
-        setEditingReportId(postRaceReport?.reportId ? String(postRaceReport.reportId) : '');
+        setEditingReportId(nextPostRaceReport?.reportId ? String(nextPostRaceReport.reportId) : '');
         return nextReports;
     };
 
@@ -311,6 +339,7 @@ function AssignedPostRace() {
 
     const validateResultForm = () => {
         if (!selectedRaceId) return 'Select a race first.';
+        if (finalReportIsLocked) return `The final report is ${postRaceReportStatus} and the results are locked.`;
         if (!canEnterResults) return 'Race must be Finished before entering results.';
         if (!resultForm.registrationId) return 'Select a registration.';
         if (!outcomeOptions.some((option) => option.value === resultForm.outcomeStatus)) return 'Select a valid outcome.';
@@ -329,6 +358,7 @@ function AssignedPostRace() {
 
     const validateViolationForm = () => {
         if (!selectedRaceId) return 'Select a race first.';
+        if (finalReportIsLocked) return `The final report is ${postRaceReportStatus} and violations are locked.`;
         if (!violationForm.registrationId) return 'Select a registration.';
         if (!violationForm.violationType.trim()) return 'Violation type is required.';
         const pts = nullableNumber(violationForm.penaltyPoints);
@@ -346,34 +376,41 @@ function AssignedPostRace() {
             throw new Error('Post-race report content is required.');
         }
 
-        const existingReportId = editingReportId
-            || reports.find((report) => report.reportType === 'PostRace')?.reportId;
-
-        const response = existingReportId
-            ? await refereeApi.updateRefereeReport(selectedRaceId, existingReportId, trimmedReportContent, 'PostRace')
-            : await refereeApi.createRefereeReport(selectedRaceId, trimmedReportContent, 'PostRace');
-
-        const nextReports = await refreshReports();
-        const postRaceReport = nextReports.find((report) => report.reportType === 'PostRace');
-
-        if (postRaceReport?.reportContent !== undefined) {
-            setReportContent(postRaceReport.reportContent);
+        if (postRaceReport?.status === 'Returned') {
+            return refereeApi.resubmitFinalReport(
+                selectedRaceId,
+                postRaceReport.reportId,
+                trimmedReportContent
+            );
         }
 
-        return response;
+        if (postRaceReport?.status === 'Submitted' || postRaceReport?.status === 'Approved') {
+            throw new Error(`The final report is already ${postRaceReport.status} and cannot be edited.`);
+        }
+
+        return refereeApi.createRefereeReport(
+            selectedRaceId,
+            trimmedReportContent,
+            'PostRace'
+        );
     };
 
-    const handleSavePostRaceReport = async () => {
-        setSaving('save-report');
-
-        try {
-            await persistPostRaceReport();
-            showToast(isEditingReport ? 'Post-race report updated successfully.' : 'Post-race report saved successfully.', 'success');
-        } catch (err) {
-            showToast(err.message || 'Failed to save post-race report.', 'error');
-        } finally {
-            setSaving('');
+    const handleSavePostRaceReport = () => {
+        if (!selectedRaceId) {
+            showToast('Select a race first.', 'error');
+            return;
         }
+
+        if (!trimmedReportContent) {
+            showToast('Post-race report content is required.', 'error');
+            return;
+        }
+
+        window.localStorage.setItem(
+            getPostRaceDraftKey(selectedRaceId),
+            trimmedReportContent
+        );
+        showToast('Report draft saved in this browser. It has not been sent to admin.', 'success');
     };
 
     const handleStartRace = async () => {
@@ -464,6 +501,11 @@ function AssignedPostRace() {
     };
 
     const handleEditResult = (result) => {
+        if (finalReportIsLocked) {
+            showToast(`The final report is ${postRaceReportStatus}. Results can no longer be edited.`, 'error');
+            return;
+        }
+
         setEditingResultId(String(result.resultId || result.registrationId || ''));
         setResultForm({
             registrationId: String(result.registrationId),
@@ -519,6 +561,11 @@ function AssignedPostRace() {
     };
 
     const handleEditViolation = (violation) => {
+        if (finalReportIsLocked) {
+            showToast(`The final report is ${postRaceReportStatus}. Violations can no longer be edited.`, 'error');
+            return;
+        }
+
         setEditingViolationId(String(violation.violationId || ''));
         setViolationForm({
             registrationId: String(violation.registrationId || ''),
@@ -564,41 +611,80 @@ function AssignedPostRace() {
 
     const handleSubmitPostRaceReport = async () => {
         if (!selectedRaceId) return;
+
         if (results.length === 0) {
             showToast('Save race results before submitting.', 'error');
             return;
         }
+
         if (!trimmedReportContent) {
             showToast('Write the post-race report content before submitting.', 'error');
             return;
         }
 
+        if (finalReportIsLocked) {
+            showToast(`The final report is already ${postRaceReportStatus}.`, 'error');
+            return;
+        }
+
         setSaving('submit-report');
+
         try {
+            let updatedLifecycle = null;
+
+            /*
+             * IMPORTANT:
+             * Confirm results first. The old order created and locked the final
+             * report before result confirmation, leaving the workflow stuck if
+             * confirm-all failed.
+             */
+            if (
+                selectedRace?.raceStatus === 'Finished'
+                && (draftResultCount > 0 || returnedResultCount > 0)
+            ) {
+                updatedLifecycle = await refereeApi.confirmAllRaceResults(selectedRaceId);
+            }
+
             await persistPostRaceReport();
-            const updatedLifecycle = await refereeApi.confirmAllRaceResults(selectedRaceId);
-            setRaces((prev) =>
-                prev.map((race) =>
-                    String(race.raceId) === String(selectedRaceId)
-                        ? {
-                            ...race,
-                            ...updatedLifecycle,
-                            raceStatus: updatedLifecycle?.raceStatus || 'ResultPending',
-                            currentStage: updatedLifecycle?.currentStage,
-                            nextStage: updatedLifecycle?.nextStage,
-                            allowedActions: updatedLifecycle?.allowedActions ?? race.allowedActions,
-                            seasonStatus: updatedLifecycle?.seasonStatus ?? race.seasonStatus,
-                            blockingReason: updatedLifecycle?.blockingReason ?? race.blockingReason,
-                        }
-                        : race
-                )
-            );
-            await loadRaceWorkflowData(selectedRaceId);
+
+            window.localStorage.removeItem(getPostRaceDraftKey(selectedRaceId));
+
+            if (updatedLifecycle) {
+                setRaces((prev) =>
+                    prev.map((race) =>
+                        String(race.raceId) === String(selectedRaceId)
+                            ? {
+                                ...race,
+                                ...updatedLifecycle,
+                                raceStatus: updatedLifecycle?.raceStatus || 'ResultPending',
+                                currentStage: updatedLifecycle?.currentStage,
+                                nextStage: updatedLifecycle?.nextStage,
+                                allowedActions: updatedLifecycle?.allowedActions ?? race.allowedActions,
+                                seasonStatus: updatedLifecycle?.seasonStatus ?? race.seasonStatus,
+                                blockingReason: updatedLifecycle?.blockingReason ?? race.blockingReason,
+                            }
+                            : race
+                    )
+                );
+            }
+
+            await Promise.all([
+                loadAssignedRaces(),
+                loadRaceWorkflowData(selectedRaceId),
+            ]);
+
             setActiveTab('results');
-            showToast(`Post-race report submitted to admin with ${results.length} result${results.length === 1 ? '' : 's'} and ${violations.length} violation${violations.length === 1 ? '' : 's'}.`, 'success');
+            showToast(
+                finalReportIsReturned
+                    ? 'Revised post-race report resubmitted to admin.'
+                    : `Post-race submission sent with ${results.length} result${results.length === 1 ? '' : 's'} and ${violations.length} violation${violations.length === 1 ? '' : 's'}.`,
+                'success'
+            );
         } catch (err) {
             showToast(err.message || 'Failed to submit post-race report.', 'error');
-        } finally { setSaving(''); }
+        } finally {
+            setSaving('');
+        }
     };
 
     return (
@@ -926,7 +1012,9 @@ function AssignedPostRace() {
                                                     <button
                                                         type="button"
                                                         onClick={() => handleEditResult(result)}
-                                                        className="rounded-full border border-[var(--admin-border)] bg-white px-3.5 py-1.5 text-xs font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)]"
+                                                        disabled={finalReportIsLocked}
+                                                        title={finalReportIsLocked ? `Final report is ${postRaceReportStatus}.` : 'Edit result'}
+                                                        className="rounded-full border border-[var(--admin-border)] bg-white px-3.5 py-1.5 text-xs font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-50"
                                                     >
                                                         Edit
                                                     </button>
@@ -1020,7 +1108,7 @@ function AssignedPostRace() {
                                 </div>
 
                                 <div style={{ display: 'flex', gap: 8 }}>
-                                    <button type="submit" disabled={saving === 'violation' || loadingRaceData || registrations.length === 0} className={primaryBtn}>
+                                    <button type="submit" disabled={saving === 'violation' || loadingRaceData || registrations.length === 0 || finalReportIsLocked} className={primaryBtn}>
                                         {saving === 'violation' ? 'Saving...' : isEditingViolation ? 'Update Violation' : 'Create Violation'}
                                     </button>
                                     {isEditingViolation && (
@@ -1068,9 +1156,9 @@ function AssignedPostRace() {
                                                 <button
                                                     type="button"
                                                     onClick={() => handleEditViolation(v)}
-                                                    title="Edit violation"
+                                                    title={finalReportIsLocked ? `Final report is ${postRaceReportStatus}.` : 'Edit violation'}
                                                     aria-label="Edit violation"
-                                                    disabled={loadingRaceData || Boolean(saving)}
+                                                    disabled={loadingRaceData || Boolean(saving) || finalReportIsLocked}
                                                     className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--admin-border)] bg-white text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                                                 >
                                                     <FaEdit />
@@ -1080,7 +1168,7 @@ function AssignedPostRace() {
                                                     onClick={() => handleDeleteViolation(v)}
                                                     title="Delete violation"
                                                     aria-label="Delete violation"
-                                                    disabled={loadingRaceData || Boolean(saving)}
+                                                    disabled={loadingRaceData || Boolean(saving) || finalReportIsLocked}
                                                     className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#e3bcb7] bg-white text-[#a4392f] transition-colors hover:bg-[#f3e1df] disabled:cursor-not-allowed disabled:opacity-60"
                                                 >
                                                     <FaTrash />
@@ -1126,7 +1214,7 @@ function AssignedPostRace() {
                             <label className={labelClass}>Post-Race Report</label>
                             <textarea
                                 className={inputClass}
-                                disabled={loadingRaceData || Boolean(saving) || !canEnterResults}
+                                disabled={loadingRaceData || Boolean(saving) || !canEditFinalReport}
                                 onChange={(event) => setReportContent(event.target.value)}
                                 placeholder="Summarize race conditions, result notes, incidents, and referee confirmation."
                                 rows={5}
@@ -1136,16 +1224,16 @@ function AssignedPostRace() {
                             <div style={{ alignItems: 'center', display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 10 }}>
                                 <button
                                     className="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-full border border-[var(--admin-primary)] bg-white px-4 text-sm font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-60"
-                                    disabled={saving === 'save-report' || loadingRaceData || !selectedRaceId || !canEnterResults || !trimmedReportContent}
+                                    disabled={loadingRaceData || !selectedRaceId || !canEditFinalReport || !trimmedReportContent}
                                     onClick={handleSavePostRaceReport}
                                     type="button"
                                 >
                                     <FaClipboardList />
-                                    {saving === 'save-report' ? 'Saving...' : isEditingReport ? 'Update Report' : 'Save Report'}
+                                    Save Local Draft
                                 </button>
-                                {isEditingReport && (
+                                {postRaceReport && (
                                     <span style={{ color: 'var(--admin-muted)', fontSize: 12, fontWeight: 700 }}>
-                                        Editing report #{editingReportId}
+                                        Final report #{editingReportId || postRaceReport.reportId}: {postRaceReportStatus}
                                     </span>
                                 )}
                             </div>
@@ -1158,7 +1246,11 @@ function AssignedPostRace() {
                             className="mt-5 inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--admin-primary)] px-6 text-sm font-bold text-white transition-colors hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             <FaCheck />
-                            {saving === 'submit-report' ? 'Submitting...' : 'Submit Report to Admin'}
+                            {saving === 'submit-report'
+                                ? 'Submitting...'
+                                : finalReportIsReturned
+                                    ? 'Resubmit Report to Admin'
+                                    : 'Submit Report to Admin'}
                         </button>
                     </section>
                 )}

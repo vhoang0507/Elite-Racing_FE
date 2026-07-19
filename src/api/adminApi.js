@@ -1039,6 +1039,12 @@ const mapRefereeReport = (report) => ({
     violationId: report.violationId,
     sourceType: report.type || (report.violationId ? 'Violation' : 'RefereeReport'),
     reportPhase: getReportPhase(report),
+    status: report.status,
+    revisionNumber: report.revisionNumber,
+    returnReasonCategory: report.returnReasonCategory,
+    returnReason: report.returnReason,
+    canApprove: Boolean(report.canApprove),
+    canReturn: Boolean(report.canReturn),
     raceId: report.raceId,
     tournamentName: getReportTournamentName(report),
     raceName: report.raceName,
@@ -1359,8 +1365,27 @@ async function reopenPublishedRaceResults(raceId, reason) {
     });
 }
 
-async function rejectResult(id) {
-    return apiRequest(`/admin/results/${id}/reject`, { method: 'PUT' });
+async function rejectResult(id, reason = '') {
+    return apiRequest(`/admin/results/${id}/reject`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            Reason: String(reason || '').trim() || null,
+        }),
+    });
+}
+
+async function approveRefereeReport(reportId) {
+    return apiRequest(`/admin/reports/${reportId}/approve`, { method: 'PUT' });
+}
+
+async function returnRefereeReport(reportId, reason, reasonCategory = 'Other') {
+    return apiRequest(`/admin/reports/${reportId}/return`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            ReasonCategory: reasonCategory,
+            Reason: String(reason || '').trim(),
+        }),
+    });
 }
 
 async function deleteResult(idOrSlug) {
@@ -1679,6 +1704,8 @@ export const adminApi = {
     publishRaceResults,
     reopenPublishedRaceResults,
     rejectResult,
+    approveRefereeReport,
+    returnRefereeReport,
     deleteResult,
 
     // Rewards
