@@ -52,7 +52,6 @@ const locationOptions = [
     'Santa Anita Park, Arcadia, California',
 ];
 const distanceOptions = [1000, 1500, 2400];
-const minDate = '2000-01-01';
 const maxDate = '2100-12-31';
 const maxPrizePool = 1000000000;
 const maxTournamentImageSize = 5 * 1024 * 1024;
@@ -105,6 +104,31 @@ function isDateYearInRange(dateValue) {
     return Number.isInteger(year) && year >= 2000 && year <= 2100;
 }
 
+function getTodayDateValue(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+}
+
+function getCurrentDateTimeValue(date = new Date()) {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+
+    return `${getTodayDateValue(date)}T${hours}:${minutes}`;
+}
+
+function isDateBeforeToday(dateValue) {
+    return toDateOnly(dateValue) < getTodayDateValue();
+}
+
+function isDateTimeBeforeNow(dateTimeValue) {
+    const normalizedValue = String(dateTimeValue || '').slice(0, 16);
+
+    return normalizedValue < getCurrentDateTimeValue();
+}
+
 function validateTournamentImage(file) {
     if (!(typeof File !== 'undefined' && file instanceof File) || file.size === 0) {
         return null;
@@ -139,6 +163,8 @@ function CreateTournament() {
 
     const matchedSeason = findSeasonForRaceDate(seasons, raceDateValue);
     const matchedSeasonStatus = readSeasonField(matchedSeason, 'status');
+    const todayDate = getTodayDateValue();
+    const currentDateTime = getCurrentDateTimeValue();
 
     useEffect(() => {
         let isMounted = true;
@@ -261,12 +287,20 @@ function CreateTournament() {
             showAdminError('Race date must be between year 2000 and 2100 and use a valid HH:mm time.');
             return;
         }
+        if (isDateTimeBeforeNow(raceDateTime)) {
+            showAdminError('Race Date cannot be in the past.');
+            return;
+        }
         if (!registrationDeadline) {
             showAdminError('Registration Deadline is required.');
             return;
         }
         if (!isDateYearInRange(registrationDeadline)) {
             showAdminError('Registration deadline year must be between 2000 and 2100.');
+            return;
+        }
+        if (isDateBeforeToday(registrationDeadline)) {
+            showAdminError('Registration Deadline cannot be in the past.');
             return;
         }
         if (raceDate <= registrationDeadline) {
@@ -440,12 +474,12 @@ function CreateTournament() {
                                 <div className={twoColumnClass}>
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Race Date</span>
-                                        <input className={inputClass} lang="en-US" max={`${maxDate}T23:59`} min={`${minDate}T00:00`} name="raceDate" onChange={(event) => setRaceDateValue(event.target.value)} type="datetime-local" value={raceDateValue} />
+                                        <input className={inputClass} lang="en-US" max={`${maxDate}T23:59`} min={currentDateTime} name="raceDate" onChange={(event) => setRaceDateValue(event.target.value)} type="datetime-local" value={raceDateValue} />
                                     </label>
 
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Registration Deadline</span>
-                                        <input className={inputClass} max={maxDate} min={minDate} name="registrationDeadline" type="date" />
+                                        <input className={inputClass} max={maxDate} min={todayDate} name="registrationDeadline" type="date" />
                                     </label>
                                 </div>
 
