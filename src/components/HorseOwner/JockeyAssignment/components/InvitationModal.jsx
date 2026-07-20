@@ -7,6 +7,7 @@ import {
 } from "../../../../utils/currency";
 import Toast from "../../../shared/Toast";
 import { useToast } from "../../../shared/useToast";
+import { formatSkillLevel } from "./JockeyGrid";
 
 export default function InvitationModal({ jockey, registrationId, tournamentName, onClose, onSent }) {
     const [feeAmount, setFeeAmount] = useState(formatCurrencyAmount(500));
@@ -58,6 +59,8 @@ export default function InvitationModal({ jockey, registrationId, tournamentName
                             <div><small>EXPERIENCE</small><p>{jockey.yearsOfExperience} Years</p></div>
                             <div><small>WEIGHT</small><p>{jockey.weightKg}kg</p></div>
                             <div><small>HEALTH</small><p>{jockey.healthStatus}</p></div>
+                            <div><small>DISTANCE SKILL</small><p>{formatSkillLevel(jockey.distanceSkillLevel)}</p></div>
+                            <div><small>BREED SKILL</small><p>{formatSkillLevel(jockey.breedSkillLevel)}</p></div>
                         </div>
                     </div>
                 </div>
@@ -111,7 +114,7 @@ const styles = {
     jockeyCard: { backgroundColor: "#16305c", borderRadius: "10px", padding: "16px", display: "flex", gap: "16px", alignItems: "center", marginBottom: "20px", color: "#fff" },
     jockeyImg: { width: "60px", height: "60px", borderRadius: "50%", objectFit: "cover", border: "2px solid rgba(255,255,255,0.3)" },
     jockeyName: { margin: 0, fontWeight: "bold", fontSize: "16px" },
-    jockeyStats: { display: "flex", gap: "24px", fontSize: "13px", marginTop: "8px" },
+    jockeyStats: { display: "flex", flexWrap: "wrap", gap: "16px 24px", fontSize: "13px", marginTop: "8px" },
     formRow: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" },
     field: { marginBottom: "16px" },
     label: { display: "block", fontSize: "11px", color: "#999", fontWeight: "700", letterSpacing: "1px", marginBottom: "6px" },

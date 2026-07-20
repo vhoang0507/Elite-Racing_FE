@@ -9,6 +9,11 @@ const HEALTH_CONFIG = {
     Injured:   { bg: '#f3e1df', color: '#a4392f', dot: '#a4392f' },
 };
 
+export function formatSkillLevel(value) {
+    if (!value) return 'N/A';
+    return String(value).replace(/([a-z])([A-Z])/g, '$1 $2');
+}
+
 export default function JockeyGrid({ registrationId, search = '', healthStatus = '', onInvite, disableInvite = false, refreshKey = 0 }) {
     const [candidates, setCandidates] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -101,8 +106,8 @@ export default function JockeyGrid({ registrationId, search = '', healthStatus =
 
                                 {/* Skills */}
                                 <div style={styles.skillsRow}>
-                                    <SkillPill label="Distance" value={jockey.distanceSkillLevel} />
-                                    <SkillPill label="Breed" value={jockey.breedSkillLevel || 'N/A'} />
+                                    <SkillPill label="Distance" value={formatSkillLevel(jockey.distanceSkillLevel)} />
+                                    <SkillPill label="Breed" value={formatSkillLevel(jockey.breedSkillLevel)} />
                                 </div>
 
                                 <button

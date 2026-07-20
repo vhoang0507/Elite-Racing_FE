@@ -6,13 +6,18 @@ import {
 } from 'react';
 
 import {
+    FaBoxOpen,
     FaCheck,
     FaDollarSign,
+    FaGift,
+    FaImage,
+    FaPlus,
     FaSyncAlt,
     FaTimes,
 } from 'react-icons/fa';
 
 import { adminApi } from '../../api/adminApi';
+import { resolveFileUrl } from '../../api/uploadApi';
 import {
     confirmAdminAction,
     showAdminSuccess,
@@ -67,6 +72,20 @@ function readRewardField(reward, key) {
     return reward?.[key] ?? reward?.[pascalKey];
 }
 
+function stockTone(available) {
+    if (available <= 0) return { badge: 'bg-[#f3e1df] text-[#a4392f]', label: 'Out of stock' };
+    if (available <= 5) return { badge: 'bg-[#faf2e0] text-[#8a6209]', label: 'Low stock' };
+    return { badge: 'bg-[#e8f7ee] text-[#16864f]', label: 'In stock' };
+}
+
+const emptyInventoryForm = {
+    name: '',
+    sku: '',
+    initialStock: 0,
+    description: '',
+    imageUrl: '',
+};
+
 function AdminRewardPayments() {
     const [rewards, setRewards] = useState([]);
     const [inventory, setInventory] = useState([]);
@@ -75,13 +94,10 @@ function AdminRewardPayments() {
     const [inventoryLoading, setInventoryLoading] = useState(true);
     const [actionLoadingId, setActionLoadingId] = useState('');
     const [inventoryActionLoadingId, setInventoryActionLoadingId] = useState('');
-    const [inventoryForm, setInventoryForm] = useState({
-        name: '',
-        sku: '',
-        initialStock: 0,
-        description: '',
-        imageUrl: '',
-    });
+    const [inventoryForm, setInventoryForm] = useState(emptyInventoryForm);
+    const [showInventoryForm, setShowInventoryForm] = useState(false);
+    const [imagePreviewBroken, setImagePreviewBroken] = useState(false);
+    const [adjustModal, setAdjustModal] = useState(null);
 
     const loadRewards = useCallback(async () => {
         setLoading(true);
@@ -176,6 +192,9 @@ function AdminRewardPayments() {
     };
 
     const handleInventoryFormChange = (field) => (event) => {
+        if (field === 'imageUrl') {
+            setImagePreviewBroken(false);
+        }
         setInventoryForm((current) => ({
             ...current,
             [field]: event.target.value,
@@ -219,13 +238,9 @@ function AdminRewardPayments() {
                 initialStock,
             });
             showAdminSuccess(response?.message || response?.Message || 'Reward item created.', 'Created');
-            setInventoryForm({
-                name: '',
-                sku: '',
-                initialStock: 0,
-                description: '',
-                imageUrl: '',
-            });
+            setInventoryForm(emptyInventoryForm);
+            setImagePreviewBroken(false);
+            setShowInventoryForm(false);
             await loadInventory();
         } catch (err) {
             showAdminError(err.message || 'Failed to create reward item.');
@@ -234,25 +249,27 @@ function AdminRewardPayments() {
         }
     };
 
-    const handleAdjustInventory = async (item) => {
-        const itemId = readRewardField(item, 'rewardItemId');
-        const quantityText = window.prompt('Quantity delta. Use negative number to reduce stock:', '1');
+    const openAdjustModal = (item) => {
+        setAdjustModal({ item, quantityDelta: '', note: '' });
+    };
 
-        if (!quantityText) {
+    const handleAdjustModalChange = (field) => (event) => {
+        setAdjustModal((current) => (current ? { ...current, [field]: event.target.value } : current));
+    };
+
+    const submitAdjustModal = async (event) => {
+        event.preventDefault();
+
+        if (!adjustModal) {
             return;
         }
 
-        const quantityDelta = Number(quantityText);
+        const itemId = readRewardField(adjustModal.item, 'rewardItemId');
+        const quantityDelta = Number(adjustModal.quantityDelta);
+        const trimmedNote = adjustModal.note.trim();
 
         if (!Number.isInteger(quantityDelta) || quantityDelta === 0 || quantityDelta < -1000000 || quantityDelta > 1000000) {
             showAdminError('Quantity delta must be a non-zero integer between -1,000,000 and 1,000,000.');
-            return;
-        }
-
-        const note = window.prompt('Inventory adjustment note:');
-        const trimmedNote = String(note || '').trim();
-
-        if (note === null) {
             return;
         }
 
@@ -269,6 +286,7 @@ function AdminRewardPayments() {
                 note: trimmedNote,
             });
             showAdminSuccess(response?.message || response?.Message || 'Inventory adjusted.', 'Adjusted');
+            setAdjustModal(null);
             await loadInventory();
         } catch (err) {
             showAdminError(err.message || 'Failed to adjust inventory.');
@@ -371,37 +389,103 @@ function AdminRewardPayments() {
 
                 <section className={panelClass}>
                     <div className="flex min-h-[64px] items-center justify-between gap-4 border-b border-[var(--admin-border)] px-5 py-4 max-[720px]:flex-col max-[720px]:items-stretch">
-                        <div>
-                            <h2 className="m-0 text-[1.05rem] text-[var(--admin-ink)]">Reward Inventory</h2>
-                            <p className="m-0 mt-1 text-[0.78rem] font-bold text-[var(--admin-muted)]">
-                                Manage physical season reward items and available stock.
-                            </p>
+                        <div className="flex items-center gap-3">
+                            <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
+                                <FaBoxOpen aria-hidden="true" />
+                            </span>
+                            <div>
+                                <h2 className="m-0 text-[1.05rem] text-[var(--admin-ink)]">Reward Inventory</h2>
+                                <p className="m-0 mt-1 text-[0.78rem] font-bold text-[var(--admin-muted)]">
+                                    Manage physical season reward items and available stock.
+                                </p>
+                            </div>
                         </div>
-                        <button
-                            className={`${actionButtonClass} border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`}
-                            disabled={inventoryActionLoadingId === 'expire'}
-                            onClick={handleExpireOverdueRewards}
-                            type="button"
-                        >
-                            <FaSyncAlt aria-hidden="true" />
-                            {inventoryActionLoadingId === 'expire' ? 'Processing...' : 'Expire Overdue'}
-                        </button>
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                className={`${actionButtonClass} border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`}
+                                disabled={inventoryActionLoadingId === 'expire'}
+                                onClick={handleExpireOverdueRewards}
+                                type="button"
+                            >
+                                <FaSyncAlt aria-hidden="true" />
+                                {inventoryActionLoadingId === 'expire' ? 'Processing...' : 'Expire Overdue'}
+                            </button>
+                            {!showInventoryForm && (
+                                <button
+                                    className={`${actionButtonClass} bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary-dark)]`}
+                                    onClick={() => setShowInventoryForm(true)}
+                                    type="button"
+                                >
+                                    <FaPlus aria-hidden="true" />
+                                    Add Reward Item
+                                </button>
+                            )}
+                        </div>
                     </div>
 
-                    <form className="grid grid-cols-[minmax(0,1fr)_120px_110px_minmax(0,1fr)_minmax(0,1fr)_auto] gap-3 border-b border-[var(--admin-border)] p-5 max-[1180px]:grid-cols-2 max-[720px]:grid-cols-1" onSubmit={handleCreateInventoryItem}>
-                        <input className="h-10 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.84rem] font-bold outline-0" maxLength={200} onChange={handleInventoryFormChange('name')} placeholder="Reward item name" required type="text" value={inventoryForm.name} />
-                        <input className="h-10 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.84rem] font-bold uppercase outline-0" maxLength={80} onChange={handleInventoryFormChange('sku')} placeholder="SKU" required type="text" value={inventoryForm.sku} />
-                        <input className="h-10 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.84rem] font-bold outline-0" max="1000000" min="0" onChange={handleInventoryFormChange('initialStock')} required step="1" type="number" value={inventoryForm.initialStock} />
-                        <input className="h-10 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.84rem] font-bold outline-0" maxLength={1000} onChange={handleInventoryFormChange('description')} placeholder="Description" type="text" value={inventoryForm.description} />
-                        <input className="h-10 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[0.84rem] font-bold outline-0" maxLength={500} onChange={handleInventoryFormChange('imageUrl')} placeholder="Image URL" type="url" value={inventoryForm.imageUrl} />
-                        <button className={`${actionButtonClass} bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary-dark)]`} disabled={inventoryActionLoadingId === 'create'} type="submit">
-                            <FaCheck aria-hidden="true" />
-                            {inventoryActionLoadingId === 'create' ? 'Creating...' : 'Create'}
-                        </button>
-                    </form>
+                    {showInventoryForm && (
+                        <form className="grid gap-4 border-b border-[var(--admin-border)] bg-[#fffaf8] p-5" onSubmit={handleCreateInventoryItem}>
+                            <div className="flex items-center justify-between">
+                                <h3 className="m-0 text-[0.9rem] font-black text-[var(--admin-ink)]">New Reward Item</h3>
+                                <button
+                                    className="text-[0.76rem] font-bold text-[var(--admin-muted)] hover:text-[var(--admin-primary-dark)]"
+                                    onClick={() => { setShowInventoryForm(false); setInventoryForm(emptyInventoryForm); setImagePreviewBroken(false); }}
+                                    type="button"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-[104px_minmax(0,1fr)] gap-5 max-[720px]:grid-cols-1">
+                                <div className="grid h-[104px] w-[104px] flex-none place-items-center overflow-hidden rounded-[10px] border border-dashed border-[var(--admin-border)] bg-white text-[var(--admin-muted)] max-[720px]:mx-auto">
+                                    {inventoryForm.imageUrl && !imagePreviewBroken ? (
+                                        <img
+                                            alt=""
+                                            className="h-full w-full object-cover"
+                                            onError={() => setImagePreviewBroken(true)}
+                                            src={resolveFileUrl(inventoryForm.imageUrl)}
+                                        />
+                                    ) : (
+                                        <FaImage aria-hidden="true" className="text-2xl" />
+                                    )}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3 max-[640px]:grid-cols-1">
+                                    <label className="grid gap-1.5">
+                                        <span className="text-[0.68rem] font-black uppercase text-[var(--admin-muted)]">Item name</span>
+                                        <input className="h-10 rounded-md border border-[var(--admin-border)] bg-white px-3 text-[0.84rem] font-bold outline-0 focus:border-[var(--admin-gold)]" maxLength={200} onChange={handleInventoryFormChange('name')} placeholder="e.g. Elite Racing Cap" required type="text" value={inventoryForm.name} />
+                                    </label>
+                                    <label className="grid gap-1.5">
+                                        <span className="text-[0.68rem] font-black uppercase text-[var(--admin-muted)]">SKU</span>
+                                        <input className="h-10 rounded-md border border-[var(--admin-border)] bg-white px-3 text-[0.84rem] font-bold uppercase outline-0 focus:border-[var(--admin-gold)]" maxLength={80} onChange={handleInventoryFormChange('sku')} placeholder="e.g. CAP-001" required type="text" value={inventoryForm.sku} />
+                                    </label>
+                                    <label className="grid gap-1.5">
+                                        <span className="text-[0.68rem] font-black uppercase text-[var(--admin-muted)]">Initial stock</span>
+                                        <input className="h-10 rounded-md border border-[var(--admin-border)] bg-white px-3 text-[0.84rem] font-bold outline-0 focus:border-[var(--admin-gold)]" max="1000000" min="0" onChange={handleInventoryFormChange('initialStock')} required step="1" type="number" value={inventoryForm.initialStock} />
+                                    </label>
+                                    <label className="grid gap-1.5">
+                                        <span className="text-[0.68rem] font-black uppercase text-[var(--admin-muted)]">Image URL</span>
+                                        <input className="h-10 rounded-md border border-[var(--admin-border)] bg-white px-3 text-[0.84rem] font-bold outline-0 focus:border-[var(--admin-gold)]" maxLength={500} onChange={handleInventoryFormChange('imageUrl')} placeholder="https://..." type="url" value={inventoryForm.imageUrl} />
+                                        <span className="text-[0.68rem] font-semibold text-[var(--admin-muted)]">Paste a hosted image link — direct upload is coming soon.</span>
+                                    </label>
+                                    <label className="col-span-2 grid gap-1.5 max-[640px]:col-span-1">
+                                        <span className="text-[0.68rem] font-black uppercase text-[var(--admin-muted)]">Description</span>
+                                        <input className="h-10 rounded-md border border-[var(--admin-border)] bg-white px-3 text-[0.84rem] font-bold outline-0 focus:border-[var(--admin-gold)]" maxLength={1000} onChange={handleInventoryFormChange('description')} placeholder="Optional short description" type="text" value={inventoryForm.description} />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end">
+                                <button className={`${actionButtonClass} bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary-dark)]`} disabled={inventoryActionLoadingId === 'create'} type="submit">
+                                    <FaCheck aria-hidden="true" />
+                                    {inventoryActionLoadingId === 'create' ? 'Creating...' : 'Create Item'}
+                                </button>
+                            </div>
+                        </form>
+                    )}
 
                     <div className="w-full overflow-x-auto">
-                        <table className="w-full border-collapse max-[980px]:min-w-[920px]">
+                        <table className="w-full border-collapse max-[980px]:min-w-[980px]">
                             <thead>
                                 <tr>
                                     {['Item', 'SKU', 'Stock', 'Reserved', 'Delivered', 'Available', 'Status', 'Actions'].map((heading) => (
@@ -418,25 +502,54 @@ function AdminRewardPayments() {
                                     </tr>
                                 ) : inventory.length === 0 ? (
                                     <tr>
-                                        <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="8">No reward inventory items found.</td>
+                                        <td className="px-5 py-10 text-center" colSpan="8">
+                                            <div className="grid place-items-center gap-2">
+                                                <span className="grid h-12 w-12 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
+                                                    <FaGift aria-hidden="true" className="text-lg" />
+                                                </span>
+                                                <p className="m-0 text-[0.9rem] font-bold text-[var(--admin-muted)]">No reward inventory items yet.</p>
+                                                <p className="m-0 text-[0.78rem] font-semibold text-[var(--admin-muted)]">Add your first physical reward item to start assigning season prizes.</p>
+                                            </div>
+                                        </td>
                                     </tr>
                                 ) : inventory.map((item) => {
                                     const itemId = readRewardField(item, 'rewardItemId');
                                     const isActive = Boolean(readRewardField(item, 'isActive'));
+                                    const available = Number(readRewardField(item, 'availableQuantity') ?? 0);
+                                    const tone = stockTone(available);
+                                    const imageUrl = readRewardField(item, 'imageUrl');
 
                                     return (
-                                        <tr key={itemId}>
-                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.88rem] font-black text-[var(--admin-ink)]">
-                                                {readRewardField(item, 'name') || '-'}
-                                                {readRewardField(item, 'description') && (
-                                                    <span className="mt-1 block text-[0.72rem] font-bold text-[var(--admin-muted)]">{readRewardField(item, 'description')}</span>
-                                                )}
+                                        <tr className="transition-colors hover:bg-[#fffaf8]" key={itemId}>
+                                            <td className="border-b border-[var(--admin-border)] px-5 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="grid h-11 w-11 flex-none place-items-center overflow-hidden rounded-[8px] bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
+                                                        {imageUrl ? (
+                                                            <img alt="" className="h-full w-full object-cover" onError={(e) => { e.currentTarget.style.display = 'none'; }} src={resolveFileUrl(imageUrl)} />
+                                                        ) : (
+                                                            <FaGift aria-hidden="true" />
+                                                        )}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <p className="m-0 text-[0.88rem] font-black text-[var(--admin-ink)]">{readRewardField(item, 'name') || '-'}</p>
+                                                        {readRewardField(item, 'description') && (
+                                                            <p className="m-0 mt-0.5 truncate text-[0.72rem] font-bold text-[var(--admin-muted)]">{readRewardField(item, 'description')}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-muted)]">{readRewardField(item, 'sku') || '-'}</td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-ink)]">{readRewardField(item, 'stockQuantity') ?? 0}</td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-muted)]">{readRewardField(item, 'reservedQuantity') ?? 0}</td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-muted)]">{readRewardField(item, 'deliveredQuantity') ?? 0}</td>
-                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-black text-[var(--admin-primary-dark)]">{readRewardField(item, 'availableQuantity') ?? 0}</td>
+                                            <td className="border-b border-[var(--admin-border)] px-5 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[0.9rem] font-black text-[var(--admin-primary-dark)]">{available}</span>
+                                                    <span className={`inline-flex min-h-5 items-center rounded-full px-2 text-[0.62rem] font-black ${tone.badge}`}>
+                                                        {tone.label}
+                                                    </span>
+                                                </div>
+                                            </td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4">
                                                 <span className={`inline-flex min-h-6 items-center rounded-full px-2.5 text-[0.68rem] font-black ${isActive ? 'bg-[#e8f7ee] text-[#16864f]' : 'bg-[#f3e1df] text-[#a4392f]'}`}>
                                                     {isActive ? 'Active' : 'Inactive'}
@@ -444,7 +557,7 @@ function AdminRewardPayments() {
                                             </td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4">
                                                 <div className="flex flex-wrap gap-2">
-                                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} disabled={inventoryActionLoadingId !== ''} onClick={() => handleAdjustInventory(item)} type="button">
+                                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} disabled={inventoryActionLoadingId !== ''} onClick={() => openAdjustModal(item)} type="button">
                                                         Adjust
                                                     </button>
                                                     <button className={`${actionButtonClass} ${isActive ? 'border border-[#f0b4b4] bg-white text-[#b91c1c] hover:bg-[#fff3f3]' : 'bg-[#e8f7ef] text-[var(--admin-primary)] hover:bg-[#d7f2e4]'}`} disabled={inventoryActionLoadingId !== ''} onClick={() => handleSetInventoryActive(item, !isActive)} type="button">
@@ -554,6 +667,32 @@ function AdminRewardPayments() {
                     </div>
                 </section>
             </section>
+
+            {adjustModal && (
+                <div className="fixed inset-0 z-[80] grid place-items-center bg-[rgba(15,23,42,0.42)] px-5 py-8" onClick={() => setAdjustModal(null)} role="presentation">
+                    <form className="grid w-[min(420px,100%)] gap-4 rounded-[8px] border border-[var(--admin-border)] bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.28)]" onClick={(event) => event.stopPropagation()} onSubmit={submitAdjustModal}>
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <h2 className="m-0 text-[1.1rem] font-black text-[var(--admin-ink)]">Adjust Stock</h2>
+                                <p className="m-0 mt-1 text-sm font-semibold text-[var(--admin-muted)]">{readRewardField(adjustModal.item, 'name')}</p>
+                            </div>
+                            <button className="grid h-9 w-9 flex-none place-items-center rounded-full border border-[var(--admin-border)] bg-white text-[var(--admin-primary)]" onClick={() => setAdjustModal(null)} type="button">x</button>
+                        </div>
+                        <label className="grid gap-1.5">
+                            <span className="text-xs font-black uppercase text-[var(--admin-muted)]">Quantity change</span>
+                            <input autoFocus className="rounded-[8px] border border-[var(--admin-border)] px-3 py-2.5 text-sm outline-none" onChange={handleAdjustModalChange('quantityDelta')} placeholder="e.g. 10 or -5" required type="number" value={adjustModal.quantityDelta} />
+                            <span className="text-xs font-semibold text-[var(--admin-muted)]">Use a negative number to reduce stock.</span>
+                        </label>
+                        <label className="grid gap-1.5">
+                            <span className="text-xs font-black uppercase text-[var(--admin-muted)]">Note</span>
+                            <textarea className="min-h-[80px] rounded-[8px] border border-[var(--admin-border)] px-3 py-2.5 text-sm outline-none" maxLength={500} minLength={3} onChange={handleAdjustModalChange('note')} placeholder="Reason for this adjustment" required value={adjustModal.note} />
+                        </label>
+                        <button className="rounded-full bg-[var(--admin-primary)] px-5 py-3 text-sm font-black text-white disabled:opacity-60" disabled={inventoryActionLoadingId === `adjust-${readRewardField(adjustModal.item, 'rewardItemId')}`} type="submit">
+                            {inventoryActionLoadingId === `adjust-${readRewardField(adjustModal.item, 'rewardItemId')}` ? 'Saving...' : 'Save Adjustment'}
+                        </button>
+                    </form>
+                </div>
+            )}
         </AdminLayout>
     );
 }
