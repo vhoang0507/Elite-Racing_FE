@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FaFire, FaStar, FaStopwatch, FaTrophy } from "react-icons/fa";
+import {
+    FaBirthdayCake,
+    FaFire,
+    FaFileMedicalAlt,
+    FaHorseHead,
+    FaStar,
+    FaStopwatch,
+    FaTrophy,
+    FaUser,
+    FaUserTie,
+    FaWeightHanging,
+} from "react-icons/fa";
 import HorseOwnerLayout from "../HorseOwnerLayout";
 import { ownerApi } from "../../../api/ownerApi";
 import { resolveFileUrl } from "../../../api/uploadApi";
@@ -11,6 +22,19 @@ function formatTime(seconds) {
     const m = Math.floor(seconds / 60);
     const s = (seconds % 60).toFixed(1);
     return m > 0 ? `${m}:${s.padStart(4, "0")}` : `${s}s`;
+}
+
+const statusTone = {
+    Win: 'bg-[#e8f7ee] text-[#16864f]',
+    Won: 'bg-[#e8f7ee] text-[#16864f]',
+    Loss: 'bg-[#f3e1df] text-[#a4392f]',
+    Lost: 'bg-[#f3e1df] text-[#a4392f]',
+    DNF: 'bg-[#f3e1df] text-[#a4392f]',
+    DQ: 'bg-[#f3e1df] text-[#a4392f]',
+};
+
+function getStatusTone(status) {
+    return statusTone[status] || 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]';
 }
 
 export default function HorseResultDetail() {
@@ -36,19 +60,30 @@ export default function HorseResultDetail() {
                 <button
                     type="button"
                     onClick={() => navigate(-1)}
-                    className="inline-flex items-center gap-1 self-start border-0 bg-transparent p-0 text-[0.8rem] font-semibold text-[var(--admin-muted)] hover:text-[var(--admin-primary)]"
+                    className="inline-flex items-center gap-1.5 self-start rounded-full border border-transparent bg-transparent px-0 py-1 text-[0.82rem] font-bold text-[var(--admin-muted)] transition-colors hover:text-[var(--admin-primary)]"
                 >
-                    ← Back to Fleet
+                    <span aria-hidden="true">←</span> Back to Fleet
                 </button>
 
-                {loading && <p className="text-[0.85rem] text-[var(--admin-muted)]">Loading...</p>}
-                {error && <p className="text-[0.85rem] text-red-700">{error}</p>}
+                {loading && (
+                    <div className="surface-card p-10 text-center font-semibold text-[var(--admin-muted)]">
+                        Loading horse profile...
+                    </div>
+                )}
+                {error && (
+                    <div className="rounded-[8px] border border-[#e3bcb7] bg-[#f3e1df] px-5 py-3 text-sm font-bold text-[#a4392f]">
+                        {error}
+                    </div>
+                )}
 
                 {!loading && data && (
                     <>
-                        <h2 className="m-0 text-[1.6rem] text-[var(--admin-primary-dark)]">{data.horse.horseName}</h2>
+                        <div>
+                            <h1 className="page-title">{data.horse.horseName}</h1>
+                            <p className="page-subtitle">{data.horse.breedName || 'Unknown breed'} · Performance profile and race history.</p>
+                        </div>
 
-                        <div className="grid grid-cols-[1fr_1fr] gap-5 max-[900px]:grid-cols-1">
+                        <div className="grid grid-cols-[1.15fr_1fr] gap-5 max-[900px]:grid-cols-1">
                             <HorseProfileCard horse={data.horse} />
                             <AchievementsCard achievements={data.achievements} />
                         </div>
@@ -61,41 +96,71 @@ export default function HorseResultDetail() {
     );
 }
 
+function InfoStat({ icon: Icon, label, value }) {
+    return (
+        <div className="flex items-center gap-3 rounded-[8px] border border-[var(--admin-border)] bg-[#fffaf8] p-3">
+            <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
+                <Icon aria-hidden="true" className="text-[0.85rem]" />
+            </span>
+            <div className="min-w-0">
+                <p className="m-0 text-[0.66rem] font-black uppercase tracking-wide text-[var(--admin-muted)]">{label}</p>
+                <p className="m-0 mt-0.5 truncate text-[0.9rem] font-bold text-[var(--admin-ink)]">{value}</p>
+            </div>
+        </div>
+    );
+}
+
 function HorseProfileCard({ horse }) {
     const [lightboxSrc, setLightboxSrc] = useState(null);
 
     return (
-        <div style={styles.card}>
-            <div style={styles.profileRow}>
+        <div className="surface-card p-5">
+            <div className="flex items-center gap-4 border-b border-[var(--admin-border)] pb-5">
                 <img
-                    src={horse.imageUrl ? resolveFileUrl(horse.imageUrl) : "/Horse1.jpg"}
                     alt={horse.horseName}
-                    style={styles.profileImg}
+                    className="h-20 w-20 flex-none rounded-full border-2 border-[var(--admin-surface-strong)] object-cover"
                     onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/Horse1.jpg"; }}
+                    src={horse.imageUrl ? resolveFileUrl(horse.imageUrl) : "/Horse1.jpg"}
                 />
-                <div>
-                    <p style={styles.horseName}>{horse.horseName}</p>
-                    <p style={styles.horseBreed}>{horse.breedName}</p>
+                <div className="min-w-0">
+                    <p className="m-0 text-[1.15rem] font-black text-[var(--admin-ink)]">{horse.horseName}</p>
+                    <p className="m-0 mt-0.5 flex items-center gap-1.5 text-[0.82rem] font-semibold text-[var(--admin-muted)]">
+                        <FaHorseHead aria-hidden="true" className="text-[0.75rem]" />
+                        {horse.breedName || 'Unknown breed'}
+                    </p>
                 </div>
             </div>
-            <div style={styles.infoGrid}>
-                <div><small style={styles.label}>AGE</small><p style={styles.value}>{horse.age} years</p></div>
-                <div><small style={styles.label}>WEIGHT</small><p style={styles.value}>{horse.weightKg} kg</p></div>
-                <div><small style={styles.label}>OWNER</small><p style={styles.value}>{horse.ownerName}</p></div>
-                <div><small style={styles.label}>ASSIGNED JOCKEY</small><p style={styles.value}>{horse.assignedJockeyName ?? "—"}</p></div>
+
+            <div className="mt-5 grid grid-cols-2 gap-3">
+                <InfoStat icon={FaBirthdayCake} label="Age" value={`${horse.age} years`} />
+                <InfoStat icon={FaWeightHanging} label="Weight" value={`${horse.weightKg} kg`} />
+                <InfoStat icon={FaUser} label="Owner" value={horse.ownerName} />
+                <InfoStat icon={FaUserTie} label="Assigned Jockey" value={horse.assignedJockeyName ?? "—"} />
             </div>
-            <div style={styles.certificateBox}>
-                <small style={styles.label}>HEALTH CERTIFICATE</small>
+
+            <div className="mt-5 rounded-[8px] border border-[var(--admin-border)] bg-[#fffaf8] p-4">
+                <p className="m-0 flex items-center gap-1.5 text-[0.66rem] font-black uppercase tracking-wide text-[var(--admin-muted)]">
+                    <FaFileMedicalAlt aria-hidden="true" />
+                    Health Certificate
+                </p>
                 {horse.healthCertificateImageUrl ? (
                     <>
-                        <button type="button" onClick={() => setLightboxSrc(resolveFileUrl(horse.healthCertificateImageUrl))} style={{ ...styles.certificateLink, background: 'none', border: 'none', cursor: 'zoom-in' }}>
-                            <img src={resolveFileUrl(horse.healthCertificateImageUrl)} alt="Health certificate" style={styles.certificateImg} />
-                            <span>Open certificate</span>
+                        <button
+                            className="mt-3 flex w-full items-center gap-3 rounded-[8px] border border-[var(--admin-border)] bg-white p-2 text-left transition-colors hover:border-[var(--admin-primary)]"
+                            onClick={() => setLightboxSrc(resolveFileUrl(horse.healthCertificateImageUrl))}
+                            type="button"
+                        >
+                            <img
+                                alt="Health certificate"
+                                className="h-12 w-16 flex-none rounded-[6px] border border-[var(--admin-border)] object-cover"
+                                src={resolveFileUrl(horse.healthCertificateImageUrl)}
+                            />
+                            <span className="text-[0.82rem] font-bold text-[var(--admin-primary)]">Open certificate</span>
                         </button>
-                        <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+                        <ImageLightbox onClose={() => setLightboxSrc(null)} src={lightboxSrc} />
                     </>
                 ) : (
-                    <p style={styles.certificateMissing}>Not uploaded</p>
+                    <p className="m-0 mt-2 text-[0.82rem] font-semibold text-[var(--admin-muted)]">Not uploaded</p>
                 )}
             </div>
         </div>
@@ -104,23 +169,23 @@ function HorseProfileCard({ horse }) {
 
 function AchievementsCard({ achievements }) {
     const items = [
-        { icon: FaTrophy, label: "Title", value: achievements.championTitles > 0 ? `Champion Titles x${achievements.championTitles}` : "No titles yet" },
-        { icon: FaStopwatch, label: "Best Time", value: achievements.bestTime != null ? formatTime(achievements.bestTime) : "—" },
-        { icon: FaFire, label: "Current Streak", value: `${achievements.currentWinStreak} Consecutive Wins` },
-        { icon: FaStar, label: "Award", value: achievements.award || "—" },
+        { icon: FaTrophy, label: "Title", value: achievements.championTitles > 0 ? `Champion Titles x${achievements.championTitles}` : "No titles yet", tone: 'bg-[#faf2e0] text-[#8a6209]' },
+        { icon: FaStopwatch, label: "Best Time", value: achievements.bestTime != null ? formatTime(achievements.bestTime) : "—", tone: 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]' },
+        { icon: FaFire, label: "Current Streak", value: `${achievements.currentWinStreak} Consecutive Wins`, tone: 'bg-[#f3e1df] text-[#a4392f]' },
+        { icon: FaStar, label: "Award", value: achievements.award || "—", tone: 'bg-[#e8f7ee] text-[#16864f]' },
     ];
 
     return (
-        <div style={styles.card}>
-            <p style={styles.cardTitle}>Recent Achievements</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                {items.map((item, i) => (
-                    <div key={i} style={styles.achievementRow}>
-                        <span style={styles.achievementIcon}><item.icon aria-hidden="true" /></span>
-                        <div>
-                            <p style={styles.achievementLabel}>{item.label}</p>
-                            <p style={styles.achievementValue}>{item.value}</p>
-                        </div>
+        <div className="surface-card p-5">
+            <h2 className="m-0 mb-4 text-[1.05rem] font-black text-[var(--admin-ink)]">Recent Achievements</h2>
+            <div className="grid grid-cols-2 gap-3 max-[500px]:grid-cols-1">
+                {items.map((item) => (
+                    <div className="rounded-[8px] border border-[var(--admin-border)] bg-[#fffaf8] p-4" key={item.label}>
+                        <span className={`grid h-9 w-9 place-items-center rounded-full ${item.tone}`}>
+                            <item.icon aria-hidden="true" className="text-[0.85rem]" />
+                        </span>
+                        <p className="m-0 mt-3 text-[0.68rem] font-black uppercase tracking-wide text-[var(--admin-muted)]">{item.label}</p>
+                        <p className="m-0 mt-1 text-[0.92rem] font-bold text-[var(--admin-ink)]">{item.value}</p>
                     </div>
                 ))}
             </div>
@@ -130,66 +195,53 @@ function AchievementsCard({ achievements }) {
 
 function RaceHistoryTable({ history }) {
     return (
-        <div style={styles.card}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                <p style={styles.cardTitle}>Race History</p>
+        <section className="surface-card">
+            <div className="section-bar">
+                <h2 className="m-0 text-[1.05rem] font-black text-[var(--admin-ink)]">Race History</h2>
+                <span className="text-xs font-black text-[var(--admin-muted)]">{history.length} race{history.length === 1 ? '' : 's'}</span>
             </div>
 
             {history.length === 0 ? (
-                <p style={{ color: "#999", fontSize: "0.8rem" }}>No race history yet.</p>
+                <div className="p-10 text-center text-[var(--admin-muted)]">
+                    <FaHorseHead aria-hidden="true" className="mx-auto mb-2 text-2xl" />
+                    <p className="m-0 font-semibold">No race history yet.</p>
+                </div>
             ) : (
-                <table style={styles.table}>
-                    <thead>
-                        <tr>
-                            <th style={styles.th}>TOURNAMENT</th>
-                            <th style={styles.th}>DATE</th>
-                            <th style={styles.th}>TRACK</th>
-                            <th style={styles.th}>DIST</th>
-                            <th style={styles.th}>JOCKEY</th>
-                            <th style={styles.th}>POS</th>
-                            <th style={styles.th}>TIME</th>
-                            <th style={styles.th}>STATUS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {history.map((h) => (
-                            <tr key={h.resultId}>
-                                <td style={{ ...styles.td, fontWeight: 600, color: "#16305c" }}>{h.tournamentName}</td>
-                                <td style={styles.td}>{new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).format(new Date(h.raceDate))}</td>
-                                <td style={styles.td}>{h.track ?? "—"}</td>
-                                <td style={styles.td}>{h.distanceMeters}m</td>
-                                <td style={styles.td}>{h.jockeyName ?? "—"}</td>
-                                <td style={styles.td}>{h.position ?? "-"}</td>
-                                <td style={styles.td}>{h.finishTime != null ? formatTime(h.finishTime) : "-"}</td>
-                                <td style={styles.td}>
-                                    <span style={styles.statusBadge}>{h.status?.toUpperCase()}</span>
-                                </td>
+                <div className="overflow-x-auto">
+                    <table className="data-table min-w-[880px]">
+                        <thead>
+                            <tr>
+                                <th>Tournament</th>
+                                <th>Date</th>
+                                <th>Track</th>
+                                <th>Dist</th>
+                                <th>Jockey</th>
+                                <th>Pos</th>
+                                <th>Time</th>
+                                <th>Status</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {history.map((h) => (
+                                <tr key={h.resultId}>
+                                    <td className="font-bold text-[var(--admin-primary-dark)]">{h.tournamentName}</td>
+                                    <td>{new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).format(new Date(h.raceDate))}</td>
+                                    <td>{h.track ?? "—"}</td>
+                                    <td>{h.distanceMeters}m</td>
+                                    <td>{h.jockeyName ?? "—"}</td>
+                                    <td>{h.position ?? "-"}</td>
+                                    <td>{h.finishTime != null ? formatTime(h.finishTime) : "-"}</td>
+                                    <td>
+                                        <span className={`inline-flex min-h-6 items-center rounded-full px-2.5 text-[0.68rem] font-black ${getStatusTone(h.status)}`}>
+                                            {h.status?.toUpperCase()}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
-        </div>
+        </section>
     );
 }
-
-const styles = {
-    card: { backgroundColor: "#fff", borderRadius: "12px", border: "1px solid #ded2ad", padding: "20px", boxShadow: "0 8px 22px rgba(15,23,42,0.06)" },
-    cardTitle: { margin: 0, fontSize: "14px", fontWeight: 700, color: "#0a1930" },
-    profileRow: { display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", marginBottom: "20px" },
-    profileImg: { width: "90px", height: "90px", borderRadius: "50%", objectFit: "cover", marginBottom: "10px" },
-    horseName: { margin: 0, fontWeight: 700, fontSize: "16px", color: "#1b2333" },
-    horseBreed: { margin: "2px 0", fontSize: "12px", color: "#6b6456" },
-    infoGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" },
-    label: { color: "#6b6456", fontSize: "11px" },
-    value: { margin: "2px 0 0", fontWeight: 600, fontSize: "13px", color: "#1b2333" },
-    certificateMissing: { margin: "6px 0 0", color: "#94a3b8", fontSize: "12px", fontWeight: 600 },
-    achievementRow: { display: "flex", alignItems: "center", gap: "10px" },
-    achievementIcon: { width: "32px", height: "32px", borderRadius: "999px", backgroundColor: "#f3e6c2", color: "#8a6a1f", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px" },
-    achievementLabel: { margin: 0, fontSize: "11px", color: "#6b6456" },
-    achievementValue: { margin: "2px 0 0", fontWeight: 600, fontSize: "13px", color: "#1b2333" },
-    table: { width: "100%", borderCollapse: "collapse" },
-    th: { textAlign: "left", fontSize: "10px", color: "#64748b", fontWeight: 700, padding: "10px 8px", borderBottom: "2px solid #c8a24a", background: "#efe8d6" },
-    td: { padding: "10px 8px", borderBottom: "1px solid #f0ece0", fontSize: "12px" },
-    statusBadge: { fontSize: "10px", padding: "3px 10px", borderRadius: "999px", fontWeight: 700, backgroundColor: "#edf2fa", color: "#16305c" },
-};
