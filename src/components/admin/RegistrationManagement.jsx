@@ -263,18 +263,9 @@ export default function RegistrationManagement() {
             return;
         }
 
-        const note = window.prompt(
-            `Reject reason for "${registration.horseName}" in "${registration.tournamentName}":`,
-            'Rejected by admin'
-        );
-
-        if (note === null) {
-            return;
-        }
-
         try {
             setSavingId(registration.registrationId);
-            await adminApi.rejectRegistration(registration.registrationId, note);
+            await adminApi.rejectRegistration(registration.registrationId);
             await loadRegistrations(statusFilter);
             setSelected(null);
             showAdminSuccess('Race entry rejected successfully.', 'Rejected');
