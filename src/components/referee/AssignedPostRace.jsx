@@ -580,6 +580,11 @@ function AssignedPostRace() {
     };
 
     const handleEditViolation = (violation) => {
+        if (violation?.isReadOnly) {
+            showToast('Pre-race inspection failures are read-only. Edit them from Pre-Race Inspection.', 'info');
+            return;
+        }
+
         if (finalReportIsLocked) {
             showToast(`The final report is ${postRaceReportStatus}. Violations can no longer be edited.`, 'error');
             return;
@@ -602,6 +607,11 @@ function AssignedPostRace() {
     };
 
     const handleDeleteViolation = async (violation) => {
+        if (violation?.isReadOnly) {
+            showToast('Pre-race inspection failures cannot be deleted from Post-Race.', 'info');
+            return;
+        }
+
         if (!selectedRaceId || !violation?.violationId) return;
         const confirmed = await requestViolationConfirm({
             title: 'Delete violation',
@@ -824,13 +834,13 @@ function AssignedPostRace() {
                     </div>
                 </div>
 
-                {/* No registrations warning */}
+                {/* Only horses that passed pre-race inspection appear in Post-Race Results. */}
                 {registrations.length === 0 && !loadingRaceData && selectedRaceId && (
                     <div className="flex items-start gap-3 rounded-[8px] border border-[#e9d8a6] bg-[#faf2e0] p-5 text-[#8a6209]">
                         <FaExclamationTriangle className="mt-1" />
                         <div>
-                            <div className="font-bold">No registrations for this race.</div>
-                            <p className="mt-1 text-sm">Result entry and violation creation require at least one registration.</p>
+                            <div className="font-bold">No horse passed pre-race inspection.</div>
+                            <p className="mt-1 text-sm">Failed inspections are shown as read-only items in the Violations tab and do not require a Post-Race result.</p>
                         </div>
                     </div>
                 )}
@@ -908,7 +918,7 @@ function AssignedPostRace() {
                                         className={inputClass}
                                     >
                                         <option value="" disabled>
-                                            {registrations.length === 0 ? 'No registrations' : 'Select registration'}
+                                            {registrations.length === 0 ? 'No eligible horses' : 'Select horse'}
                                         </option>
                                         {registrations.map((r) => (
                                             <option key={r.registrationId} value={String(r.registrationId)}>
@@ -1073,7 +1083,7 @@ function AssignedPostRace() {
                                         required disabled={loadingRaceData || registrations.length === 0}
                                         className={inputClass}>
                                         <option value="" disabled>
-                                            {registrations.length === 0 ? 'No registrations' : 'Select registration'}
+                                            {registrations.length === 0 ? 'No eligible horses' : 'Select horse'}
                                         </option>
                                         {registrations.map((r) => (
                                             <option key={r.registrationId} value={String(r.registrationId)}>
@@ -1153,12 +1163,12 @@ function AssignedPostRace() {
                         <div className="surface-card" style={{ overflow: 'hidden' }}>
                             <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--admin-border)' }}>
                                 <h2 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                                    <FaGavel style={{ color: 'var(--admin-primary)' }} /> Logged Violations
+                                    <FaGavel style={{ color: 'var(--admin-primary)' }} /> Violations & Pre-Race Failures
                                 </h2>
                             </div>
                             <div>
                                 {violations.length === 0 ? (
-                                    <div className="p-6 text-center text-sm text-[var(--admin-muted)]">No violations logged.</div>
+                                    <div className="p-6 text-center text-sm text-[var(--admin-muted)]">No violations or failed pre-race inspections.</div>
                                 ) : violations.map((v) => (
                                     <div key={v.violationId} className="border-t border-[var(--admin-border)] px-5 py-4">
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
@@ -1168,33 +1178,38 @@ function AssignedPostRace() {
                                                     {v.horseName} — {v.description || 'No description'}
                                                 </div>
                                                 <div className="mt-1 text-xs text-[var(--admin-muted)]">
-                                                    {formatDateTime(v.createdAt)} · Penalty: {v.penaltyPoints ?? 0} pts
+                                                    {formatDateTime(v.createdAt)}
+                                                    {v.isReadOnly ? ' · Pre-race inspection' : ` · Penalty: ${v.penaltyPoints ?? 0} pts`}
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                                                 <span className="inline-flex flex-shrink-0 items-center rounded-full bg-[#f3e1df] px-2.5 py-1 text-[0.68rem] font-bold text-[#a4392f]">
-                                                    {v.action}
+                                                    {v.isReadOnly ? 'Pre-Race Failed' : v.action}
                                                 </span>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleEditViolation(v)}
-                                                    title={finalReportIsLocked ? `Final report is ${postRaceReportStatus}.` : 'Edit violation'}
-                                                    aria-label="Edit violation"
-                                                    disabled={loadingRaceData || Boolean(saving) || finalReportIsLocked}
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--admin-border)] bg-white text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-60"
-                                                >
-                                                    <FaEdit />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleDeleteViolation(v)}
-                                                    title="Delete violation"
-                                                    aria-label="Delete violation"
-                                                    disabled={loadingRaceData || Boolean(saving) || finalReportIsLocked}
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#e3bcb7] bg-white text-[#a4392f] transition-colors hover:bg-[#f3e1df] disabled:cursor-not-allowed disabled:opacity-60"
-                                                >
-                                                    <FaTrash />
-                                                </button>
+                                                {!v.isReadOnly && (
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleEditViolation(v)}
+                                                            title={finalReportIsLocked ? `Final report is ${postRaceReportStatus}.` : 'Edit violation'}
+                                                            aria-label="Edit violation"
+                                                            disabled={loadingRaceData || Boolean(saving) || finalReportIsLocked}
+                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--admin-border)] bg-white text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                                                        >
+                                                            <FaEdit />
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDeleteViolation(v)}
+                                                            title="Delete violation"
+                                                            aria-label="Delete violation"
+                                                            disabled={loadingRaceData || Boolean(saving) || finalReportIsLocked}
+                                                            className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[#e3bcb7] bg-white text-[#a4392f] transition-colors hover:bg-[#f3e1df] disabled:cursor-not-allowed disabled:opacity-60"
+                                                        >
+                                                            <FaTrash />
+                                                        </button>
+                                                    </>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
