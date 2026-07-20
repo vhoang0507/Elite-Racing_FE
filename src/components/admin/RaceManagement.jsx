@@ -454,7 +454,9 @@ function RaceManagement() {
     const filteredTournaments = useMemo(() => {
         const filtered = tournaments.filter((tournament) => (
             matchesQuery(tournament, query)
-            && (statusFilter === 'all' || formatClass(tournament.status) === statusFilter)
+            && (statusFilter === 'all'
+                ? formatClass(tournament.status) !== 'cancelled'
+                : formatClass(tournament.status) === statusFilter)
         ));
 
         const sorted = [...filtered].sort((current, next) => {
