@@ -193,7 +193,7 @@ export default function Leaderboard() {
                     )
                 ) : activeTab === 'horses' ? (
                     horses.length === 0 ? (
-                        <p className="m-0 p-8 text-center text-[var(--admin-muted)]">No horse data yet — waiting for BE endpoint.</p>
+                        <p className="m-0 p-8 text-center text-[var(--admin-muted)]">No horse ranking data for the active season yet.</p>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="data-table min-w-[600px]">
@@ -233,7 +233,7 @@ export default function Leaderboard() {
                     )
                 ) : (
                     predictors.length === 0 ? (
-                        <p className="m-0 p-8 text-center text-[var(--admin-muted)]">No predictor data yet — waiting for BE endpoint.</p>
+                        <p className="m-0 p-8 text-center text-[var(--admin-muted)]">No predictor ranking data for the active season yet.</p>
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="data-table min-w-[540px]">
@@ -275,7 +275,7 @@ export default function Leaderboard() {
                 )}
 
                 <div className="border-t px-6 py-3 text-xs font-semibold text-[var(--admin-muted)]">
-                    Rankings update after each race result is finalized by the referee.
+                    Rankings update after an official race result is published. Predictor ranking uses season score first, then correct predictions as a tie-breaker.
                 </div>
             </div>
         </div>

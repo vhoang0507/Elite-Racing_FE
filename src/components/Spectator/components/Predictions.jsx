@@ -29,7 +29,7 @@ function getOutcome(prediction) {
 }
 
 function PredictionCard({ prediction }) {
-    const { pointsAwarded, stakePoints, netPoints, tournamentName, predictedHorseName, tournamentStatus } = prediction;
+    const { pointsAwarded, stakePoints, netPoints, seasonName, tournamentName, predictedHorseName, tournamentStatus } = prediction;
     const outcome = getOutcome(prediction);
 
     const accentColor = {
@@ -52,7 +52,7 @@ function PredictionCard({ prediction }) {
         correct:   `Correct  +${pointsAwarded ?? 0} pts`,
         wrong:     `Wrong  -${stakePoints ?? 0} pts`,
         locked:    'Locked – Awaiting Evaluation',
-        cancelled: 'Cancelled',
+        cancelled: 'Cancelled · Stake Refunded',
         pending:   'Awaiting Result',
     }[outcome];
 
@@ -80,9 +80,11 @@ function PredictionCard({ prediction }) {
                             )}
                         </p>
                     )}
-                    {tournamentStatus && (
+                    {(seasonName || tournamentStatus) && (
                         <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: 'var(--admin-muted)' }}>
-                            Tournament: {tournamentStatus}
+                            {seasonName ? `Season: ${seasonName}` : ''}
+                            {seasonName && tournamentStatus ? ' · ' : ''}
+                            {tournamentStatus ? `Tournament: ${tournamentStatus}` : ''}
                         </p>
                     )}
                 </div>
@@ -114,9 +116,11 @@ export default function Predictions() {
     const locked    = predictions.filter(p => p.status === 'Locked').length;
     const pending   = predictions.filter(p => p.status === 'Pending').length;
     const accuracy  = (correct + wrong) === 0 ? 0 : Math.round((correct / (correct + wrong)) * 100);
-    const totalPts  = predictions.reduce((s, p) => s + (p.pointsAwarded ?? 0), 0);
-    const totalStake = predictions.reduce((s, p) => s + (p.stakePoints ?? 0), 0);
-    const netTotal  = totalPts - totalStake;
+    // The backend already normalizes cancelled predictions to netPoints = 0.
+    // Summing that field prevents refunded stakes from being counted as losses.
+    const netTotal = predictions.reduce((sum, prediction) =>
+        sum + (prediction.netPoints ?? 0), 0
+    );
 
     const stats = [
         { label: 'Total',      value: total,           icon: FaBullseye,    tone: '' },
@@ -191,7 +195,7 @@ export default function Predictions() {
                             <FaTrophy aria-hidden="true" />
                         </div>
                         <p className="m-0 text-[0.85rem] text-[var(--admin-muted)]">
-                            Each correct prediction earns you points. At the end of the season (every 3 months), top predictors receive exclusive rewards. Points reset each season.
+                            Stakes change your wallet balance. Evaluated prediction payouts also build your season score. Cancelled tournaments refund the stake and count as net 0.
                         </p>
                     </div>
 

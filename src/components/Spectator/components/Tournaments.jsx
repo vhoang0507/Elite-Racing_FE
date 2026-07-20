@@ -432,7 +432,13 @@ export default function Tournaments() {
         }).finally(() => setLoading(false));
     }, []);
 
-    const predMap = Object.fromEntries(predictions.map(p => [p.tournamentId, p]));
+    // getMyPredictions returns history across all seasons. Only predictions that
+    // belong to the tournaments currently displayed may affect this page's counters.
+    const visibleTournamentIds = new Set(tournaments.map(t => t.tournamentId));
+    const visiblePredictions = predictions.filter(p =>
+        p.status !== 'Cancelled' && visibleTournamentIds.has(p.tournamentId)
+    );
+    const predMap = Object.fromEntries(visiblePredictions.map(p => [p.tournamentId, p]));
 
     const filtered = tournaments.filter(t => {
         if (filter === 'open') return canPredict(t) && !predMap[t.tournamentId];

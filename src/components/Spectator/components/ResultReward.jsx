@@ -68,8 +68,14 @@ export default function ResultReward() {
         loadData();
     }, []);
 
+    const hasActiveSeason = rewards?.hasActiveSeason ?? false;
     const bettingPoints = rewards?.bettingPoints ?? 0;
+    const seasonScore = rewards?.seasonScore ?? rewards?.rewardPoints ?? 0;
     const netPoints = rewards?.netPoints ?? 0;
+    const baseOpeningPoints = rewards?.baseOpeningPoints ?? 0;
+    const carriedBonusPoints = rewards?.carriedBonusPoints ?? 0;
+    const openingTotalPoints = rewards?.openingTotalPoints ?? 0;
+    const historySeasonName = rewards?.historySeasonName ?? null;
     const accuracy = rewards?.predictionAccuracy ?? 0;
     const myRank = rewards?.myRank ?? null;
     const history = rewards?.pointHistory ?? [];
@@ -83,7 +89,7 @@ export default function ResultReward() {
 
     const stats = [
         { label: 'Wallet Balance', value: bettingPoints, suffix: 'pts', icon: FaCoins, tone: 'gold' },
-        { label: 'Net Points', value: `${netPoints >= 0 ? '+' : ''}${netPoints}`, suffix: 'pts', icon: FaCoins, tone: netPoints >= 0 ? 'green' : 'red' },
+        { label: 'Season Score', value: seasonScore, suffix: 'pts', icon: FaCoins, tone: 'green' },
         { label: 'Prediction Accuracy', value: `${accuracy}%`, icon: FaPercent, tone: 'blue' },
         { label: 'My Season Rank', value: myRank ? `#${myRank}` : '-', icon: FaListOl, tone: '' },
     ];
@@ -172,6 +178,22 @@ export default function ResultReward() {
                 <p className="m-0 text-center font-semibold text-[var(--admin-muted)]">Loading...</p>
             ) : (
                 <>
+                    <div className={`rounded-[8px] border px-5 py-4 text-sm font-semibold ${hasActiveSeason ? 'border-[#bfe6d0] bg-[#e8f7ee] text-[#145f3d]' : 'border-[var(--admin-border)] bg-[#fffaf8] text-[var(--admin-muted)]'}`}>
+                        {hasActiveSeason ? (
+                            <>
+                                New-season opening wallet: <strong>{baseOpeningPoints.toLocaleString()} base</strong>
+                                {' + '}<strong>{carriedBonusPoints.toLocaleString()} carry bonus</strong>
+                                {' = '}<strong>{openingTotalPoints.toLocaleString()} points</strong>.
+                                Season score starts from 0 and only increases from evaluated prediction results.
+                            </>
+                        ) : (
+                            <>
+                                No active season. The spendable wallet has been reset to <strong>0</strong>.
+                                {historySeasonName ? ` Transactions and bet history below are from ${historySeasonName}.` : ''}
+                            </>
+                        )}
+                    </div>
+
                     <div className="grid grid-cols-4 gap-4 max-[1000px]:grid-cols-2 max-[500px]:grid-cols-1">
                         {stats.map((stat) => {
                             const Icon = stat.icon;
@@ -217,7 +239,7 @@ export default function ResultReward() {
                                     )}
                                 </>
                             ) : (
-                                <p className="m-0 text-[var(--admin-muted)]">Season data not available yet.</p>
+                                <p className="m-0 text-[var(--admin-muted)]">No active season. Wallet balance and season score remain 0 until the next season is activated.</p>
                             )}
                         </div>
 
@@ -278,6 +300,11 @@ export default function ResultReward() {
                                                 <p className="m-0 mt-1 text-xs font-semibold text-[var(--admin-muted)]">
                                                     Awarded: {formatDate(readField(reward, 'awardedAt'))} | Claim deadline: {formatDate(readField(reward, 'claimDeadline'))}
                                                 </p>
+                                                <p className="m-0 mt-1 text-xs font-bold text-[var(--admin-primary)]">
+                                                    {readField(reward, 'isBonusApplied')
+                                                        ? `Bonus applied to season #${readField(reward, 'appliedToSeasonId')}`
+                                                        : 'Bonus waiting for the next season activation'}
+                                                </p>
                                                 {readField(reward, 'adminNote') && (
                                                     <p className="m-0 mt-2 text-xs font-semibold text-[#a4392f]">{readField(reward, 'adminNote')}</p>
                                                 )}
@@ -299,9 +326,12 @@ export default function ResultReward() {
 
                     <section className="surface-card">
                         <div className="section-bar">
-                            <h2 className="m-0 text-[1.05rem] font-bold">Point Transactions</h2>
+                            <div>
+                                <h2 className="m-0 text-[1.05rem] font-bold">Point Transactions</h2>
+                                {historySeasonName && <p className="m-0 mt-1 text-xs font-semibold text-[var(--admin-muted)]">{historySeasonName}</p>}
+                            </div>
                             <span className="font-black" style={{ color: netPoints >= 0 ? '#16864f' : '#a4392f' }}>
-                                Net: {netPoints >= 0 ? '+' : ''}{netPoints} pts
+                                Active-season net: {netPoints >= 0 ? '+' : ''}{netPoints} pts
                             </span>
                         </div>
                         {walletTransactions.length === 0 ? (
@@ -310,7 +340,10 @@ export default function ResultReward() {
                             <div key={readField(item, 'pointTransactionId')} className="flex items-center gap-3 border-b border-[var(--admin-border)] px-5 py-3 last:border-b-0">
                                 <div className="min-w-0 flex-1">
                                     <p className="m-0 font-bold text-[0.9rem]">{readField(item, 'description') || readField(item, 'transactionType')}</p>
-                                    <p className="m-0 text-xs text-[var(--admin-muted)]">{formatDate(readField(item, 'createdAt'))}</p>
+                                    <p className="m-0 text-xs text-[var(--admin-muted)]">
+                                        {readField(item, 'seasonName') || historySeasonName || 'Season'} · {formatDate(readField(item, 'createdAt'))}
+                                        {' · '}Balance {readField(item, 'balanceBefore')} → {readField(item, 'balanceAfter')}
+                                    </p>
                                 </div>
                                 <span className="font-black" style={{ color: Number(readField(item, 'amount')) >= 0 ? '#16864f' : '#a4392f' }}>
                                     {Number(readField(item, 'amount')) >= 0 ? '+' : ''}{readField(item, 'amount')} pts

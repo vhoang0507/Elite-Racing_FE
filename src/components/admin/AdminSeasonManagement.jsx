@@ -515,13 +515,13 @@ function AdminSeasonManagement() {
         const copy = {
             activate: {
                 title: 'Activate season',
-                message: `Activate "${seasonName}" and reset spectator betting points?`,
+                message: `Activate "${seasonName}"? Each spectator receives a 1,000-point wallet plus any pending bonus from the latest closed season. Season score starts at 0.`,
                 confirmLabel: 'Activate',
                 run: () => adminApi.activateSeason(id),
             },
             close: {
                 title: 'Close season',
-                message: `Close "${seasonName}" and award configured season rewards?`,
+                message: `Close "${seasonName}"? Final balances and ranks will be stored, rewards will be generated, and every spendable spectator wallet will display 0 until the next season is activated.`,
                 confirmLabel: 'Close Season',
                 run: () => adminApi.closeSeason(id),
             },

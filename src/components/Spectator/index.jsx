@@ -29,7 +29,7 @@ function SeasonBanner({ season }) {
                         {season.startDate?.slice(0, 10)} — {season.endDate?.slice(0, 10)}
                     </p>
                     <p className="m-0 mt-1 text-[0.82rem] text-[var(--admin-muted)]">
-                        Points are distributed to top predictors at season end, then reset each quarter.
+                        Season score resets to 0 each season. The new wallet opens with 1,000 points plus any earned carry bonus.
                     </p>
                 </div>
                 <div className="flex gap-6 text-center">
@@ -61,6 +61,7 @@ function SeasonBanner({ season }) {
 export default function SpectatorDashboard() {
     const navigate = useNavigate();
     const [data, setData] = useState(null);
+    const [wallet, setWallet] = useState(null);
     const [season, setSeason] = useState(null);
     const [predictors, setPredictors] = useState([]);
     const [openTournaments, setOpenTournaments] = useState([]);
@@ -70,26 +71,37 @@ export default function SpectatorDashboard() {
     useEffect(() => {
         Promise.all([
             spectatorApi.getSpectatorDashboard().catch(() => null),
+            spectatorApi.getSpectatorWallet().catch(() => null),
             spectatorApi.getCurrentSeason().catch(() => null),
             spectatorApi.getPredictorLeaderboard().catch(() => []),
             spectatorApi.getSpectatorTournaments().catch(() => []),
             spectatorApi.getMyPredictions().catch(() => []),
-        ]).then(([dash, s, preds, tours, myPreds]) => {
+        ]).then(([dash, walletPayload, s, preds, tours, myPreds]) => {
             setData(dash);
+            setWallet(walletPayload);
             setSeason(s);
             setPredictors((preds ?? []).slice(0, 5));
-            const predMap = Object.fromEntries((myPreds ?? []).map(p => [p.tournamentId, p]));
+
+            const validPredictions = (myPreds ?? []).filter(p => p.status !== 'Cancelled');
+            const predMap = Object.fromEntries(validPredictions.map(p => [p.tournamentId, p]));
             setOpenTournaments(
-                (tours ?? []).filter(t => (t.status === 'OpenRegistration' || t.status === 'Scheduled') && !predMap[t.tournamentId]).slice(0, 3)
+                (tours ?? [])
+                    .filter(t => t.canPredict === true && !predMap[t.tournamentId])
+                    .slice(0, 3)
             );
             setPredictions((myPreds ?? []).slice(0, 4));
         }).finally(() => setLoading(false));
     }, []);
 
+    const hasActiveSeason = wallet?.hasActiveSeason ?? data?.hasActiveSeason ?? false;
+    const bettingPoints = wallet?.bettingPoints ?? data?.bettingPoints ?? 0;
+    const seasonScore = wallet?.seasonScore ?? data?.seasonScore ?? data?.rewardPoints ?? 0;
+
     const stats = [
-        { label: 'My Predictions',      value: data?.predictionsSubmitted ?? 0, icon: FaBullseye,    tone: 'blue' },
-        { label: 'Points This Season',  value: `${data?.rewardPoints ?? 0}`,    icon: FaCoins,       tone: 'gold', suffix: 'pts' },
-        { label: 'My Season Rank',      value: data?.myRank ? `#${data.myRank}` : '—', icon: FaListOl, tone: '' },
+        { label: 'Wallet Balance', value: bettingPoints, icon: FaCoins, tone: 'gold', suffix: 'pts' },
+        { label: 'Season Score', value: seasonScore, icon: FaTrophy, tone: 'blue', suffix: 'pts' },
+        { label: 'My Predictions', value: data?.predictionsSubmitted ?? 0, icon: FaBullseye, tone: 'blue' },
+        { label: 'My Season Rank', value: data?.myRank ? `#${data.myRank}` : '—', icon: FaListOl, tone: '' },
     ];
 
     return (
@@ -101,10 +113,12 @@ export default function SpectatorDashboard() {
                             Spectator Console
                         </span>
                         <h1 className="m-0 mt-1.5 text-[1.9rem] leading-[1.15] max-[720px]:text-[1.5rem]">
-                            {data?.rewardPoints ?? 0} points{data?.myRank ? ` · Rank #${data.myRank}` : ''}
+                            {bettingPoints.toLocaleString()} wallet pts · {seasonScore.toLocaleString()} season score
                         </h1>
                         <p className="m-0 mt-2 max-w-xl text-[0.92rem] text-[rgba(255,255,255,0.75)]">
-                            Predict tournament winners, earn points, and compete with other spectators.
+                            {hasActiveSeason
+                                ? `New-season wallet: ${(wallet?.baseOpeningPoints ?? 0).toLocaleString()} base + ${(wallet?.carriedBonusPoints ?? 0).toLocaleString()} bonus.`
+                                : 'No active season. Your spendable wallet is 0 until the next season is activated.'}
                         </p>
                     </div>
                 </div>
@@ -116,7 +130,7 @@ export default function SpectatorDashboard() {
                         <SeasonBanner season={season} />
 
                         {/* Stats */}
-                        <div className="grid grid-cols-3 gap-5 max-[800px]:grid-cols-1">
+                        <div className="grid grid-cols-4 gap-5 max-[1050px]:grid-cols-2 max-[600px]:grid-cols-1">
                             {stats.map((s) => {
                                 const Icon = s.icon;
                                 return (
@@ -213,7 +227,13 @@ export default function SpectatorDashboard() {
                                                 backgroundColor: p.isCorrect === true ? '#e8f7ee' : p.isCorrect === false ? '#f3e1df' : '#faf2e0',
                                                 color: p.isCorrect === true ? '#16864f' : p.isCorrect === false ? '#a4392f' : '#8a6209',
                                             }}>
-                                                {p.isCorrect === true ? `+${p.pointsAwarded} pts` : p.isCorrect === false ? 'Wrong' : 'Pending'}
+                                                {p.status === 'Cancelled'
+                                                    ? 'Cancelled · refunded'
+                                                    : p.isCorrect === true
+                                                        ? `+${p.pointsAwarded} pts`
+                                                        : p.isCorrect === false
+                                                            ? 'Wrong'
+                                                            : 'Pending'}
                                             </span>
                                         </div>
                                     ))
