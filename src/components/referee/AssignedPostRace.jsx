@@ -352,6 +352,84 @@ function AssignedPostRace() {
         setConfirmRequest(null);
     };
 
+    const validateFinishTimeOrder = (candidate) => {
+        const candidateRegistrationId = String(candidate.registrationId || '');
+        const candidateResultId = String(candidate.resultId || '');
+        const finishedRows = results
+            .filter((result) => {
+                const resultId = result.resultId ?? result.ResultId;
+                const registrationId = result.registrationId ?? result.RegistrationId;
+                const sameResult = candidateResultId && String(resultId) === candidateResultId;
+                const sameRegistration = candidateRegistrationId && String(registrationId) === candidateRegistrationId;
+                return !sameResult && !sameRegistration;
+            })
+            .concat(candidate)
+            .map((result) => {
+                const position = nullableNumber(result.finishPosition ?? result.FinishPosition);
+                const time = nullableNumber(result.finishTimeSeconds ?? result.FinishTimeSeconds);
+                const outcomeStatus = normalizeOutcomeStatus(result.outcomeStatus ?? result.OutcomeStatus);
+                return { position, time, outcomeStatus };
+            })
+            .filter((result) =>
+                result.outcomeStatus === 'Finished' &&
+                Number.isInteger(result.position) &&
+                result.position > 0 &&
+                result.time !== null
+            )
+            .sort((a, b) => a.position - b.position);
+
+        let slowestHigherRank = null;
+        for (const row of finishedRows) {
+            if (slowestHigherRank && row.position > slowestHigherRank.position && row.time <= slowestHigherRank.time) {
+                return `Position #${row.position} time (${formatSeconds(row.time)}) must be greater than position #${slowestHigherRank.position} time (${formatSeconds(slowestHigherRank.time)}).`;
+            }
+            if (!slowestHigherRank || row.time > slowestHigherRank.time) {
+                slowestHigherRank = row;
+            }
+        }
+
+        return '';
+    };
+
+    const validateScoreOrder = (candidate) => {
+        const candidateRegistrationId = String(candidate.registrationId || '');
+        const candidateResultId = String(candidate.resultId || '');
+        const finishedRows = results
+            .filter((result) => {
+                const resultId = result.resultId ?? result.ResultId;
+                const registrationId = result.registrationId ?? result.RegistrationId;
+                const sameResult = candidateResultId && String(resultId) === candidateResultId;
+                const sameRegistration = candidateRegistrationId && String(registrationId) === candidateRegistrationId;
+                return !sameResult && !sameRegistration;
+            })
+            .concat(candidate)
+            .map((result) => {
+                const position = nullableNumber(result.finishPosition ?? result.FinishPosition);
+                const score = nullableNumber(result.score ?? result.Score);
+                const outcomeStatus = normalizeOutcomeStatus(result.outcomeStatus ?? result.OutcomeStatus);
+                return { position, score, outcomeStatus };
+            })
+            .filter((result) =>
+                result.outcomeStatus === 'Finished' &&
+                Number.isInteger(result.position) &&
+                result.position > 0 &&
+                result.score !== null
+            )
+            .sort((a, b) => a.position - b.position);
+
+        let highestHigherRankScore = null;
+        for (const row of finishedRows) {
+            if (highestHigherRankScore && row.position > highestHigherRankScore.position && row.score <= highestHigherRankScore.score) {
+                return `Position #${row.position} score (${row.score}) must be greater than position #${highestHigherRankScore.position} score (${highestHigherRankScore.score}).`;
+            }
+            if (!highestHigherRankScore || row.score > highestHigherRankScore.score) {
+                highestHigherRankScore = row;
+            }
+        }
+
+        return '';
+    };
+
     const validateResultForm = () => {
         if (!selectedRaceId) return 'Select a race first.';
         if (finalReportIsLocked) return `The final report is ${postRaceReportStatus} and the results are locked.`;
@@ -368,6 +446,22 @@ function AssignedPostRace() {
         if (resultForm.finishTimeSeconds !== '' && (time === null || time < 0)) return 'Finish time must be ≥ 0.';
         const score = nullableNumber(resultForm.score);
         if (resultForm.score !== '' && (score === null || score < 0)) return 'Score must be ≥ 0.';
+        const finishTimeOrderMessage = validateFinishTimeOrder({
+            resultId: editingResultId,
+            registrationId: resultForm.registrationId,
+            outcomeStatus: resultForm.outcomeStatus,
+            finishPosition: pos,
+            finishTimeSeconds: time,
+        });
+        if (finishTimeOrderMessage) return finishTimeOrderMessage;
+        const scoreOrderMessage = validateScoreOrder({
+            resultId: editingResultId,
+            registrationId: resultForm.registrationId,
+            outcomeStatus: resultForm.outcomeStatus,
+            finishPosition: pos,
+            score,
+        });
+        if (scoreOrderMessage) return scoreOrderMessage;
         return '';
     };
 
