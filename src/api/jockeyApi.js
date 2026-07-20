@@ -96,6 +96,23 @@ export async function updateJockeyAvailabilities(items) {
     });
 }
 
+
+// ─── Rewards ─────────────────────────────────────────────────────────────────
+
+export async function getJockeyRewardSummary() {
+    return apiRequest('/jockey/rewards/summary');
+}
+
+export async function getJockeyRewards(limit = 50) {
+    return apiRequest(`/jockey/rewards?limit=${limit}`);
+}
+
+export async function claimJockeyReward(prizePayoutId) {
+    return apiRequest(`/jockey/rewards/${prizePayoutId}/claim`, {
+        method: 'PUT',
+    });
+}
+
 // ─── Notifications ────────────────────────────────────────────────────────────
 
 export async function getNotificationSummary() {
@@ -147,6 +164,9 @@ export const jockeyApi = {
     getJockeyCalendar,
     getJockeyAvailabilities,
     updateJockeyAvailabilities,
+    getJockeyRewardSummary,
+    getJockeyRewards,
+    claimJockeyReward,
     getNotificationSummary,
     getNotifications,
     getNotificationDetail,

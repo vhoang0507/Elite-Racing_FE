@@ -1480,12 +1480,23 @@ async function expireOverdueRewards() {
     return apiRequest('/admin/reward-inventory/expire-overdue', { method: 'POST' });
 }
 
-async function approveRewardPayment(id) {
-    return apiRequest(`/admin/rewards/${id}/approve-payment`, { method: 'PUT' });
+async function approveRewardPayment(id, payload = {}) {
+    return apiRequest(`/admin/rewards/${id}/approve-payment`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            PaymentReference: payload.paymentReference ?? payload.PaymentReference ?? '',
+            AdminNote: payload.adminNote ?? payload.AdminNote ?? '',
+        }),
+    });
 }
 
-async function rejectRewardPayment(id) {
-    return apiRequest(`/admin/rewards/${id}/reject`, { method: 'PUT' });
+async function rejectRewardPayment(id, payload = {}) {
+    return apiRequest(`/admin/rewards/${id}/reject`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            AdminNote: payload.adminNote ?? payload.AdminNote ?? '',
+        }),
+    });
 }
 
 // ─── Reports (Violations) ────────────────────────────────────────────────────

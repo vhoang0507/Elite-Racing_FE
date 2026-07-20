@@ -38,21 +38,21 @@ export default function AvailableRewards({ rewards, loading, onClaim, claimingId
                             <th style={styles.th}>TOURNAMENT</th>
                             <th style={styles.th}>HORSE</th>
                             <th style={styles.th}>RANK</th>
-                            <th style={styles.th}>PRIZE</th>
+                            <th style={styles.th}>OWNER SHARE</th>
                             <th style={styles.th}>STATUS</th>
                             <th style={styles.th}>ACTION</th>
                         </tr>
                     </thead>
                     <tbody>
                         {rewards.map((r) => (
-                            <tr key={r.prizeAwardId}>
+                            <tr key={r.prizePayoutId}>
                                 <td style={styles.td}>
                                     <strong>{r.tournamentName}</strong>
                                     <div style={styles.subText}>{new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).format(new Date(r.raceDate))}</div>
                                 </td>
                                 <td style={styles.td}>{r.horseName}</td>
                                 <td style={styles.td}>{ordinal(r.rankPosition)}</td>
-                                <td style={styles.td}>{formatCurrency(r.prizeAmount)}</td>
+                                <td style={styles.td}>{formatCurrency(r.payoutAmount ?? 0)}</td>
                                 <td style={styles.td}>
                                     <span style={{ ...styles.statusBadge, ...(statusStyle[r.status] || {}) }}>
                                         {formatStatus(r.status)}
@@ -62,11 +62,11 @@ export default function AvailableRewards({ rewards, loading, onClaim, claimingId
                                     {r.canClaim ? (
                                         <button
                                             type="button"
-                                            disabled={claimingId === r.prizeAwardId}
-                                            onClick={() => onClaim(r.prizeAwardId)}
+                                            disabled={claimingId === r.prizePayoutId}
+                                            onClick={() => onClaim(r.prizePayoutId)}
                                             className="rounded-full bg-[var(--admin-primary,#16305c)] px-4 py-1.5 text-[12px] font-bold text-white transition-colors hover:bg-[#0a1930] disabled:opacity-60"
                                         >
-                                            {claimingId === r.prizeAwardId ? "..." : "Claim"}
+                                            {claimingId === r.prizePayoutId ? "..." : "Claim"}
                                         </button>
                                     ) : (
                                         <button type="button" style={styles.detailsBtn}>Details</button>

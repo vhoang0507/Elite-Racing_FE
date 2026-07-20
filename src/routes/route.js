@@ -41,6 +41,7 @@ import AcceptedRaces from '../components/jockey/AcceptedRaces';
 import JockeyCalendar from '../components/jockey/JockeyCalendar';
 import JockeyNotifications from '../components/jockey/JockeyNotifications';
 import JockeySetting from '../components/jockey/JockeySetting';
+import JockeyRewards from '../components/jockey/JockeyRewards';
 
 import HorseOwnerDashboard from '../components/HorseOwner/HorseOwnerDashboard';
 import MyHorse from '../components/HorseOwner/MyHorse';
@@ -113,6 +114,7 @@ const appRoutes = [
     { path: '/jockey/invitations', element: guard('Jockey', PendingInvitations) },
     { path: '/jockey/accepted', element: guard('Jockey', AcceptedRaces) },
     { path: '/jockey/schedule', element: guard('Jockey', JockeyCalendar) },
+    { path: '/jockey/rewards', element: guard('Jockey', JockeyRewards) },
     { path: '/jockey/notifications', element: guard('Jockey', JockeyNotifications) },
     { path: '/jockey/settings', element: guard('Jockey', JockeySetting) },
 

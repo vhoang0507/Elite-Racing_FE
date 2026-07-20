@@ -10,6 +10,7 @@ import {
     FaLock,
     FaSearch,
     FaSignOutAlt,
+    FaTrophy,
 } from 'react-icons/fa';
 
 import { clearAuthSession } from '../../utils/tokenStorage';
@@ -20,6 +21,7 @@ const navigation = [
     { key: 'invitations', label: 'Pending Invitations', icon: FaEnvelope, path: '/jockey/invitations', section: 'Racing' },
     { key: 'accepted', label: 'Accepted Races', icon: FaHorseHead, path: '/jockey/accepted', section: 'Racing' },
     { key: 'schedule', label: 'Calendar', icon: FaCalendarAlt, path: '/jockey/schedule', section: 'Racing' },
+    { key: 'rewards', label: 'Result & Reward', icon: FaTrophy, path: '/jockey/rewards', section: 'Racing' },
     { key: 'notifications', label: 'Notifications', icon: FaBell, path: '/jockey/notifications', section: 'Account' },
     { key: 'settings', label: 'Settings', icon: FaCog, path: '/jockey/settings', section: 'Account' },
 ];

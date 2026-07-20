@@ -46,26 +46,6 @@ const statusClass = {
     Rejected: 'bg-[#f3e1df] text-[#a4392f]',
 };
 
-function formatDateTime(value) {
-    if (!value) {
-        return '-';
-    }
-
-    const date = new Date(value);
-
-    if (Number.isNaN(date.getTime())) {
-        return String(value);
-    }
-
-    return new Intl.DateTimeFormat('en-US', {
-        month: 'short',
-        day: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-    }).format(date);
-}
-
 function readRewardField(reward, key) {
     const pascalKey = key[0].toUpperCase() + key.slice(1);
 
@@ -139,7 +119,7 @@ function AdminRewardPayments() {
         const countByStatus = (status) => rewards.filter((reward) => readRewardField(reward, 'status') === status).length;
 
         return [
-            { label: 'Total Rewards', value: rewards.length },
+            { label: 'Total Payouts', value: rewards.length },
             { label: 'Under Review', value: countByStatus('UnderReview') },
             { label: 'Paid', value: countByStatus('Paid') },
             { label: 'Rejected', value: countByStatus('Rejected') },
@@ -147,22 +127,32 @@ function AdminRewardPayments() {
     }, [rewards]);
 
     const handlePaymentAction = async (reward, action) => {
-        const id = readRewardField(reward, 'prizeAwardId');
-        const ownerName = readRewardField(reward, 'ownerName') || 'this owner';
+        const id = readRewardField(reward, 'prizePayoutId');
+        const recipientName = readRewardField(reward, 'recipientName') || 'this recipient';
+        const recipientType = readRewardField(reward, 'recipientType') || 'recipient';
         const copy = action === 'approve'
             ? {
                 title: 'Approve reward payment',
-                message: `Mark reward payment for ${ownerName} as paid?`,
+                message: `Mark the ${recipientType.toLowerCase()} payout for ${recipientName} as paid?`,
                 confirmLabel: 'Approve Payment',
-                run: () => adminApi.approveRewardPayment(id),
+                run: async () => {
+                    const paymentReference = window.prompt('Enter the bank transfer or payment gateway reference:');
+                    if (!paymentReference?.trim()) {
+                        throw new Error('Payment reference is required before marking a payout as paid.');
+                    }
+                    return adminApi.approveRewardPayment(id, { paymentReference: paymentReference.trim() });
+                },
                 fallback: 'Reward payment approved successfully.',
             }
             : {
                 title: 'Reject reward payment',
-                message: `Reject reward payment for ${ownerName}?`,
+                message: `Reject the ${recipientType.toLowerCase()} payout for ${recipientName}?`,
                 confirmLabel: 'Reject Payment',
                 tone: 'danger',
-                run: () => adminApi.rejectRewardPayment(id),
+                run: async () => {
+                    const adminNote = window.prompt('Reason for rejection (optional):') || '';
+                    return adminApi.rejectRewardPayment(id, { adminNote });
+                },
                 fallback: 'Reward payment rejected successfully.',
             };
 
@@ -591,7 +581,7 @@ function AdminRewardPayments() {
                         <table className="w-full border-collapse max-[980px]:min-w-[1040px]">
                             <thead>
                                 <tr>
-                                    {['Tournament', 'Owner', 'Horse', 'Rank', 'Prize', 'Status', 'Paid At', 'Actions'].map((heading) => (
+                                    {['Tournament', 'Recipient', 'Horse', 'Rank', 'Payout', 'Status', 'Payment Ref.', 'Actions'].map((heading) => (
                                         <th className="border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-5 py-4 text-left text-[0.68rem] font-black uppercase text-[#64748b]" key={heading}>
                                             {heading}
                                         </th>
@@ -608,7 +598,7 @@ function AdminRewardPayments() {
                                         <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="8">No reward payments found.</td>
                                     </tr>
                                 ) : rewards.map((reward) => {
-                                    const id = readRewardField(reward, 'prizeAwardId');
+                                    const id = readRewardField(reward, 'prizePayoutId');
                                     const status = readRewardField(reward, 'status');
                                     const canReview = status === 'UnderReview';
 
@@ -618,7 +608,8 @@ function AdminRewardPayments() {
                                                 {readRewardField(reward, 'tournamentName') || '-'}
                                             </td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-ink)]">
-                                                {readRewardField(reward, 'ownerName') || `Owner #${readRewardField(reward, 'ownerId') || '-'}`}
+                                                <span className="block">{readRewardField(reward, 'recipientName') || '-'}</span>
+                                                <span className="mt-0.5 block text-[0.68rem] uppercase text-[var(--admin-muted)]">{readRewardField(reward, 'recipientType') || '-'}</span>
                                             </td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-muted)]">
                                                 {readRewardField(reward, 'horseName') || '-'}
@@ -627,7 +618,7 @@ function AdminRewardPayments() {
                                                 #{readRewardField(reward, 'rankPosition') || '-'}
                                             </td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-black text-[var(--admin-primary-dark)]">
-                                                {adminApi.formatters.toMoney(readRewardField(reward, 'prizeAmount') || 0)}
+                                                {adminApi.formatters.toMoney(readRewardField(reward, 'payoutAmount') || 0)}
                                             </td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4">
                                                 <span className={`inline-flex min-h-6 items-center rounded-full px-2.5 text-[0.68rem] font-black ${statusClass[status] || 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]'}`}>
@@ -635,7 +626,7 @@ function AdminRewardPayments() {
                                                 </span>
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-4 text-[0.82rem] font-bold text-[var(--admin-muted)]">
-                                                {formatDateTime(readRewardField(reward, 'paidAt'))}
+                                                {readRewardField(reward, 'paymentReference') || '-'}
                                             </td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4">
                                                 <div className="flex flex-wrap gap-2">

@@ -51,10 +51,10 @@ export default function ResultReward() {
         loadResults(resultsLimit);
     }, [resultsLimit, loadResults]);
 
-    const handleClaim = async (prizeAwardId) => {
-        setClaimingId(prizeAwardId);
+    const handleClaim = async (prizePayoutId) => {
+        setClaimingId(prizePayoutId);
         try {
-            await ownerApi.claimReward(prizeAwardId);
+            await ownerApi.claimReward(prizePayoutId);
             loadRewards();
             loadSummary();
             showToast('Reward claimed successfully!', 'success', 'Claim Reward');

@@ -204,8 +204,8 @@ export async function getAvailableRewards(limit = 10) {
     return apiRequest(`/owner/rewards/available?limit=${limit}`);
 }
 
-export async function claimReward(prizeAwardId) {
-    return apiRequest(`/owner/rewards/${prizeAwardId}/claim`, {
+export async function claimReward(prizePayoutId) {
+    return apiRequest(`/owner/rewards/${prizePayoutId}/claim`, {
         method: 'PUT',
     });
 }
