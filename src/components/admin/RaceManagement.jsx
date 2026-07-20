@@ -562,18 +562,6 @@ function RaceManagement() {
             return;
         }
 
-        const note = window.prompt('Confirmation note for final standings:');
-        const trimmedNote = String(note || '').trim();
-
-        if (!trimmedNote) {
-            return;
-        }
-
-        if (trimmedNote.length < 5 || trimmedNote.length > 1000) {
-            setDetailError('Finalization note must be between 5 and 1,000 characters.');
-            return;
-        }
-
         const confirmed = await confirmAdminAction({
             title: 'Finalize standings',
             message: `Finalize standings for "${selectedTournament.name}" and complete this tournament?`,
@@ -588,7 +576,7 @@ function RaceManagement() {
         setDetailError('');
 
         try {
-            const response = await adminApi.finalizeTournamentStandings(selectedTournament.id, trimmedNote);
+            const response = await adminApi.finalizeTournamentStandings(selectedTournament.id, 'Final standings confirmed by admin.');
             showAdminSuccess(response?.message || response?.Message || 'Tournament standings finalized.', 'Finalized');
             await loadTournamentDetailData(selectedTournament.id);
             await refreshTournamentRows();
