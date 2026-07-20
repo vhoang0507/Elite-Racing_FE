@@ -389,7 +389,7 @@ function PendingInvitations() {
                                     </div>
                                     <p className="m-0 mt-1"><strong>Fee:</strong> {formatFee(selectedInvitation.feeAmount)}</p>
                                     {selectedInvitation.jockeySelectionDeadline && (
-                                        <p className="m-0 mt-1"><strong>Deadline:</strong> {formatDate(selectedInvitation.jockeySelectionDeadline)}</p>
+                                        <p className="m-0 mt-1"><strong>Registration deadline:</strong> {formatDate(selectedInvitation.jockeySelectionDeadline)}</p>
                                     )}
                                     <p className="m-0 mt-1"><strong>Status:</strong> {selectedInvitation.status}</p>
                                 </div>
