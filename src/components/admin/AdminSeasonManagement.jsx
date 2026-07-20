@@ -731,11 +731,11 @@ function AdminSeasonManagement() {
                             <div className="grid grid-cols-2 gap-4 max-[720px]:grid-cols-1">
                                 <label className={fieldClass}>
                                     <span className={labelClass}>Start Date</span>
-                                    <input className={controlClass} max={maxDate} min={minDate} onChange={handleSeasonFieldChange('startDate')} required type="date" value={seasonForm.startDate} />
+                                    <input className={controlClass} lang="en-US" max={maxDate} min={minDate} onChange={handleSeasonFieldChange('startDate')} required type="date" value={seasonForm.startDate} />
                                 </label>
                                 <label className={fieldClass}>
                                     <span className={labelClass}>End Date</span>
-                                    <input className={controlClass} max={maxDate} min={minDate} onChange={handleSeasonFieldChange('endDate')} required type="date" value={seasonForm.endDate} />
+                                    <input className={controlClass} lang="en-US" max={maxDate} min={minDate} onChange={handleSeasonFieldChange('endDate')} required type="date" value={seasonForm.endDate} />
                                 </label>
                             </div>
 
@@ -1044,12 +1044,12 @@ function AdminSeasonManagement() {
 
                                 <label className={fieldClass}>
                                     <span className={labelClass}>Start Date</span>
-                                    <input className={controlClass} max={maxDate} min={minDate} onChange={handleEditSeasonFieldChange('startDate')} required type="date" value={editSeasonForm.startDate} />
+                                    <input className={controlClass} lang="en-US" max={maxDate} min={minDate} onChange={handleEditSeasonFieldChange('startDate')} required type="date" value={editSeasonForm.startDate} />
                                 </label>
 
                                 <label className={fieldClass}>
                                     <span className={labelClass}>End Date</span>
-                                    <input className={controlClass} max={maxDate} min={minDate} onChange={handleEditSeasonFieldChange('endDate')} required type="date" value={editSeasonForm.endDate} />
+                                    <input className={controlClass} lang="en-US" max={maxDate} min={minDate} onChange={handleEditSeasonFieldChange('endDate')} required type="date" value={editSeasonForm.endDate} />
                                 </label>
 
                                 <label className={`${fieldClass} col-span-2 max-[720px]:col-span-1`}>

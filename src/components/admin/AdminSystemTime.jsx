@@ -61,6 +61,37 @@ function toDisplayValue(value) {
     return String(value).replace(/(T\d{2}:\d{2}:\d{2})\.\d+((?:Z|[+-]\d{2}:?\d{2})?)$/, '$1$2');
 }
 
+function getReadableDateTimeParts(value) {
+    const displayValue = toDisplayValue(value);
+    const match = String(displayValue).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(Z|[+-]\d{2}:?\d{2})?$/i);
+
+    if (!match) {
+        return null;
+    }
+
+    const [, year, month, day, hours, minutes, seconds, suffix = ''] = match;
+    const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+    const normalizedSuffix = suffix && suffix.toUpperCase() !== 'Z' && !suffix.includes(':')
+        ? `${suffix.slice(0, 3)}:${suffix.slice(3)}`
+        : suffix;
+    const timezone = suffix.toUpperCase() === 'Z'
+        ? 'UTC'
+        : normalizedSuffix
+            ? `UTC${normalizedSuffix.startsWith('+') || normalizedSuffix.startsWith('-') ? normalizedSuffix : `+${normalizedSuffix}`}`
+            : '';
+
+    return {
+        dateLabel: new Intl.DateTimeFormat('en-US', {
+            day: '2-digit',
+            month: 'long',
+            timeZone: 'UTC',
+            year: 'numeric',
+        }).format(date),
+        timeLabel: `${hours}:${minutes}:${seconds}`,
+        timezone,
+    };
+}
+
 function padDatePart(value) {
     return String(value).padStart(2, '0');
 }
@@ -168,14 +199,32 @@ function TimeItem({
     label,
     value,
 }) {
+    const readableDateTime = getReadableDateTimeParts(value);
+
     return (
         <article className="rounded-md border border-[var(--admin-border)] bg-[#fffdfc] p-4">
             <span className="block text-[0.68rem] font-black uppercase text-[#64748b]">
                 {label}
             </span>
-            <strong className="mt-2 block break-words text-[0.95rem] text-[var(--admin-ink)]">
-                {toDisplayValue(value)}
-            </strong>
+            {readableDateTime ? (
+                <div className="mt-2 grid gap-1">
+                    <strong className="block text-[1rem] leading-tight text-[var(--admin-ink)]">
+                        {readableDateTime.dateLabel}
+                    </strong>
+                    <span className="font-mono text-[1.1rem] font-black tracking-normal text-[var(--admin-primary-dark)]">
+                        {readableDateTime.timeLabel}
+                    </span>
+                    {readableDateTime.timezone && (
+                        <span className="text-[0.74rem] font-black uppercase text-[var(--admin-muted)]">
+                            {readableDateTime.timezone}
+                        </span>
+                    )}
+                </div>
+            ) : (
+                <strong className="mt-2 block break-words text-[0.95rem] text-[var(--admin-ink)]">
+                    {toDisplayValue(value)}
+                </strong>
+            )}
         </article>
     );
 }
