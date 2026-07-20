@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     FaEnvelope,
     FaCheckCircle,
@@ -13,6 +14,7 @@ import {
 
 import JockeyLayout from './JockeyLayout';
 import { jockeyApi } from '../../api/jockeyApi';
+import { resolveFileUrl } from '../../api/uploadApi';
 import Toast from '../shared/Toast';
 import { useToast } from '../shared/useToast';
 
@@ -23,6 +25,7 @@ const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
 const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
 function JockeyDashboard() {
+    const navigate = useNavigate();
     const [dashboard, setDashboard] = useState(null);
     const [invitations, setInvitations] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -184,14 +187,34 @@ function JockeyDashboard() {
                                 <p className="p-6 text-center text-sm text-[var(--admin-muted)]">No pending invitations</p>
                             ) : (
                                 (showAllInvitations ? invitations : invitations.slice(0, 2)).map((inv) => (
-                                    <div key={inv.invitationId} className="flex items-center gap-4 px-[22px] py-4">
-                                        <div className="h-14 w-14 flex-none overflow-hidden rounded-lg bg-[#3d2c1e]">
-                                            <div className="grid h-full w-full place-items-center text-white">
-                                                <FaHorseHead />
-                                            </div>
+                                    <div
+                                        className="flex cursor-pointer items-center gap-4 px-[22px] py-4 transition-colors hover:bg-[#fffaf8]"
+                                        key={inv.invitationId}
+                                        onClick={() => navigate('/jockey/invitations')}
+                                        role="button"
+                                        tabIndex={0}
+                                    >
+                                        <div className="relative h-14 w-14 flex-none overflow-hidden rounded-lg bg-[#3d2c1e]">
+                                            {inv.horseImageUrl ? (
+                                                <img
+                                                    alt={inv.horseName || ''}
+                                                    className="h-full w-full object-cover"
+                                                    onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                                    src={resolveFileUrl(inv.horseImageUrl)}
+                                                />
+                                            ) : (
+                                                <div className="grid h-full w-full place-items-center text-white">
+                                                    <FaHorseHead />
+                                                </div>
+                                            )}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <strong className="block text-[0.95rem] text-[var(--admin-ink)]">{inv.raceName}</strong>
+                                            {inv.horseName && (
+                                                <span className="flex items-center gap-1 text-[0.82rem] text-[var(--admin-muted)]">
+                                                    <FaHorseHead className="text-[0.7rem]" /> {inv.horseName}
+                                                </span>
+                                            )}
                                             <span className="flex items-center gap-1 text-[0.82rem] text-[var(--admin-muted)]">
                                                 <FaUsers className="text-[0.7rem]" /> {inv.ownerName}
                                             </span>
@@ -202,14 +225,14 @@ function JockeyDashboard() {
                                         <div className="flex gap-2">
                                             <button
                                                 className="inline-flex min-h-[34px] cursor-pointer items-center justify-center gap-[6px] rounded-full bg-[var(--admin-primary)] px-4 text-[0.78rem] font-[850] text-white transition-colors hover:bg-[var(--admin-primary-dark)]"
-                                                onClick={() => handleAccept(inv.invitationId)}
+                                                onClick={(event) => { event.stopPropagation(); handleAccept(inv.invitationId); }}
                                                 type="button"
                                             >
                                                 Accept
                                             </button>
                                             <button
                                                 className="inline-flex min-h-[34px] cursor-pointer items-center justify-center gap-[6px] rounded-full border border-[var(--admin-border)] bg-white px-4 text-[0.78rem] font-[850] text-[var(--admin-ink)] transition-colors hover:bg-[var(--admin-surface-strong)]"
-                                                onClick={() => handleReject(inv.invitationId)}
+                                                onClick={(event) => { event.stopPropagation(); handleReject(inv.invitationId); }}
                                                 type="button"
                                             >
                                                 Reject

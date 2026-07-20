@@ -188,17 +188,17 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
                     {/* Left column - Tournament Info */}
                     <div style={styles.infoCol}>
                         {(tournament.seasonName || tournament.seasonStatus) && (
-                            <div style={styles.infoRow}><span><FaLayerGroup aria-hidden="true" /></span><div><small>SEASON</small><p>{tournament.seasonName || "N/A"}{tournament.seasonStatus ? ` (${tournament.seasonStatus})` : ""}</p></div></div>
+                            <div style={styles.infoRow}><span style={styles.infoIcon}><FaLayerGroup aria-hidden="true" /></span><div style={styles.infoContent}><small style={styles.infoLabel}>SEASON</small><p style={styles.infoValue}>{tournament.seasonName || "N/A"}{tournament.seasonStatus ? ` (${tournament.seasonStatus})` : ""}</p></div></div>
                         )}
                         {tournament.registrationDeadline && (
-                            <div style={styles.infoRow}><span><FaHourglassEnd aria-hidden="true" /></span><div><small>DEADLINE</small><p>{tournament.registrationDeadline}</p></div></div>
+                            <div style={styles.infoRow}><span style={styles.infoIcon}><FaHourglassEnd aria-hidden="true" /></span><div style={styles.infoContent}><small style={styles.infoLabel}>DEADLINE</small><p style={styles.infoValue}>{tournament.registrationDeadline}</p></div></div>
                         )}
-                        <div style={styles.infoRow}><span><FaCalendarAlt aria-hidden="true" /></span><div><small>DATE</small><p>{tournament.raceDate}</p></div></div>
-                        <div style={styles.infoRow}><span><FaMapMarkerAlt aria-hidden="true" /></span><div><small>LOCATION</small><p>{tournament.location}</p></div></div>
-                        <div style={styles.infoRow}><span><FaUsers aria-hidden="true" /></span><div><small>SLOTS LEFT</small><p>{tournament.availableSlots} / {tournament.maxHorses}</p></div></div>
-                        <div style={styles.infoRow}><span><FaRulerHorizontal aria-hidden="true" /></span><div><small>DISTANCE</small><p>{tournament.distanceMeters} m</p></div></div>
-                        <div style={styles.infoRow}><span><FaCoins aria-hidden="true" /></span><div><small>PRIZE POOL</small><h3 style={{ margin: 0, color: "#16305c" }}>{formatCurrency(tournament.prizePool)}</h3></div></div>
-                        <p style={{ display: "flex", alignItems: "flex-start", gap: "6px", fontSize: "11px", color: "#999", marginTop: "8px" }}>
+                        <div style={styles.infoRow}><span style={styles.infoIcon}><FaCalendarAlt aria-hidden="true" /></span><div style={styles.infoContent}><small style={styles.infoLabel}>DATE</small><p style={styles.infoValue}>{tournament.raceDate}</p></div></div>
+                        <div style={styles.infoRow}><span style={styles.infoIcon}><FaMapMarkerAlt aria-hidden="true" /></span><div style={styles.infoContent}><small style={styles.infoLabel}>LOCATION</small><p style={styles.infoValue}>{tournament.location}</p></div></div>
+                        <div style={styles.infoRow}><span style={styles.infoIcon}><FaUsers aria-hidden="true" /></span><div style={styles.infoContent}><small style={styles.infoLabel}>SLOTS LEFT</small><p style={styles.infoValue}>{tournament.availableSlots} / {tournament.maxHorses}</p></div></div>
+                        <div style={styles.infoRow}><span style={styles.infoIcon}><FaRulerHorizontal aria-hidden="true" /></span><div style={styles.infoContent}><small style={styles.infoLabel}>DISTANCE</small><p style={styles.infoValue}>{tournament.distanceMeters} m</p></div></div>
+                        <div style={styles.infoRow}><span style={styles.infoIcon}><FaCoins aria-hidden="true" /></span><div style={styles.infoContent}><small style={styles.infoLabel}>PRIZE POOL</small><h3 style={styles.prizeValue}>{formatCurrency(tournament.prizePool)}</h3></div></div>
+                        <p style={styles.disclaimer}>
                             <FaExclamationTriangle aria-hidden="true" style={{ marginTop: "1px", flexShrink: 0 }} />
                             Registrations require admin approval before race participation.
                         </p>
@@ -279,17 +279,23 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
 
 const styles = {
     overlay: { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" },
-    modal: { backgroundColor: "#fff", borderRadius: "12px", width: "900px", maxWidth: "95vw", maxHeight: "90vh", overflowY: "auto" },
+    modal: { backgroundColor: "#fff", borderRadius: "14px", width: "980px", maxWidth: "96vw", maxHeight: "92vh", overflowY: "auto" },
     imgWrapper: { position: "relative" },
-    img: { width: "100%", height: "160px", objectFit: "cover", borderRadius: "12px 12px 0 0" },
-    imgOverlay: { position: "absolute", bottom: "16px", left: "16px" },
-    upcomingBadge: { backgroundColor: "#16305c", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "4px" },
-    tournamentName: { color: "#fff", margin: "4px 0 0", fontSize: "22px", textShadow: "0 1px 3px rgba(0,0,0,0.5)" },
-    closeBtn: { position: "absolute", top: "12px", right: "12px", background: "rgba(0,0,0,0.4)", color: "#fff", border: "none", borderRadius: "50%", width: "28px", height: "28px", cursor: "pointer", fontSize: "14px" },
-    body: { display: "grid", gridTemplateColumns: "240px 1fr", gap: "0" },
-    infoCol: { padding: "20px", borderRight: "1px solid #eee", backgroundColor: "#faf8f8" },
-    infoRow: { display: "flex", gap: "10px", marginBottom: "12px", alignItems: "flex-start", fontSize: "13px" },
-    formCol: { padding: "20px" },
+    img: { width: "100%", height: "180px", objectFit: "cover", borderRadius: "14px 14px 0 0" },
+    imgOverlay: { position: "absolute", bottom: "16px", left: "20px" },
+    upcomingBadge: { backgroundColor: "#16305c", color: "#fff", fontSize: "11px", padding: "3px 8px", borderRadius: "4px", fontWeight: 700, letterSpacing: "0.04em" },
+    tournamentName: { color: "#fff", margin: "6px 0 0", fontSize: "24px", fontWeight: 800, textShadow: "0 1px 3px rgba(0,0,0,0.5)" },
+    closeBtn: { position: "absolute", top: "12px", right: "12px", background: "rgba(0,0,0,0.4)", color: "#fff", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", fontSize: "14px" },
+    body: { display: "grid", gridTemplateColumns: "290px 1fr", gap: "0" },
+    infoCol: { padding: "26px 24px", borderRight: "1px solid #eee", backgroundColor: "#faf8f8" },
+    infoRow: { display: "flex", gap: "14px", marginBottom: "18px", alignItems: "center", fontSize: "13px" },
+    infoIcon: { display: "flex", alignItems: "center", justifyContent: "center", width: "36px", height: "36px", borderRadius: "50%", backgroundColor: "#eef1f7", color: "#16305c", fontSize: "15px", flexShrink: 0 },
+    infoContent: { display: "flex", flexDirection: "column", gap: "3px", minWidth: 0 },
+    infoLabel: { fontSize: "10.5px", fontWeight: 800, letterSpacing: "0.07em", color: "#8a8380" },
+    infoValue: { margin: 0, fontSize: "14px", fontWeight: 700, color: "#1b2333" },
+    prizeValue: { margin: 0, fontSize: "16px", fontWeight: 800, color: "#16305c" },
+    disclaimer: { display: "flex", alignItems: "flex-start", gap: "8px", fontSize: "11px", fontWeight: 600, color: "#8a8380", marginTop: "12px", paddingTop: "14px", borderTop: "1px solid #ede4e2" },
+    formCol: { padding: "26px" },
     stepTitle: { fontSize: "11px", color: "#999", fontWeight: "700", letterSpacing: "1px", margin: "0 0 10px" },
     input: { width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #ddd", fontSize: "13px", boxSizing: "border-box" },
     horseCard: { display: "flex", gap: "12px", padding: "12px", borderRadius: "8px", marginBottom: "4px" },

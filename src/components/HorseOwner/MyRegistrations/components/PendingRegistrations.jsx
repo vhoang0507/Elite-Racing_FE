@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { FaHourglassHalf } from "react-icons/fa";
 import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
+import Toast from "../../../shared/Toast";
+import { useToast } from "../../../shared/useToast";
+import WithdrawModal from "./WithdrawModal";
 
 const humanizeLabel = (value) => String(value || "").replace(/([a-z0-9])([A-Z])/g, "$1 $2").trim();
 
@@ -18,6 +21,8 @@ export default function PendingRegistrations({ onViewStatus }) {
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState("");
     const [actionId, setActionId] = useState(null);
+    const [withdrawTarget, setWithdrawTarget] = useState(null);
+    const { toast, showToast, hideToast } = useToast();
 
     const loadData = useCallback(() => {
         setLoading(true);
@@ -33,26 +38,17 @@ export default function PendingRegistrations({ onViewStatus }) {
         loadData();
     }, [loadData]);
 
-    const handleWithdraw = async (row) => {
-        const reason = window.prompt(`Reason for withdrawing ${row.horseName || "this registration"}:`);
-        const trimmedReason = String(reason || "").trim();
-
-        if (!trimmedReason) return;
-
-        if (trimmedReason.length < 5 || trimmedReason.length > 500) {
-            window.alert("Withdraw reason must be between 5 and 500 characters.");
-            return;
-        }
-
+    const confirmWithdraw = async (row, reason) => {
         setActionId(row.registrationId);
 
         try {
-            await ownerApi.withdrawRegistration(row.registrationId, trimmedReason);
-            window.alert("Registration withdrawn successfully.");
+            await ownerApi.withdrawRegistration(row.registrationId, reason);
+            setWithdrawTarget(null);
+            showToast("Registration withdrawn successfully.", "success");
             loadData();
         } catch (err) {
             if (!handleOwnerAccessError(err, navigate)) {
-                window.alert(err.message || "Failed to withdraw registration.");
+                throw err;
             }
         } finally {
             setActionId(null);
@@ -140,7 +136,7 @@ export default function PendingRegistrations({ onViewStatus }) {
                                                 </button>
                                                 <button
                                                     disabled={actionId === row.registrationId}
-                                                    onClick={() => handleWithdraw(row)}
+                                                    onClick={() => setWithdrawTarget(row)}
                                                     style={{ ...styles.withdrawBtn, ...(actionId === row.registrationId ? styles.disabledBtn : {}) }}
                                                     type="button"
                                                 >
@@ -155,6 +151,13 @@ export default function PendingRegistrations({ onViewStatus }) {
                     </table>
                 </div>
             )}
+
+            <Toast message={toast.message} type={toast.type} title={toast.title} onClose={hideToast} />
+            <WithdrawModal
+                onClose={() => setWithdrawTarget(null)}
+                onConfirm={confirmWithdraw}
+                target={withdrawTarget}
+            />
         </section>
     );
 }

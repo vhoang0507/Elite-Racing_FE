@@ -123,9 +123,15 @@ export default function JockeyGrid({ registrationId, search = '', healthStatus =
                                     type="button"
                                 >
                                     {canInvite ? (
-                                        <><FaEnvelope aria-hidden="true" style={{ marginRight: 6 }} />Send Invitation</>
+                                        <>
+                                            <FaEnvelope aria-hidden="true" style={{ fontSize: 12, flexShrink: 0 }} />
+                                            Send Invitation
+                                        </>
                                     ) : (
-                                        <><FaCheckCircle aria-hidden="true" style={{ marginRight: 6 }} />Invited</>
+                                        <>
+                                            <FaCheckCircle aria-hidden="true" style={{ fontSize: 12, flexShrink: 0 }} />
+                                            Invited
+                                        </>
                                     )}
                                 </button>
                             </div>
@@ -173,5 +179,5 @@ const styles = {
     name: { margin: 0, fontWeight: 700, fontSize: 14, color: '#1e293b' },
     statsRow: { display: 'flex', gap: 6 },
     skillsRow: { display: 'flex', flexWrap: 'wrap', gap: 5 },
-    inviteBtn: { width: '100%', padding: '9px 0', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, marginTop: 4 },
+    inviteBtn: { width: '100%', padding: '9px 0', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, marginTop: 4, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 },
 };

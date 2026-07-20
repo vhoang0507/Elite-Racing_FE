@@ -31,7 +31,7 @@ import {
 import AdminLayout from './AdminLayout';
 
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] w-full max-w-full content-start gap-[22px] overflow-x-hidden px-11 py-[34px] max-[760px]:px-5 max-[760px]:py-7';
-const wrapClass = 'grid w-full max-w-[960px] min-w-0 gap-[18px]';
+const wrapClass = 'grid w-full max-w-[960px] min-w-0 mx-auto gap-[18px]';
 const formClass = 'grid min-w-0 gap-5';
 const cardClass = 'grid w-full min-w-0 max-w-full gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-[22px] max-[760px]:p-[18px]';
 const cardTitleClass = 'm-0 flex items-center gap-2 border-b border-[var(--admin-border)] pb-2.5 text-[0.9rem] font-black text-[var(--admin-ink)]';

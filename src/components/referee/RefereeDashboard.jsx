@@ -262,7 +262,7 @@ function RefereeDashboard() {
 
                                 <button
                                     type="button"
-                                    onClick={() => navigate('/referee/races/post-race', { state: { raceId: priorityRace?.raceId } })}
+                                    onClick={() => navigate('/referee/races', { state: { raceId: priorityRace?.raceId } })}
                                     disabled={!priorityRace}
                                     className="secondary-button mt-6 border-white bg-white text-[var(--admin-primary)]"
                                 >

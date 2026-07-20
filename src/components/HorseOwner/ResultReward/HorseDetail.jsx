@@ -67,7 +67,12 @@ function HorseProfileCard({ horse }) {
     return (
         <div style={styles.card}>
             <div style={styles.profileRow}>
-                <img src={horse.imageUrl || "/Horse1.jpg"} alt={horse.horseName} style={styles.profileImg} />
+                <img
+                    src={horse.imageUrl ? resolveFileUrl(horse.imageUrl) : "/Horse1.jpg"}
+                    alt={horse.horseName}
+                    style={styles.profileImg}
+                    onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = "/Horse1.jpg"; }}
+                />
                 <div>
                     <p style={styles.horseName}>{horse.horseName}</p>
                     <p style={styles.horseBreed}>{horse.breedName}</p>
