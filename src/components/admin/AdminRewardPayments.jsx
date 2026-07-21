@@ -12,6 +12,7 @@ import {
     FaGift,
     FaImage,
     FaPlus,
+    FaPen,
     FaSyncAlt,
     FaTimes,
 } from 'react-icons/fa';
@@ -79,6 +80,10 @@ function AdminRewardPayments() {
     const [inventoryImagePreviewUrl, setInventoryImagePreviewUrl] = useState('');
     const [showInventoryForm, setShowInventoryForm] = useState(false);
     const [imagePreviewBroken, setImagePreviewBroken] = useState(false);
+    const [editModal, setEditModal] = useState(null);
+    const [editImageFile, setEditImageFile] = useState(null);
+    const [editImagePreviewUrl, setEditImagePreviewUrl] = useState('');
+    const [editImagePreviewBroken, setEditImagePreviewBroken] = useState(false);
     const [adjustModal, setAdjustModal] = useState(null);
 
     const loadRewards = useCallback(async () => {
@@ -122,6 +127,12 @@ function AdminRewardPayments() {
             URL.revokeObjectURL(inventoryImagePreviewUrl);
         }
     }, [inventoryImagePreviewUrl]);
+
+    useEffect(() => () => {
+        if (editImagePreviewUrl) {
+            URL.revokeObjectURL(editImagePreviewUrl);
+        }
+    }, [editImagePreviewUrl]);
 
     const stats = useMemo(() => {
         const countByStatus = (status) => rewards.filter((reward) => readRewardField(reward, 'status') === status).length;
@@ -300,6 +311,146 @@ function AdminRewardPayments() {
             await loadInventory();
         } catch (err) {
             showAdminError(err.message || 'Failed to create reward item.');
+        } finally {
+            setInventoryActionLoadingId('');
+        }
+    };
+
+    const closeEditModal = () => {
+        setEditModal(null);
+        setEditImageFile(null);
+        setEditImagePreviewUrl('');
+        setEditImagePreviewBroken(false);
+    };
+
+    const openEditModal = (item) => {
+        setEditModal({
+            item,
+            name: String(readRewardField(item, 'name') || ''),
+            sku: String(readRewardField(item, 'sku') || ''),
+            description: String(readRewardField(item, 'description') || ''),
+            imageUrl: String(readRewardField(item, 'imageUrl') || ''),
+            rowVersion: String(readRewardField(item, 'rowVersion') || ''),
+        });
+        setEditImageFile(null);
+        setEditImagePreviewUrl('');
+        setEditImagePreviewBroken(false);
+    };
+
+    const handleEditModalChange = (field) => (event) => {
+        setEditModal((current) => (current
+            ? { ...current, [field]: event.target.value }
+            : current));
+    };
+
+    const handleEditImageChange = (event) => {
+        const file = event.target.files?.[0] || null;
+
+        if (!file) {
+            setEditImageFile(null);
+            setEditImagePreviewUrl('');
+            setEditImagePreviewBroken(false);
+            return;
+        }
+
+        const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+        const allowedExtensions = new Set(['jpg', 'jpeg', 'png', 'webp']);
+        const extension = file.name.split('.').pop()?.toLowerCase() || '';
+
+        if (!allowedTypes.has(file.type) && !allowedExtensions.has(extension)) {
+            event.target.value = '';
+            setEditImageFile(null);
+            setEditImagePreviewUrl('');
+            showAdminError('Reward image must be a JPG, PNG, or WEBP file.');
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            event.target.value = '';
+            setEditImageFile(null);
+            setEditImagePreviewUrl('');
+            showAdminError('Reward image cannot exceed 5MB.');
+            return;
+        }
+
+        setEditImageFile(file);
+        setEditImagePreviewUrl(URL.createObjectURL(file));
+        setEditImagePreviewBroken(false);
+    };
+
+    const removeEditImage = () => {
+        setEditModal((current) => (current ? { ...current, imageUrl: '' } : current));
+        setEditImageFile(null);
+        setEditImagePreviewUrl('');
+        setEditImagePreviewBroken(false);
+    };
+
+    const submitEditModal = async (event) => {
+        event.preventDefault();
+
+        if (!editModal) {
+            return;
+        }
+
+        const itemId = readRewardField(editModal.item, 'rewardItemId');
+        const name = editModal.name.trim();
+        const sku = editModal.sku.trim();
+        const description = editModal.description.trim();
+
+        if (!name || name.length > 200) {
+            showAdminError('Reward item name is required and cannot exceed 200 characters.');
+            return;
+        }
+
+        if (!sku || sku.length > 80) {
+            showAdminError('Reward SKU is required and cannot exceed 80 characters.');
+            return;
+        }
+
+        if (description.length > 1000) {
+            showAdminError('Inventory description cannot exceed 1,000 characters.');
+            return;
+        }
+
+        if (!editModal.rowVersion) {
+            showAdminError('The item version is missing. Refresh the inventory and try again.');
+            return;
+        }
+
+        setInventoryActionLoadingId(`edit-${itemId}`);
+
+        try {
+            let imageUrl = editModal.imageUrl;
+
+            if (editImageFile) {
+                const uploadResponse = await uploadFile(editImageFile, 'rewards');
+                imageUrl = uploadResponse?.url
+                    || uploadResponse?.Url
+                    || uploadResponse?.absoluteUrl
+                    || uploadResponse?.AbsoluteUrl
+                    || '';
+
+                if (!imageUrl) {
+                    throw new Error('The image was uploaded, but the server did not return its URL.');
+                }
+            }
+
+            const response = await adminApi.updateRewardInventoryItem(itemId, {
+                name,
+                sku,
+                description,
+                imageUrl,
+                rowVersion: editModal.rowVersion,
+            });
+
+            showAdminSuccess(
+                response?.message || response?.Message || 'Reward item information updated.',
+                'Updated',
+            );
+            closeEditModal();
+            await loadInventory();
+        } catch (err) {
+            showAdminError(err.message || 'Failed to update reward item information.');
         } finally {
             setInventoryActionLoadingId('');
         }
@@ -619,6 +770,10 @@ function AdminRewardPayments() {
                                             </td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4">
                                                 <div className="flex flex-wrap gap-2">
+                                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} disabled={inventoryActionLoadingId !== ''} onClick={() => openEditModal(item)} type="button">
+                                                        <FaPen aria-hidden="true" />
+                                                        Edit
+                                                    </button>
                                                     <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} disabled={inventoryActionLoadingId !== ''} onClick={() => openAdjustModal(item)} type="button">
                                                         Adjust
                                                     </button>
@@ -730,6 +885,74 @@ function AdminRewardPayments() {
                     </div>
                 </section>
             </section>
+
+            {editModal && (
+                <div className="fixed inset-0 z-[80] grid place-items-center overflow-y-auto bg-[rgba(15,23,42,0.42)] px-5 py-8" onClick={closeEditModal} role="presentation">
+                    <form className="grid w-[min(620px,100%)] gap-5 rounded-[10px] border border-[var(--admin-border)] bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.28)]" onClick={(event) => event.stopPropagation()} onSubmit={submitEditModal}>
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <h2 className="m-0 text-[1.1rem] font-black text-[var(--admin-ink)]">Edit Reward Item</h2>
+                                <p className="m-0 mt-1 text-sm font-semibold text-[var(--admin-muted)]">Update item details and replace or remove its image. Stock is managed separately.</p>
+                            </div>
+                            <button className="grid h-9 w-9 flex-none place-items-center rounded-full border border-[var(--admin-border)] bg-white text-[var(--admin-primary)]" onClick={closeEditModal} type="button">x</button>
+                        </div>
+
+                        <div className="grid grid-cols-[128px_minmax(0,1fr)] gap-5 max-[640px]:grid-cols-1">
+                            <div className="grid content-start gap-3 max-[640px]:justify-items-center">
+                                <div className="grid h-32 w-32 place-items-center overflow-hidden rounded-[10px] border border-dashed border-[var(--admin-border)] bg-[var(--admin-surface-strong)] text-[var(--admin-muted)]">
+                                    {(editImagePreviewUrl || editModal.imageUrl) && !editImagePreviewBroken ? (
+                                        <img
+                                            alt="Reward item preview"
+                                            className="h-full w-full object-cover"
+                                            onError={() => setEditImagePreviewBroken(true)}
+                                            src={editImagePreviewUrl || resolveFileUrl(editModal.imageUrl)}
+                                        />
+                                    ) : (
+                                        <FaImage aria-hidden="true" className="text-3xl" />
+                                    )}
+                                </div>
+                                {(editImagePreviewUrl || editModal.imageUrl) && (
+                                    <button className="text-xs font-black text-[#b91c1c] hover:underline" onClick={removeEditImage} type="button">Remove image</button>
+                                )}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 max-[560px]:grid-cols-1">
+                                <label className="grid gap-1.5">
+                                    <span className="text-xs font-black uppercase text-[var(--admin-muted)]">Item name</span>
+                                    <input autoFocus className="rounded-[8px] border border-[var(--admin-border)] px-3 py-2.5 text-sm font-bold outline-none focus:border-[var(--admin-gold)]" maxLength={200} onChange={handleEditModalChange('name')} required type="text" value={editModal.name} />
+                                </label>
+                                <label className="grid gap-1.5">
+                                    <span className="text-xs font-black uppercase text-[var(--admin-muted)]">SKU</span>
+                                    <input className="rounded-[8px] border border-[var(--admin-border)] px-3 py-2.5 text-sm font-bold uppercase outline-none focus:border-[var(--admin-gold)]" maxLength={80} onChange={handleEditModalChange('sku')} required type="text" value={editModal.sku} />
+                                </label>
+                                <label className="col-span-2 grid gap-1.5 max-[560px]:col-span-1">
+                                    <span className="text-xs font-black uppercase text-[var(--admin-muted)]">Replace image</span>
+                                    <input
+                                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                        className="block min-h-11 cursor-pointer rounded-[8px] border border-[var(--admin-border)] bg-white text-xs font-bold text-[var(--admin-muted)] file:mr-3 file:min-h-11 file:cursor-pointer file:border-0 file:bg-[var(--admin-primary)] file:px-4 file:text-xs file:font-black file:text-white"
+                                        disabled={inventoryActionLoadingId === `edit-${readRewardField(editModal.item, 'rewardItemId')}`}
+                                        onChange={handleEditImageChange}
+                                        type="file"
+                                    />
+                                    <span className="text-xs font-semibold text-[var(--admin-muted)]">JPG, PNG, or WEBP. Maximum 5MB. Leave empty to keep the current image.</span>
+                                </label>
+                                <label className="col-span-2 grid gap-1.5 max-[560px]:col-span-1">
+                                    <span className="text-xs font-black uppercase text-[var(--admin-muted)]">Description</span>
+                                    <textarea className="min-h-[100px] rounded-[8px] border border-[var(--admin-border)] px-3 py-2.5 text-sm outline-none focus:border-[var(--admin-gold)]" maxLength={1000} onChange={handleEditModalChange('description')} placeholder="Optional item description" value={editModal.description} />
+                                    <span className="text-right text-xs font-semibold text-[var(--admin-muted)]">{editModal.description.length}/1000</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3">
+                            <button className="rounded-full border border-[var(--admin-border)] bg-white px-5 py-3 text-sm font-black text-[var(--admin-primary-dark)]" onClick={closeEditModal} type="button">Cancel</button>
+                            <button className="rounded-full bg-[var(--admin-primary)] px-5 py-3 text-sm font-black text-white disabled:opacity-60" disabled={inventoryActionLoadingId === `edit-${readRewardField(editModal.item, 'rewardItemId')}`} type="submit">
+                                {inventoryActionLoadingId === `edit-${readRewardField(editModal.item, 'rewardItemId')}` ? 'Uploading & Saving...' : 'Save Item Changes'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            )}
 
             {adjustModal && (
                 <div className="fixed inset-0 z-[80] grid place-items-center bg-[rgba(15,23,42,0.42)] px-5 py-8" onClick={() => setAdjustModal(null)} role="presentation">

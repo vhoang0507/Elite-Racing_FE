@@ -1475,6 +1475,19 @@ async function createRewardInventoryItem(payload) {
     });
 }
 
+async function updateRewardInventoryItem(id, payload) {
+    return apiRequest(`/admin/reward-inventory/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            Name: payload.name ?? payload.Name ?? '',
+            Sku: payload.sku ?? payload.Sku ?? '',
+            Description: payload.description ?? payload.Description ?? null,
+            ImageUrl: payload.imageUrl ?? payload.ImageUrl ?? null,
+            RowVersion: payload.rowVersion ?? payload.RowVersion ?? '',
+        }),
+    });
+}
+
 async function adjustRewardInventory(id, payload) {
     return apiRequest(`/admin/reward-inventory/${id}/stock`, {
         method: 'PUT',
@@ -1802,6 +1815,7 @@ export const adminApi = {
     getAdminRewards,
     getRewardInventory,
     createRewardInventoryItem,
+    updateRewardInventoryItem,
     adjustRewardInventory,
     setRewardInventoryActive,
     expireOverdueRewards,
