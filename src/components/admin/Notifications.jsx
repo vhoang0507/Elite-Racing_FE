@@ -4,6 +4,8 @@ import {
     useState,
 } from 'react';
 
+import { useNavigate } from 'react-router-dom';
+
 import {
     FaBell,
     FaCalendarCheck,
@@ -129,6 +131,7 @@ const formatDateTime = (value) => {
 };
 
 function Notifications() {
+    const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
     const [selectedNotification, setSelectedNotification] = useState(null);
     const [query, setQuery] = useState('');
@@ -140,14 +143,35 @@ function Notifications() {
     useEffect(() => {
         let isMounted = true;
 
-        adminApi.getNotifications().then((payload) => {
-            if (isMounted) {
-                setNotifications(payload);
+        const refreshNotifications = async () => {
+            try {
+                const payload = await adminApi.getNotifications();
+
+                if (isMounted) {
+                    setNotifications(payload);
+                }
+            } catch {
+                // Silent polling failure: keep the last successfully loaded list.
             }
-        }).catch(() => {});
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                refreshNotifications();
+            }
+        };
+
+        refreshNotifications();
+        const intervalId = window.setInterval(refreshNotifications, 10000);
+
+        window.addEventListener('focus', refreshNotifications);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
             isMounted = false;
+            window.clearInterval(intervalId);
+            window.removeEventListener('focus', refreshNotifications);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
     }, []);
 
@@ -206,6 +230,7 @@ function Notifications() {
 
         try {
             await adminApi.markNotificationRead(notification.id);
+            window.dispatchEvent(new Event('admin-notifications-changed'));
         } catch (err) {
             setNotifications(prev);
             setSelectedNotification(notification);
@@ -228,11 +253,23 @@ function Notifications() {
         setNotifications((current) => current.map((n) => ({ ...n, isRead: true, status: 'Read' })));
         try {
             await adminApi.markAllNotificationsRead();
+            window.dispatchEvent(new Event('admin-notifications-changed'));
             showToast('All notifications marked as read.', 'success', 'Updated');
         } catch (err) {
             setNotifications(prev);
             showToast(err.message || 'Failed to update. Please try again.', 'error', 'Error');
         }
+    };
+
+    const handleNotificationAction = () => {
+        const actionUrl = selectedNotification?.actionUrl;
+
+        if (!actionUrl) {
+            return;
+        }
+
+        setSelectedNotification(null);
+        navigate(actionUrl);
     };
 
     const handleKeyDown = (event, notification) => {
@@ -489,6 +526,18 @@ function Notifications() {
                                         <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{detailValue(selectedNotification.actionUrl)}</strong>
                                     </div>
                                 </div>
+
+                                {selectedNotification.actionUrl && (
+                                    <div className="flex justify-end border-t border-[var(--notifications-line)] pt-4">
+                                        <button
+                                            className="primary-button min-w-[190px] justify-center"
+                                            onClick={handleNotificationAction}
+                                            type="button"
+                                        >
+                                            {selectedNotification.type === 'registration' ? 'Review Registration' : 'Open Related Page'}
+                                        </button>
+                                    </div>
+                                )}
                             </section>
                         </div>
                     )}

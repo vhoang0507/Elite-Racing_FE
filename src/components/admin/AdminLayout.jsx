@@ -147,9 +147,43 @@ function AdminLayout({
     const { toast, showToast, hideToast } = useToast();
 
     useEffect(() => {
-        adminApi.getAdminUnreadCount()
-            .then((count) => setUnreadCount(count))
-            .catch(() => {});
+        let isMounted = true;
+
+        const refreshUnreadCount = async () => {
+            try {
+                const count = await adminApi.getAdminUnreadCount();
+
+                if (isMounted) {
+                    setUnreadCount(count);
+                }
+            } catch {
+                // Keep the previous count when the API is temporarily unavailable.
+            }
+        };
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                refreshUnreadCount();
+            }
+        };
+
+        refreshUnreadCount();
+
+        // Polling keeps the bell current when an Owner submits a registration
+        // while the Admin is already signed in.
+        const intervalId = window.setInterval(refreshUnreadCount, 10000);
+
+        window.addEventListener('focus', refreshUnreadCount);
+        window.addEventListener('admin-notifications-changed', refreshUnreadCount);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            isMounted = false;
+            window.clearInterval(intervalId);
+            window.removeEventListener('focus', refreshUnreadCount);
+            window.removeEventListener('admin-notifications-changed', refreshUnreadCount);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
     }, []);
 
     useEffect(() => {
@@ -301,7 +335,9 @@ function AdminLayout({
                         <button aria-label="Notifications" className={`${iconButtonClasses} relative`} onClick={() => navigate('/admin/notifications')} type="button">
                             <FaBell aria-hidden="true" />
                             {unreadCount > 0 && (
-                                <span className="absolute right-2.5 top-[9px] h-2 w-2 rounded-full border-2 border-[var(--admin-surface)] bg-[var(--admin-primary)]" />
+                                <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full border-2 border-[var(--admin-surface)] bg-[var(--admin-primary)] px-1 text-[0.62rem] font-black leading-none text-white">
+                                    {unreadCount > 99 ? '99+' : unreadCount}
+                                </span>
                             )}
                         </button>
                         <div className="role-header-identity max-[520px]:hidden">

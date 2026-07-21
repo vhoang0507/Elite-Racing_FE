@@ -1601,39 +1601,58 @@ function formatNotificationTime(createdAt) {
 }
 
 function deriveNotificationTone(actionType, relatedType) {
-    const s = `${actionType || ''} ${relatedType || ''}`.toLowerCase();
-    if (s.includes('prediction')) return 'prediction';
-    if (s.includes('report') || s.includes('violation')) return 'urgent';
-    if (s.includes('race') || s.includes('result') || s.includes('tournament')) return 'race';
+    const value = `${actionType || ''} ${relatedType || ''}`.toLowerCase();
+
+    // RaceRegistration contains the word "race", so registration must be
+    // checked before the generic race/result branch.
+    if (value.includes('registration')) return 'registration';
+    if (value.includes('prediction')) return 'prediction';
+    if (value.includes('report') || value.includes('violation')) return 'urgent';
+    if (value.includes('race') || value.includes('result') || value.includes('tournament')) return 'race';
     return 'registration';
 }
 
 function deriveNotificationType(actionType, relatedType) {
-    const s = `${actionType || ''} ${relatedType || ''}`.toLowerCase();
-    if (s.includes('prediction')) return 'prediction';
-    if (s.includes('report') || s.includes('violation')) return 'report';
-    if (s.includes('race') || s.includes('result') || s.includes('tournament')) return 'race-result';
+    const value = `${actionType || ''} ${relatedType || ''}`.toLowerCase();
+
+    if (value.includes('registration')) return 'registration';
+    if (value.includes('prediction')) return 'prediction';
+    if (value.includes('report') || value.includes('violation')) return 'report';
+    if (value.includes('race') || value.includes('result') || value.includes('tournament')) return 'race-result';
     return 'registration';
+}
+
+function deriveNotificationPriority(priority) {
+    const normalized = String(priority || '').toLowerCase();
+
+    if (normalized === 'high') return 'high-priority';
+    if (normalized === 'low') return 'low-priority';
+    return 'medium-priority';
 }
 
 async function getNotifications() {
     const data = await apiRequest('/admin/notifications');
-    return (Array.isArray(data) ? data : []).map((n) => ({
-        id: n.notificationId,
-        title: n.title,
-        message: n.message,
-        isRead: n.isRead,
-        createdAt: n.createdAt,
-        time: formatNotificationTime(n.createdAt),
-        actionUrl: n.actionUrl,
-        relatedType: n.relatedType,
-        relatedId: n.relatedId,
-        actionType: n.actionType,
-        tone: deriveNotificationTone(n.actionType, n.relatedType),
-        type: deriveNotificationType(n.actionType, n.relatedType),
-        priority: 'medium-priority',
-        status: n.isRead ? 'Read' : 'Pending',
-    }));
+
+    return (Array.isArray(data) ? data : []).map((n) => {
+        const actionType = n.actionType || n.type || '';
+
+        return {
+            id: n.notificationId,
+            title: n.title,
+            message: n.message,
+            isRead: n.isRead,
+            createdAt: n.createdAt,
+            time: formatNotificationTime(n.createdAt),
+            actionUrl: n.actionUrl,
+            relatedType: n.relatedType,
+            relatedId: n.relatedId,
+            actionType,
+            tone: deriveNotificationTone(actionType, n.relatedType),
+            type: deriveNotificationType(actionType, n.relatedType),
+            priority: deriveNotificationPriority(n.priority),
+            status: n.isRead ? 'Read' : 'Pending',
+        };
+    });
 }
 
 async function getAdminUnreadCount() {
