@@ -564,18 +564,6 @@ function AdminRewardPayments() {
                             Review owner prize claims and mark approved payments as paid.
                         </p>
                     </div>
-                    <button
-                        className={`${actionButtonClass} border border-[var(--admin-border)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`}
-                        disabled={loading || inventoryLoading}
-                        onClick={() => {
-                            loadRewards();
-                            loadInventory();
-                        }}
-                        type="button"
-                    >
-                        <FaSyncAlt aria-hidden="true" />
-                        Refresh
-                    </button>
                 </div>
 
                 <section aria-label="Reward payment summary" className="grid grid-cols-4 gap-5 max-[1180px]:grid-cols-2 max-[720px]:grid-cols-1">

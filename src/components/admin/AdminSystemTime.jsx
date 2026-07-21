@@ -490,15 +490,6 @@ function AdminSystemTime() {
                         </p>
                     </div>
 
-                    <button
-                        className={secondaryButtonClass}
-                        disabled={loading || isBusy}
-                        type="button"
-                        onClick={handleRefresh}
-                    >
-                        <FaSyncAlt aria-hidden="true" />
-                        <span>{loading ? 'Loading...' : 'Get Current Time'}</span>
-                    </button>
                 </div>
 
                 <section className="rounded-[var(--admin-radius)] border border-[#efd06a] bg-[#fff7db] px-5 py-4 text-[#6f5108]">

@@ -1,384 +1,298 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { FaArrowLeft, FaFlagCheckered, FaHorseHead, FaMapMarkerAlt, FaPlay, FaStopwatch, FaTrophy } from 'react-icons/fa';
 import { spectatorApi } from '../../../api/spectatorApi';
 
-const LANE_COLORS = ['#ef4444', '#3b82f6', '#22c55e', '#facc15', '#a855f7', '#f97316'];
-const TRACK_START = 21;
-const TRACK_FINISH = 84;
+const HORSE_COLORS = ['#ff5f57', '#3b82f6', '#22c55e', '#facc15', '#a855f7', '#f97316', '#ec4899', '#06b6d4'];
+const TRACK_LABELS = ['Start', '1/4', 'Half', '3/4', 'Finish'];
 
-function getLaneColor(lane) {
-    return LANE_COLORS[(Math.max(Number(lane) || 1, 1) - 1) % LANE_COLORS.length];
+function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+}
+
+function seededValue(seed) {
+    const x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
 }
 
 function formatTime(ms) {
-    const value = Number(ms) || 0;
-    return `${(value / 1000).toFixed(2)}s`;
+    if (!ms) return '0.00s';
+    return `${(ms / 1000).toFixed(2)}s`;
 }
 
-function formatFinishTime(runner) {
-    const seconds = Number(runner.finishTimeSeconds);
-
-    if (Number.isFinite(seconds)) {
-        return `${seconds.toFixed(2)}s`;
-    }
-
-    return formatTime(runner.finishTimeMs);
+function ordinal(rank) {
+    const r = Number(rank || 0);
+    if (r % 100 >= 11 && r % 100 <= 13) return `${r}th`;
+    if (r % 10 === 1) return `${r}st`;
+    if (r % 10 === 2) return `${r}nd`;
+    if (r % 10 === 3) return `${r}rd`;
+    return `${r}th`;
 }
 
-function rankLabel(rank) {
-    if (rank === 1) return '1st';
-    if (rank === 2) return '2nd';
-    if (rank === 3) return '3rd';
-    return `#${rank}`;
-}
-
-function getHorseEmojiFilter(color) {
-    const normalized = String(color || '').toLowerCase();
-    const filters = {
-        '#ef4444': 'hue-rotate(325deg) saturate(1.8) brightness(1.08)',
-        '#3b82f6': 'hue-rotate(185deg) saturate(1.8) brightness(1.12)',
-        '#22c55e': 'hue-rotate(95deg) saturate(1.9) brightness(1.08)',
-        '#facc15': 'hue-rotate(0deg) saturate(1.65) brightness(1.12)',
-        '#a855f7': 'hue-rotate(245deg) saturate(1.75) brightness(1.15)',
-        '#f97316': 'hue-rotate(20deg) saturate(1.85) brightness(1.06)',
+function buildRunnerProfile(runner, index) {
+    const seedBase = Number(runner?.registrationId || 0) + Number(runner?.horseId || 0) + (index + 1) * 13;
+    return {
+        wavePhase: seededValue(seedBase + 11) * Math.PI * 2,
+        waveFreq: 1.65 + seededValue(seedBase + 21) * 1.4,
+        waveAmp: 0.018 + seededValue(seedBase + 31) * 0.03,
+        earlyBoost: 0.6 + seededValue(seedBase + 41) * 0.8,
+        lateKick: 0.6 + seededValue(seedBase + 51) * 1.0,
+        drift: seededValue(seedBase + 61) * 0.01,
     };
-
-    return filters[normalized] || 'saturate(1.55) brightness(1.08)';
 }
 
-function getReplayDurationMs(runners, totalDurationMs) {
-    const duration = Number(totalDurationMs);
+function getProgressAt(elapsed, finishMs, profile) {
+    if (elapsed <= 0 || finishMs <= 0) return 0;
 
-    if (Number.isFinite(duration) && duration > 0) {
-        return duration < 1000 ? duration * 1000 : duration;
+    const raw = clamp(elapsed / finishMs, 0, 1);
+
+    let base;
+    if (raw < 0.18) {
+        const t = raw / 0.18;
+        base = 0.1 * Math.pow(t, 0.9) + profile.earlyBoost * 0.015 * Math.sin(t * Math.PI);
+    } else if (raw < 0.45) {
+        const t = (raw - 0.18) / 0.27;
+        base = 0.1 + t * 0.28;
+    } else if (raw < 0.74) {
+        const t = (raw - 0.45) / 0.29;
+        base = 0.38 + t * 0.27;
+    } else {
+        const t = (raw - 0.74) / 0.26;
+        base = 0.65 + t * 0.35;
     }
 
-    const maxFinishMs = Math.max(...(runners || []).map((runner) => getRunnerDeclaredFinishMs(runner)), 0);
-    return maxFinishMs > 0 ? maxFinishMs : 30000;
+    const wave = Math.sin(raw * profile.waveFreq * Math.PI * 2 + profile.wavePhase)
+        * profile.waveAmp
+        * (1 - raw * 0.55);
+    const lateKick = raw > 0.62
+        ? Math.pow((raw - 0.62) / 0.38, 1.55) * 0.055 * profile.lateKick
+        : 0;
+    const drift = profile.drift * Math.sin(raw * Math.PI * 4);
+
+    const progress = base + wave + lateKick + drift;
+    return raw >= 1 ? 1 : clamp(progress, 0, 0.985);
 }
 
-function getRunnerDeclaredFinishMs(runner) {
-    const finishSeconds = Number(runner?.finishTimeSeconds);
-
-    if (Number.isFinite(finishSeconds) && finishSeconds > 0) {
-        return finishSeconds * 1000;
+function buildTrackMarkers(distanceMeters) {
+    const total = Number(distanceMeters || 0);
+    if (!total) {
+        return TRACK_LABELS.map((label, index) => ({ label, distance: '' , left: `${index * 25}%`}));
     }
 
-    const finishMs = Number(runner?.finishTimeMs);
-
-    if (!Number.isFinite(finishMs) || finishMs <= 0) {
-        return 0;
-    }
-
-    return finishMs < 1000 ? finishMs * 1000 : finishMs;
+    return TRACK_LABELS.map((label, index) => ({
+        label,
+        distance: `${Math.round((total * index) / 4)}m`,
+        left: `${index * 25}%`,
+    }));
 }
 
-function getRunnerRank(runner, fallbackRank) {
-    const rank = Number(runner?.rank);
-    return Number.isFinite(rank) && rank > 0 ? rank : fallbackRank;
-}
-
-function getRunnerFinishMs(runner, raceMs, runnerCount) {
-    const finishMs = getRunnerDeclaredFinishMs(runner);
-
-    if (finishMs > 0) {
-        return finishMs;
-    }
-
-    const rank = getRunnerRank(runner, runnerCount);
-    const spread = runnerCount > 1 ? (rank - 1) / (runnerCount - 1) : 0;
-    return raceMs * (0.82 + spread * 0.18);
-}
-
-function getStableSeed(value) {
-    const text = String(value || 'race-replay');
-    let hash = 2166136261;
-
-    for (let index = 0; index < text.length; index += 1) {
-        hash ^= text.charCodeAt(index);
-        hash = Math.imul(hash, 16777619);
-    }
-
-    return hash >>> 0;
-}
-
-function getRunnerStableKey(runner, fallbackIndex) {
-    return [
-        runner?.horseId,
-        runner?.horseName,
-        runner?.ownerName,
-    ].filter(Boolean).join('|') || String(fallbackIndex);
-}
-
-function getStableReplayLaneRunners(runners, tournamentKey) {
-    const tournamentSeed = tournamentKey || 'race-replay';
-    const stableOrder = runners
-        .map((runner, index) => ({
-            index,
-            runner,
-            seed: getStableSeed(`${tournamentSeed}|${getRunnerStableKey(runner, index)}`),
-        }))
-        .sort((a, b) => (
-            a.seed - b.seed
-            || String(a.runner?.horseName || '').localeCompare(String(b.runner?.horseName || ''))
-            || a.index - b.index
-        ));
-
-    return stableOrder.map(({ runner }, index) => {
-        const replayLane = index + 1;
-
-        return {
-            ...runner,
-            replayColor: getLaneColor(replayLane),
-            replayLane,
-        };
-    });
-}
-
-function HorseSilhouette({ color }) {
-    return (
-        <span
-            aria-hidden="true"
-            style={{
-                display: 'block',
-                width: 62,
-                height: 42,
-                fontSize: 38,
-                lineHeight: '42px',
-                textAlign: 'center',
-                transform: 'scaleX(-1)',
-                transformOrigin: 'center',
-                filter: getHorseEmojiFilter(color),
-                WebkitTextStroke: '1px rgba(0,0,0,0.1)',
-                textShadow: `0 3px 5px rgba(0,0,0,0.4), 0 0 8px ${color}55`,
-            }}
-        >
-            🐎
-        </span>
-    );
-}
-
-function ResultHorseIcon({ color }) {
-    return (
-        <span
-            aria-hidden="true"
-            style={{
-                display: 'block',
-                width: 44,
-                height: 30,
-                fontSize: 28,
-                lineHeight: '30px',
-                textAlign: 'center',
-                transform: 'scaleX(-1)',
-                filter: getHorseEmojiFilter(color),
-                textShadow: `0 2px 4px rgba(0,0,0,0.25), 0 0 6px ${color}55`,
-            }}
-        >
-            🐎
-        </span>
-    );
-}
-
-function RaceTrack({ runners, phase, raceMs, replayKey }) {
-    const laneCount = runners.length;
-    const lanes = Array.from({ length: laneCount }, (_, index) => index + 1);
-    const laneTopStart = 23;
-    const laneTopEnd = 78;
-    const laneGap = laneCount > 1 ? (laneTopEnd - laneTopStart) / (laneCount - 1) : 0;
-    const runnerByLane = new Map(
-        runners.map((runner, index) => [Number(runner.replayLane || runner.lane || index + 1), runner])
-    );
+function RaceHeader({ replay, racePhase, totalMs, liveOrder }) {
+    const topThree = liveOrder.slice(0, 3);
 
     return (
-        <div style={{ overflowX: 'auto', paddingBottom: 4 }}>
-            <div
-                style={{
-                    position: 'relative',
-                    minWidth: 820,
-                    aspectRatio: '16 / 7',
-                    borderRadius: 8,
-                    overflow: 'hidden',
-                    background: `
-                        radial-gradient(circle at 5% 90%, rgba(28,83,37,0.95) 0 34px, transparent 36px),
-                        radial-gradient(circle at 95% 10%, rgba(31,91,41,0.95) 0 42px, transparent 44px),
-                        linear-gradient(135deg, #123d1d 0%, #2f6b36 48%, #12361a 100%)
-                    `,
-                    boxShadow: 'inset 0 0 60px rgba(0,0,0,0.28)',
-                    padding: 16,
-                }}
-            >
-                <style>
-                    {`
-                        @keyframes spectatorRaceHorseRun {
-                            from {
-                                left: 0%;
-                            }
-                            to {
-                                left: 100%;
-                            }
-                        }
-                    `}
-                </style>
-                {/* Straight home-stretch track surface (matches the straight-line horse motion below) */}
-                <div
-                    style={{
-                        position: 'absolute',
-                        inset: '10% 4%',
-                        borderRadius: 14,
-                        background: 'linear-gradient(180deg, #2b343a 0%, #20282d 55%, #232b30 100%)',
-                        border: '4px solid rgba(255,255,255,0.88)',
-                        boxShadow: 'inset 0 0 0 4px rgba(255,255,255,0.14), inset 0 0 42px rgba(0,0,0,0.5)',
-                    }}
-                />
-                {/* Top and bottom running rails */}
-                <div style={{ position: 'absolute', top: '13.5%', left: '5.5%', right: '5.5%', borderTop: '2px solid rgba(255,255,255,0.4)' }} />
-                <div style={{ position: 'absolute', bottom: '13.5%', left: '5.5%', right: '5.5%', borderTop: '2px solid rgba(255,255,255,0.4)' }} />
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="surface-card overflow-hidden">
+                <div className="border-b border-[var(--admin-border)] bg-[linear-gradient(135deg,#0b4f4f_0%,#16696a_50%,#1c8a80_100%)] px-6 py-5 text-white">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                            <h1 className="m-0 text-[2rem] font-black leading-tight">Race Replay</h1>
+                            <p className="m-0 mt-2 text-[0.96rem] font-semibold text-white/85">
+                                {replay.tournamentName} • {replay.raceName}
+                            </p>
+                        </div>
+                        <span className="inline-flex min-h-10 items-center rounded-full border border-white/20 bg-white/10 px-4 text-[0.82rem] font-black uppercase tracking-[0.12em] text-white">
+                            {racePhase === 'done' ? 'Official Replay' : racePhase === 'running' ? 'Race In Progress' : 'Ready To Replay'}
+                        </span>
+                    </div>
 
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: '15%',
-                        bottom: '15%',
-                        left: `${TRACK_START}%`,
-                        borderLeft: '2px dashed rgba(255,255,255,0.72)',
-                    }}
-                />
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: '28%',
-                        left: `${TRACK_START - 1.2}%`,
-                        writingMode: 'vertical-rl',
-                        textOrientation: 'upright',
-                        color: '#ffffff',
-                        fontSize: 14,
-                        fontWeight: 900,
-                        letterSpacing: 1,
-                    }}
-                >
-                    START
+                    <div className="mt-4 flex flex-wrap gap-3 text-[0.82rem] font-bold text-white/90">
+                        <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2">
+                            <FaMapMarkerAlt aria-hidden="true" /> {replay.location || 'Racecourse'}
+                        </span>
+                        <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2">
+                            <FaFlagCheckered aria-hidden="true" /> {Number(replay.distanceMeters || 0).toLocaleString()}m straight track
+                        </span>
+                        <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2">
+                            <FaStopwatch aria-hidden="true" /> Best finish: {formatTime(totalMs)}
+                        </span>
+                        <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-2">
+                            <FaHorseHead aria-hidden="true" /> {replay.runners.length} runners
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="surface-card p-5">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                        <h2 className="m-0 text-[1rem] font-black text-[var(--admin-ink)]">Live Running Order</h2>
+                        <p className="m-0 mt-1 text-[0.78rem] font-semibold text-[var(--admin-muted)]">
+                            Rankings update as the race progresses.
+                        </p>
+                    </div>
+                    <span className="rounded-full bg-[var(--admin-surface-strong)] px-3 py-1 text-[0.72rem] font-black text-[var(--admin-primary)]">
+                        {racePhase === 'done' ? 'Finished' : racePhase === 'running' ? 'Tracking' : 'Waiting'}
+                    </span>
                 </div>
 
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: '17%',
-                        bottom: '17%',
-                        left: `${TRACK_FINISH}%`,
-                        width: 18,
-                        backgroundImage: 'repeating-conic-gradient(#ffffff 0% 25%, #111827 0% 50%)',
-                        backgroundSize: '10px 10px',
-                        border: '1px solid rgba(255,255,255,0.55)',
-                        boxShadow: '0 0 0 1px rgba(0,0,0,0.25)',
-                    }}
-                />
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: '33%',
-                        left: `${TRACK_FINISH + 4.4}%`,
-                        writingMode: 'vertical-rl',
-                        textOrientation: 'upright',
-                        color: '#ffffff',
-                        fontSize: 16,
-                        fontWeight: 900,
-                        letterSpacing: 1,
-                    }}
-                >
-                    FINISH
-                </div>
-
-                {lanes.map((lane) => {
-                    const runner = runnerByLane.get(lane);
-                    const top = laneCount > 1 ? laneTopStart + (lane - 1) * laneGap : 50;
-                    const color = runner?.replayColor || runner?.color || getLaneColor(lane);
-                    const finishMs = getRunnerFinishMs(runner, raceMs, runners.length);
-
-                    return (
-                        <div key={lane}>
-                            <div
-                                style={{
-                                    position: 'absolute',
-                                    top: `${top}%`,
-                                    left: '16%',
-                                    width: 30,
-                                    height: 30,
-                                    transform: 'translate(-50%, -50%)',
-                                    borderRadius: '50%',
-                                    background: color,
-                                    color: '#fff',
-                                    display: 'grid',
-                                    placeItems: 'center',
-                                    fontSize: 14,
-                                    fontWeight: 900,
-                                    boxShadow: '0 2px 8px rgba(0,0,0,0.38), inset 0 0 0 2px rgba(255,255,255,0.25)',
-                                }}
-                            >
-                                {lane}
+                <div className="grid gap-2.5">
+                    {topThree.map((runner) => (
+                        <div key={runner.registrationId} className="flex items-center gap-3 rounded-[12px] border border-[var(--admin-border)] bg-[#fffaf8] px-3 py-3">
+                            <span className="grid h-10 w-10 place-items-center rounded-full text-[0.8rem] font-black text-white" style={{ backgroundColor: runner.color }}>
+                                {ordinal(runner.liveRank)}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                                <p className="m-0 truncate text-[0.92rem] font-black text-[var(--admin-ink)]">{runner.horseName}</p>
+                                <p className="m-0 mt-0.5 truncate text-[0.76rem] font-semibold text-[var(--admin-muted)]">
+                                    Jockey: {runner.jockeyName || 'TBA'}
+                                </p>
                             </div>
-                            <div
-                                style={{
-                                    position: 'absolute',
-                                    top: `${top}%`,
-                                    left: `${TRACK_START}%`,
-                                    right: '15%',
-                                    borderTop: '2px dashed rgba(255,255,255,0.66)',
-                                }}
-                            />
-                            {runner && (
-                                <div
-                                    style={{
-                                        position: 'absolute',
-                                        top: `${top}%`,
-                                        left: `${TRACK_START}%`,
-                                        width: `${TRACK_FINISH - TRACK_START - 4}%`,
-                                        height: 46,
-                                        transform: 'translateY(-50%)',
-                                        pointerEvents: 'none',
-                                    }}
-                                >
-                                    <div
-                                        key={`${runner.resultId || runner.horseName || lane}-${replayKey}`}
-                                        style={{
-                                            position: 'absolute',
-                                            top: '50%',
-                                            left: phase === 'done' ? '100%' : '0%',
-                                            transform: 'translate(-50%, -50%)',
-                                            animation: phase === 'running'
-                                                ? `spectatorRaceHorseRun ${finishMs}ms linear forwards`
-                                                : 'none',
-                                            animationDelay: '0ms',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            gap: 2,
-                                        }}
-                                    >
-                                        {runner.horseName && (
-                                            <span
-                                                style={{
-                                                    fontSize: 10,
-                                                    fontWeight: 800,
-                                                    color: '#fff',
-                                                    background: 'rgba(0,0,0,0.6)',
-                                                    padding: '1px 7px',
-                                                    borderRadius: 999,
-                                                    whiteSpace: 'nowrap',
-                                                    letterSpacing: 0.2,
-                                                    boxShadow: `0 0 0 1px ${color}`,
-                                                }}
-                                            >
+                            <span className="text-[0.82rem] font-black text-[var(--admin-primary)]">{formatTime(runner.finishTimeMs)}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function RaceTrack({ replay, racePhase, elapsed, totalMs, runners }) {
+    const markers = useMemo(() => buildTrackMarkers(replay.distanceMeters), [replay.distanceMeters]);
+    const distanceLabel = `${Number(replay.distanceMeters || 0).toLocaleString()}m`;
+
+    return (
+        <div className="surface-card overflow-hidden">
+            <div className="border-b border-[var(--admin-border)] bg-[#f8fbff] px-5 py-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 className="m-0 text-[1.08rem] font-black text-[var(--admin-ink)]">Straight Track Replay</h2>
+                        <p className="m-0 mt-1 text-[0.8rem] font-semibold text-[var(--admin-muted)]">
+                            Official course distance: <strong className="text-[var(--admin-primary-dark)]">{distanceLabel}</strong>
+                        </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <span className="rounded-full bg-[#edf8f4] px-3 py-1.5 text-[0.74rem] font-black text-[#106748]">
+                            {racePhase === 'done' ? 'Race finished' : racePhase === 'running' ? 'Horses are sprinting' : 'Waiting for starter signal'}
+                        </span>
+                        <span className="rounded-full bg-[var(--admin-surface-strong)] px-3 py-1.5 text-[0.74rem] font-black text-[var(--admin-primary)]">
+                            Elapsed: {formatTime(elapsed)}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="px-5 py-5">
+                <div className="relative overflow-hidden rounded-[24px] border border-[#17354d] bg-[radial-gradient(circle_at_center,#1d3144_0%,#111827_68%,#0b1220_100%)] px-6 py-8 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]">
+                    <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(34,197,94,0.16)_0%,rgba(34,197,94,0.05)_12%,rgba(17,24,39,0)_13%)]" />
+                    <div className="pointer-events-none absolute inset-x-5 bottom-0 h-8 rounded-t-full bg-[radial-gradient(circle_at_bottom,rgba(34,197,94,0.48),rgba(34,197,94,0))]" />
+
+                    <div className="mb-5 grid grid-cols-[130px_minmax(0,1fr)_76px] items-end gap-4 max-[720px]:grid-cols-[100px_minmax(0,1fr)_56px]">
+                        <div className="text-[0.72rem] font-black uppercase tracking-[0.18em] text-white/75">Lane / Horse</div>
+                        <div className="relative h-8">
+                            {markers.map((marker, index) => (
+                                <div key={`${marker.label}-${index}`} className="absolute bottom-0 -translate-x-1/2 text-center" style={{ left: marker.left }}>
+                                    <div className="text-[0.68rem] font-black uppercase tracking-[0.08em] text-white/80">{marker.label}</div>
+                                    <div className="text-[0.62rem] font-semibold text-white/55">{marker.distance}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="text-right text-[0.72rem] font-black uppercase tracking-[0.18em] text-white/75">Finish</div>
+                    </div>
+
+                    <div className="relative grid gap-3">
+                        {runners.map((runner, index) => {
+                            const progressPct = clamp(runner.progress * 100, 0, 100);
+                            const laneLabel = index + 1;
+
+                            return (
+                                <div key={runner.registrationId} className="grid grid-cols-[130px_minmax(0,1fr)_76px] items-center gap-4 max-[720px]:grid-cols-[100px_minmax(0,1fr)_56px]">
+                                    <div className="flex items-center gap-3 rounded-[16px] border border-white/10 bg-white/5 px-3 py-3 backdrop-blur-sm">
+                                        <span className="grid h-8 w-8 place-items-center rounded-full text-[0.8rem] font-black text-white" style={{ backgroundColor: runner.color }}>
+                                            {laneLabel}
+                                        </span>
+                                        <div className="min-w-0">
+                                            <p className="m-0 truncate text-[0.88rem] font-black text-white">{runner.horseName}</p>
+                                            <p className="m-0 mt-0.5 truncate text-[0.68rem] font-semibold text-white/65">{runner.jockeyName || 'Jockey TBA'}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="relative h-[58px] overflow-hidden rounded-[18px] border border-white/10 bg-[linear-gradient(180deg,rgba(16,185,129,0.15),rgba(15,23,42,0.05))]">
+                                        <div className="absolute inset-x-0 top-1/2 h-[2px] -translate-y-1/2 bg-[linear-gradient(90deg,rgba(255,255,255,0.16),rgba(255,255,255,0.03))]" />
+                                        {markers.map((marker, markerIndex) => (
+                                            <div key={`${runner.registrationId}-${marker.label}-${markerIndex}`} className="absolute top-0 bottom-0 border-l border-dashed border-white/20" style={{ left: marker.left }} />
+                                        ))}
+                                        <div className="absolute inset-y-0 left-0 w-[2px] bg-white/60" />
+                                        <div className="absolute inset-y-0 right-5 w-[12px] bg-[repeating-linear-gradient(180deg,#ffffff_0_6px,#111827_6px_12px)] shadow-[0_0_16px_rgba(255,255,255,0.35)]" />
+
+                                        <div
+                                            className="absolute top-1/2 flex -translate-y-1/2 items-center gap-2 transition-[left] duration-75 ease-linear"
+                                            style={{ left: `calc(${progressPct}% * 0.92 + 1%)` }}
+                                        >
+                                            <div
+                                                className="absolute left-2 top-1/2 h-4 w-10 -translate-y-1/2 rounded-full bg-white/20 blur-[10px]"
+                                                style={{ opacity: racePhase === 'running' ? 0.95 : 0.5 }}
+                                            />
+                                            <div className="relative flex h-10 w-10 items-center justify-center rounded-full shadow-[0_8px_18px_rgba(0,0,0,0.35)]" style={{ backgroundColor: runner.color, animation: racePhase === 'running' ? 'horseFloat 360ms ease-in-out infinite' : 'none' }}>
+                                                <FaHorseHead aria-hidden="true" className="text-white" />
+                                            </div>
+                                            <div className="rounded-full border border-white/10 bg-[#0b1220]/80 px-2.5 py-1 text-[0.66rem] font-black uppercase tracking-[0.08em] text-white shadow-[0_6px_18px_rgba(0,0,0,0.3)]">
                                                 {runner.horseName}
-                                            </span>
-                                        )}
-                                        <HorseSilhouette color={color} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="text-right">
+                                        <p className="m-0 text-[0.82rem] font-black text-white">{runner.liveRank}</p>
+                                        <p className="m-0 mt-0.5 text-[0.66rem] font-semibold uppercase tracking-[0.08em] text-white/65">Rank</p>
                                     </div>
                                 </div>
-                            )}
-                        </div>
-                    );
-                })}
+                            );
+                        })}
+                    </div>
 
+                    <style>{`@keyframes horseFloat { 0%, 100% { transform: translateY(-50%) translateX(0); } 50% { transform: translateY(calc(-50% - 3px)) translateX(1px); } }`}</style>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function ResultsTable({ runners }) {
+    return (
+        <div className="surface-card overflow-hidden">
+            <div className="section-bar">
+                <h2 className="m-0 text-[1.05rem] font-black">Official Results</h2>
+                <span className="text-[0.78rem] font-black text-[var(--admin-muted)]">Published placements</span>
+            </div>
+
+            <div className="overflow-x-auto">
+                <table className="w-full min-w-[760px] border-collapse">
+                    <thead>
+                        <tr>
+                            {['Rank', 'Horse', 'Jockey', 'Lane', 'Official Time', 'Owner'].map((heading) => (
+                                <th key={heading} className="border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-5 py-4 text-left text-[0.7rem] font-black uppercase text-[#64748b]">
+                                    {heading}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {runners.map((runner) => (
+                            <tr key={`result-${runner.registrationId}`} className="hover:bg-[#fffaf8]">
+                                <td className="border-b border-[var(--admin-border)] px-5 py-4">
+                                    <span className="inline-flex min-h-8 items-center rounded-full px-3 text-[0.78rem] font-black text-white" style={{ backgroundColor: runner.color }}>
+                                        {ordinal(runner.officialRank)}
+                                    </span>
+                                </td>
+                                <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.88rem] font-black text-[var(--admin-ink)]">{runner.horseName}</td>
+                                <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-muted)]">{runner.jockeyName || '—'}</td>
+                                <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-muted)]">Lane {runner.lane}</td>
+                                <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-black text-[var(--admin-primary)]">{formatTime(runner.finishTimeMs)}</td>
+                                <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-muted)]">{runner.ownerName || '—'}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
             </div>
         </div>
     );
@@ -387,186 +301,153 @@ function RaceTrack({ runners, phase, raceMs, replayKey }) {
 export default function RaceReplay() {
     const { raceId } = useParams();
     const navigate = useNavigate();
-
-    const [data, setData] = useState(null);
+    const [replay, setReplay] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const [phase, setPhase] = useState('idle');
+    const [racePhase, setRacePhase] = useState('idle');
     const [elapsed, setElapsed] = useState(0);
-    const [showResults, setShowResults] = useState(false);
-    const [replayKey, setReplayKey] = useState(0);
-
-    const rafRef = useRef(null);
-    const startRef = useRef(null);
-    const resultTimerRef = useRef(null);
 
     useEffect(() => {
-        spectatorApi.getRaceReplay(Number(raceId))
-            .then((payload) => setData(payload))
-            .catch((err) => setError(err?.message || 'Failed to load replay.'))
-            .finally(() => setLoading(false));
+        let cancelled = false;
+        setLoading(true);
+        setError('');
+
+        spectatorApi.getRaceReplay(raceId)
+            .then((data) => {
+                if (!cancelled) {
+                    setReplay(data);
+                }
+            })
+            .catch((err) => {
+                if (!cancelled) {
+                    setError(err.message || 'Unable to load race replay.');
+                }
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            });
+
+        return () => {
+            cancelled = true;
+        };
     }, [raceId]);
 
-    useEffect(() => () => {
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-        if (resultTimerRef.current) clearTimeout(resultTimerRef.current);
-    }, []);
+    const preparedRunners = useMemo(() => {
+        const source = Array.isArray(replay?.runners) ? replay.runners : [];
+        return source
+            .map((runner, index) => ({
+                ...runner,
+                officialRank: Number(runner.rank || index + 1),
+                liveRank: Number(runner.rank || index + 1),
+                finishTimeMs: Number(runner.finishTimeMs || 0),
+                color: runner.color || HORSE_COLORS[index % HORSE_COLORS.length],
+                lane: Number(runner.lane || index + 1),
+                profile: buildRunnerProfile(runner, index),
+                progress: racePhase === 'done' ? 1 : 0,
+            }))
+            .sort((a, b) => a.officialRank - b.officialRank);
+    }, [replay, racePhase]);
 
-    const startReplay = useCallback(() => {
-        if (!data) return;
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-        if (resultTimerRef.current) clearTimeout(resultTimerRef.current);
+    const totalMs = useMemo(() => {
+        if (!preparedRunners.length) return 0;
+        return Math.max(...preparedRunners.map((runner) => Number(runner.finishTimeMs || 0)), 0);
+    }, [preparedRunners]);
 
-        const raceMs = getReplayDurationMs(data.runners || [], data.totalDurationMs);
+    useEffect(() => {
+        if (racePhase !== 'running') return undefined;
 
-        setElapsed(0);
-        setShowResults(false);
-        setReplayKey((currentKey) => currentKey + 1);
-        setPhase('running');
-        startRef.current = performance.now();
+        const startedAt = performance.now();
+        let rafId;
 
         const animate = (now) => {
-            const ms = now - startRef.current;
-            setElapsed(ms);
+            const nextElapsed = Math.max(0, now - startedAt);
+            setElapsed(nextElapsed);
 
-            if (ms < raceMs) {
-                rafRef.current = requestAnimationFrame(animate);
+            if (nextElapsed >= totalMs) {
+                setElapsed(totalMs);
+                setRacePhase('done');
                 return;
             }
 
-            setElapsed(raceMs);
-            setPhase('done');
-            resultTimerRef.current = setTimeout(() => setShowResults(true), 600);
+            rafId = window.requestAnimationFrame(animate);
         };
 
-        rafRef.current = requestAnimationFrame(animate);
-    }, [data]);
+        rafId = window.requestAnimationFrame(animate);
+        return () => window.cancelAnimationFrame(rafId);
+    }, [racePhase, totalMs]);
+
+    const runners = useMemo(() => {
+        return preparedRunners
+            .map((runner, index) => ({
+                ...runner,
+                progress: racePhase === 'done'
+                    ? 1
+                    : racePhase === 'running'
+                        ? getProgressAt(elapsed, runner.finishTimeMs, runner.profile)
+                        : 0,
+            }))
+            .sort((a, b) => {
+                if (b.progress !== a.progress) return b.progress - a.progress;
+                if (a.finishTimeMs !== b.finishTimeMs) return a.finishTimeMs - b.finishTimeMs;
+                return a.officialRank - b.officialRank;
+            })
+            .map((runner, index) => ({
+                ...runner,
+                liveRank: index + 1,
+            }));
+    }, [preparedRunners, racePhase, elapsed]);
+
+    const trackRunners = useMemo(() => {
+        return [...runners].sort((a, b) => a.lane - b.lane);
+    }, [runners]);
+
+    const startReplay = () => {
+        setElapsed(0);
+        setRacePhase('running');
+    };
 
     if (loading) {
-        return (
-            <div className="grid gap-7">
-                <p className="m-0 py-20 text-center font-semibold text-[var(--admin-muted)]">Loading replay...</p>
-            </div>
-        );
+        return <p className="m-0 font-semibold text-[var(--admin-muted)]">Loading replay...</p>;
     }
 
     if (error) {
-        return (
-            <div className="grid gap-7">
-                <button type="button" onClick={() => navigate(-1)} style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: '#0b7f5a', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>
-                    Back
-                </button>
-                <div className="surface-card p-10 text-center">
-                    <p style={{ margin: 0, fontSize: 40 }}>Race replay</p>
-                    <h3 style={{ margin: '10px 0 6px', fontSize: '1.1rem', fontWeight: 800, color: '#2b1b1b' }}>Replay Unavailable</h3>
-                    <p style={{ margin: 0, color: '#999', fontSize: '0.88rem' }}>{error}</p>
-                    <p style={{ margin: '8px 0 0', color: '#bbb', fontSize: '0.8rem' }}>Replay is only available after admin approves all race results.</p>
-                </div>
-            </div>
-        );
+        return <p className="m-0 font-semibold text-[#a4392f]">{error}</p>;
     }
 
-    if (!data) return null;
-
-    const tournamentKey = [data.tournamentId, data.tournamentName].filter(Boolean).join('|')
-        || [raceId, data.raceId, data.raceName].filter(Boolean).join('|');
-    const replayRunners = getStableReplayLaneRunners(data.runners || [], tournamentKey);
-    const sortedRunners = [...replayRunners].sort((a, b) => (
-        (a.replayLane || a.lane || a.rank) - (b.replayLane || b.lane || b.rank)
-    ));
-    const totalMs = getReplayDurationMs(sortedRunners, data.totalDurationMs);
+    if (!replay) {
+        return <p className="m-0 font-semibold text-[var(--admin-muted)]">No replay available.</p>;
+    }
 
     return (
-        <div className="grid gap-6">
-            <button type="button" onClick={() => navigate(-1)}
-                style={{ alignSelf: 'flex-start', background: 'none', border: 'none', color: '#0b7f5a', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem' }}>
-                Back
-            </button>
-
-            <div>
-                <h1 className="page-title">Race Replay</h1>
-                <p className="page-subtitle">{data.tournamentName} - {data.raceName} - {data.distanceMeters}m</p>
+        <div className="grid gap-5">
+            <div className="flex justify-center">
+                <button
+                    className="inline-flex items-center gap-2 rounded-full border border-[var(--admin-border)] bg-white px-4 py-2 text-[0.82rem] font-black text-[var(--admin-primary)] transition-colors hover:border-[var(--admin-gold)]"
+                    onClick={() => navigate(-1)}
+                    type="button"
+                >
+                    <FaArrowLeft aria-hidden="true" />
+                    Back
+                </button>
             </div>
 
-            <div className="surface-card" style={{ padding: 0, overflow: 'hidden' }}>
-                {sortedRunners.length === 0 ? (
-                    <p className="m-0 py-20 text-center font-semibold text-[var(--admin-muted)]">No runners are available for this replay.</p>
-                ) : (
-                    <RaceTrack
-                        runners={sortedRunners}
-                        phase={phase}
-                        raceMs={totalMs}
-                        replayKey={replayKey}
-                    />
-                )}
+            <RaceHeader replay={replay} racePhase={racePhase} totalMs={totalMs} liveOrder={runners} />
+            <RaceTrack replay={replay} racePhase={racePhase} elapsed={elapsed} totalMs={totalMs} runners={trackRunners} />
 
-                <div style={{ padding: '18px 24px 24px', display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'center' }}>
-                    {(phase === 'idle' || phase === 'done') && (
-                        <button
-                            type="button"
-                            onClick={startReplay}
-                            disabled={sortedRunners.length === 0}
-                            style={{
-                                padding: '11px 30px',
-                                borderRadius: 9,
-                                border: 'none',
-                                background: '#0b7f5a',
-                                color: '#fff',
-                                fontWeight: 800,
-                                fontSize: '0.95rem',
-                                cursor: sortedRunners.length === 0 ? 'not-allowed' : 'pointer',
-                                opacity: sortedRunners.length === 0 ? 0.55 : 1,
-                            }}
-                        >
-                            {phase === 'done' ? 'Replay Again' : 'Start Replay'}
-                        </button>
-                    )}
-                    {phase === 'running' && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <div style={{ width: 180, height: 6, background: '#e5e7eb', borderRadius: 3, overflow: 'hidden' }}>
-                                <div style={{ height: '100%', width: `${Math.min((elapsed / totalMs) * 100, 100)}%`, background: '#0b7f5a', transition: 'width 0.1s linear' }} />
-                            </div>
-                            <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 700 }}>
-                                {formatTime(Math.min(elapsed, totalMs))} / {formatTime(totalMs)}
-                            </span>
-                        </div>
-                    )}
-                </div>
+            <div className="flex justify-center">
+                <button
+                    className="inline-flex min-h-11 items-center gap-3 rounded-full bg-[var(--admin-primary)] px-6 text-[0.9rem] font-black text-white shadow-[0_18px_32px_rgba(22,48,92,0.18)] transition-colors hover:bg-[var(--admin-primary-dark)]"
+                    onClick={startReplay}
+                    type="button"
+                >
+                    <FaPlay aria-hidden="true" />
+                    {racePhase === 'done' ? 'Replay Again' : racePhase === 'running' ? 'Restart Replay' : 'Start Replay'}
+                </button>
             </div>
 
-            {showResults && (
-                <div className="surface-card" style={{ padding: '22px 28px' }}>
-                    <h2 style={{ margin: '0 0 16px', fontSize: '1rem', fontWeight: 800, color: '#2b1b1b' }}>Official Results</h2>
-                    <div style={{ display: 'grid', gap: 8 }}>
-                        {[...sortedRunners]
-                            .sort((a, b) => a.rank - b.rank)
-                            .map((runner) => (
-                                <div key={runner.resultId} style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 12,
-                                    padding: '12px 16px',
-                                    borderRadius: 10,
-                                    background: runner.rank === 1 ? '#fffbea' : runner.rank === 2 ? '#f8faff' : runner.rank === 3 ? '#fff8f4' : '#fafafa',
-                                    border: `1.5px solid ${runner.rank === 1 ? '#f59e0b' : runner.rank === 2 ? '#93c5fd' : runner.rank === 3 ? '#fca5a5' : '#eee'}`,
-                                }}>
-                                    <span style={{ flexShrink: 0, width: 38, textAlign: 'center', fontWeight: 900, color: runner.replayColor || getLaneColor(runner.replayLane || runner.lane) }}>{rankLabel(runner.rank)}</span>
-                                    <ResultHorseIcon color={runner.replayColor || runner.color || getLaneColor(runner.replayLane || runner.lane)} />
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <p style={{ margin: 0, fontWeight: 800, fontSize: '0.92rem', color: '#2b1b1b' }}>{runner.horseName}</p>
-                                        <p style={{ margin: '1px 0 0', fontSize: '0.73rem', color: '#999' }}>
-                                            {[runner.jockeyName, runner.ownerName].filter(Boolean).join(' - ')}
-                                        </p>
-                                    </div>
-                                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                        <p style={{ margin: 0, fontWeight: 900, fontSize: '0.88rem', color: '#2b1b1b' }}>{formatFinishTime(runner)}</p>
-                                        <p style={{ margin: '1px 0 0', fontSize: '0.7rem', color: '#999' }}>Lane {runner.replayLane || runner.lane}</p>
-                                    </div>
-                                </div>
-                            ))}
-                    </div>
-                </div>
-            )}
+            <ResultsTable runners={[...trackRunners].sort((a, b) => a.officialRank - b.officialRank)} />
         </div>
     );
 }

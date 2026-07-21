@@ -279,20 +279,34 @@ export default function ResultReward() {
                             <div className="grid gap-3">
                                 {rewardRules.length === 0 ? (
                                     <p className="m-0 text-sm text-[var(--admin-muted)]">No reward rules configured for the active season.</p>
-                                ) : rewardRules.map((rule) => (
-                                    <div key={readField(rule, 'seasonRewardRuleId') || readField(rule, 'rankPosition')} className="flex items-center gap-3 rounded-[8px] border border-[var(--admin-border)] bg-[#fffaf8] p-3">
-                                        <span className="grid h-9 w-9 flex-none place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
-                                            <FaGift aria-hidden="true" />
-                                        </span>
-                                        <div className="min-w-0">
-                                            <p className="m-0 font-bold text-[0.9rem]">Rank #{readField(rule, 'rankPosition')} - {readField(rule, 'rewardName')}</p>
-                                            <p className="m-0 text-xs text-[var(--admin-muted)]">
-                                                {readField(rule, 'bonusPoints') ?? 0} bonus points
-                                                {readField(rule, 'rewardDescription') ? ` | ${readField(rule, 'rewardDescription')}` : ''}
-                                            </p>
+                                ) : rewardRules.map((rule) => {
+                                    const physicalRewardName = readField(rule, 'rewardItemName') || readField(rule, 'physicalRewardName');
+                                    const physicalRewardQty = readField(rule, 'quantity') || readField(rule, 'rewardQuantity') || 0;
+
+                                    return (
+                                        <div key={readField(rule, 'seasonRewardRuleId') || readField(rule, 'rankPosition')} className="rounded-[10px] border border-[var(--admin-border)] bg-[#fffaf8] p-4">
+                                            <div className="flex items-start gap-3">
+                                                <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
+                                                    <FaGift aria-hidden="true" />
+                                                </span>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="m-0 font-bold text-[0.96rem]">Rank #{readField(rule, 'rankPosition')} - {readField(rule, 'rewardName')}</p>
+                                                    <div className="mt-2 flex flex-wrap gap-2">
+                                                        <span className="inline-flex min-h-7 items-center rounded-full bg-[#edf8f4] px-3 text-[0.74rem] font-black text-[#106748]">
+                                                            Bonus: {(readField(rule, 'bonusPoints') ?? 0).toLocaleString()} pts
+                                                        </span>
+                                                        <span className="inline-flex min-h-7 items-center rounded-full bg-[#fff2d9] px-3 text-[0.74rem] font-black text-[#8a6209]">
+                                                            Physical reward: {physicalRewardName ? `${physicalRewardName}${physicalRewardQty ? ` x${physicalRewardQty}` : ''}` : 'No physical gift'}
+                                                        </span>
+                                                    </div>
+                                                    {readField(rule, 'rewardDescription') ? (
+                                                        <p className="m-0 mt-2 text-xs font-semibold text-[var(--admin-muted)]">{readField(rule, 'rewardDescription')}</p>
+                                                    ) : null}
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>

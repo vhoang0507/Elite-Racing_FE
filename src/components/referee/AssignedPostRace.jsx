@@ -844,14 +844,6 @@ function AssignedPostRace() {
                         <h1 className="page-title">Post-Race Workflow</h1>
                         <p className="page-subtitle">Enter results, log violations, and submit the post-race report to admin.</p>
                     </div>
-                    <button
-                        type="button"
-                        onClick={() => loadRaceWorkflowData(selectedRaceId)}
-                        disabled={!selectedRaceId || loadingRaceData}
-                        className="secondary-button gap-2 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        <FaRedo /> Refresh
-                    </button>
                 </div>
 
                 {/* Alerts */}

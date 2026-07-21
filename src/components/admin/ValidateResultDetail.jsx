@@ -349,35 +349,6 @@ function ValidateResultDetail() {
         }
     };
 
-    const handleRetryPredictionEvaluation = async () => {
-        const raceId = detail?.raceId || postRaceResults.find((result) => result?.raceId)?.raceId;
-
-        if (!raceId) {
-            showAdminError('Race information is missing for prediction evaluation.');
-            return;
-        }
-
-        const confirmed = await confirmAdminAction({
-            title: 'Retry prediction evaluation',
-            message: 'Retry prediction evaluation for this race?',
-            confirmLabel: 'Retry Evaluation',
-        });
-
-        if (!confirmed) return;
-
-        setActionLoading(true);
-
-        try {
-            const response = await adminApi.evaluateRacePredictions(raceId);
-            const successMessage = response?.message || response?.Message || 'Prediction evaluation completed.';
-            showAdminSuccess(successMessage, 'Evaluated');
-            await loadDetail();
-        } catch (err) {
-            showAdminError(err.message || 'Failed to evaluate predictions.');
-        } finally {
-            setActionLoading(false);
-        }
-    };
 
     const handleReopenPublishedResults = async () => {
         const raceId = detail?.raceId || postRaceResults.find((result) => result?.raceId)?.raceId;
@@ -579,17 +550,6 @@ function ValidateResultDetail() {
                                 </button>
                             </>
                         )}
-                        {!loading && !error && detail?.raceId && (
-                            <button
-                                type="button"
-                                disabled={actionLoading}
-                                onClick={handleRetryPredictionEvaluation}
-                                className="flex min-h-[38px] cursor-pointer items-center gap-2 rounded-full border border-[var(--admin-border)] bg-white px-4 text-[0.78rem] font-black text-[var(--admin-primary)] transition-colors hover:border-[var(--admin-gold)] disabled:opacity-50"
-                            >
-                                <FaRedoAlt aria-hidden="true" className="h-3 w-3" />
-                                Retry Evaluation
-                            </button>
-                        )}
                         {!loading && !error && canReopenPublishedResults && (
                             <button
                                 type="button"
@@ -601,15 +561,6 @@ function ValidateResultDetail() {
                                 Reopen
                             </button>
                         )}
-                        <button
-                            aria-label="Refresh referee report"
-                            className="grid h-[38px] w-[38px] cursor-pointer place-items-center rounded-full border border-[var(--admin-border)] bg-white text-[#64748b] transition-colors hover:border-[var(--admin-gold)] hover:text-[var(--admin-primary)]"
-                            disabled={loading}
-                            onClick={loadDetail}
-                            type="button"
-                        >
-                            <FaRedoAlt aria-hidden="true" />
-                        </button>
                     </div>
                 </div>
 

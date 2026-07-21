@@ -265,13 +265,6 @@ export default function Notifications() {
                         >
                             {markingAll ? 'Updating...' : 'Mark all read'}
                         </button>
-                        <button
-                            className="cursor-pointer rounded-full border-0 bg-transparent px-3 py-2 text-[0.82rem] font-bold text-[var(--admin-primary)] hover:bg-[var(--admin-surface-strong)]"
-                            onClick={() => setReloadKey((current) => current + 1)}
-                            type="button"
-                        >
-                            Refresh
-                        </button>
                     </div>
                 </div>
 

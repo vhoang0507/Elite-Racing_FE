@@ -5,6 +5,7 @@ import {
     FaCheckCircle,
     FaEdit,
     FaHorseHead,
+    FaInfoCircle,
     FaMapMarkerAlt,
     FaPlay,
     FaTimes,
@@ -55,13 +56,105 @@ function canWatchReplay(tournament) {
         && !!tournament.race?.raceId;
 }
 
-// ─── Predict Modal ────────────────────────────────────────────────────────────
+// ─── Horse detail modal ───────────────────────────────────────────────────────
+
+function HorseDetailModal({ horse, onClose, onSelect }) {
+    if (!horse) return null;
+
+    const horseImageUrl = getHorseImageUrl(horse);
+    const jockeyImageUrl = horse?.jockeyProfileImageUrl ? resolveFileUrl(horse.jockeyProfileImageUrl) : '';
+
+    return (
+        <div
+            style={{ position: 'fixed', inset: 0, zIndex: 260, backgroundColor: 'rgba(20,10,10,0.72)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 18 }}
+            onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
+        >
+            <div style={{ width: '100%', maxWidth: 720, borderRadius: 18, overflow: 'hidden', backgroundColor: '#fff', boxShadow: '0 30px 80px rgba(20, 12, 12, 0.35)' }}>
+                <div style={{ padding: '20px 24px', background: 'linear-gradient(135deg,#16305c,#28539d)', color: '#fff', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14 }}>
+                    <div style={{ display: 'flex', gap: 14, minWidth: 0 }}>
+                        <div style={{ width: 78, height: 78, borderRadius: 14, overflow: 'hidden', flexShrink: 0, background: 'rgba(255,255,255,0.12)', display: 'grid', placeItems: 'center' }}>
+                            {horseImageUrl ? (
+                                <img alt={horse.horseName || 'Horse'} src={horseImageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                                <span style={{ fontSize: 34 }}>🐴</span>
+                            )}
+                        </div>
+                        <div style={{ minWidth: 0 }}>
+                            <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase', opacity: 0.9 }}>Race Entry Profile</p>
+                            <h3 style={{ margin: '6px 0 0', fontSize: '1.35rem', fontWeight: 800, lineHeight: 1.2 }}>{horse.horseName || 'Horse'}</h3>
+                            <p style={{ margin: '8px 0 0', fontSize: '0.85rem', opacity: 0.92 }}>Owner: <strong>{horse.ownerName || '—'}</strong> · Jockey: <strong>{horse.jockeyName || '—'}</strong></p>
+                            <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                <span style={{ background: 'rgba(255,255,255,0.12)', padding: '6px 10px', borderRadius: 999, fontSize: '0.75rem', fontWeight: 700 }}>Breed: {horse.breedName || '—'}</span>
+                                <span style={{ background: 'rgba(255,255,255,0.12)', padding: '6px 10px', borderRadius: 999, fontSize: '0.75rem', fontWeight: 700 }}>Status: {horse.status || horse.registrationStatus || 'Ready'}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onClick={onClose} style={{ background: 'rgba(255,255,255,0.14)', color: '#fff', border: 'none', width: 34, height: 34, borderRadius: 999, cursor: 'pointer', flexShrink: 0 }}>
+                        <FaTimes />
+                    </button>
+                </div>
+
+                <div style={{ padding: '22px 24px', display: 'grid', gap: 16 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 10 }}>
+                        {[
+                            ['Age', horse.age ?? horse.horseAge ?? '—'],
+                            ['Height', horse.heightCm ? `${horse.heightCm} cm` : '—'],
+                            ['Weight', horse.weightKg || horse.horseWeightKg ? `${horse.weightKg || horse.horseWeightKg} kg` : '—'],
+                            ['Health', horse.healthStatus || horse.horseHealthStatus || '—'],
+                        ].map(([label, value]) => (
+                            <div key={label} style={{ border: '1px solid #e7edf5', borderRadius: 12, background: '#f8fbff', padding: '12px 14px' }}>
+                                <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: '#64748b' }}>{label}</p>
+                                <p style={{ margin: '8px 0 0', fontSize: '0.95rem', fontWeight: 800, color: '#2b1b1b' }}>{value}</p>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                        <div style={{ border: '1px solid #eadfce', borderRadius: 14, padding: 16, background: '#fffaf8' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                <div style={{ width: 52, height: 52, borderRadius: 999, overflow: 'hidden', background: '#edf2fa', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                                    {jockeyImageUrl ? (
+                                        <img alt={horse.jockeyName || 'Jockey'} src={jockeyImageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : (
+                                        <span style={{ fontSize: 22 }}>🏇</span>
+                                    )}
+                                </div>
+                                <div>
+                                    <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', color: '#64748b' }}>Jockey</p>
+                                    <h4 style={{ margin: '5px 0 0', fontSize: '1rem', fontWeight: 800, color: '#16305c' }}>{horse.jockeyName || 'No jockey assigned'}</h4>
+                                </div>
+                            </div>
+                            <div style={{ marginTop: 14, display: 'grid', gap: 8, fontSize: '0.82rem', color: '#45556c' }}>
+                                <span><strong>Experience:</strong> {horse?.jockey?.yearsOfExperience ?? '—'} years</span>
+                                <span><strong>Weight:</strong> {horse?.jockey?.weightKg ? `${horse.jockey.weightKg} kg` : '—'}</span>
+                                <span><strong>Health:</strong> {horse?.jockey?.healthStatus || '—'}</span>
+                            </div>
+                        </div>
+
+                        <div style={{ border: '1px solid #eadfce', borderRadius: 14, padding: 16, background: '#fffaf8' }}>
+                            <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', color: '#64748b' }}>Horse achievement</p>
+                            <p style={{ margin: '10px 0 0', fontSize: '0.88rem', lineHeight: 1.6, color: '#3a4452' }}>
+                                {horse.achievementSummary || horse?.horse?.achievementSummary || 'No achievement summary provided for this entry yet.'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style={{ padding: '0 24px 22px', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                    <button type="button" onClick={onClose} style={{ padding: '11px 18px', borderRadius: 10, border: '1px solid #dce5ef', background: '#fff', color: '#555', fontWeight: 700, cursor: 'pointer' }}>Close</button>
+                    <button type="button" onClick={onSelect} style={{ padding: '11px 18px', borderRadius: 10, border: 'none', background: '#16305c', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>Select this horse</button>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 function PredictModal({ tournament, prediction, onClose, onSuccess }) {
     const [horses, setHorses] = useState([]);
     const [wallet, setWallet] = useState(null);
     const [loading, setLoading] = useState(true);
     const [selected, setSelected] = useState(null);
+    const [selectedDetailHorse, setSelectedDetailHorse] = useState(null);
     const [stakePoints, setStakePoints] = useState(10);
     const [submitting, setSubmitting] = useState(false);
     const { toast, showToast, hideToast } = useToast();
@@ -245,7 +338,7 @@ function PredictModal({ tournament, prediction, onClose, onSuccess }) {
                                     <button
                                         key={h.horseId}
                                         type="button"
-                                        onClick={() => setSelected(h)}
+                                        onClick={() => { setSelected(h); setSelectedDetailHorse(h); }}
                                         style={{
                                             display: 'flex', alignItems: 'center', gap: 12,
                                             padding: '12px 14px', borderRadius: 10, cursor: 'pointer',
@@ -276,7 +369,16 @@ function PredictModal({ tournament, prediction, onClose, onSuccess }) {
                                                 {h.ownerName && <span>👤 Owner: <strong style={{ color: '#555' }}>{h.ownerName}</strong></span>}
                                                 {h.jockeyName && <span>🏇 Jockey: <strong style={{ color: '#555' }}>{h.jockeyName}</strong></span>}
                                             </div>
+                                            <p style={{ margin: '6px 0 0', fontSize: '0.7rem', fontWeight: 700, color: '#16305c' }}>Tap card to view horse & jockey profile</p>
                                         </div>
+                                        <button
+                                            type="button"
+                                            onClick={(event) => { event.stopPropagation(); setSelected(h); setSelectedDetailHorse(h); }}
+                                            style={{ border: 'none', background: 'transparent', color: '#16305c', cursor: 'pointer', display: 'grid', placeItems: 'center', width: 30, height: 30, flexShrink: 0 }}
+                                            title="View horse details"
+                                        >
+                                            <FaInfoCircle />
+                                        </button>
                                         {isSel && <FaCheckCircle style={{ color: '#16305c', flexShrink: 0, fontSize: 17 }} />}
                                     </button>
                                 );
@@ -364,6 +466,16 @@ function PredictModal({ tournament, prediction, onClose, onSuccess }) {
                     </div>
                 </div>
             </div>
+            <HorseDetailModal
+                horse={selectedDetailHorse}
+                onClose={() => setSelectedDetailHorse(null)}
+                onSelect={() => {
+                    if (selectedDetailHorse) {
+                        setSelected(selectedDetailHorse);
+                    }
+                    setSelectedDetailHorse(null);
+                }}
+            />
         </div>
     );
 }

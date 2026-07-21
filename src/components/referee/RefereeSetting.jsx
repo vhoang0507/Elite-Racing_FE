@@ -92,15 +92,6 @@ function RefereeSetting() {
                                     </p>
                                 </div>
 
-                                <button
-                                    type="button"
-                                    onClick={loadProfile}
-                                    disabled={loading}
-                                    className="flex items-center gap-2 rounded-md border border-[var(--admin-primary)] px-5 py-3 font-semibold text-[var(--admin-primary)] disabled:cursor-not-allowed disabled:opacity-60"
-                                >
-                                    <FaSyncAlt />
-                                    {loading ? 'Loading...' : 'Refresh'}
-                                </button>
                             </div>
 
                             <div className="mb-8 flex items-center gap-5 max-[720px]:flex-col max-[720px]:items-start">

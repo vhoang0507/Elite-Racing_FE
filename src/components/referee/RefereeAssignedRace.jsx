@@ -96,6 +96,7 @@ function RefereeAssignedRace() {
     const { toast, showToast, hideToast } = useToast();
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [showCompleted, setShowCompleted] = useState(false);
 
     const filteredRaces = useMemo(() => {
         const q = search.trim().toLowerCase();
@@ -108,6 +109,9 @@ function RefereeAssignedRace() {
             return matchesSearch && matchesStatus;
         });
     }, [races, search, statusFilter]);
+
+    const activeRaces = filteredRaces.filter((race) => !['Completed', 'Published'].includes(getDisplayStatus(race)));
+    const completedRaces = filteredRaces.filter((race) => ['Completed', 'Published'].includes(getDisplayStatus(race)));
 
     useEffect(() => {
         let ignore = false;
@@ -138,7 +142,7 @@ function RefereeAssignedRace() {
                 <div>
                     <h1 className="page-title">My Assigned Races</h1>
                     <p className="page-subtitle">
-                        Select a race to perform pre-race inspection or manage post-race results and reports.
+                        Focus on unfinished assignments first. Completed races can be collapsed below when you need to review them again.
                     </p>
                 </div>
 
@@ -174,113 +178,106 @@ function RefereeAssignedRace() {
                         {races.length === 0 ? 'No assigned races yet.' : 'No races match your filter.'}
                     </div>
                 ) : (
-                    <div className="grid gap-3">
-                        {filteredRaces.map((race) => {
-                            const displayStatus = getDisplayStatus(race);
-                            const s = STATUS_STYLE[displayStatus] ?? { bg: 'var(--admin-surface-strong)', color: 'var(--admin-primary)' };
-                            return (
-                                <div
-                                    key={race.raceId}
-                                    className="surface-card"
-                                    style={{ display: 'flex', alignItems: 'center', gap: 0, overflow: 'hidden' }}
-                                >
-                                    {/* Left accent bar */}
-                                    <div style={{ width: 5, alignSelf: 'stretch', backgroundColor: s.color, flexShrink: 0 }} />
-
-                                    {/* Race info */}
-                                    <div style={{ flex: 1, padding: '16px 20px', minWidth: 0 }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                                            <span style={{ fontWeight: 700, fontSize: '1rem', color: '#2b1b1b' }}>
-                                                {race.raceName}
-                                            </span>
-                                            <span style={{
-                                                backgroundColor: s.bg, color: s.color,
-                                                fontSize: 11, fontWeight: 700,
-                                                padding: '2px 10px', borderRadius: 20,
-                                            }}>
-                                                {formatStatus(displayStatus)}
-                                            </span>
-                                            {race.seasonStatus && (
-                                                <span style={{
-                                                    backgroundColor: race.seasonStatus === 'Active' ? 'var(--admin-surface-strong)' : '#f3e1df',
-                                                    color: race.seasonStatus === 'Active' ? 'var(--admin-primary)' : '#a4392f',
-                                                    fontSize: 11,
-                                                    fontWeight: 700,
-                                                    padding: '2px 10px',
-                                                    borderRadius: 20,
-                                                }}>
-                                                    Season: {race.seasonStatus}
-                                                </span>
-                                            )}
-                                        </div>
-
-                                        <div style={{ fontSize: 13, color: 'var(--admin-primary)', fontWeight: 600, marginTop: 2 }}>
-                                            {race.tournamentName}
-                                        </div>
-
-                                        <div style={{ display: 'flex', gap: 20, marginTop: 6, flexWrap: 'wrap' }}>
-                                            <span style={{ fontSize: 12, color: '#999', display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                <FaMapMarkerAlt /> {race.location || 'N/A'}
-                                            </span>
-                                            <span style={{ fontSize: 12, color: '#999' }}>
-                                                📅 {formatDateTime(race.raceDate)}
-                                            </span>
-                                            <span style={{ fontSize: 12, color: '#999' }}>
-                                                🏃 {race.distanceMeters?.toLocaleString('en-US') ?? 0}m
-                                            </span>
-                                        </div>
-                                        {race.blockingReason && (
-                                            <div style={{ marginTop: 6, fontSize: 12, color: '#b91c1c', fontWeight: 600 }}>
-                                                {race.blockingReason}
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Action buttons */}
-                                    {(() => {
-                                        const canPreRace = canOpenPreRace(race);
-                                        const canPostRace = canOpenPostRace(race);
-                                        return (
-                                            <div style={{ display: 'flex', gap: 8, padding: '0 20px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                                                <button
-                                                    type="button"
-                                                    disabled={!canPreRace}
-                                                    onClick={() => navigate(`/referee/races/pre-race/${race.raceId}`, { state: { race } })}
-                                                    title={canPreRace ? 'Open pre-race inspection' : getDisabledReason(race, 'Only available after registration is closed')}
-                                                    style={{
-                                                        display: 'flex', alignItems: 'center', gap: 6,
-                                                        padding: '8px 16px', borderRadius: 8,
-                                                        border: '1px solid #dce5ef',
-                                                        background: canPreRace ? '#fff8f6' : '#f5f5f5',
-                                                        color: canPreRace ? 'var(--admin-primary)' : '#bbb',
-                                                        fontWeight: 700, fontSize: 13,
-                                                        cursor: canPreRace ? 'pointer' : 'not-allowed',
-                                                    }}
-                                                >
-                                                    <FaClipboardCheck /> Pre-Race Inspect
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    disabled={!canPostRace}
-                                                    onClick={() => navigate('/referee/races/post-race', { state: { raceId: race.raceId } })}
-                                                    title={canPostRace ? 'Open post-race workflow' : getDisabledReason(race, 'Only available for ready / ongoing / finished races')}
-                                                    style={{
-                                                        display: 'flex', alignItems: 'center', gap: 6,
-                                                        padding: '8px 16px', borderRadius: 8,
-                                                        border: 'none',
-                                                        background: canPostRace ? 'var(--admin-primary)' : '#e0e0e0',
-                                                        color: '#fff', fontWeight: 700, fontSize: 13,
-                                                        cursor: canPostRace ? 'pointer' : 'not-allowed',
-                                                    }}
-                                                >
-                                                    <FaGavel /> Post-Race
-                                                </button>
-                                            </div>
-                                        );
-                                    })()}
+                    <div className="grid gap-5">
+                        <div className="grid gap-3">
+                            {activeRaces.length === 0 ? (
+                                <div className="surface-card p-6 text-center text-[0.9rem] font-semibold text-[var(--admin-muted)]">
+                                    No unfinished races match your current filter.
                                 </div>
-                            );
-                        })}
+                            ) : activeRaces.map((race) => {
+                                const displayStatus = getDisplayStatus(race);
+                                const s = STATUS_STYLE[displayStatus] ?? { bg: 'var(--admin-surface-strong)', color: 'var(--admin-primary)' };
+                                const canPreRace = canOpenPreRace(race);
+                                const canPostRace = canOpenPostRace(race);
+                                return (
+                                    <div key={race.raceId} className="surface-card overflow-hidden border-[1.5px] border-[var(--admin-border)]">
+                                        <div style={{ width: '100%', height: 4, backgroundColor: s.color }} />
+                                        <div style={{ padding: '18px 20px', display: 'grid', gap: 14 }}>
+                                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                                                <div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                                                        <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#2b1b1b' }}>{race.raceName}</h3>
+                                                        <span style={{ backgroundColor: s.bg, color: s.color, fontSize: 11, fontWeight: 800, padding: '4px 12px', borderRadius: 999 }}>
+                                                            {formatStatus(displayStatus)}
+                                                        </span>
+                                                    </div>
+                                                    <p style={{ margin: '4px 0 0', fontSize: '0.84rem', fontWeight: 700, color: 'var(--admin-primary)' }}>{race.tournamentName}</p>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                                    <button
+                                                        type="button"
+                                                        disabled={!canPreRace}
+                                                        onClick={() => navigate(`/referee/races/pre-race/${race.raceId}`, { state: { race } })}
+                                                        title={canPreRace ? 'Open pre-race inspection' : getDisabledReason(race, 'Only available after registration is closed')}
+                                                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 15px', borderRadius: 10, border: '1px solid #dce5ef', background: canPreRace ? '#fff8f6' : '#f5f5f5', color: canPreRace ? 'var(--admin-primary)' : '#bbb', fontWeight: 700, fontSize: 13, cursor: canPreRace ? 'pointer' : 'not-allowed' }}
+                                                    >
+                                                        <FaClipboardCheck /> Pre-Race
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        disabled={!canPostRace}
+                                                        onClick={() => navigate('/referee/races/post-race', { state: { raceId: race.raceId } })}
+                                                        title={canPostRace ? 'Open post-race workflow' : getDisabledReason(race, 'Only available for ready / ongoing / finished races')}
+                                                        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 15px', borderRadius: 10, border: 'none', background: canPostRace ? 'var(--admin-primary)' : '#e0e0e0', color: '#fff', fontWeight: 700, fontSize: 13, cursor: canPostRace ? 'pointer' : 'not-allowed' }}
+                                                    >
+                                                        <FaGavel /> Post-Race
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 18, fontSize: 12, color: '#6b7280', fontWeight: 700 }}>
+                                                <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><FaMapMarkerAlt /> {race.location || 'N/A'}</span>
+                                                <span>📅 {formatDateTime(race.raceDate)}</span>
+                                                <span>🏁 {(race.distanceMeters ?? 0).toLocaleString('en-US')}m</span>
+                                                {race.seasonStatus && race.seasonStatus !== 'Active' ? <span>Season: {race.seasonStatus}</span> : null}
+                                            </div>
+                                            {race.blockingReason && !canPreRace && !canPostRace ? (
+                                                <div style={{ fontSize: 12, color: '#b91c1c', fontWeight: 700 }}>{race.blockingReason}</div>
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {completedRaces.length > 0 && (
+                            <div className="surface-card overflow-hidden">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCompleted((current) => !current)}
+                                    style={{ width: '100%', padding: '16px 20px', border: 'none', background: '#fffaf8', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 800, color: '#2b1b1b' }}
+                                >
+                                    <span>Completed races ({completedRaces.length})</span>
+                                    <span style={{ color: 'var(--admin-primary)' }}>{showCompleted ? 'Hide' : 'Show'}</span>
+                                </button>
+                                {showCompleted ? (
+                                    <div style={{ padding: '0 16px 16px', display: 'grid', gap: 10 }}>
+                                        {completedRaces.map((race) => {
+                                            const displayStatus = getDisplayStatus(race);
+                                            const s = STATUS_STYLE[displayStatus] ?? { bg: 'var(--admin-surface-strong)', color: 'var(--admin-primary)' };
+                                            return (
+                                                <div key={race.raceId} style={{ border: '1px solid var(--admin-border)', borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                                                    <div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                                                            <strong style={{ color: '#2b1b1b' }}>{race.raceName}</strong>
+                                                            <span style={{ backgroundColor: s.bg, color: s.color, fontSize: 11, fontWeight: 800, padding: '4px 10px', borderRadius: 999 }}>{formatStatus(displayStatus)}</span>
+                                                        </div>
+                                                        <p style={{ margin: '5px 0 0', fontSize: 12, color: '#6b7280', fontWeight: 700 }}>{race.tournamentName} • {formatDateTime(race.raceDate)} • {(race.distanceMeters ?? 0).toLocaleString('en-US')}m</p>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => navigate('/referee/races/post-race', { state: { raceId: race.raceId } })}
+                                                        style={{ padding: '9px 14px', borderRadius: 10, border: '1px solid #dce5ef', background: '#fff', color: 'var(--admin-primary)', fontWeight: 700, cursor: 'pointer' }}
+                                                    >
+                                                        View details
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : null}
+                            </div>
+                        )}
                     </div>
                 )}
             </section>
