@@ -37,6 +37,22 @@ const pageShellClass = [
 
 const panelWidthClass = 'w-[min(100%,1120px)]';
 
+
+const returnReasonOptions = [
+    { value: 'MissingInformation', label: 'Missing information' },
+    { value: 'DataMismatch', label: 'Result data mismatch' },
+    { value: 'MissingViolationDetails', label: 'Missing violation details' },
+    { value: 'IncorrectRaceInformation', label: 'Incorrect race information' },
+    { value: 'MissingEvidence', label: 'Missing supporting evidence' },
+    { value: 'UnclearConclusion', label: 'Unclear conclusion' },
+    { value: 'Other', label: 'Other correction' },
+];
+
+const createInitialReturnForm = () => ({
+    reasonCategory: 'MissingInformation',
+    reason: '',
+});
+
 const statusClass = {
     pending: 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
     draft: 'border-[#d6a918] bg-[#ffd95e] text-[#8c6508]',
@@ -143,6 +159,9 @@ function ValidateResultDetail() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
+    const [returnModalOpen, setReturnModalOpen] = useState(false);
+    const [returnForm, setReturnForm] = useState(createInitialReturnForm);
+    const [returnFormError, setReturnFormError] = useState('');
 
     const loadDetail = async () => {
         setLoading(true);
@@ -252,31 +271,49 @@ function ValidateResultDetail() {
         }
     };
 
-    const handleReturn = async () => {
-        const reason = window.prompt(
-            'Reason for returning this submission to the referee? (minimum 10 characters)'
-        );
-        const trimmedReason = String(reason || '').trim();
+    const openReturnModal = () => {
+        setReturnForm(createInitialReturnForm());
+        setReturnFormError('');
+        setReturnModalOpen(true);
+    };
 
-        if (!trimmedReason) {
+    const closeReturnModal = () => {
+        if (actionLoading) return;
+
+        setReturnModalOpen(false);
+        setReturnFormError('');
+    };
+
+    const handleReturnFormChange = (field) => (event) => {
+        const { value } = event.target;
+
+        setReturnForm((current) => ({
+            ...current,
+            [field]: value,
+        }));
+
+        if (returnFormError) {
+            setReturnFormError('');
+        }
+    };
+
+    const handleReturn = async (event) => {
+        event.preventDefault();
+
+        const trimmedReason = String(returnForm.reason || '').trim();
+
+        if (!returnForm.reasonCategory) {
+            setReturnFormError('Choose the main reason for returning this submission.');
             return;
         }
 
         if (trimmedReason.length < 10 || trimmedReason.length > 1000) {
-            showAdminError('Return reason must be between 10 and 1,000 characters.');
+            setReturnFormError('Correction instructions must contain between 10 and 1,000 characters.');
             return;
         }
 
-        const confirmed = await confirmAdminAction({
-            title: 'Return result report',
-            message: 'Return the final report and all referee-confirmed results for correction?',
-            confirmLabel: 'Return',
-            tone: 'danger',
-        });
-
-        if (!confirmed) return;
-
         setActionLoading(true);
+        setReturnFormError('');
 
         try {
             const finalReport = getFinalPostRaceReport();
@@ -296,14 +333,17 @@ function ValidateResultDetail() {
                 await adminApi.returnRefereeReport(
                     finalReport.reportId,
                     trimmedReason,
-                    'Other'
+                    returnForm.reasonCategory
                 );
             }
 
+            setReturnModalOpen(false);
             showAdminSuccess('Final report and all results returned to referee.', 'Returned');
             setTimeout(() => navigate('/admin/results'), 1500);
         } catch (err) {
-            showAdminError(err.message || 'Failed to return result.');
+            const message = err.message || 'Failed to return result.';
+            setReturnFormError(message);
+            showAdminError(message);
         } finally {
             setActionLoading(false);
         }
@@ -522,7 +562,7 @@ function ValidateResultDetail() {
                                 <button
                                     type="button"
                                     disabled={actionLoading}
-                                    onClick={handleReturn}
+                                    onClick={openReturnModal}
                                     className="flex min-h-[38px] cursor-pointer items-center gap-2 rounded-full border border-[#d89288] bg-white px-4 text-[0.78rem] font-black text-[#a4392f] transition-colors hover:bg-[#f3e1df] disabled:opacity-50"
                                 >
                                     <FaUndo aria-hidden="true" className="h-3 w-3" />
@@ -743,6 +783,124 @@ function ValidateResultDetail() {
                     </>
                 )}
             </section>
+
+            {returnModalOpen ? (
+                <div
+                    aria-labelledby="return-submission-title"
+                    aria-modal="true"
+                    className="fixed inset-0 z-[120] grid place-items-center overflow-y-auto bg-[#07152d]/65 px-4 py-8 backdrop-blur-[2px]"
+                    onMouseDown={closeReturnModal}
+                    role="dialog"
+                >
+                    <form
+                        className="w-[min(100%,620px)] overflow-hidden rounded-[22px] border border-[#e0c98c] bg-white shadow-[0_28px_80px_rgba(3,15,38,0.35)]"
+                        onMouseDown={(event) => event.stopPropagation()}
+                        onSubmit={handleReturn}
+                    >
+                        <div className="flex items-start justify-between gap-5 border-b border-[#eadfca] bg-[#fffaf0] px-6 py-5">
+                            <div className="flex items-start gap-3.5">
+                                <span className="grid h-11 w-11 flex-none place-items-center rounded-full border border-[#efb9b1] bg-[#fff0ed] text-[#a62c22]">
+                                    <FaUndo aria-hidden="true" />
+                                </span>
+                                <div>
+                                    <h2 className="m-0 text-[1.18rem] font-black text-[#102b57]" id="return-submission-title">
+                                        Return to referee for correction
+                                    </h2>
+                                    <p className="m-0 mt-1.5 max-w-[470px] text-[0.8rem] font-semibold leading-5 text-[#6b7280]">
+                                        The final post-race report, all referee-confirmed results, and the race status will be returned together.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                aria-label="Close return dialog"
+                                className="grid h-9 w-9 flex-none cursor-pointer place-items-center rounded-full border border-[#ded4c2] bg-white text-[1.35rem] font-bold leading-none text-[#42526b] hover:bg-[#f6efe4] disabled:cursor-not-allowed disabled:opacity-50"
+                                disabled={actionLoading}
+                                onClick={closeReturnModal}
+                                type="button"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        <div className="grid gap-5 px-6 py-6">
+                            <div className="grid grid-cols-2 gap-3 rounded-xl border border-[#dbe5f0] bg-[#f7faff] p-4 max-[620px]:grid-cols-1">
+                                <div>
+                                    <span className="block text-[0.62rem] font-black uppercase tracking-wide text-[#718096]">Tournament</span>
+                                    <strong className="mt-1 block text-[0.87rem] text-[#17233b]">{tournamentName}</strong>
+                                </div>
+                                <div>
+                                    <span className="block text-[0.62rem] font-black uppercase tracking-wide text-[#718096]">Referee</span>
+                                    <strong className="mt-1 block text-[0.87rem] text-[#17233b]">{detail?.refereeName || `#${detail?.refereeId || '-'}`}</strong>
+                                </div>
+                            </div>
+
+                            <label className="grid gap-2 text-[0.74rem] font-black uppercase tracking-wide text-[#48658f]">
+                                Correction category
+                                <select
+                                    autoFocus
+                                    className="min-h-[46px] rounded-xl border border-[#d8c58d] bg-white px-4 text-[0.9rem] font-bold normal-case tracking-normal text-[#17233b] outline-none transition focus:border-[#0f3d79] focus:ring-2 focus:ring-[#0f3d79]/15"
+                                    disabled={actionLoading}
+                                    onChange={handleReturnFormChange('reasonCategory')}
+                                    value={returnForm.reasonCategory}
+                                >
+                                    {returnReasonOptions.map((option) => (
+                                        <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                </select>
+                            </label>
+
+                            <label className="grid gap-2 text-[0.74rem] font-black uppercase tracking-wide text-[#48658f]">
+                                Instructions for the referee
+                                <textarea
+                                    className="min-h-[150px] resize-y rounded-xl border border-[#d8c58d] bg-white px-4 py-3 text-[0.92rem] font-semibold leading-6 normal-case tracking-normal text-[#17233b] outline-none transition placeholder:font-medium placeholder:text-[#98a2b3] focus:border-[#0f3d79] focus:ring-2 focus:ring-[#0f3d79]/15"
+                                    disabled={actionLoading}
+                                    maxLength={1000}
+                                    onChange={handleReturnFormChange('reason')}
+                                    placeholder="Describe exactly what is incorrect and what the referee must update before resubmitting..."
+                                    value={returnForm.reason}
+                                />
+                            </label>
+
+                            <div className="flex items-start justify-between gap-4 text-[0.72rem] font-bold">
+                                <span className={returnForm.reason.trim().length > 0 && returnForm.reason.trim().length < 10 ? 'text-[#a62c22]' : 'text-[#718096]'}>
+                                    Minimum 10 characters. This message will be shown to the referee.
+                                </span>
+                                <span className="flex-none text-[#718096]">{returnForm.reason.length}/1000</span>
+                            </div>
+
+                            {returnFormError ? (
+                                <div className="flex items-start gap-3 rounded-xl border border-[#efb9b1] bg-[#fff2ef] px-4 py-3 text-[0.82rem] font-bold leading-5 text-[#a62c22]" role="alert">
+                                    <FaExclamationCircle aria-hidden="true" className="mt-0.5 flex-none" />
+                                    <span>{returnFormError}</span>
+                                </div>
+                            ) : null}
+
+                            <div className="rounded-xl border border-[#f1d49d] bg-[#fff8e8] px-4 py-3 text-[0.78rem] font-semibold leading-5 text-[#765216]">
+                                Returning this submission does not delete the data. The referee can edit the returned report and results, then submit them again for approval.
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 border-t border-[#eadfca] bg-[#fffdf9] px-6 py-4 max-[520px]:flex-col-reverse">
+                            <button
+                                className="min-h-[44px] cursor-pointer rounded-full border border-[#d8c58d] bg-white px-5 text-[0.8rem] font-black text-[#17335f] hover:bg-[#f8f1e4] disabled:cursor-not-allowed disabled:opacity-50"
+                                disabled={actionLoading}
+                                onClick={closeReturnModal}
+                                type="button"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="inline-flex min-h-[44px] cursor-pointer items-center justify-center gap-2 rounded-full bg-[#a62c22] px-5 text-[0.8rem] font-black text-white shadow-[0_8px_20px_rgba(166,44,34,0.2)] hover:bg-[#87241d] disabled:cursor-not-allowed disabled:opacity-50"
+                                disabled={actionLoading || returnForm.reason.trim().length < 10}
+                                type="submit"
+                            >
+                                <FaUndo aria-hidden="true" className="h-3.5 w-3.5" />
+                                {actionLoading ? 'Returning...' : 'Return to Referee'}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            ) : null}
         </AdminLayout>
     );
 }
