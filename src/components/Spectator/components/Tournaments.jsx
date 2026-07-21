@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
     FaCalendarAlt,
     FaCheckCircle,
+    FaEdit,
     FaHorseHead,
     FaMapMarkerAlt,
     FaPlay,
@@ -56,7 +57,7 @@ function canWatchReplay(tournament) {
 
 // ─── Predict Modal ────────────────────────────────────────────────────────────
 
-function PredictModal({ tournament, onClose, onSuccess }) {
+function PredictModal({ tournament, prediction, onClose, onSuccess }) {
     const [horses, setHorses] = useState([]);
     const [wallet, setWallet] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -65,20 +66,36 @@ function PredictModal({ tournament, onClose, onSuccess }) {
     const [submitting, setSubmitting] = useState(false);
     const { toast, showToast, hideToast } = useToast();
 
+    const isEditing = Boolean(prediction?.predictionId);
+    const originalStakePoints = isEditing ? Number(prediction?.stakePoints ?? 0) : 0;
+
     useEffect(() => {
         Promise.all([
             spectatorApi.getTournamentHorses(tournament.tournamentId).catch(() => []),
             spectatorApi.getSpectatorWallet().catch(() => null),
-        ]).then(([h, w]) => {
-            setHorses(h ?? []);
-            setWallet(w);
-            if (w?.minimumStakePoints) setStakePoints(w.minimumStakePoints);
+        ]).then(([horseItems, walletData]) => {
+            const normalizedHorses = horseItems ?? [];
+            setHorses(normalizedHorses);
+            setWallet(walletData);
+
+            if (isEditing) {
+                const currentHorse = normalizedHorses.find(
+                    horse => horse.horseId === prediction.predictedHorseId,
+                );
+                setSelected(currentHorse ?? null);
+                setStakePoints(Number(prediction.stakePoints ?? walletData?.minimumStakePoints ?? 10));
+            } else if (walletData?.minimumStakePoints) {
+                setStakePoints(walletData.minimumStakePoints);
+            }
         }).finally(() => setLoading(false));
-    }, [tournament.tournamentId]);
+    }, [isEditing, prediction?.predictedHorseId, prediction?.stakePoints, tournament.tournamentId]);
 
     const minStake = wallet?.minimumStakePoints ?? 10;
-    const maxStake = wallet?.bettingPoints ?? 9999;
-    const remaining = wallet ? Math.max(0, wallet.bettingPoints - stakePoints) : null;
+    const availableForPrediction = (wallet?.bettingPoints ?? 9999) + originalStakePoints;
+    const maxStake = Math.max(minStake, availableForPrediction);
+    const remaining = wallet
+        ? Math.max(0, wallet.bettingPoints + originalStakePoints - stakePoints)
+        : null;
     const stakeValid = stakePoints >= minStake && stakePoints <= maxStake;
 
     const handleStakeChange = (e) => {
@@ -88,17 +105,46 @@ function PredictModal({ tournament, onClose, onSuccess }) {
 
     const handleSubmit = async () => {
         if (!selected) return;
-        if (!stakeValid) { showToast(`Stake must be between ${minStake} and ${maxStake} points.`, 'error'); return; }
+        if (!stakeValid) {
+            showToast(`Stake must be between ${minStake} and ${maxStake} points.`, 'error');
+            return;
+        }
+
         setSubmitting(true);
         try {
-            await spectatorApi.createPrediction({
-                tournamentId: tournament.tournamentId,
+            const payload = {
                 predictedHorseId: selected.horseId,
                 stakePoints,
+            };
+
+            const result = isEditing
+                ? await spectatorApi.updatePrediction(prediction.predictionId, payload)
+                : await spectatorApi.createPrediction({
+                    tournamentId: tournament.tournamentId,
+                    ...payload,
+                });
+
+            onSuccess({
+                ...result,
+                tournamentId: tournament.tournamentId,
+                predictionId: result?.predictionId ?? prediction?.predictionId,
+                predictedHorseId: selected.horseId,
+                predictedHorseName: selected.horseName,
+                predictedHorseImageUrl: selected.imageUrl ?? selected.horseImageUrl ?? null,
+                predictedOwnerName: selected.ownerName ?? null,
+                predictedJockeyName: selected.jockeyName ?? null,
+                stakePoints,
+                status: result?.status ?? 'Pending',
+                isCorrect: null,
+                pointsAwarded: 0,
             });
-            onSuccess(tournament.tournamentId, selected);
         } catch (err) {
-            showToast(err.message || 'Failed to submit prediction. Please try again.', 'error');
+            showToast(
+                err.message || (isEditing
+                    ? 'Failed to update prediction. Please try again.'
+                    : 'Failed to submit prediction. Please try again.'),
+                'error',
+            );
         } finally {
             setSubmitting(false);
         }
@@ -130,7 +176,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                             onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = '/GoldenDerby.jpg'; }}
                         />
                         <div style={{ minWidth: 0 }}>
-                            <p style={{ margin: 0, fontSize: 10, fontWeight: 800, color: '#16305c', textTransform: 'uppercase', letterSpacing: '0.07em' }}>🏆 Tournament Prediction</p>
+                            <p style={{ margin: 0, fontSize: 10, fontWeight: 800, color: '#16305c', textTransform: 'uppercase', letterSpacing: '0.07em' }}>{isEditing ? '✏️ Edit Tournament Prediction' : '🏆 Tournament Prediction'}</p>
                             <h3 style={{ margin: '5px 0 0', fontSize: '1.1rem', fontWeight: 800, color: '#2b1b1b', lineHeight: 1.3 }}>{tournament.tournamentName}</h3>
                             {/* Meta row */}
                             <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: '4px 14px', fontSize: '0.78rem', color: '#888' }}>
@@ -154,7 +200,7 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                 {wallet && (
                     <div style={{ padding: '12px 28px', background: '#f0faf5', borderBottom: '1px solid #d4edda', flexShrink: 0, display: 'flex', gap: 0, alignItems: 'stretch' }}>
                         <div style={{ flex: 1, borderRight: '1px solid #c3e6cb', paddingRight: 14, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#16305c', textTransform: 'uppercase', letterSpacing: '0.05em' }}>💰 Balance</span>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#16305c', textTransform: 'uppercase', letterSpacing: '0.05em' }}>💰 Current Balance</span>
                             <span style={{ fontSize: '1rem', fontWeight: 800, color: '#16305c' }}>{wallet.bettingPoints.toLocaleString()} pts</span>
                         </div>
                         <div style={{ flex: 1, paddingLeft: 14, borderRight: '1px solid #c3e6cb', paddingRight: 14, display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -174,7 +220,11 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                 <div style={{ padding: '10px 28px', background: '#fffdf8', borderBottom: '1px solid #f0e8e6', flexShrink: 0 }}>
                     <p style={{ margin: 0, fontSize: '0.8rem', color: '#777', display: 'flex', alignItems: 'flex-start', gap: 6 }}>
                         <span style={{ flexShrink: 0 }}>ℹ️</span>
-                        <span>Select a horse and set your stake. <strong>You can only predict once</strong> per tournament — choose carefully!</span>
+                        <span>
+                            {isEditing
+                                ? <>You may change the horse or stake before the prediction deadline. Your previous stake is reused automatically.</>
+                                : <>Select a horse and set your stake. You can edit it before the prediction deadline.</>}
+                        </span>
                     </p>
                 </div>
 
@@ -276,6 +326,11 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                             <div>
                                 <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 700, color: '#16305c', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Bet</p>
                                 <p style={{ margin: '1px 0 0', fontSize: '0.88rem', fontWeight: 800, color: '#2b1b1b' }}>🐴 {selected.horseName}</p>
+                                <p style={{ margin: '3px 0 0', fontSize: '0.72rem', color: '#777' }}>
+                                    {selected.ownerName ? `Owner: ${selected.ownerName}` : 'Owner: —'}
+                                    {' · '}
+                                    {selected.jockeyName ? `Jockey: ${selected.jockeyName}` : 'Jockey: —'}
+                                </p>
                             </div>
                             <div style={{ textAlign: 'right' }}>
                                 <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Staking</p>
@@ -300,7 +355,11 @@ function PredictModal({ tournament, onClose, onSuccess }) {
                                 cursor: selected && !submitting && stakeValid ? 'pointer' : 'not-allowed',
                             }}
                         >
-                            {submitting ? 'Submitting...' : selected ? `Confirm — ${stakePoints} pts on ${selected.horseName}` : 'Select a Horse First'}
+                            {submitting
+                                ? (isEditing ? 'Saving Changes...' : 'Submitting...')
+                                : selected
+                                    ? `${isEditing ? 'Save Changes' : 'Confirm'} — ${stakePoints} pts on ${selected.horseName}`
+                                    : 'Select a Horse First'}
                         </button>
                     </div>
                 </div>
@@ -313,13 +372,20 @@ function PredictModal({ tournament, onClose, onSuccess }) {
 
 function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
     const s = getStatusStyle(tournament.status);
-    const hasPredicted = !!myPrediction || tournament.hasPredicted;
-    const horseName = myPrediction?.predictedHorseName ?? tournament.myPrediction?.predictedHorseName;
-    const isCorrect = myPrediction?.isCorrect;
-    const predStatus = myPrediction?.status ?? null;
+    const predictionData = myPrediction ?? tournament.myPrediction ?? null;
+    const hasPredicted = Boolean(predictionData) || tournament.hasPredicted;
+    const horseName = predictionData?.predictedHorseName;
+    const ownerName = predictionData?.predictedOwnerName;
+    const jockeyName = predictionData?.predictedJockeyName;
+    const stakePoints = predictionData?.stakePoints ?? 0;
+    const isCorrect = predictionData?.isCorrect;
+    const predStatus = predictionData?.status ?? predictionData?.predictionStatus ?? null;
     const isLocked = predStatus === 'Locked';
-    const pts = myPrediction?.pointsAwarded ?? 0;
+    const pts = predictionData?.pointsAwarded ?? 0;
     const open = canPredict(tournament);
+    const canEdit = Boolean(tournament.canEditPrediction) &&
+        predStatus === 'Pending' &&
+        Boolean(predictionData?.predictionId);
     const replayOpen = canWatchReplay(tournament);
 
     return (
@@ -365,6 +431,12 @@ function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
                                     <p style={{ margin: 0, fontWeight: 700, fontSize: '0.92rem', color: '#2b1b1b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                         {horseName ?? '—'}
                                     </p>
+                                    <p style={{ margin: '3px 0 0', fontSize: '0.72rem', color: '#777', lineHeight: 1.45 }}>
+                                        Owner: <strong>{ownerName ?? '—'}</strong>
+                                        {' · '}
+                                        Jockey: <strong>{jockeyName ?? '—'}</strong>
+                                        {stakePoints > 0 && <> · Stake: <strong>{stakePoints.toLocaleString()} pts</strong></>}
+                                    </p>
                                 </div>
                             </div>
                             <span style={{
@@ -374,6 +446,20 @@ function TournamentCard({ tournament, myPrediction, onPredict, onReplay }) {
                             }}>
                                 {isCorrect === true ? `✓ Correct  +${pts} pts` : isCorrect === false ? '✗ Wrong' : isLocked ? 'Locked' : 'Pending Result'}
                             </span>
+                            {canEdit && (
+                                <button
+                                    type="button"
+                                    onClick={() => onPredict(tournament, predictionData)}
+                                    style={{
+                                        width: '100%', padding: '9px 12px', borderRadius: 8,
+                                        border: '1.5px solid #16305c', background: '#fff', color: '#16305c',
+                                        fontWeight: 800, fontSize: '0.82rem', cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                                    }}
+                                >
+                                    <FaEdit /> Edit Prediction
+                                </button>
+                            )}
                         </div>
                     ) : open ? (
                         // Can predict
@@ -454,12 +540,26 @@ export default function Tournaments() {
         completed: tournaments.filter(t => t.status === 'Completed').length,
     };
 
-    const handlePredictSuccess = (tournamentId, horse) => {
+    const handlePredictSuccess = (updatedPrediction) => {
         setModal(null);
         setPredictions(prev => [
-            ...prev.filter(p => p.tournamentId !== tournamentId),
-            { predictionId: Date.now(), tournamentId, predictedHorseId: horse.horseId, predictedHorseName: horse.horseName, isCorrect: null, pointsAwarded: 0, status: 'Pending' },
+            ...prev.filter(p => p.tournamentId !== updatedPrediction.tournamentId),
+            updatedPrediction,
         ]);
+        setTournaments(prev => prev.map(tournament => {
+            if (tournament.tournamentId !== updatedPrediction.tournamentId) return tournament;
+
+            return {
+                ...tournament,
+                hasPredicted: true,
+                canPredict: false,
+                canEditPrediction: true,
+                myPrediction: {
+                    ...updatedPrediction,
+                    predictionStatus: updatedPrediction.status,
+                },
+            };
+        }));
     };
 
     return (
@@ -467,7 +567,7 @@ export default function Tournaments() {
             <div>
                 <h1 className="page-title">Tournaments</h1>
                 <p className="page-subtitle">
-                    Browse all tournaments. Pick the horse you think will win — one prediction per tournament.
+                    Browse tournaments, review Owner and Jockey information, and edit your pending prediction before the deadline.
                 </p>
             </div>
 
@@ -521,7 +621,7 @@ export default function Tournaments() {
                             key={t.tournamentId}
                             tournament={t}
                             myPrediction={predMap[t.tournamentId]}
-                            onPredict={setModal}
+                            onPredict={(tournament, prediction) => setModal({ tournament, prediction })}
                             onReplay={(raceId) => navigate(`/spectator/races/${raceId}/replay`)}
                         />
                     ))}
@@ -530,7 +630,8 @@ export default function Tournaments() {
 
             {modal && (
                 <PredictModal
-                    tournament={modal}
+                    tournament={modal.tournament}
+                    prediction={modal.prediction}
                     onClose={() => setModal(null)}
                     onSuccess={handlePredictSuccess}
                 />

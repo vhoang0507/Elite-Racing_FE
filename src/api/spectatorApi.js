@@ -30,6 +30,16 @@ export async function createPrediction(payload) {
     });
 }
 
+export async function updatePrediction(predictionId, payload) {
+    return apiRequest(`/spectator/predictions/${predictionId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            predictedHorseId: payload.predictedHorseId,
+            stakePoints: payload.stakePoints,
+        }),
+    });
+}
+
 export async function getMyPredictions() {
     // Returns array of { predictionId, tournamentId, tournamentName, predictedHorseId,
     //   predictedHorseName, isCorrect, pointsAwarded, stakePoints, netPoints, status, lockedAt }
@@ -123,6 +133,7 @@ export const spectatorApi = {
     getSpectatorTournamentDetail,
     getRaceRegistrations,
     createPrediction,
+    updatePrediction,
     getMyPredictions,
     getSpectatorWallet,
     getTournamentHorses,
