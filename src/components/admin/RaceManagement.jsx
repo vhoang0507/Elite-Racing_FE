@@ -731,6 +731,9 @@ function RaceManagement() {
 
         const formData = new FormData(event.currentTarget);
         const tournamentImage = formData.get('tournamentImage');
+        const goldPrize = parseCurrency(formData.get('goldPrize'));
+        const silverPrize = parseCurrency(formData.get('silverPrize'));
+        const bronzePrize = parseCurrency(formData.get('bronzePrize'));
         const patch = {
             name: formData.get('name').trim(),
             description: formData.get('description').trim(),
@@ -739,7 +742,10 @@ function RaceManagement() {
             location: formData.get('location').trim(),
             distanceMeters: Number(formData.get('distanceMeters') || 0),
             maxHorses: Number(formData.get('maxHorses') || 0),
-            prizePool: parseCurrency(formData.get('prizePool')),
+            goldPrize,
+            silverPrize,
+            bronzePrize,
+            prizePool: goldPrize + silverPrize + bronzePrize,
             raceStartTime: String(formData.get('raceStartTime') || '').trim(),
             rules: formData.get('rules'),
             tournamentImage: typeof File !== 'undefined' && tournamentImage instanceof File && tournamentImage.size > 0 ? tournamentImage : null,
@@ -785,8 +791,18 @@ function RaceManagement() {
             return;
         }
 
-        if (patch.prizePool < 0 || patch.prizePool > maxPrizePool) {
-            setEditError('Prize pool must be between 0 and 1,000,000,000.');
+        if (patch.goldPrize <= 0 || patch.silverPrize <= 0 || patch.bronzePrize <= 0) {
+            setEditError('Gold, Silver, and Bronze prizes must all be greater than 0.');
+            return;
+        }
+
+        if (!(patch.goldPrize > patch.silverPrize && patch.silverPrize > patch.bronzePrize)) {
+            setEditError('Prize amounts must decrease by rank: Gold must be greater than Silver, and Silver must be greater than Bronze.');
+            return;
+        }
+
+        if (patch.prizePool > maxPrizePool) {
+            setEditError('Prize pool cannot exceed 1,000,000,000.');
             return;
         }
 
@@ -1194,6 +1210,20 @@ function RaceManagement() {
                                     <DetailItem label="Prize Pool">
                                         {adminApi.formatters.toMoney(selectedTournament.prizePool)}
                                     </DetailItem>
+                                    <DetailItem label="Gold Prize">
+                                        {adminApi.formatters.toMoney(readTournamentField(selectedTournament, 'goldPrize', 'GoldPrize') || 0)}
+                                    </DetailItem>
+                                    <DetailItem label="Silver Prize">
+                                        {adminApi.formatters.toMoney(readTournamentField(selectedTournament, 'silverPrize', 'SilverPrize') || 0)}
+                                    </DetailItem>
+                                    <DetailItem label="Bronze Prize">
+                                        {adminApi.formatters.toMoney(readTournamentField(selectedTournament, 'bronzePrize', 'BronzePrize') || 0)}
+                                    </DetailItem>
+                                    <DetailItem label="Prize Rules">
+                                        {readTournamentField(selectedTournament, 'hasCompletePrizeRules', 'HasCompletePrizeRules')
+                                            ? 'Configured'
+                                            : 'Missing or incomplete'}
+                                    </DetailItem>
                                     <DetailItem label="Referee">
                                         {getRefereeNames(selectedTournament).length > 0 ? getRefereeNames(selectedTournament).join(', ') : 'Unassigned'}
                                     </DetailItem>
@@ -1336,9 +1366,24 @@ function RaceManagement() {
                                     </label>
 
                                     <label className={editFieldClass}>
-                                        <span className={editLabelClass}>Prize Pool</span>
-                                        <input className={editControlClass} defaultValue={formatCurrencyAmount(editingTournament.prizePool)} inputMode="numeric" name="prizePool" onChange={handleCurrencyInputChange} type="text" />
+                                        <span className={editLabelClass}>Gold Prize</span>
+                                        <input className={editControlClass} defaultValue={formatCurrencyAmount(readTournamentField(editingTournament, 'goldPrize', 'GoldPrize') || 0)} inputMode="numeric" name="goldPrize" onChange={handleCurrencyInputChange} required type="text" />
                                     </label>
+
+                                    <label className={editFieldClass}>
+                                        <span className={editLabelClass}>Silver Prize</span>
+                                        <input className={editControlClass} defaultValue={formatCurrencyAmount(readTournamentField(editingTournament, 'silverPrize', 'SilverPrize') || 0)} inputMode="numeric" name="silverPrize" onChange={handleCurrencyInputChange} required type="text" />
+                                    </label>
+
+                                    <label className={editFieldClass}>
+                                        <span className={editLabelClass}>Bronze Prize</span>
+                                        <input className={editControlClass} defaultValue={formatCurrencyAmount(readTournamentField(editingTournament, 'bronzePrize', 'BronzePrize') || 0)} inputMode="numeric" name="bronzePrize" onChange={handleCurrencyInputChange} required type="text" />
+                                    </label>
+
+                                    <div className={detailItemClass}>
+                                        <span className={detailLabelClass}>Prize Pool</span>
+                                        <div className={detailValueClass}>Automatically calculated from Gold + Silver + Bronze when saved.</div>
+                                    </div>
 
                                     <label className={`${editFieldClass} col-span-2 max-[720px]:col-span-1`}>
                                         <span className={editLabelClass}>Tournament Image</span>

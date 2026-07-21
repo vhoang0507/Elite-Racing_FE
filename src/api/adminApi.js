@@ -333,6 +333,10 @@ async function getTournaments() {
         distanceMeters: getTournamentDistanceMeters(t),
         registeredHorses: t.entriesCount || 0,
         prizePool: t.prizePool,
+        goldPrize: Number(readApiField(t, 'goldPrize') ?? 0),
+        silverPrize: Number(readApiField(t, 'silverPrize') ?? 0),
+        bronzePrize: Number(readApiField(t, 'bronzePrize') ?? 0),
+        hasCompletePrizeRules: Boolean(readApiField(t, 'hasCompletePrizeRules')),
         referee: getAssignedReferee(t),
         status: t.status,
         seasonId: readApiField(t, 'seasonId'),
@@ -394,13 +398,15 @@ async function createTournament(payload) {
     appendFormValue(formData, 'RegistrationDeadline', payload.startDate || payload.registrationDeadline || '');
     appendFormValue(formData, 'DistanceMeters', Number(payload.distanceMeters || 0));
     appendFormValue(formData, 'MaxHorses', Number(payload.maxHorses || 0));
-    appendFormValue(
-        formData,
-        'PrizePool',
-        payload.prizePool === undefined || payload.prizePool === null
-            ? parseCurrency(payload.goldPrize) + parseCurrency(payload.silverPrize) + parseCurrency(payload.bronzePrize)
-            : parseCurrency(payload.prizePool)
-    );
+    const goldPrize = parseCurrency(payload.goldPrize);
+    const silverPrize = parseCurrency(payload.silverPrize);
+    const bronzePrize = parseCurrency(payload.bronzePrize);
+    const calculatedPrizePool = goldPrize + silverPrize + bronzePrize;
+
+    appendFormValue(formData, 'GoldPrize', goldPrize);
+    appendFormValue(formData, 'SilverPrize', silverPrize);
+    appendFormValue(formData, 'BronzePrize', bronzePrize);
+    appendFormValue(formData, 'PrizePool', calculatedPrizePool);
     appendFormValue(formData, 'Rules', payload.rules || '');
 
     if (typeof File !== 'undefined' && payload.tournamentImage instanceof File && payload.tournamentImage.size > 0) {
@@ -443,7 +449,16 @@ async function updateTournament(id, patch) {
     appendFormValue(formData, 'RegistrationDeadline', patch.startDate || patch.registrationDeadline || '');
     appendFormValue(formData, 'DistanceMeters', Number(patch.distanceMeters || 0));
     appendFormValue(formData, 'MaxHorses', Number(patch.maxHorses || 0));
-    appendFormValue(formData, 'PrizePool', parseCurrency(patch.prizePool));
+
+    const goldPrize = parseCurrency(patch.goldPrize);
+    const silverPrize = parseCurrency(patch.silverPrize);
+    const bronzePrize = parseCurrency(patch.bronzePrize);
+    const calculatedPrizePool = goldPrize + silverPrize + bronzePrize;
+
+    appendFormValue(formData, 'GoldPrize', goldPrize);
+    appendFormValue(formData, 'SilverPrize', silverPrize);
+    appendFormValue(formData, 'BronzePrize', bronzePrize);
+    appendFormValue(formData, 'PrizePool', calculatedPrizePool);
     appendFormValue(formData, 'Rules', patch.rules || '');
 
     if (typeof File !== 'undefined' && patch.tournamentImage instanceof File && patch.tournamentImage.size > 0) {

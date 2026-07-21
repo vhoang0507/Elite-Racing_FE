@@ -364,6 +364,9 @@ function CreateTournament() {
             payload.append('RegistrationDeadline', registrationDeadline);
             payload.append('DistanceMeters', String(distanceMeters));
             payload.append('MaxHorses', String(maxHorses));
+            payload.append('GoldPrize', String(goldPrize));
+            payload.append('SilverPrize', String(silverPrize));
+            payload.append('BronzePrize', String(bronzePrize));
             payload.append('PrizePool', String(prizePool));
             payload.append('Rules', rules);
 
