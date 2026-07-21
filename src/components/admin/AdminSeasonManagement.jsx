@@ -47,10 +47,12 @@ const emptySeasonForm = {
 };
 
 const defaultRewardRules = [
-    { rankPosition: 1, rewardName: 'Champion Bonus', rewardDescription: '', bonusPoints: 300, rewardItemId: '', quantity: 1 },
-    { rankPosition: 2, rewardName: 'Runner-up Bonus', rewardDescription: '', bonusPoints: 200, rewardItemId: '', quantity: 1 },
-    { rankPosition: 3, rewardName: 'Third Place Bonus', rewardDescription: '', bonusPoints: 100, rewardItemId: '', quantity: 1 },
+    { rankPosition: 1, rewardName: 'Champion Bonus', rewardDescription: 'Awarded to the spectator who finishes the season in first place.', bonusPoints: 300, rewardItemId: '', quantity: 1 },
+    { rankPosition: 2, rewardName: 'Runner-up Bonus', rewardDescription: 'Awarded to the spectator who finishes the season in second place.', bonusPoints: 200, rewardItemId: '', quantity: 1 },
+    { rankPosition: 3, rewardName: 'Third Place Bonus', rewardDescription: 'Awarded to the spectator who finishes the season in third place.', bonusPoints: 100, rewardItemId: '', quantity: 1 },
 ];
+
+const rewardTiePolicyText = 'Rankings compare season score, correct predictions, accuracy, and total predictions. If all four values are equal, spectators share the same rank and each receives the full reward for that rank. The next rank is skipped (for example: 1, 1, 3). Physical rewards require enough stock for every tied winner.';
 
 const statusClass = {
     Draft: 'bg-[#f3f4f6] text-[#374151]',
@@ -945,6 +947,10 @@ function AdminSeasonManagement() {
                                 </button>
                             </div>
 
+                            <div className="mb-4 rounded-lg border border-[#d9c58c] bg-[#fff8df] px-4 py-3 text-[0.78rem] font-semibold leading-relaxed text-[#6f5711]">
+                                <strong>Tie policy:</strong> {rewardTiePolicyText}
+                            </div>
+
                             <div className="grid max-h-[720px] gap-4 overflow-y-auto pr-1 max-[720px]:max-h-none max-[720px]:overflow-visible max-[720px]:pr-0">
                                 {createRewardRules.map((rule, index) => (
                                     <article className="rounded-lg border border-[var(--admin-border)] bg-white p-4 shadow-[0_10px_24px_rgba(81,31,22,0.06)]" key={`${index}-${rule.rankPosition}`}>
@@ -1130,6 +1136,10 @@ function AdminSeasonManagement() {
                                         <FaTimes aria-hidden="true" />
                                     </button>
                                 </div>
+                            </div>
+
+                            <div className="rounded-lg border border-[#d9c58c] bg-[#fff8df] px-4 py-3 text-[0.78rem] font-semibold leading-relaxed text-[#6f5711]">
+                                <strong>Tie policy:</strong> {rewardTiePolicyText}
                             </div>
 
                             <div className="grid gap-3">
@@ -1341,6 +1351,7 @@ function AdminSeasonManagement() {
                                         <div className="overflow-hidden rounded-md border border-[var(--admin-border)]">
                                             <div className="border-b border-[var(--admin-border)] bg-[#f8fbff] px-4 py-3">
                                                 <h3 className="m-0 text-[0.95rem] font-black text-[var(--admin-primary-dark)]">Reward Rules</h3>
+                                                <p className="m-0 mt-1 text-[0.72rem] font-semibold leading-relaxed text-[var(--admin-muted)]">{rewardTiePolicyText}</p>
                                             </div>
                                             <div className="divide-y divide-[var(--admin-border)]">
                                                 {detailRewardRules.length === 0 ? (

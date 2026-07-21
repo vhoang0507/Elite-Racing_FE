@@ -15,6 +15,8 @@ const emptyClaimForm = {
     deliveryAddress: '',
 };
 
+const rewardTiePolicyText = 'Rankings compare season score, correct predictions, accuracy, and total predictions. If all four values are equal, spectators share the same rank and each receives the full reward for that rank. The next rank is skipped (for example: 1, 1, 3). Physical rewards require enough stock for every tied winner.';
+
 function readField(item, key) {
     const pascalKey = key[0].toUpperCase() + key.slice(1);
     return item?.[key] ?? item?.[pascalKey];
@@ -245,7 +247,10 @@ export default function ResultReward() {
 
                         <div className="surface-card p-5">
                             <h2 className="m-0 mb-1 text-[1.05rem] font-bold">Reward Rules</h2>
-                            <p className="m-0 mb-4 text-[0.83rem] text-[var(--admin-muted)]">Current season prizes for top predictors.</p>
+                            <p className="m-0 mb-3 text-[0.83rem] text-[var(--admin-muted)]">Current season prizes for top predictors.</p>
+                            <div className="mb-4 rounded-[8px] border border-[#d9c58c] bg-[#fff8df] px-4 py-3 text-[0.78rem] font-semibold leading-relaxed text-[#6f5711]">
+                                <strong>Tie policy:</strong> {rewardTiePolicyText}
+                            </div>
                             <div className="grid gap-3">
                                 {rewardRules.length === 0 ? (
                                     <p className="m-0 text-sm text-[var(--admin-muted)]">No reward rules configured for the active season.</p>
