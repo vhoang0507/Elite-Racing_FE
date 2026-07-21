@@ -17,7 +17,7 @@ import {
 } from 'react-icons/fa';
 
 import { adminApi } from '../../api/adminApi';
-import { resolveFileUrl } from '../../api/uploadApi';
+import { resolveFileUrl, uploadFile } from '../../api/uploadApi';
 import {
     confirmAdminAction,
     showAdminSuccess,
@@ -75,6 +75,8 @@ function AdminRewardPayments() {
     const [actionLoadingId, setActionLoadingId] = useState('');
     const [inventoryActionLoadingId, setInventoryActionLoadingId] = useState('');
     const [inventoryForm, setInventoryForm] = useState(emptyInventoryForm);
+    const [inventoryImageFile, setInventoryImageFile] = useState(null);
+    const [inventoryImagePreviewUrl, setInventoryImagePreviewUrl] = useState('');
     const [showInventoryForm, setShowInventoryForm] = useState(false);
     const [imagePreviewBroken, setImagePreviewBroken] = useState(false);
     const [adjustModal, setAdjustModal] = useState(null);
@@ -114,6 +116,12 @@ function AdminRewardPayments() {
     useEffect(() => {
         loadInventory();
     }, [loadInventory]);
+
+    useEffect(() => () => {
+        if (inventoryImagePreviewUrl) {
+            URL.revokeObjectURL(inventoryImagePreviewUrl);
+        }
+    }, [inventoryImagePreviewUrl]);
 
     const stats = useMemo(() => {
         const countByStatus = (status) => rewards.filter((reward) => readRewardField(reward, 'status') === status).length;
@@ -182,13 +190,56 @@ function AdminRewardPayments() {
     };
 
     const handleInventoryFormChange = (field) => (event) => {
-        if (field === 'imageUrl') {
-            setImagePreviewBroken(false);
-        }
         setInventoryForm((current) => ({
             ...current,
             [field]: event.target.value,
         }));
+    };
+
+    const resetInventoryCreateForm = () => {
+        setInventoryForm(emptyInventoryForm);
+        setInventoryImageFile(null);
+        setInventoryImagePreviewUrl('');
+        setImagePreviewBroken(false);
+    };
+
+    const handleInventoryImageChange = (event) => {
+        const file = event.target.files?.[0] || null;
+
+        if (!file) {
+            setInventoryImageFile(null);
+            setInventoryImagePreviewUrl('');
+            setImagePreviewBroken(false);
+            return;
+        }
+
+        const allowedTypes = new Set([
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+        ]);
+        const allowedExtensions = new Set(['jpg', 'jpeg', 'png', 'webp']);
+        const extension = file.name.split('.').pop()?.toLowerCase() || '';
+
+        if (!allowedTypes.has(file.type) && !allowedExtensions.has(extension)) {
+            event.target.value = '';
+            setInventoryImageFile(null);
+            setInventoryImagePreviewUrl('');
+            showAdminError('Reward image must be a JPG, PNG, or WEBP file.');
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            event.target.value = '';
+            setInventoryImageFile(null);
+            setInventoryImagePreviewUrl('');
+            showAdminError('Reward image cannot exceed 5MB.');
+            return;
+        }
+
+        setInventoryImageFile(file);
+        setInventoryImagePreviewUrl(URL.createObjectURL(file));
+        setImagePreviewBroken(false);
     };
 
     const handleCreateInventoryItem = async (event) => {
@@ -213,23 +264,38 @@ function AdminRewardPayments() {
             return;
         }
 
-        if (inventoryForm.description.length > 1000 || inventoryForm.imageUrl.length > 500) {
-            showAdminError('Inventory description or image URL is too long.');
+        if (inventoryForm.description.length > 1000) {
+            showAdminError('Inventory description cannot exceed 1,000 characters.');
             return;
         }
 
         setInventoryActionLoadingId('create');
 
         try {
+            let imageUrl = '';
+
+            if (inventoryImageFile) {
+                const uploadResponse = await uploadFile(inventoryImageFile, 'rewards');
+                imageUrl = uploadResponse?.url
+                    || uploadResponse?.Url
+                    || uploadResponse?.absoluteUrl
+                    || uploadResponse?.AbsoluteUrl
+                    || '';
+
+                if (!imageUrl) {
+                    throw new Error('The image was uploaded, but the server did not return its URL.');
+                }
+            }
+
             const response = await adminApi.createRewardInventoryItem({
                 ...inventoryForm,
                 name,
                 sku,
                 initialStock,
+                imageUrl,
             });
             showAdminSuccess(response?.message || response?.Message || 'Reward item created.', 'Created');
-            setInventoryForm(emptyInventoryForm);
-            setImagePreviewBroken(false);
+            resetInventoryCreateForm();
             setShowInventoryForm(false);
             await loadInventory();
         } catch (err) {
@@ -419,7 +485,7 @@ function AdminRewardPayments() {
                                 <h3 className="m-0 text-[0.9rem] font-black text-[var(--admin-ink)]">New Reward Item</h3>
                                 <button
                                     className="text-[0.76rem] font-bold text-[var(--admin-muted)] hover:text-[var(--admin-primary-dark)]"
-                                    onClick={() => { setShowInventoryForm(false); setInventoryForm(emptyInventoryForm); setImagePreviewBroken(false); }}
+                                    onClick={() => { setShowInventoryForm(false); resetInventoryCreateForm(); }}
                                     type="button"
                                 >
                                     Cancel
@@ -428,12 +494,12 @@ function AdminRewardPayments() {
 
                             <div className="grid grid-cols-[104px_minmax(0,1fr)] gap-5 max-[720px]:grid-cols-1">
                                 <div className="grid h-[104px] w-[104px] flex-none place-items-center overflow-hidden rounded-[10px] border border-dashed border-[var(--admin-border)] bg-white text-[var(--admin-muted)] max-[720px]:mx-auto">
-                                    {inventoryForm.imageUrl && !imagePreviewBroken ? (
+                                    {(inventoryImagePreviewUrl || inventoryForm.imageUrl) && !imagePreviewBroken ? (
                                         <img
-                                            alt=""
+                                            alt="Reward item preview"
                                             className="h-full w-full object-cover"
                                             onError={() => setImagePreviewBroken(true)}
-                                            src={resolveFileUrl(inventoryForm.imageUrl)}
+                                            src={inventoryImagePreviewUrl || resolveFileUrl(inventoryForm.imageUrl)}
                                         />
                                     ) : (
                                         <FaImage aria-hidden="true" className="text-2xl" />
@@ -454,9 +520,15 @@ function AdminRewardPayments() {
                                         <input className="h-10 rounded-md border border-[var(--admin-border)] bg-white px-3 text-[0.84rem] font-bold outline-0 focus:border-[var(--admin-gold)]" max="1000000" min="0" onChange={handleInventoryFormChange('initialStock')} required step="1" type="number" value={inventoryForm.initialStock} />
                                     </label>
                                     <label className="grid gap-1.5">
-                                        <span className="text-[0.68rem] font-black uppercase text-[var(--admin-muted)]">Image URL</span>
-                                        <input className="h-10 rounded-md border border-[var(--admin-border)] bg-white px-3 text-[0.84rem] font-bold outline-0 focus:border-[var(--admin-gold)]" maxLength={500} onChange={handleInventoryFormChange('imageUrl')} placeholder="https://..." type="url" value={inventoryForm.imageUrl} />
-                                        <span className="text-[0.68rem] font-semibold text-[var(--admin-muted)]">Paste a hosted image link — direct upload is coming soon.</span>
+                                        <span className="text-[0.68rem] font-black uppercase text-[var(--admin-muted)]">Reward image</span>
+                                        <input
+                                            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                            className="block h-10 cursor-pointer rounded-md border border-[var(--admin-border)] bg-white text-[0.78rem] font-bold text-[var(--admin-muted)] file:mr-3 file:h-full file:cursor-pointer file:border-0 file:bg-[var(--admin-primary)] file:px-4 file:text-[0.76rem] file:font-black file:text-white hover:file:bg-[var(--admin-primary-dark)]"
+                                            disabled={inventoryActionLoadingId === 'create'}
+                                            onChange={handleInventoryImageChange}
+                                            type="file"
+                                        />
+                                        <span className="text-[0.68rem] font-semibold text-[var(--admin-muted)]">JPG, PNG, or WEBP. Maximum 5MB. The image is uploaded when you create the item.</span>
                                     </label>
                                     <label className="col-span-2 grid gap-1.5 max-[640px]:col-span-1">
                                         <span className="text-[0.68rem] font-black uppercase text-[var(--admin-muted)]">Description</span>
@@ -468,7 +540,7 @@ function AdminRewardPayments() {
                             <div className="flex justify-end">
                                 <button className={`${actionButtonClass} bg-[var(--admin-primary)] text-white hover:bg-[var(--admin-primary-dark)]`} disabled={inventoryActionLoadingId === 'create'} type="submit">
                                     <FaCheck aria-hidden="true" />
-                                    {inventoryActionLoadingId === 'create' ? 'Creating...' : 'Create Item'}
+                                    {inventoryActionLoadingId === 'create' ? 'Uploading & Creating...' : 'Create Item'}
                                 </button>
                             </div>
                         </form>
