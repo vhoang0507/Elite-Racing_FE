@@ -112,7 +112,6 @@ const Register = () => {
                                     <option value="" disabled>
                                         Select your primary role
                                     </option>
-                                    <option value="RaceReferee">Referee</option>
                                     <option value="Jockey">Jockey</option>
                                     <option value="Spectator">Spectator</option>
                                     <option value="HorseOwner">Horse Owner</option>
@@ -120,6 +119,10 @@ const Register = () => {
 
                                 <FaChevronDown className={iconClass} />
                             </div>
+
+                            <p className="mt-2 text-[0.85rem] text-[#6b7280]">
+                                Referee accounts are created by administrators.
+                            </p>
                         </div>
 
                         <div className={formGroupClass}>
