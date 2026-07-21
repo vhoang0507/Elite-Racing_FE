@@ -96,6 +96,12 @@ export async function getSpectatorRewards() {
     return apiRequest('/spectator/rewards');
 }
 
+export async function confirmSeasonRewardDelivery(rewardId) {
+    return apiRequest(`/spectator/rewards/${rewardId}/confirm-delivery`, {
+        method: 'PUT',
+    });
+}
+
 export async function claimSeasonReward(rewardId, payload) {
     return apiRequest(`/spectator/rewards/${rewardId}/claim`, {
         method: 'POST',
@@ -143,6 +149,7 @@ export const spectatorApi = {
     getCurrentSeason,
     getSpectatorRewards,
     claimSeasonReward,
+    confirmSeasonRewardDelivery,
     getSpectatorNotifications,
     getSpectatorUnreadCount,
     markSpectatorNotificationAsRead,

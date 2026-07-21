@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     FaBell,
     FaCheck,
@@ -24,6 +25,7 @@ function formatDateTime(value) {
 }
 
 function RefereeNotification() {
+    const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [selectedId, setSelectedId] = useState(null);
@@ -61,8 +63,8 @@ function RefereeNotification() {
     useEffect(() => {
         let ignore = false;
 
-        async function load() {
-            setLoading(true);
+        async function load(isInitial = false) {
+            if (isInitial) setLoading(true);
 
             try {
                 const [notificationData, unreadData] = await Promise.all([
@@ -76,16 +78,21 @@ function RefereeNotification() {
                 setUnreadCount(unreadData?.unreadCount ?? 0);
                 setSelectedId(notificationData?.[0]?.notificationId ?? null);
             } catch (err) {
-                if (!ignore) showToast(err.message || 'Failed to load notifications.', 'error');
+                if (!ignore && isInitial) showToast(err.message || 'Failed to load notifications.', 'error');
             } finally {
-                if (!ignore) setLoading(false);
+                if (!ignore && isInitial) setLoading(false);
             }
         }
 
-        load();
+        load(true);
+        const refresh = () => load(false);
+        const intervalId = window.setInterval(refresh, 15000);
+        window.addEventListener('focus', refresh);
 
         return () => {
             ignore = true;
+            window.clearInterval(intervalId);
+            window.removeEventListener('focus', refresh);
         };
     }, []);
 
@@ -105,6 +112,16 @@ function RefereeNotification() {
         } catch (err) {
             showToast(err.message || 'Failed to mark notification as read.', 'error');
         }
+    };
+
+    const handleOpenAction = async () => {
+        if (!selectedNotification?.actionUrl) return;
+
+        if (!selectedNotification.isRead) {
+            await handleSelect(selectedNotification);
+        }
+
+        navigate(selectedNotification.actionUrl);
     };
 
     const handleMarkAllRead = async () => {
@@ -279,6 +296,15 @@ function RefereeNotification() {
                                             >
                                                 Mark as Read
                                             </button>
+                                            {selectedNotification.actionUrl && (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleOpenAction}
+                                                    className="rounded-full border border-[var(--admin-primary)] bg-white px-5 py-2 font-bold text-[var(--admin-primary)]"
+                                                >
+                                                    Open Related Page
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </>

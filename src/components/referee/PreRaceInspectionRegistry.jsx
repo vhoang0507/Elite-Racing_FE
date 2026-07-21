@@ -155,19 +155,22 @@ function PreRaceInspectionRegistry() {
     const [report, setReport] = useState(null);
     const [registrations, setRegistrations] = useState([]);
     const [drafts, setDrafts] = useState({});
-    const [loadingRace, setLoadingRace] = useState(!location.state?.race);
+    // Always verify the URL/state against the server assignment list before
+    // allowing this protected report page to load race data.
+    const [loadingRace, setLoadingRace] = useState(true);
     const [loadingReport, setLoadingReport] = useState(false);
     const [savingId, setSavingId] = useState(null);
     const [markingReady, setMarkingReady] = useState(false);
     const { toast, showToast, hideToast } = useToast();
 
-    const selectedRace = useMemo(
-        () =>
-            races.find((race) => String(race.raceId) === String(raceId)) ??
-            location.state?.race ??
-            null,
-        [races, raceId, location.state]
-    );
+    const selectedRace = useMemo(() => {
+        const verifiedRace = races.find(
+            (race) => String(race.raceId) === String(raceId)
+        );
+
+        if (verifiedRace) return verifiedRace;
+        return loadingRace ? location.state?.race ?? null : null;
+    }, [races, raceId, location.state, loadingRace]);
 
     const registrationById = useMemo(() => {
         const map = new Map();
@@ -217,7 +220,7 @@ function PreRaceInspectionRegistry() {
     }, []);
 
     useEffect(() => {
-        if (!raceId) return undefined;
+        if (!raceId || loadingRace || !selectedRace) return undefined;
 
         let ignore = false;
 
@@ -271,7 +274,7 @@ function PreRaceInspectionRegistry() {
         return () => {
             ignore = true;
         };
-    }, [raceId, filter]);
+    }, [raceId, filter, loadingRace, selectedRace]);
 
     const handleDraftChange = (registrationId, field, value) => {
         setDrafts((previous) => ({
@@ -342,6 +345,29 @@ function PreRaceInspectionRegistry() {
             setSavingId(null);
         }
     };
+
+    if (!loadingRace && !selectedRace) {
+        return (
+            <RefereeLayout activeKey="pre-race">
+                <section className="page-shell">
+                    <button
+                        type="button"
+                        onClick={() => navigate('/referee/races/pre-race')}
+                        className="mb-6 flex items-center gap-2 font-semibold text-[var(--admin-primary)]"
+                    >
+                        <FaArrowLeft />
+                        Back to Pre-Race Tournaments
+                    </button>
+                    <div className="rounded-[8px] border border-[#e3bcb7] bg-[#f3e1df] p-6 text-[#a4392f]">
+                        <h1 className="m-0 text-xl font-black">Pre-race report unavailable</h1>
+                        <p className="mb-0 mt-2 font-semibold">
+                            This pre-race report page is locked because the race does not exist, was cancelled, or is not assigned to your referee account.
+                        </p>
+                    </div>
+                </section>
+            </RefereeLayout>
+        );
+    }
 
     const showMarkReadyButton = selectedRace?.raceStatus === 'AssignedReferee' || selectedRace?.allowedActions?.canMarkReady;
     const markReadyAllowed = canMarkRaceReady(selectedRace);

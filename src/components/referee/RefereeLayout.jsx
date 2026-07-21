@@ -170,16 +170,24 @@ function RefereeLayout({
     useEffect(() => {
         let ignore = false;
 
-        refereeApi.getUnreadCount()
-            .then((data) => {
-                if (!ignore) setUnreadCount(data?.unreadCount ?? 0);
-            })
-            .catch(() => {
-                if (!ignore) setUnreadCount(0);
-            });
+        const refreshUnreadCount = () => {
+            refereeApi.getUnreadCount()
+                .then((data) => {
+                    if (!ignore) setUnreadCount(data?.unreadCount ?? 0);
+                })
+                .catch(() => {
+                    if (!ignore) setUnreadCount(0);
+                });
+        };
+
+        refreshUnreadCount();
+        const intervalId = window.setInterval(refreshUnreadCount, 15000);
+        window.addEventListener('focus', refreshUnreadCount);
 
         return () => {
             ignore = true;
+            window.clearInterval(intervalId);
+            window.removeEventListener('focus', refreshUnreadCount);
         };
     }, []);
 

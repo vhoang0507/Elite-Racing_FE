@@ -142,7 +142,8 @@ const getPostRaceDraftKey = (raceId) => `erl:post-race-report-draft:${raceId}`;
 
 function AssignedPostRace() {
     const location = useLocation();
-    const initialRaceId = location.state?.raceId;
+    const queryRaceId = new URLSearchParams(location.search).get('raceId');
+    const initialRaceId = location.state?.raceId ?? queryRaceId;
 
     const [races, setRaces] = useState([]);
     const [selectedRaceId, setSelectedRaceId] = useState(null);
@@ -267,8 +268,12 @@ function AssignedPostRace() {
             );
             setRaces(nextRaces);
             setSelectedRaceId((current) => {
-                if (current) return current;
-                if (initialRaceId) return initialRaceId;
+                const containsRace = (value) => nextRaces.some(
+                    (race) => String(race.raceId) === String(value)
+                );
+
+                if (current && containsRace(current)) return current;
+                if (initialRaceId && containsRace(initialRaceId)) return initialRaceId;
                 return nextRaces[0]?.raceId ?? null;
             });
         } catch (err) {
@@ -283,7 +288,7 @@ function AssignedPostRace() {
         setLoadingRaceData(true);
         try {
             const [registrationData, resultData, violationData, reportData] = await Promise.all([
-                refereeApi.getRaceRegistrations(raceId),
+                refereeApi.getPostRaceRegistrations(raceId),
                 refereeApi.getRaceResults(raceId),
                 refereeApi.getViolations(raceId),
                 refereeApi.getRefereeReports(raceId).catch(() => []),
@@ -543,7 +548,10 @@ function AssignedPostRace() {
                         : race
                 )
             );
-            showToast('Race started! Status is now Ongoing.', 'success');
+            // Reload through the dedicated post-race endpoint immediately.
+            // This removes every failed pre-race horse before the page can be used.
+            await loadRaceWorkflowData(selectedRaceId);
+            showToast('Race started! Only passed horses are available for post-race work.', 'success');
         } catch (err) {
             showToast(err.message || 'Failed to start race.', 'error');
         } finally {
@@ -809,6 +817,23 @@ function AssignedPostRace() {
             setSaving('');
         }
     };
+
+    if (!loadingRaces && races.length === 0) {
+        return (
+            <RefereeLayout activeKey="post-race">
+                <section className="page-shell">
+                    <h1 className="page-title">Post-Race Workflow</h1>
+                    <p className="page-subtitle">Enter results, log violations, and submit the post-race report to admin.</p>
+                    <div className="mt-6 rounded-[8px] border border-[#e3bcb7] bg-[#f3e1df] p-6 text-[#a4392f]">
+                        <h2 className="m-0 text-lg font-black">Post-race report unavailable</h2>
+                        <p className="mb-0 mt-2 font-semibold">
+                            This post-race report page is locked because there is no active assigned race in the post-race workflow.
+                        </p>
+                    </div>
+                </section>
+            </RefereeLayout>
+        );
+    }
 
     return (
         <RefereeLayout activeKey="post-race">

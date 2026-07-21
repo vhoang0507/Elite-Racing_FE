@@ -36,7 +36,7 @@ function formatDate(value) {
 function statusBadgeClass(status) {
     if (status === 'Delivered' || status === 'Approved') return 'bg-[#e8f7ee] text-[#16864f]';
     if (status === 'Rejected' || status === 'Expired') return 'bg-[#f3e1df] text-[#a4392f]';
-    if (status === 'Claimed' || status === 'Preparing') return 'bg-[#faf2e0] text-[#8a6209]';
+    if (status === 'Claimed' || status === 'Preparing' || status === 'Shipped') return 'bg-[#faf2e0] text-[#8a6209]';
     return 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]';
 }
 
@@ -47,6 +47,7 @@ export default function ResultReward() {
     const [claimReward, setClaimReward] = useState(null);
     const [claimForm, setClaimForm] = useState(emptyClaimForm);
     const [claimSaving, setClaimSaving] = useState(false);
+    const [confirmingDeliveryId, setConfirmingDeliveryId] = useState(null);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
 
@@ -153,6 +154,30 @@ export default function ResultReward() {
             setError(err.message || 'Failed to claim reward.');
         } finally {
             setClaimSaving(false);
+        }
+    };
+
+    const confirmDelivery = async (reward) => {
+        const rewardId = readField(reward, 'seasonRewardId');
+        if (!rewardId || confirmingDeliveryId) return;
+
+        const confirmed = window.confirm(
+            'Confirm that you received this reward? This action marks delivery as complete.'
+        );
+        if (!confirmed) return;
+
+        setConfirmingDeliveryId(rewardId);
+        setError('');
+        setMessage('');
+
+        try {
+            const response = await spectatorApi.confirmSeasonRewardDelivery(rewardId);
+            setMessage(response?.message || response?.Message || 'Delivery confirmed successfully.');
+            await loadData();
+        } catch (err) {
+            setError(err.message || 'Failed to confirm delivery.');
+        } finally {
+            setConfirmingDeliveryId(null);
         }
     };
 
@@ -319,6 +344,16 @@ export default function ResultReward() {
                                                 {readField(reward, 'canClaim') && (
                                                     <button className="rounded-full bg-[var(--admin-primary)] px-4 py-2 text-xs font-black text-white" onClick={() => openClaim(reward)} type="button">
                                                         Claim
+                                                    </button>
+                                                )}
+                                                {readField(reward, 'canConfirmDelivery') && (
+                                                    <button
+                                                        className="rounded-full bg-[#16864f] px-4 py-2 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                                        disabled={confirmingDeliveryId === rewardId}
+                                                        onClick={() => confirmDelivery(reward)}
+                                                        type="button"
+                                                    >
+                                                        {confirmingDeliveryId === rewardId ? 'Confirming...' : 'Confirm Received'}
                                                     </button>
                                                 )}
                                             </div>

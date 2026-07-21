@@ -63,6 +63,10 @@ export async function getRaceRegistrations(raceId) {
     return apiRequest(`/referee/races/${raceId}/registrations`);
 }
 
+export async function getPostRaceRegistrations(raceId) {
+    return apiRequest(`/referee/races/${raceId}/registrations?passedOnly=true`);
+}
+
 export async function saveInspection(raceId, payload) {
     return apiRequest(`/referee/races/${raceId}/inspections`, {
         method: 'POST',
@@ -201,6 +205,7 @@ export const refereeApi = {
     getAssignedRacesWithLifecycle,
     getRaceLifecycle,
     getRaceRegistrations,
+    getPostRaceRegistrations,
     saveInspection,
     getInspectionReport,
     markRaceReady,

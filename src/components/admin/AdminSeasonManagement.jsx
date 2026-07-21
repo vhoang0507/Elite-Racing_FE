@@ -64,7 +64,7 @@ const statusClass = {
 const rewardStatusTransitions = {
     Claimed: ['Approved', 'Rejected'],
     Approved: ['Preparing', 'Rejected'],
-    Preparing: ['Delivered', 'Rejected'],
+    Preparing: ['Shipped', 'Rejected'],
 };
 
 function readSeasonField(season, key) {
@@ -792,10 +792,14 @@ function AdminSeasonManagement() {
         setRewardStatusLoadingId(`${rewardId}-${status}`);
 
         try {
-            const response = await adminApi.updateSeasonRewardStatus(rewardId, {
-                status,
-                adminNote: adminNote || null,
-            });
+            const response = status === 'Shipped'
+                ? await adminApi.shipSeasonReward(rewardId, {
+                    adminNote: adminNote || null,
+                })
+                : await adminApi.updateSeasonRewardStatus(rewardId, {
+                    status,
+                    adminNote: adminNote || null,
+                });
             showAdminSuccess(response?.message || response?.Message || 'Season reward status updated.', 'Updated');
             if (detailSeason) {
                 await openSeasonDetail(detailSeason);

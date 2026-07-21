@@ -661,6 +661,15 @@ async function getSeasonRewards(id) {
     return apiRequest(`/admin/seasons/${id}/rewards`);
 }
 
+async function shipSeasonReward(rewardId, payload = {}) {
+    return apiRequest(`/admin/seasons/rewards/${rewardId}/ship`, {
+        method: 'PUT',
+        body: JSON.stringify({
+            AdminNote: payload.adminNote ?? payload.AdminNote ?? null,
+        }),
+    });
+}
+
 async function updateSeasonRewardStatus(rewardId, payload) {
     return apiRequest(`/admin/seasons/rewards/${rewardId}/status`, {
         method: 'PUT',
@@ -1789,6 +1798,7 @@ export const adminApi = {
     upsertSeasonRewardRules,
     getSeasonRewards,
     updateSeasonRewardStatus,
+    shipSeasonReward,
 
     // Race Registrations
     getRegistrations,

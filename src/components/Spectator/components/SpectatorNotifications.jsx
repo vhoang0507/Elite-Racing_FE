@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     FaBell,
     FaBullseye,
@@ -9,19 +10,41 @@ import Toast from '../../shared/Toast';
 import { useToast } from '../../shared/useToast';
 
 export default function SpectatorNotifications() {
+    const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [markingAll, setMarkingAll] = useState(false);
     const { toast, showToast, hideToast } = useToast();
 
     useEffect(() => {
-        spectatorApi.getSpectatorNotifications()
-            .then(data => setNotifications(Array.isArray(data) ? data : []))
-            .catch((err) => {
-                setNotifications([]);
-                showToast(err.message || 'Failed to load notifications.', 'error', 'Error');
-            })
-            .finally(() => setLoading(false));
+        let ignore = false;
+
+        const loadNotifications = async (isInitial = false) => {
+            if (isInitial) setLoading(true);
+
+            try {
+                const data = await spectatorApi.getSpectatorNotifications();
+                if (!ignore) setNotifications(Array.isArray(data) ? data : []);
+            } catch (err) {
+                if (!ignore && isInitial) {
+                    setNotifications([]);
+                    showToast(err.message || 'Failed to load notifications.', 'error', 'Error');
+                }
+            } finally {
+                if (!ignore && isInitial) setLoading(false);
+            }
+        };
+
+        loadNotifications(true);
+        const refresh = () => loadNotifications(false);
+        const intervalId = window.setInterval(refresh, 15000);
+        window.addEventListener('focus', refresh);
+
+        return () => {
+            ignore = true;
+            window.clearInterval(intervalId);
+            window.removeEventListener('focus', refresh);
+        };
     }, []);
 
     const handleMarkRead = async (id) => {
@@ -31,6 +54,16 @@ export default function SpectatorNotifications() {
         } catch (err) {
             showToast(err.message || 'Failed to update notification.', 'error', 'Error');
         }
+    };
+
+    const handleOpenAction = async (notification) => {
+        if (!notification?.actionUrl) return;
+
+        if (!notification.isRead) {
+            await handleMarkRead(notification.notificationId);
+        }
+
+        navigate(notification.actionUrl);
     };
 
     const handleMarkAllRead = async () => {
@@ -128,14 +161,26 @@ export default function SpectatorNotifications() {
                                     <span className="text-[0.76rem] text-[var(--admin-muted)]">
                                         {new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).format(new Date(n.createdAt))}
                                     </span>
-                                    {!n.isRead && (
-                                        <button
-                                            onClick={() => handleMarkRead(n.notificationId)}
-                                            className="primary-button min-h-8 px-3 text-[0.8rem]"
-                                        >
-                                            Mark Read
-                                        </button>
-                                    )}
+                                    <div className="flex flex-wrap gap-2">
+                                        {!n.isRead && (
+                                            <button
+                                                onClick={() => handleMarkRead(n.notificationId)}
+                                                className="primary-button min-h-8 px-3 text-[0.8rem]"
+                                                type="button"
+                                            >
+                                                Mark Read
+                                            </button>
+                                        )}
+                                        {n.actionUrl && (
+                                            <button
+                                                onClick={() => handleOpenAction(n)}
+                                                className="secondary-button min-h-8 px-3 text-[0.8rem]"
+                                                type="button"
+                                            >
+                                                Open
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </article>
