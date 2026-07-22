@@ -7,13 +7,36 @@ import RegistrationJourney from "./components/RegistrationJourney";
 
 export default function MyRegistrations() {
     const [journeyId, setJourneyId] = useState(null);
+    const [registrationRefreshKey, setRegistrationRefreshKey] = useState(0);
     const journeyRef = useRef(null);
 
-    const handleViewStatus = (registrationId) => {
-        setJourneyId(registrationId);
+    const scrollToJourney = () => {
         setTimeout(() => {
             journeyRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
         }, 100);
+    };
+
+    const handleViewStatus = (registrationId) => {
+        setJourneyId(registrationId);
+        scrollToJourney();
+    };
+
+    const getRegistrationId = (registration) => {
+        if (!registration) return null;
+        if (typeof registration === "number" || typeof registration === "string") {
+            const id = Number(registration);
+            return Number.isFinite(id) && id > 0 ? id : null;
+        }
+
+        const id = Number(registration.registrationId ?? registration.RegistrationId ?? registration.id);
+        return Number.isFinite(id) && id > 0 ? id : null;
+    };
+
+    const handleRegistrationCreated = (registration) => {
+        const registrationId = getRegistrationId(registration);
+        setRegistrationRefreshKey((current) => current + 1);
+        setJourneyId(registrationId);
+        scrollToJourney();
     };
 
     return (
@@ -26,11 +49,11 @@ export default function MyRegistrations() {
                     </p>
                 </div>
 
-                <OpenTournaments />
-                <PendingRegistrations onViewStatus={handleViewStatus} />
-                <ApprovedRegistrations onViewStatus={handleViewStatus} />
+                <OpenTournaments onRegistrationCreated={handleRegistrationCreated} />
+                <PendingRegistrations onViewStatus={handleViewStatus} refreshKey={registrationRefreshKey} />
+                <ApprovedRegistrations onViewStatus={handleViewStatus} refreshKey={registrationRefreshKey} />
                 <div ref={journeyRef}>
-                    <RegistrationJourney registrationId={journeyId} />
+                    <RegistrationJourney registrationId={journeyId} refreshKey={registrationRefreshKey} />
                 </div>
             </section>
         </HorseOwnerLayout>
