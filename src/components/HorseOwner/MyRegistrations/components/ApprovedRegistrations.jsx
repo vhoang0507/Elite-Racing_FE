@@ -14,7 +14,7 @@ const STATUS_CFG = {
 };
 const humanizeLabel = (value) => String(value || "").replace(/([a-z0-9])([A-Z])/g, "$1 $2").trim();
 
-export default function ApprovedRegistrations() {
+export default function ApprovedRegistrations({ onViewStatus }) {
     const navigate = useNavigate();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -162,6 +162,13 @@ export default function ApprovedRegistrations() {
                                             </td>
                                             <td style={styles.td}>
                                                 <div style={{ display: "flex", gap: 6 }}>
+                                                    <button
+                                                        onClick={() => onViewStatus && onViewStatus(row.registrationId)}
+                                                        style={{ ...styles.actionBtn, ...styles.ghostBtn }}
+                                                        type="button"
+                                                    >
+                                                        View Status
+                                                    </button>
                                                     <button
                                                         disabled={infoLoadingId === row.registrationId}
                                                         onClick={() => openRaceInfo(row)}

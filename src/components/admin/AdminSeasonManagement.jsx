@@ -744,8 +744,8 @@ function AdminSeasonManagement() {
             return;
         }
 
-        if (readSeasonField(ruleSeason, 'status') !== 'Draft') {
-            showAdminError('Reward rules can only be changed while the season is Draft.');
+        if (!['Draft', 'Active'].includes(readSeasonField(ruleSeason, 'status'))) {
+            showAdminError('Reward rules can only be changed while the season is Draft or Active, before it is closed.');
             return;
         }
 
@@ -974,23 +974,23 @@ function AdminSeasonManagement() {
                                                         <FaEye aria-hidden="true" />
                                                         View
                                                     </button>
-                                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} disabled={!isDraft} onClick={() => startEditSeason(season)} type="button">
+                                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} disabled={!isDraft} onClick={() => startEditSeason(season)} title={isDraft ? 'Edit season details' : 'Only Draft seasons can have their name/dates/points edited.'} type="button">
                                                         <FaEdit aria-hidden="true" />
                                                         Edit
                                                     </button>
-                                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} disabled={!isDraft} onClick={() => configureRewardRules(season)} type="button">
+                                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} disabled={!isDraft && !isActive} onClick={() => configureRewardRules(season)} title={isDraft || isActive ? 'Configure reward rules' : 'Reward rules can only be edited while Draft or Active, before the season is closed.'} type="button">
                                                         <FaTrophy aria-hidden="true" />
                                                         Edit Reward
                                                     </button>
-                                                    <button className={`${actionButtonClass} bg-[#e8f7ef] text-[var(--admin-primary)] hover:bg-[#d7f2e4]`} disabled={!isDraft || actionLoading === `activate-${id}`} onClick={() => handleSeasonAction(season, 'activate')} type="button">
+                                                    <button className={`${actionButtonClass} bg-[#e8f7ef] text-[var(--admin-primary)] hover:bg-[#d7f2e4]`} disabled={!isDraft || actionLoading === `activate-${id}`} onClick={() => handleSeasonAction(season, 'activate')} title={isDraft ? 'Activate this season' : status === 'Active' ? 'This season is already active.' : 'Only Draft seasons can be activated.'} type="button">
                                                         <FaCheck aria-hidden="true" />
                                                         Activate
                                                     </button>
-                                                    <button className={`${actionButtonClass} bg-[var(--admin-surface-strong)] text-[var(--admin-primary)] hover:bg-[#d8e0ea]`} disabled={!isActive || actionLoading === `close-${id}`} onClick={() => handleSeasonAction(season, 'close')} type="button">
+                                                    <button className={`${actionButtonClass} bg-[var(--admin-surface-strong)] text-[var(--admin-primary)] hover:bg-[#d8e0ea]`} disabled={!isActive || actionLoading === `close-${id}`} onClick={() => handleSeasonAction(season, 'close')} title={isActive ? 'Close this season (settles wallets and generates rewards)' : 'Only the Active season can be closed.'} type="button">
                                                         <FaTrophy aria-hidden="true" />
                                                         Close
                                                     </button>
-                                                    <button className={`${actionButtonClass} border border-[#f0b4b4] bg-white text-[#b91c1c] hover:bg-[#fff3f3]`} disabled={!isDraft || actionLoading === `cancel-${id}`} onClick={() => handleSeasonAction(season, 'cancel')} type="button">
+                                                    <button className={`${actionButtonClass} border border-[#f0b4b4] bg-white text-[#b91c1c] hover:bg-[#fff3f3]`} disabled={!isDraft || actionLoading === `cancel-${id}`} onClick={() => handleSeasonAction(season, 'cancel')} title={isDraft ? 'Cancel this draft season' : 'Only Draft seasons can be cancelled.'} type="button">
                                                         <FaTimes aria-hidden="true" />
                                                         Cancel
                                                     </button>
@@ -1245,7 +1245,7 @@ function AdminSeasonManagement() {
                                 </button>
                                 <button
                                     className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md bg-[var(--admin-primary)] px-4 font-black text-white hover:bg-[var(--admin-primary-dark)] disabled:cursor-not-allowed disabled:opacity-60"
-                                    disabled={rewardRulesLocked || savingRules || readSeasonField(ruleSeason, 'status') !== 'Draft'}
+                                    disabled={rewardRulesLocked || savingRules || !['Draft', 'Active'].includes(readSeasonField(ruleSeason, 'status'))}
                                     type="submit"
                                 >
                                     {rewardRulesLocked ? 'Reward Saved' : savingRules ? 'Saving...' : 'Save Reward'}
