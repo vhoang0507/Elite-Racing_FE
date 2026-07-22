@@ -42,7 +42,19 @@ const STATUS_LABELS = {
     ResultPending: 'Result Pending',
 };
 
+function isRaceConcluded(race) {
+    return race?.raceStatus === 'Published' || race?.tournamentStatus === 'Completed';
+}
+
 function getDisplayStatus(race) {
+    // A race that is already published (or whose tournament is fully completed) is
+    // always shown/filtered as concluded, even if the tournament itself is still
+    // sitting in "ClosedRegistration" (e.g. other races in the same tournament are
+    // still running). Otherwise a finished race could get masked as "Closed
+    // Registration" and stay stuck in the active/unfinished list forever.
+    if (isRaceConcluded(race)) {
+        return race?.raceStatus ?? race?.tournamentStatus;
+    }
     return race?.tournamentStatus === 'ClosedRegistration'
         ? race.tournamentStatus
         : race?.raceStatus;
@@ -58,6 +70,7 @@ function isSeasonActive(race) {
 
 function canOpenPreRace(race) {
     if (!isSeasonActive(race)) return false;
+    if (isRaceConcluded(race)) return false;
 
     const actions = race?.allowedActions ?? {};
     return Boolean(
@@ -71,6 +84,7 @@ function canOpenPreRace(race) {
 
 function canOpenPostRace(race) {
     if (!isSeasonActive(race)) return false;
+    if (isRaceConcluded(race)) return false;
 
     const actions = race?.allowedActions ?? {};
     return Boolean(

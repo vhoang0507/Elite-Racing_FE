@@ -369,7 +369,29 @@ function PredictModal({ tournament, prediction, onClose, onSuccess }) {
                                                 {h.ownerName && <span>👤 Owner: <strong style={{ color: '#555' }}>{h.ownerName}</strong></span>}
                                                 {h.jockeyName && <span>🏇 Jockey: <strong style={{ color: '#555' }}>{h.jockeyName}</strong></span>}
                                             </div>
-                                            <p style={{ margin: '6px 0 0', fontSize: '0.7rem', fontWeight: 700, color: '#16305c' }}>Tap card to view horse & jockey profile</p>
+                                            <div style={{ marginTop: 5, display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                                                {(h.age ?? h.horseAge) != null && (
+                                                    <span style={{ background: '#f0f4f8', color: '#45556c', padding: '2px 7px', borderRadius: 999, fontSize: '0.66rem', fontWeight: 700 }}>
+                                                        Age {h.age ?? h.horseAge}
+                                                    </span>
+                                                )}
+                                                {(h.healthStatus ?? h.horseHealthStatus) && (
+                                                    <span style={{ background: '#f0f4f8', color: '#45556c', padding: '2px 7px', borderRadius: 999, fontSize: '0.66rem', fontWeight: 700 }}>
+                                                        {h.healthStatus ?? h.horseHealthStatus}
+                                                    </span>
+                                                )}
+                                                {h?.jockey?.yearsOfExperience != null && (
+                                                    <span style={{ background: '#f0f4f8', color: '#45556c', padding: '2px 7px', borderRadius: 999, fontSize: '0.66rem', fontWeight: 700 }}>
+                                                        {h.jockey.yearsOfExperience}y jockey exp
+                                                    </span>
+                                                )}
+                                                {h.breedName && (
+                                                    <span style={{ background: '#f0f4f8', color: '#45556c', padding: '2px 7px', borderRadius: 999, fontSize: '0.66rem', fontWeight: 700 }}>
+                                                        {h.breedName}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p style={{ margin: '6px 0 0', fontSize: '0.7rem', fontWeight: 700, color: '#16305c' }}>Tap card for full profile & achievements</p>
                                         </div>
                                         <button
                                             type="button"

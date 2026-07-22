@@ -1,20 +1,46 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     FaBell,
-    FaBullseye,
-    FaCheckCircle,
+    FaCheck,
+    FaEnvelopeOpenText,
+    FaExclamationTriangle,
+    FaInfoCircle,
 } from 'react-icons/fa';
 import { spectatorApi } from '../../../api/spectatorApi';
 import Toast from '../../shared/Toast';
 import { useToast } from '../../shared/useToast';
+
+function formatDateTime(value) {
+    if (!value) return 'N/A';
+    return new Intl.DateTimeFormat('en-US', {
+        month: 'short',
+        day: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    }).format(new Date(value));
+}
 
 export default function SpectatorNotifications() {
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [markingAll, setMarkingAll] = useState(false);
+    const [selectedId, setSelectedId] = useState(null);
+    const [filter, setFilter] = useState('all');
     const { toast, showToast, hideToast } = useToast();
+
+    const filteredNotifications = useMemo(() => {
+        if (filter === 'unread') return notifications.filter((item) => !item.isRead);
+        if (filter === 'read') return notifications.filter((item) => item.isRead);
+        return notifications;
+    }, [notifications, filter]);
+
+    const selectedNotification = useMemo(
+        () => filteredNotifications.find((item) => item.notificationId === selectedId) ?? filteredNotifications[0] ?? null,
+        [filteredNotifications, selectedId]
+    );
 
     useEffect(() => {
         let ignore = false;
@@ -24,7 +50,11 @@ export default function SpectatorNotifications() {
 
             try {
                 const data = await spectatorApi.getSpectatorNotifications();
-                if (!ignore) setNotifications(Array.isArray(data) ? data : []);
+                if (!ignore) {
+                    const items = Array.isArray(data) ? data : [];
+                    setNotifications(items);
+                    if (isInitial) setSelectedId(items[0]?.notificationId ?? null);
+                }
             } catch (err) {
                 if (!ignore && isInitial) {
                     setNotifications([]);
@@ -45,25 +75,30 @@ export default function SpectatorNotifications() {
             window.clearInterval(intervalId);
             window.removeEventListener('focus', refresh);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const handleMarkRead = async (id) => {
+    const handleSelect = async (notification) => {
+        setSelectedId(notification.notificationId);
+
+        if (notification.isRead) return;
+
         try {
-            await spectatorApi.markSpectatorNotificationAsRead(id);
-            setNotifications(prev => prev.map(n => n.notificationId === id ? { ...n, isRead: true } : n));
+            await spectatorApi.markSpectatorNotificationAsRead(notification.notificationId);
+            setNotifications(prev => prev.map(n => n.notificationId === notification.notificationId ? { ...n, isRead: true } : n));
         } catch (err) {
             showToast(err.message || 'Failed to update notification.', 'error', 'Error');
         }
     };
 
-    const handleOpenAction = async (notification) => {
-        if (!notification?.actionUrl) return;
+    const handleOpenAction = async () => {
+        if (!selectedNotification?.actionUrl) return;
 
-        if (!notification.isRead) {
-            await handleMarkRead(notification.notificationId);
+        if (!selectedNotification.isRead) {
+            await handleSelect(selectedNotification);
         }
 
-        navigate(notification.actionUrl);
+        navigate(selectedNotification.actionUrl);
     };
 
     const handleMarkAllRead = async () => {
@@ -82,35 +117,8 @@ export default function SpectatorNotifications() {
 
     const unread = notifications.filter(n => !n.isRead).length;
 
-    if (loading) return <p className="m-0 text-center font-semibold text-[var(--admin-muted)]">Loading...</p>;
-
-    const stats = [
-        { label: "TOTAL ALERTS", value: notifications.length, icon: FaBell },
-        { label: "UNREAD", value: unread, icon: FaBullseye },
-        { label: "READ", value: notifications.length - unread, icon: FaCheckCircle },
-    ];
-
     return (
-        <div className="grid gap-7">
-            <div className="flex items-start justify-between gap-4 max-[640px]:flex-col">
-                <div>
-                    <h2 className="page-title">Notifications</h2>
-                    <p className="page-subtitle">
-                        Stay updated with live races, prediction events, tournament news, and exclusive spectator rewards.
-                    </p>
-                </div>
-                {unread > 0 && (
-                    <button
-                        onClick={handleMarkAllRead}
-                        disabled={markingAll}
-                        className="inline-flex min-h-[36px] cursor-pointer items-center rounded-full border border-[var(--admin-primary)] bg-transparent px-4 text-[0.82rem] font-bold text-[var(--admin-primary)] hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-50"
-                        type="button"
-                    >
-                        {markingAll ? 'Updating...' : `Mark all read (${unread})`}
-                    </button>
-                )}
-            </div>
-
+        <div className="min-h-screen">
             <Toast
                 message={toast.message}
                 type={toast.type}
@@ -119,73 +127,172 @@ export default function SpectatorNotifications() {
                 duration={3500}
             />
 
-            <div className="grid grid-cols-3 gap-4 max-[900px]:grid-cols-1">
-                {stats.map((s) => {
-                    const Icon = s.icon;
-
-                    return (
-                        <article key={s.label} className="stat-card min-h-[118px]">
-                            <div className="stat-icon">
-                                <Icon aria-hidden="true" />
-                            </div>
-                            <small className="stat-label">{s.label}</small>
-                            <h3 className="stat-value text-[1.8rem]">{s.value}</h3>
-                        </article>
-                    );
-                })}
+            <div className="mb-8">
+                <h1 className="page-title">Notifications</h1>
+                <p className="page-subtitle">
+                    Stay updated with live races, prediction events, tournament news, and exclusive spectator rewards.
+                </p>
             </div>
 
-            <div className="grid gap-3">
-                {notifications.length === 0 ? (
-                    <p className="m-0 rounded-[8px] border border-[var(--admin-border)] bg-white p-10 text-center text-[var(--admin-muted)]">
-                        No notifications.
-                    </p>
-                ) : (
-                    notifications.map((n) => (
-                        <article
-                            key={n.notificationId}
-                            className={`soft-card flex items-start gap-4 p-4 ${!n.isRead ? 'border-l-[3px] border-l-[var(--admin-primary)] bg-[var(--admin-surface-strong)]' : ''}`}
-                        >
-                            <div className="stat-icon h-10 w-10">
-                                <FaBell aria-hidden="true" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-start justify-between gap-3">
-                                    <p className="m-0 font-bold text-[var(--admin-ink)]">{n.title}</p>
-                                    <span className={`status-badge ${n.isRead ? 'bg-[#e8f7ee] text-[#16864f]' : 'bg-[#faf2e0] text-[#8a6209]'}`}>
-                                        {n.isRead ? 'Read' : 'Unread'}
+            <div className="mb-8 flex flex-wrap gap-5">
+                <div className="flex w-56 justify-between rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
+                    <div>
+                        <p className="text-sm uppercase text-[var(--admin-muted)]">Total Alerts</p>
+                        <h3 className="mt-2 text-2xl font-bold">{notifications.length}</h3>
+                    </div>
+                    <FaBell className="text-[var(--admin-primary)]" size={22} />
+                </div>
+
+                <div className="flex w-56 justify-between rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
+                    <div>
+                        <p className="text-sm uppercase text-[var(--admin-muted)]">Unread</p>
+                        <h3 className="mt-2 text-2xl font-bold text-[#a4392f]">{unread}</h3>
+                    </div>
+                    <FaExclamationTriangle className="text-[#a4392f]" size={22} />
+                </div>
+
+                <div className="flex items-center gap-3 rounded-[8px] border border-[var(--admin-border)] bg-white p-4">
+                    <select
+                        value={filter}
+                        onChange={(event) => setFilter(event.target.value)}
+                        className="rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-4 py-2 font-semibold outline-none focus:border-[var(--admin-primary)]"
+                    >
+                        <option value="all">All</option>
+                        <option value="unread">Unread</option>
+                        <option value="read">Read</option>
+                    </select>
+
+                    <button
+                        type="button"
+                        onClick={handleMarkAllRead}
+                        disabled={markingAll || unread === 0}
+                        className="inline-flex items-center gap-2 rounded-full border border-[var(--admin-primary)] px-4 py-2 font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        <FaCheck aria-hidden="true" />
+                        {markingAll ? 'Updating...' : 'Mark All Read'}
+                    </button>
+                </div>
+            </div>
+
+            <div className="grid gap-8 xl:grid-cols-[360px_1fr]">
+                <div className="space-y-2">
+                    {loading ? (
+                        <div className="rounded-[8px] border border-[var(--admin-border)] bg-white p-5 text-[var(--admin-muted)]">
+                            Loading notifications...
+                        </div>
+                    ) : filteredNotifications.length === 0 ? (
+                        <div className="rounded-[8px] border border-[var(--admin-border)] bg-white p-5 text-[var(--admin-muted)]">
+                            No notifications for this filter.
+                        </div>
+                    ) : (
+                        filteredNotifications.map((item) => (
+                            <button
+                                type="button"
+                                key={item.notificationId}
+                                onClick={() => handleSelect(item)}
+                                className={`w-full cursor-pointer rounded-[8px] border border-[var(--admin-border)] bg-white p-4 text-left hover:bg-[#faf5f4] ${selectedNotification?.notificationId === item.notificationId ? 'ring-2 ring-[var(--admin-primary)]' : ''}`}
+                            >
+                                <div className="flex justify-between gap-3">
+                                    <h3 className="font-medium">{item.title}</h3>
+                                    <span className="whitespace-nowrap text-sm text-[var(--admin-muted)]">
+                                        {formatDateTime(item.createdAt)}
                                     </span>
                                 </div>
-                                <p className="m-0 mt-2 text-[0.9rem] text-[var(--admin-muted)]">{n.message}</p>
-                                <div className="mt-3 flex items-center justify-between gap-3 max-[640px]:flex-col max-[640px]:items-start">
-                                    <span className="text-[0.76rem] text-[var(--admin-muted)]">
-                                        {new Intl.DateTimeFormat('en-US', { month: 'short', day: '2-digit', year: 'numeric' }).format(new Date(n.createdAt))}
+
+                                <p className="mt-2 line-clamp-2 text-sm text-[var(--admin-muted)]">
+                                    {item.message}
+                                </p>
+
+                                {!item.isRead && (
+                                    <span className="mt-3 inline-block rounded-full bg-[#f3e1df] px-2.5 py-1 text-xs font-semibold text-[#a4392f]">
+                                        NEW
                                     </span>
-                                    <div className="flex flex-wrap gap-2">
-                                        {!n.isRead && (
+                                )}
+                            </button>
+                        ))
+                    )}
+                </div>
+
+                <div className="space-y-4">
+                    <div className="overflow-hidden rounded-[8px] border border-[var(--admin-border)] bg-white">
+                        {selectedNotification ? (
+                            <>
+                                <div className="flex items-center justify-between border-b p-4">
+                                    <div className="flex items-center gap-2 rounded-full bg-[var(--admin-primary)] px-4 py-1 text-sm text-white">
+                                        <FaEnvelopeOpenText />
+                                        Spectator Alert
+                                    </div>
+
+                                    <div className="text-right">
+                                        <p className="text-xs uppercase text-[var(--admin-muted)]">Time Received</p>
+                                        <p className="font-medium">{formatDateTime(selectedNotification.createdAt)}</p>
+                                    </div>
+                                </div>
+
+                                <div className="p-6 leading-8 text-[var(--admin-ink)]">
+                                    <h2 className="mb-4 text-2xl font-bold text-[#2b1b1b]">
+                                        {selectedNotification.title}
+                                    </h2>
+
+                                    <p>{selectedNotification.message}</p>
+                                </div>
+
+                                <div className="border-t p-4">
+                                    <div className="flex flex-wrap gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => handleSelect(selectedNotification)}
+                                            disabled={selectedNotification.isRead}
+                                            className="rounded-full bg-[var(--admin-primary)] px-5 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                        >
+                                            Mark as Read
+                                        </button>
+                                        {selectedNotification.actionUrl && (
                                             <button
-                                                onClick={() => handleMarkRead(n.notificationId)}
-                                                className="primary-button min-h-8 px-3 text-[0.8rem]"
                                                 type="button"
+                                                onClick={handleOpenAction}
+                                                className="rounded-full border border-[var(--admin-primary)] bg-white px-5 py-2 font-bold text-[var(--admin-primary)]"
                                             >
-                                                Mark Read
-                                            </button>
-                                        )}
-                                        {n.actionUrl && (
-                                            <button
-                                                onClick={() => handleOpenAction(n)}
-                                                className="secondary-button min-h-8 px-3 text-[0.8rem]"
-                                                type="button"
-                                            >
-                                                Open
+                                                Open Related Page
                                             </button>
                                         )}
                                     </div>
                                 </div>
+                            </>
+                        ) : (
+                            <div className="p-6 text-[var(--admin-muted)]">
+                                Select a notification to view details.
                             </div>
-                        </article>
-                    ))
-                )}
+                        )}
+                    </div>
+
+                    <div className="rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
+                        <h3 className="mb-5 flex items-center gap-2 font-semibold">
+                            <FaInfoCircle className="text-[var(--admin-primary)]" />
+                            Recent Activity
+                        </h3>
+
+                        <div className="space-y-4">
+                            {notifications.slice(0, 3).map((item) => (
+                                <div key={item.notificationId} className="flex gap-3">
+                                    <div className={`mt-2 h-3 w-3 rounded-full ${item.isRead ? 'bg-[var(--admin-border)]' : 'bg-[#a4392f]'}`} />
+                                    <div>
+                                        <p>{item.title}</p>
+                                        <p className="text-sm text-[var(--admin-muted)]">
+                                            {formatDateTime(item.createdAt)}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {notifications.length === 0 && (
+                                <p className="text-sm text-[var(--admin-muted)]">
+                                    No recent notification activity.
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

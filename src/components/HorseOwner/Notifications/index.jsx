@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     FaBell,
     FaCalendarAlt,
+    FaCheck,
     FaCheckCircle,
-    FaClock,
-    FaInbox,
+    FaEnvelopeOpenText,
+    FaInfoCircle,
     FaUserTie,
 } from "react-icons/fa";
 
@@ -49,77 +51,21 @@ function normalizeSummary(summary) {
     };
 }
 
-function NotificationDetailModal({ notification, onClose }) {
-    const Icon = iconByCategory[notification.category] || FaBell;
-    const statusStyle = getStatusStyle(notification.statusLabel);
-    const tag = notification.statusLabel || notification.category;
-
-    return (
-        <div
-            style={{
-                position: 'fixed', inset: 0, zIndex: 200,
-                backgroundColor: 'rgba(0,0,0,0.45)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                padding: '20px',
-            }}
-            onClick={onClose}
-        >
-            <div
-                style={{
-                    backgroundColor: '#fff', borderRadius: '14px',
-                    boxShadow: '0 24px 70px rgba(0,0,0,0.28)',
-                    width: '100%', maxWidth: '480px', overflow: 'hidden',
-                }}
-                onClick={(e) => e.stopPropagation()}
-            >
-                {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px', padding: '20px', borderBottom: '1px solid #eee' }}>
-                    <span style={{ display: 'grid', placeItems: 'center', width: 42, height: 42, borderRadius: '999px', backgroundColor: '#edf2fa', color: '#16305c', flexShrink: 0 }}>
-                        <Icon />
-                    </span>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ margin: 0, fontWeight: 700, fontSize: '15px', color: '#0f172a' }}>{notification.title}</p>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                            <FaClock style={{ color: '#64748b', fontSize: '11px' }} />
-                            <span style={{ fontSize: '12px', color: '#64748b' }}>{notification.displayTime}</span>
-                            {tag && (
-                                <span style={{ borderRadius: '999px', padding: '2px 8px', fontSize: '11px', fontWeight: 700, backgroundColor: statusStyle.bg, color: statusStyle.color }}>
-                                    {tag}
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                    <button onClick={onClose} style={{ border: '1px solid #ded2ad', borderRadius: 999, background: '#faf7f0', color: '#16305c', fontSize: 16, fontWeight: 800, cursor: 'pointer', width: 32, height: 32 }}>✕</button>
-                </div>
-
-                {/* Body */}
-                <div style={{ padding: '20px' }}>
-                    <p style={{ margin: 0, fontSize: '14px', color: '#374151', lineHeight: 1.6 }}>{notification.message}</p>
-                </div>
-
-                {/* Footer */}
-                <div style={{ padding: '14px 20px', borderTop: '1px solid #eee', display: 'flex', justifyContent: 'flex-end' }}>
-                    <button
-                        onClick={onClose}
-                        style={{ backgroundColor: '#efe8d6', color: '#374151', border: '1px solid #ded2ad', borderRadius: 999, padding: '9px 18px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
-                    >
-                        Close
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-}
-
 export default function Notifications() {
+    const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("All");
     const [summary, setSummary] = useState(emptySummary);
     const [notifications, setNotifications] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [reloadKey, setReloadKey] = useState(0);
     const [markingAll, setMarkingAll] = useState(false);
-    const [selectedNotification, setSelectedNotification] = useState(null);
+    const [selectedId, setSelectedId] = useState(null);
     const { toast, showToast, hideToast } = useToast();
+
+    const selectedNotification = useMemo(
+        () => notifications.find((item) => item.notificationId === selectedId) ?? notifications[0] ?? null,
+        [notifications, selectedId]
+    );
 
     useEffect(() => {
         let isMounted = true;
@@ -137,8 +83,14 @@ export default function Notifications() {
                     return;
                 }
 
+                const items = Array.isArray(listData?.items) ? listData.items : [];
                 setSummary(normalizeSummary(summaryData));
-                setNotifications(Array.isArray(listData?.items) ? listData.items : []);
+                setNotifications(items);
+                setSelectedId((current) => (
+                    current && items.some((item) => item.notificationId === current)
+                        ? current
+                        : items[0]?.notificationId ?? null
+                ));
             } catch (err) {
                 if (!isMounted) {
                     return;
@@ -161,45 +113,35 @@ export default function Notifications() {
         };
     }, [activeTab, reloadKey]);
 
-    const statCards = useMemo(() => [
-        {
-            label: "UNREAD",
-            value: summary.unread,
-            icon: FaInbox,
-        },
-        {
-            label: "INVITATIONS",
-            value: summary.invitations,
-            icon: FaUserTie,
-        },
-        {
-            label: "UPCOMING RACES",
-            value: summary.upcomingRaces,
-            icon: FaCalendarAlt,
-        },
-    ], [summary]);
+    const handleSelect = async (notification) => {
+        setSelectedId(notification.notificationId);
 
-    const handleNotificationClick = async (notification) => {
-        // Mark as read if unread
-        if (!notification.isRead) {
-            try {
-                await ownerApi.markNotificationAsRead(notification.notificationId);
-                setNotifications((current) => current.map((item) => (
-                    item.notificationId === notification.notificationId
-                        ? { ...item, isRead: true }
-                        : item
-                )));
-                setSummary((current) => ({
-                    ...current,
-                    unread: Math.max(0, current.unread - 1),
-                }));
-            } catch (err) {
-                showToast(err.message || "Failed to update notification.", 'error');
-            }
+        if (notification.isRead) return;
+
+        try {
+            await ownerApi.markNotificationAsRead(notification.notificationId);
+            setNotifications((current) => current.map((item) => (
+                item.notificationId === notification.notificationId
+                    ? { ...item, isRead: true }
+                    : item
+            )));
+            setSummary((current) => ({
+                ...current,
+                unread: Math.max(0, current.unread - 1),
+            }));
+        } catch (err) {
+            showToast(err.message || "Failed to update notification.", 'error');
+        }
+    };
+
+    const handleOpenAction = async () => {
+        if (!selectedNotification?.actionUrl) return;
+
+        if (!selectedNotification.isRead) {
+            await handleSelect(selectedNotification);
         }
 
-        // Show detail modal
-        setSelectedNotification(notification);
+        navigate(selectedNotification.actionUrl);
     };
 
     const handleMarkAllRead = async () => {
@@ -219,110 +161,6 @@ export default function Notifications() {
 
     return (
         <HorseOwnerLayout activeKey="notifications">
-            <section className="grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7">
-                <div>
-                    <h2 className="m-0 text-[1.8rem] text-[var(--admin-primary-dark)]">Notifications</h2>
-                    <p className="m-0 mt-1 text-[0.85rem] text-[var(--admin-muted)]">
-                        Stay updated with tournaments, race schedules, jockey responses
-                    </p>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4 max-[720px]:grid-cols-1">
-                    {statCards.map((stat) => {
-                        const Icon = stat.icon;
-
-                        return (
-                            <div className="flex items-center gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-5" key={stat.label}>
-                                <span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
-                                    <Icon aria-hidden="true" />
-                                </span>
-                                <div>
-                                    <small className="text-[0.7rem] font-bold uppercase text-[var(--admin-muted)]">{stat.label}</small>
-                                    <h3 className="m-0 text-[1.5rem] text-[var(--admin-ink)]">{stat.value}</h3>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-
-                <div className="flex items-center gap-1 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-1 max-[720px]:flex-wrap">
-                    {tabs.map((tab) => (
-                        <button
-                            className={`cursor-pointer rounded-full border-0 px-4 py-2 text-[0.82rem] font-bold transition-colors ${activeTab === tab ? "bg-[var(--admin-primary)] text-white" : "bg-transparent text-[var(--admin-muted)] hover:bg-[var(--admin-surface-strong)]"}`}
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            type="button"
-                        >
-                            {tab}
-                        </button>
-                    ))}
-                    <div className="ml-auto flex items-center gap-2 max-[720px]:ml-0">
-                        <button
-                            className="cursor-pointer rounded-full border border-[var(--admin-primary)] bg-transparent px-3 py-2 text-[0.82rem] font-bold text-[var(--admin-primary)] hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-50"
-                            onClick={handleMarkAllRead}
-                            disabled={markingAll || summary.unread === 0}
-                            type="button"
-                        >
-                            {markingAll ? 'Updating...' : 'Mark all read'}
-                        </button>
-                    </div>
-                </div>
-
-                <div className="grid gap-3">
-                    {isLoading ? (
-                        <div className="rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 text-center text-[0.9rem] font-semibold text-[var(--admin-muted)]">
-                            Loading notifications...
-                        </div>
-                    ) : notifications.length === 0 ? (
-                        <div className="rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-6 text-center text-[0.9rem] font-semibold text-[var(--admin-muted)]">
-                            No notifications
-                        </div>
-                    ) : notifications.map((notification) => {
-                        const Icon = iconByCategory[notification.category] || FaBell;
-                        const tag = notification.statusLabel || notification.category;
-                        const statusStyle = getStatusStyle(notification.statusLabel);
-
-                        return (
-                            <button
-                                className={`flex cursor-pointer items-start gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-4 text-left transition-colors hover:bg-[#fff8f6] ${notification.isRead ? "opacity-80" : ""}`}
-                                key={notification.notificationId}
-                                onClick={() => handleNotificationClick(notification)}
-                                type="button"
-                            >
-                                <span className="grid h-10 w-10 flex-none place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
-                                    <Icon aria-hidden="true" />
-                                </span>
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-center justify-between gap-4">
-                                        <p className="m-0 text-[0.9rem] font-bold text-[var(--admin-ink)]">{notification.title}</p>
-                                        {!notification.isRead && <span className="h-2 w-2 flex-none rounded-full bg-[var(--admin-primary)]" />}
-                                    </div>
-                                    <p className="m-0 mt-1 break-words text-[0.82rem] text-[var(--admin-muted)]">{notification.message}</p>
-                                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                                        <span className="inline-flex items-center gap-1 text-[0.72rem] text-[var(--admin-muted)]">
-                                            <FaClock aria-hidden="true" />
-                                            {notification.displayTime}
-                                        </span>
-                                        {tag && (
-                                            <span className="rounded-full px-2 py-0.5 text-[0.68rem] font-bold" style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}>
-                                                {tag}
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                            </button>
-                        );
-                    })}
-                </div>
-            </section>
-
-            {selectedNotification && (
-                <NotificationDetailModal
-                    notification={selectedNotification}
-                    onClose={() => setSelectedNotification(null)}
-                />
-            )}
-
             <Toast
                 message={toast.message}
                 type={toast.type}
@@ -330,6 +168,193 @@ export default function Notifications() {
                 onClose={hideToast}
                 duration={3500}
             />
+
+            <div className="min-h-screen bg-[#faf8f8] p-8">
+                <div className="mb-8">
+                    <h1 className="page-title">Notifications</h1>
+                    <p className="page-subtitle">
+                        Stay updated with tournaments, race schedules, and jockey responses.
+                    </p>
+                </div>
+
+                <div className="mb-8 flex flex-wrap gap-5">
+                    <div className="flex w-56 justify-between rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
+                        <div>
+                            <p className="text-sm uppercase text-[var(--admin-muted)]">Unread</p>
+                            <h3 className="mt-2 text-2xl font-bold text-[#a4392f]">{summary.unread}</h3>
+                        </div>
+                        <FaBell className="text-[#a4392f]" size={22} />
+                    </div>
+
+                    <div className="flex w-56 justify-between rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
+                        <div>
+                            <p className="text-sm uppercase text-[var(--admin-muted)]">Invitations</p>
+                            <h3 className="mt-2 text-2xl font-bold">{summary.invitations}</h3>
+                        </div>
+                        <FaUserTie className="text-[var(--admin-primary)]" size={22} />
+                    </div>
+
+                    <div className="flex w-56 justify-between rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
+                        <div>
+                            <p className="text-sm uppercase text-[var(--admin-muted)]">Upcoming Races</p>
+                            <h3 className="mt-2 text-2xl font-bold">{summary.upcomingRaces}</h3>
+                        </div>
+                        <FaCalendarAlt className="text-[var(--admin-primary)]" size={22} />
+                    </div>
+
+                    <div className="flex items-center gap-3 rounded-[8px] border border-[var(--admin-border)] bg-white p-4">
+                        <select
+                            value={activeTab}
+                            onChange={(event) => setActiveTab(event.target.value)}
+                            className="rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-4 py-2 font-semibold outline-none focus:border-[var(--admin-primary)]"
+                        >
+                            {tabs.map((tab) => (
+                                <option key={tab} value={tab}>{tab}</option>
+                            ))}
+                        </select>
+
+                        <button
+                            type="button"
+                            onClick={handleMarkAllRead}
+                            disabled={markingAll || summary.unread === 0}
+                            className="inline-flex items-center gap-2 rounded-full border border-[var(--admin-primary)] px-4 py-2 font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            <FaCheck aria-hidden="true" />
+                            {markingAll ? 'Updating...' : 'Mark All Read'}
+                        </button>
+                    </div>
+                </div>
+
+                <div className="grid gap-8 xl:grid-cols-[360px_1fr]">
+                    <div className="space-y-2">
+                        {isLoading ? (
+                            <div className="rounded-[8px] border border-[var(--admin-border)] bg-white p-5 text-[var(--admin-muted)]">
+                                Loading notifications...
+                            </div>
+                        ) : notifications.length === 0 ? (
+                            <div className="rounded-[8px] border border-[var(--admin-border)] bg-white p-5 text-[var(--admin-muted)]">
+                                No notifications for this filter.
+                            </div>
+                        ) : (
+                            notifications.map((item) => {
+                                const tag = item.statusLabel || item.category;
+                                const statusStyle = getStatusStyle(item.statusLabel);
+
+                                return (
+                                    <button
+                                        type="button"
+                                        key={item.notificationId}
+                                        onClick={() => handleSelect(item)}
+                                        className={`w-full cursor-pointer rounded-[8px] border border-[var(--admin-border)] bg-white p-4 text-left hover:bg-[#faf5f4] ${selectedNotification?.notificationId === item.notificationId ? 'ring-2 ring-[var(--admin-primary)]' : ''}`}
+                                    >
+                                        <div className="flex justify-between gap-3">
+                                            <h3 className="font-medium">{item.title}</h3>
+                                            <span className="whitespace-nowrap text-sm text-[var(--admin-muted)]">
+                                                {item.displayTime}
+                                            </span>
+                                        </div>
+
+                                        <p className="mt-2 line-clamp-2 text-sm text-[var(--admin-muted)]">
+                                            {item.message}
+                                        </p>
+
+                                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                                            {tag && (
+                                                <span className="inline-block rounded-full px-2.5 py-1 text-xs font-semibold" style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}>
+                                                    {tag}
+                                                </span>
+                                            )}
+                                            {!item.isRead && (
+                                                <span className="inline-block rounded-full bg-[#f3e1df] px-2.5 py-1 text-xs font-semibold text-[#a4392f]">
+                                                    NEW
+                                                </span>
+                                            )}
+                                        </div>
+                                    </button>
+                                );
+                            })
+                        )}
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="overflow-hidden rounded-[8px] border border-[var(--admin-border)] bg-white">
+                            {selectedNotification ? (
+                                <>
+                                    <div className="flex items-center justify-between border-b p-4">
+                                        <div className="flex items-center gap-2 rounded-full bg-[var(--admin-primary)] px-4 py-1 text-sm text-white">
+                                            <FaEnvelopeOpenText />
+                                            {selectedNotification.category || 'Owner Alert'}
+                                        </div>
+
+                                        <div className="text-right">
+                                            <p className="text-xs uppercase text-[var(--admin-muted)]">Time Received</p>
+                                            <p className="font-medium">{selectedNotification.displayTime}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 leading-8 text-[var(--admin-ink)]">
+                                        <h2 className="mb-4 text-2xl font-bold text-[#2b1b1b]">
+                                            {selectedNotification.title}
+                                        </h2>
+                                        <p>{selectedNotification.message}</p>
+                                    </div>
+
+                                    <div className="border-t p-4">
+                                        <div className="flex flex-wrap gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleSelect(selectedNotification)}
+                                                disabled={selectedNotification.isRead}
+                                                className="rounded-full bg-[var(--admin-primary)] px-5 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                            >
+                                                Mark as Read
+                                            </button>
+                                            {selectedNotification.actionUrl && (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleOpenAction}
+                                                    className="rounded-full border border-[var(--admin-primary)] bg-white px-5 py-2 font-bold text-[var(--admin-primary)]"
+                                                >
+                                                    Open Related Page
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="p-6 text-[var(--admin-muted)]">
+                                    Select a notification to view details.
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
+                            <h3 className="mb-5 flex items-center gap-2 font-semibold">
+                                <FaInfoCircle className="text-[var(--admin-primary)]" />
+                                Recent Activity
+                            </h3>
+
+                            <div className="space-y-4">
+                                {notifications.slice(0, 3).map((item) => (
+                                    <div key={item.notificationId} className="flex gap-3">
+                                        <div className={`mt-2 h-3 w-3 rounded-full ${item.isRead ? 'bg-[var(--admin-border)]' : 'bg-[#a4392f]'}`} />
+                                        <div>
+                                            <p>{item.title}</p>
+                                            <p className="text-sm text-[var(--admin-muted)]">{item.displayTime}</p>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {notifications.length === 0 && (
+                                    <p className="text-sm text-[var(--admin-muted)]">
+                                        No recent notification activity.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </HorseOwnerLayout>
     );
 }

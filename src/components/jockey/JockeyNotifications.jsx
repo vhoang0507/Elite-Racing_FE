@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
     FaBell,
     FaEnvelope,
-    FaTrophy,
-    FaCog,
+    FaEnvelopeOpenText,
+    FaExclamationTriangle,
+    FaInfoCircle,
     FaCheck,
-    FaFilter,
 } from 'react-icons/fa';
 
 import JockeyLayout from './JockeyLayout';
@@ -14,9 +14,6 @@ import { resolveFileUrl } from '../../api/uploadApi';
 import ImageLightbox from '../shared/ImageLightbox';
 import Toast from '../shared/Toast';
 import { useToast } from '../shared/useToast';
-
-const pageShellClass = 'grid gap-7 px-11 py-9 max-[980px]:px-5 max-[980px]:py-7';
-const panelClass = 'overflow-hidden rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)]';
 
 function HealthCertificateLink({ url }) {
     const [lightboxSrc, setLightboxSrc] = useState(null);
@@ -45,13 +42,20 @@ function JockeyNotifications() {
     const [summary, setSummary] = useState(null);
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [selectedNotif, setSelectedNotif] = useState(null);
+    const [selectedId, setSelectedId] = useState(null);
     const [detailLoading, setDetailLoading] = useState(false);
     const [detailError, setDetailError] = useState('');
+    const [detailExtra, setDetailExtra] = useState(null);
     const [status, setStatus] = useState('All');
     const [date, setDate] = useState('');
     const [sort, setSort] = useState('Newest');
     const { toast, showToast, hideToast } = useToast();
+
+    const selectedNotification = useMemo(() => {
+        const base = notifications.find((item) => item.notificationId === selectedId) ?? notifications[0] ?? null;
+        if (!base) return null;
+        return detailExtra && detailExtra.notificationId === base.notificationId ? { ...base, ...detailExtra } : base;
+    }, [notifications, selectedId, detailExtra]);
 
     const fetchNotifications = async () => {
         try {
@@ -60,7 +64,13 @@ function JockeyNotifications() {
                 date: date || undefined,
                 sort,
             });
-            setNotifications(data.items ?? []);
+            const items = data.items ?? [];
+            setNotifications(items);
+            setSelectedId((current) => (
+                current && items.some((item) => item.notificationId === current)
+                    ? current
+                    : items[0]?.notificationId ?? null
+            ));
         } catch (err) {
             setNotifications([]);
             showToast(err.message || 'Failed to load notifications.', 'error', 'Error');
@@ -85,10 +95,10 @@ function JockeyNotifications() {
 
     useEffect(() => {
         fetchNotifications();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [status, date, sort]);
 
     const handleMarkAllRead = async () => {
-        // Optimistic update — update UI immediately
         const prevNotifs = notifications;
         const prevSummary = summary;
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
@@ -97,21 +107,20 @@ function JockeyNotifications() {
             await jockeyApi.markAllNotificationsAsRead();
             showToast('All notifications marked as read.', 'success', 'Updated');
         } catch (err) {
-            // Revert if API fails
             setNotifications(prevNotifs);
             setSummary(prevSummary);
             showToast(err.message || 'Failed to update. Please try again.', 'error', 'Error');
         }
     };
 
-    const handleClickNotif = async (notif) => {
-        setSelectedNotif(notif);
+    const handleSelect = async (notif) => {
+        setSelectedId(notif.notificationId);
         setDetailLoading(true);
         setDetailError('');
 
         try {
             const detail = await jockeyApi.getNotificationDetail(notif.notificationId);
-            setSelectedNotif({ ...notif, ...detail });
+            setDetailExtra({ notificationId: notif.notificationId, ...detail });
         } catch (err) {
             setDetailError(err.message || 'Failed to load notification detail');
         } finally {
@@ -123,9 +132,6 @@ function JockeyNotifications() {
                 await jockeyApi.markNotificationAsRead(notif.notificationId);
                 setNotifications(prev => prev.map(n =>
                     n.notificationId === notif.notificationId ? { ...n, isRead: true } : n
-                ));
-                setSelectedNotif(prev => (
-                    prev?.notificationId === notif.notificationId ? { ...prev, isRead: true } : prev
                 ));
                 setSummary(prev => prev ? { ...prev, unread: Math.max(0, prev.unread - 1) } : prev);
             } catch {
@@ -142,60 +148,52 @@ function JockeyNotifications() {
 
     return (
         <JockeyLayout activeKey="notifications">
-            <section className={pageShellClass}>
-                <div>
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                title={toast.title}
+                onClose={hideToast}
+                duration={3500}
+            />
+
+            <div className="min-h-screen bg-[#faf8f8] p-8">
+                <div className="mb-8">
                     <h1 className="page-title">Notifications</h1>
                     <p className="page-subtitle">
                         Monitor system updates, approvals, reports, and important activities.
                     </p>
                 </div>
 
-                {/* Summary */}
-                <section className="grid grid-cols-3 gap-5 max-[1080px]:grid-cols-1">
-                    <article className={panelClass}>
-                        <div className="flex items-center gap-4 p-6">
-                            <div className="grid h-12 w-12 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
-                                <FaBell />
-                            </div>
-                            <div>
-                                <div className="text-[var(--admin-muted)]">Total Alerts</div>
-                                <strong>{summary?.totalAlerts ?? 0}</strong>
-                            </div>
+                <div className="mb-8 flex flex-wrap gap-5">
+                    <div className="flex w-56 justify-between rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
+                        <div>
+                            <p className="text-sm uppercase text-[var(--admin-muted)]">Total Alerts</p>
+                            <h3 className="mt-2 text-2xl font-bold">{summary?.totalAlerts ?? 0}</h3>
                         </div>
-                    </article>
+                        <FaBell className="text-[var(--admin-primary)]" size={22} />
+                    </div>
 
-                    <article className={panelClass}>
-                        <div className="flex items-center gap-4 p-6">
-                            <div className="grid h-12 w-12 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
-                                <FaEnvelope />
-                            </div>
-                            <div>
-                                <div className="text-[var(--admin-muted)]">Unread</div>
-                                <strong className="text-[var(--admin-primary)]">{summary?.unread ?? 0}</strong>
-                            </div>
+                    <div className="flex w-56 justify-between rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
+                        <div>
+                            <p className="text-sm uppercase text-[var(--admin-muted)]">Unread</p>
+                            <h3 className="mt-2 text-2xl font-bold text-[#a4392f]">{summary?.unread ?? 0}</h3>
                         </div>
-                    </article>
+                        <FaExclamationTriangle className="text-[#a4392f]" size={22} />
+                    </div>
 
-                    <article className={panelClass}>
-                        <div className="flex items-center gap-4 p-6">
-                            <div className="grid h-12 w-12 place-items-center rounded-full bg-[#faf2e0] text-[#8a6209]">
-                                <FaEnvelope />
-                            </div>
-                            <div>
-                                <div className="text-[var(--admin-muted)]">Invitations</div>
-                                <strong>{summary?.invitations ?? 0}</strong>
-                            </div>
+                    <div className="flex w-56 justify-between rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
+                        <div>
+                            <p className="text-sm uppercase text-[var(--admin-muted)]">Invitations</p>
+                            <h3 className="mt-2 text-2xl font-bold">{summary?.invitations ?? 0}</h3>
                         </div>
-                    </article>
-                </section>
+                        <FaEnvelope className="text-[var(--admin-primary)]" size={22} />
+                    </div>
 
-                {/* Filter */}
-                <section className={`${panelClass} flex items-center justify-between gap-4 p-4 max-[720px]:flex-col`}>
-                    <div className="flex gap-3 max-[720px]:w-full max-[720px]:flex-col">
+                    <div className="flex flex-wrap items-center gap-3 rounded-[8px] border border-[var(--admin-border)] bg-white p-4">
                         <select
                             value={status}
                             onChange={e => setStatus(e.target.value)}
-                            className="rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-4 py-2 outline-none"
+                            className="rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-4 py-2 font-semibold outline-none focus:border-[var(--admin-primary)]"
                         >
                             <option value="All">Status: All</option>
                             <option value="Unread">Unread</option>
@@ -208,129 +206,159 @@ function JockeyNotifications() {
                             onChange={e => setDate(e.target.value)}
                             className="rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-4 py-2 outline-none"
                         />
-                    </div>
-
-                    <div className="flex gap-3">
-                        <button
-                            onClick={handleMarkAllRead}
-                            className="rounded-full border border-[var(--admin-primary)] px-4 py-2 font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)]"
-                        >
-                            <FaCheck className="mr-2 inline" />
-                            Mark All Read
-                        </button>
 
                         <select
                             value={sort}
                             onChange={e => setSort(e.target.value)}
-                            className="rounded-full bg-[var(--admin-primary)] px-4 py-2 font-bold text-white outline-none"
+                            className="rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-4 py-2 font-semibold outline-none focus:border-[var(--admin-primary)]"
                         >
                             <option value="Newest">Newest</option>
                             <option value="Oldest">Oldest</option>
                         </select>
-                    </div>
-                </section>
 
-                {/* Main */}
-                <section className="grid grid-cols-[minmax(0,1fr)_320px] items-start gap-5 max-[1080px]:grid-cols-1">
-                    {/* Notifications List */}
-                    <div className="grid gap-4 content-start">
+                        <button
+                            type="button"
+                            onClick={handleMarkAllRead}
+                            className="inline-flex items-center gap-2 rounded-full border border-[var(--admin-primary)] px-4 py-2 font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)]"
+                        >
+                            <FaCheck aria-hidden="true" />
+                            Mark All Read
+                        </button>
+                    </div>
+                </div>
+
+                <div className="grid gap-8 xl:grid-cols-[360px_1fr]">
+                    <div className="space-y-2">
                         {notifications.length === 0 ? (
-                            <p className="p-6 text-center text-sm text-[var(--admin-muted)]">No notifications</p>
+                            <div className="rounded-[8px] border border-[var(--admin-border)] bg-white p-5 text-[var(--admin-muted)]">
+                                No notifications for this filter.
+                            </div>
                         ) : (
                             notifications.map((item) => (
-                                <article
+                                <button
+                                    type="button"
                                     key={item.notificationId}
-                                    onClick={() => handleClickNotif(item)}
-                                    className={`${panelClass} cursor-pointer ${!item.isRead ? 'border-l-4 border-l-[var(--admin-primary)]' : ''} ${selectedNotif?.notificationId === item.notificationId ? 'bg-[var(--admin-surface-strong)]' : ''}`}
+                                    onClick={() => handleSelect(item)}
+                                    className={`w-full cursor-pointer rounded-[8px] border border-[var(--admin-border)] bg-white p-4 text-left hover:bg-[#faf5f4] ${selectedNotification?.notificationId === item.notificationId ? 'ring-2 ring-[var(--admin-primary)]' : ''}`}
                                 >
-                                    <div className="flex gap-4 p-5">
-                                        <div className="grid h-10 w-10 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
-                                            <FaEnvelope />
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-start justify-between gap-4">
-                                                <strong>{item.title}</strong>
-                                                {!item.isRead && (
-                                                    <span className="rounded-full bg-[var(--admin-surface-strong)] px-2 py-0.5 text-[0.7rem] font-bold text-[var(--admin-primary)] whitespace-nowrap">
-                                                        Unread
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <p className="mt-2 text-[0.9rem] text-[var(--admin-muted)]">{item.message}</p>
-                                            <div className="mt-3 text-[0.85rem] text-[var(--admin-muted)]">{item.displayTime}</div>
-                                        </div>
+                                    <div className="flex justify-between gap-3">
+                                        <h3 className="font-medium">{item.title}</h3>
+                                        <span className="whitespace-nowrap text-sm text-[var(--admin-muted)]">
+                                            {item.displayTime}
+                                        </span>
                                     </div>
-                                </article>
+
+                                    <p className="mt-2 line-clamp-2 text-sm text-[var(--admin-muted)]">
+                                        {item.message}
+                                    </p>
+
+                                    {!item.isRead && (
+                                        <span className="mt-3 inline-block rounded-full bg-[#f3e1df] px-2.5 py-1 text-xs font-semibold text-[#a4392f]">
+                                            NEW
+                                        </span>
+                                    )}
+                                </button>
                             ))
                         )}
                     </div>
 
-                    {/* Detail Panel */}
-                    <aside className={`${panelClass} sticky top-6`}>
-                        {selectedNotif ? (
-                            <div className="p-5">
-                                <h3 className="mb-4 text-lg font-bold">Notification Detail</h3>
-                                {detailLoading && (
-                                    <div className="mb-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-muted)]">
-                                        Loading notification detail...
+                    <div className="space-y-4">
+                        <div className="overflow-hidden rounded-[8px] border border-[var(--admin-border)] bg-white">
+                            {selectedNotification ? (
+                                <>
+                                    <div className="flex items-center justify-between border-b p-4">
+                                        <div className="flex items-center gap-2 rounded-full bg-[var(--admin-primary)] px-4 py-1 text-sm text-white">
+                                            <FaEnvelopeOpenText />
+                                            Jockey Alert
+                                        </div>
+
+                                        <div className="text-right">
+                                            <p className="text-xs uppercase text-[var(--admin-muted)]">Time Received</p>
+                                            <p className="font-medium">{selectedNotification.displayTime}</p>
+                                        </div>
                                     </div>
-                                )}
-                                {detailError && (
-                                    <div className="mb-4 rounded-[var(--admin-radius)] border border-[#d89288] bg-[#f3e1df] px-4 py-3 text-[0.82rem] font-bold text-[#a4392f]">
-                                        {detailError}
-                                    </div>
-                                )}
-                                <div className="grid gap-4 text-[0.9rem]">
-                                    <div>
-                                        <div className="text-[var(--admin-muted)] text-[0.75rem] font-bold uppercase mb-1">Title</div>
-                                        <strong>{selectedNotif.title}</strong>
-                                    </div>
-                                    <div>
-                                        <div className="text-[var(--admin-muted)] text-[0.75rem] font-bold uppercase mb-1">Message</div>
-                                        <p className="text-[var(--admin-ink)]">{selectedNotif.message}</p>
-                                    </div>
-                                    <div>
-                                        <div className="text-[var(--admin-muted)] text-[0.75rem] font-bold uppercase mb-1">Time</div>
-                                        <span>{selectedNotif.displayTime}</span>
-                                    </div>
-                                    <div>
-                                        <div className="text-[var(--admin-muted)] text-[0.75rem] font-bold uppercase mb-1">Status</div>
-                                        <span className={`rounded-full px-2.5 py-0.5 text-[0.75rem] font-bold ${selectedNotif.isRead ? 'bg-[#e8f7ee] text-[#16864f]' : 'bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]'}`}>
-                                            {selectedNotif.isRead ? 'Read' : 'Unread'}
-                                        </span>
-                                    </div>
-                                    {selectedNotif.raceDetail && (
-                                        <div className="rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] p-4">
-                                            <div className="text-[var(--admin-muted)] text-[0.75rem] font-bold uppercase mb-2">Race Detail</div>
-                                            <div className="grid gap-2">
-                                                <strong>{selectedNotif.raceDetail.raceName}</strong>
-                                                <span>{selectedNotif.raceDetail.horseName} - {selectedNotif.raceDetail.ownerName}</span>
-                                                <span className="text-[var(--admin-muted)]">{selectedNotif.raceDetail.horseHealthStatus || '-'}</span>
-                                                <div>
-                                                    <div className="text-[var(--admin-muted)] text-[0.75rem] font-bold uppercase mb-1">Health Certificate</div>
-                                                    <HealthCertificateLink url={selectedNotif.raceDetail.healthCertificateImageUrl} />
+
+                                    <div className="p-6 leading-8 text-[var(--admin-ink)]">
+                                        <h2 className="mb-4 text-2xl font-bold text-[#2b1b1b]">
+                                            {selectedNotification.title}
+                                        </h2>
+
+                                        {detailLoading && (
+                                            <div className="mb-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-4 py-3 text-[0.82rem] font-bold text-[var(--admin-muted)]">
+                                                Loading notification detail...
+                                            </div>
+                                        )}
+                                        {detailError && (
+                                            <div className="mb-4 rounded-[var(--admin-radius)] border border-[#d89288] bg-[#f3e1df] px-4 py-3 text-[0.82rem] font-bold text-[#a4392f]">
+                                                {detailError}
+                                            </div>
+                                        )}
+
+                                        <p>{selectedNotification.message}</p>
+
+                                        {selectedNotification.raceDetail && (
+                                            <div className="mt-5 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] p-4 leading-normal">
+                                                <div className="mb-2 text-[0.75rem] font-bold uppercase text-[var(--admin-muted)]">Race Detail</div>
+                                                <div className="grid gap-2">
+                                                    <strong>{selectedNotification.raceDetail.raceName}</strong>
+                                                    <span>{selectedNotification.raceDetail.horseName} - {selectedNotification.raceDetail.ownerName}</span>
+                                                    <span className="text-[var(--admin-muted)]">{selectedNotification.raceDetail.horseHealthStatus || '-'}</span>
+                                                    <div>
+                                                        <div className="mb-1 text-[0.75rem] font-bold uppercase text-[var(--admin-muted)]">Health Certificate</div>
+                                                        <HealthCertificateLink url={selectedNotification.raceDetail.healthCertificateImageUrl} />
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="flex h-full min-h-[200px] items-center justify-center p-5">
-                                <p className="text-center text-[var(--admin-muted)]">Click a notification to view details</p>
-                            </div>
-                        )}
-                    </aside>
-                </section>
-            </section>
+                                        )}
+                                    </div>
 
-            <Toast
-                message={toast.message}
-                type={toast.type}
-                title={toast.title}
-                onClose={hideToast}
-                duration={3500}
-            />
+                                    <div className="border-t p-4">
+                                        <div className="flex flex-wrap gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleSelect(selectedNotification)}
+                                                disabled={selectedNotification.isRead}
+                                                className="rounded-full bg-[var(--admin-primary)] px-5 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                            >
+                                                Mark as Read
+                                            </button>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="p-6 text-[var(--admin-muted)]">
+                                    Select a notification to view details.
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
+                            <h3 className="mb-5 flex items-center gap-2 font-semibold">
+                                <FaInfoCircle className="text-[var(--admin-primary)]" />
+                                Recent Activity
+                            </h3>
+
+                            <div className="space-y-4">
+                                {notifications.slice(0, 3).map((item) => (
+                                    <div key={item.notificationId} className="flex gap-3">
+                                        <div className={`mt-2 h-3 w-3 rounded-full ${item.isRead ? 'bg-[var(--admin-border)]' : 'bg-[#a4392f]'}`} />
+                                        <div>
+                                            <p>{item.title}</p>
+                                            <p className="text-sm text-[var(--admin-muted)]">{item.displayTime}</p>
+                                        </div>
+                                    </div>
+                                ))}
+
+                                {notifications.length === 0 && (
+                                    <p className="text-sm text-[var(--admin-muted)]">
+                                        No recent notification activity.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </JockeyLayout>
     );
 }

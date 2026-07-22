@@ -8,46 +8,23 @@ import { useNavigate } from 'react-router-dom';
 
 import {
     FaBell,
-    FaCalendarCheck,
     FaCheck,
-    FaClock,
+    FaEnvelopeOpenText,
     FaExclamationTriangle,
     FaFlagCheckered,
-    FaSearch,
+    FaInfoCircle,
     FaTh,
-    FaTimes,
     FaTrophy,
 } from 'react-icons/fa';
 
 import { adminApi } from '../../api/adminApi';
 import { confirmAdminAction } from '../../utils/adminFeedback';
-import { getCompactPaginationItems } from '../../utils/pagination';
 import Toast from '../shared/Toast';
 import { useToast } from '../shared/useToast';
 
 import AdminLayout from './AdminLayout';
 
 const formatClass = (value) => String(value || '').toLowerCase().replace(/\s+/g, '-');
-
-const pageShellClass = [
-    '[--notifications-soft:#f8fbff]',
-    '[--notifications-line:#dce5ef]',
-    'grid min-h-[calc(100vh-64px)] content-start gap-[26px] px-[52px] py-11 max-[820px]:px-5 max-[820px]:py-8',
-].join(' ');
-
-const panelWidthClass = 'w-[min(100%,1110px)]';
-
-const summaryIconClass = {
-    total: 'bg-[#ffe5e2] text-[var(--admin-primary)]',
-    action: 'bg-[#ffd15c] text-[#744f04]',
-};
-
-const notificationIconClass = {
-    registration: 'bg-[#ffd66a] text-[#795602]',
-    race: 'bg-[#e4e3ff] text-[#4d4cc3]',
-    urgent: 'bg-[#ffd9d4] text-[#c51f1f]',
-    prediction: 'bg-[#f2dcd7] text-[#965f56]',
-};
 
 const tagClass = {
     registration: 'bg-[#ffe2a0] text-[#7a5604]',
@@ -69,41 +46,6 @@ const iconByTone = {
     race: FaFlagCheckered,
     urgent: FaExclamationTriangle,
     prediction: FaTrophy,
-};
-
-const selectClass = 'h-full w-full min-w-0 cursor-pointer border-0 bg-transparent px-0 pr-6 text-[0.78rem] font-bold text-[#475569] outline-0';
-const paginationButtonClass = 'grid h-[34px] w-[34px] cursor-pointer place-items-center rounded-full border border-[var(--admin-border)] bg-white font-extrabold text-[var(--admin-primary-dark)] transition-colors hover:border-[var(--admin-primary)] hover:bg-[var(--admin-primary)] hover:text-white';
-const pageSize = 4;
-
-const matchesQuery = (notification, query) => {
-    const normalizedQuery = query.trim().toLowerCase();
-
-    if (!normalizedQuery) {
-        return true;
-    }
-
-    return [
-        notification.title,
-        notification.type,
-        notification.priority,
-        notification.message,
-    ].some((value) => String(value).toLowerCase().includes(normalizedQuery));
-};
-
-const highlightMessage = (message, highlight) => {
-    if (!highlight || !message.includes(highlight)) {
-        return message;
-    }
-
-    const [before, after] = message.split(highlight);
-
-    return (
-        <>
-            {before}
-            <strong>{highlight}</strong>
-            {after}
-        </>
-    );
 };
 
 const detailValue = (value) => (
@@ -130,94 +72,99 @@ const formatDateTime = (value) => {
     }).format(date);
 };
 
+const matchesQuery = (notification, query) => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+        return true;
+    }
+
+    return [
+        notification.title,
+        notification.type,
+        notification.priority,
+        notification.message,
+    ].some((value) => String(value).toLowerCase().includes(normalizedQuery));
+};
+
 function Notifications() {
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
-    const [selectedNotification, setSelectedNotification] = useState(null);
+    const [selectedId, setSelectedId] = useState(null);
     const [query, setQuery] = useState('');
     const [typeFilter, setTypeFilter] = useState('all-types');
     const [priorityFilter, setPriorityFilter] = useState('all-priority');
-    const [page, setPage] = useState(1);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const { toast, showToast, hideToast } = useToast();
+
+    const selectedNotification = useMemo(
+        () => notifications.find((item) => item.id === selectedId) ?? notifications[0] ?? null,
+        [notifications, selectedId]
+    );
+
+    const filteredNotifications = useMemo(() => notifications.filter((notification) => (
+        matchesQuery(notification, query)
+        && (typeFilter === 'all-types' || formatClass(notification.type) === typeFilter)
+        && (priorityFilter === 'all-priority' || formatClass(notification.priority) === priorityFilter)
+    )), [notifications, priorityFilter, query, typeFilter]);
 
     useEffect(() => {
         let isMounted = true;
 
-        const refreshNotifications = async () => {
+        const refreshNotifications = async (isInitial = false) => {
+            if (isInitial) setLoading(true);
+
             try {
                 const payload = await adminApi.getNotifications();
 
                 if (isMounted) {
-                    setNotifications(payload);
+                    setNotifications(payload ?? []);
+                    if (isInitial) {
+                        setSelectedId(payload?.[0]?.id ?? null);
+                    }
                 }
-            } catch {
-                // Silent polling failure: keep the last successfully loaded list.
+            } catch (err) {
+                if (isMounted && isInitial) {
+                    showToast(err.message || 'Failed to load notifications.', 'error');
+                }
+            } finally {
+                if (isMounted && isInitial) setLoading(false);
             }
         };
 
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'visible') {
-                refreshNotifications();
+                refreshNotifications(false);
             }
         };
 
-        refreshNotifications();
-        const intervalId = window.setInterval(refreshNotifications, 10000);
+        refreshNotifications(true);
+        const intervalId = window.setInterval(() => refreshNotifications(false), 10000);
 
-        window.addEventListener('focus', refreshNotifications);
+        window.addEventListener('focus', () => refreshNotifications(false));
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
             isMounted = false;
             window.clearInterval(intervalId);
-            window.removeEventListener('focus', refreshNotifications);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const summaryCards = useMemo(() => [
-        {
-            marker: 'System Total',
-            value: notifications.length.toLocaleString('en-US'),
-            label: 'Total Notifications',
-            tone: 'total',
-            icon: FaBell,
-        },
-        {
-            marker: 'Unread',
-            value: String(notifications.filter((notification) => !notification.isRead).length),
-            label: 'Unread Notifications',
-            tone: 'action',
-            icon: FaCalendarCheck,
-        },
-    ], [notifications]);
-
-    const filteredNotifications = useMemo(() => notifications.filter((notification) => {
-        return (
-            matchesQuery(notification, query)
-            && (typeFilter === 'all-types' || formatClass(notification.type) === typeFilter)
-            && (priorityFilter === 'all-priority' || formatClass(notification.priority) === priorityFilter)
-        );
-    }), [notifications, priorityFilter, query, typeFilter]);
-
-    const totalPages = Math.max(1, Math.ceil(filteredNotifications.length / pageSize));
-    const visibleNotifications = filteredNotifications.slice((page - 1) * pageSize, page * pageSize);
-    const firstShown = filteredNotifications.length === 0 ? 0 : (page - 1) * pageSize + 1;
-    const lastShown = Math.min(page * pageSize, filteredNotifications.length);
+    const unreadCount = notifications.filter((notification) => !notification.isRead).length;
 
     const handleQueryChange = (value) => {
         setQuery(value);
-        setPage(1);
     };
 
     const handleFilterChange = (setter) => (event) => {
         setter(event.target.value);
-        setPage(1);
     };
 
-    const handleOpenNotification = async (notification) => {
-        const openedNotification = { ...notification, isRead: true, status: 'Read' };
-        setSelectedNotification(openedNotification);
+    const handleSelect = async (notification) => {
+        setSelectedId(notification.id);
 
         if (notification.isRead) {
             return;
@@ -233,7 +180,6 @@ function Notifications() {
             window.dispatchEvent(new Event('admin-notifications-changed'));
         } catch (err) {
             setNotifications(prev);
-            setSelectedNotification(notification);
             showToast(err.message || 'Failed to mark as read.', 'error', 'Error');
         }
     };
@@ -249,8 +195,10 @@ function Notifications() {
             return;
         }
 
+        setSaving(true);
         const prev = notifications;
         setNotifications((current) => current.map((n) => ({ ...n, isRead: true, status: 'Read' })));
+
         try {
             await adminApi.markAllNotificationsRead();
             window.dispatchEvent(new Event('admin-notifications-changed'));
@@ -258,25 +206,19 @@ function Notifications() {
         } catch (err) {
             setNotifications(prev);
             showToast(err.message || 'Failed to update. Please try again.', 'error', 'Error');
+        } finally {
+            setSaving(false);
         }
     };
 
-    const handleNotificationAction = () => {
+    const handleOpenAction = () => {
         const actionUrl = selectedNotification?.actionUrl;
 
         if (!actionUrl) {
             return;
         }
 
-        setSelectedNotification(null);
         navigate(actionUrl);
-    };
-
-    const handleKeyDown = (event, notification) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            handleOpenNotification(notification);
-        }
     };
 
     return (
@@ -287,253 +229,6 @@ function Notifications() {
             searchPlaceholder="Search notifications..."
             searchValue={query}
         >
-                <section className={pageShellClass}>
-                    <div>
-                        <h1 className="page-title">
-                            Notifications
-                        </h1>
-                        <p className="page-subtitle max-w-[520px] leading-[1.45]">
-                            Monitor system updates, approvals, reports, and important activities.
-                        </p>
-                    </div>
-
-                    <section
-                        aria-label="Notifications summary"
-                        className={`${panelWidthClass} grid grid-cols-2 gap-[26px] max-[820px]:grid-cols-1`}
-                    >
-                        {summaryCards.map((card) => {
-                            const Icon = card.icon;
-
-                            return (
-                                <article
-                                    className="grid min-h-[148px] content-start gap-2.5 rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-6 pb-5 pt-6 shadow-[0_14px_30px_rgba(15,23,42,0.05)]"
-                                    key={card.label}
-                                >
-                                    <div className="flex items-start justify-between gap-4">
-                                        <span className={`grid h-[38px] w-[38px] place-items-center rounded-full ${summaryIconClass[card.tone]}`}>
-                                            <Icon aria-hidden="true" className="h-4 w-4" />
-                                        </span>
-                                        <small className="text-[0.58rem] font-black uppercase text-[#475569]">
-                                            {card.marker}
-                                        </small>
-                                    </div>
-                                    <strong className="text-[2rem] leading-none text-[var(--admin-primary-dark)]">
-                                        {card.value}
-                                    </strong>
-                                    <span className="text-[0.82rem] font-bold text-[#475569]">{card.label}</span>
-                                </article>
-                            );
-                        })}
-                    </section>
-
-                    <section
-                        aria-label="Notification filters"
-                        className={`${panelWidthClass} grid min-h-[62px] grid-cols-[minmax(240px,1fr)_180px_180px_auto] items-center gap-4 rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--notifications-soft)] px-[18px] py-3 max-[1180px]:grid-cols-2 max-[820px]:grid-cols-1`}
-                    >
-                        <label className="flex h-[38px] items-center gap-2.5 rounded-full border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661] transition-colors hover:border-[var(--admin-gold)]">
-                            <FaSearch aria-hidden="true" />
-                            <input
-                                className="h-full w-full min-w-0 border-0 bg-transparent p-0 text-[0.78rem] text-[var(--admin-ink)] outline-0"
-                                onChange={(event) => handleQueryChange(event.target.value)}
-                                placeholder="Search notifications..."
-                                type="search"
-                                value={query}
-                            />
-                        </label>
-
-                        <label className="flex h-[38px] items-center rounded-full border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661] transition-colors hover:border-[var(--admin-gold)]">
-                            <select className={selectClass} onChange={handleFilterChange(setTypeFilter)} value={typeFilter}>
-                                <option value="all-types">All Types</option>
-                                <option value="registration">Registration</option>
-                                <option value="race-result">Race Result</option>
-                                <option value="report">Report</option>
-                                <option value="prediction">Prediction</option>
-                            </select>
-                        </label>
-
-                        <label className="flex h-[38px] items-center rounded-full border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-3 text-[#826661] transition-colors hover:border-[var(--admin-gold)]">
-                            <select className={selectClass} onChange={handleFilterChange(setPriorityFilter)} value={priorityFilter}>
-                                <option value="all-priority">All Priority</option>
-                                <option value="critical">Critical</option>
-                                <option value="high-priority">High Priority</option>
-                                <option value="medium-priority">Medium Priority</option>
-                                <option value="low-priority">Low Priority</option>
-                            </select>
-                        </label>
-
-                        <button
-                            onClick={handleMarkAllRead}
-                            type="button"
-                            className="flex h-[38px] items-center gap-2 rounded-full border border-[var(--admin-primary)] px-4 text-[0.78rem] font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-primary)] hover:text-white"
-                        >
-                            <FaCheck aria-hidden="true" />
-                            Mark All Read
-                        </button>
-                    </section>
-
-                    <section aria-label="Notification list" className={`${panelWidthClass} grid gap-[18px]`}>
-                        {visibleNotifications.length === 0 && (
-                            <div className="grid justify-items-center gap-3 rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-6 py-14 text-center shadow-[0_14px_28px_rgba(15,23,42,0.04)]">
-                                <span className="grid h-12 w-12 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
-                                    <FaBell aria-hidden="true" className="h-5 w-5" />
-                                </span>
-                                <span className="font-bold text-[var(--admin-muted)]">No notifications for this filter.</span>
-                            </div>
-                        )}
-                        {visibleNotifications.map((notification) => {
-                            const Icon = iconByTone[notification.tone] || FaBell;
-
-                            return (
-                                <article
-                                    className={[
-                                        'relative grid min-h-[146px] cursor-pointer grid-cols-[auto_minmax(0,1fr)] gap-[18px] rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--admin-surface)] px-[22px] py-[22px] shadow-[0_14px_28px_rgba(15,23,42,0.04)] max-[820px]:grid-cols-1',
-                                        notification.tone === 'urgent' && !notification.isRead ? 'before:absolute before:bottom-0 before:left-0 before:top-0 before:w-[3px] before:rounded-full before:bg-[#e42121] before:content-[""]' : '',
-                                        notification.isRead ? 'opacity-75' : '',
-                                    ].join(' ')}
-                                    key={notification.id}
-                                    onClick={() => handleOpenNotification(notification)}
-                                    onKeyDown={(event) => handleKeyDown(event, notification)}
-                                    role="button"
-                                    tabIndex="0"
-                                >
-                                    <span className={`grid h-[42px] w-[42px] place-items-center rounded-full ${notificationIconClass[notification.tone]}`}>
-                                        <Icon aria-hidden="true" className="h-4 w-4" />
-                                    </span>
-
-                                    <div className="min-w-0">
-                                        <div className="flex items-start justify-between gap-[18px] max-[820px]:flex-col">
-                                            <h2 className="m-0 text-base leading-[1.2] text-[var(--admin-ink)]">
-                                                {notification.title}
-                                            </h2>
-                                            <time className="inline-flex items-center gap-[5px] whitespace-nowrap text-[0.76rem] font-bold text-[#6f5a56]">
-                                                <FaClock aria-hidden="true" className="h-[11px] w-[11px]" />
-                                                <span>{notification.time}</span>
-                                            </time>
-                                        </div>
-
-                                        <p className="mt-1.5 max-w-[680px] text-[0.82rem] font-semibold leading-[1.45] text-[#475569] [&_strong]:text-[var(--admin-primary)]">
-                                            {highlightMessage(notification.message, notification.highlight)}
-                                        </p>
-
-                                        <div className="mt-5 flex flex-wrap gap-2">
-                                            {[notification.type, notification.priority].map((tag) => (
-                                                <span
-                                                    className={`inline-flex min-h-5 items-center rounded-full px-2 text-[0.58rem] font-black uppercase ${tagClass[formatClass(tag)] || tagClass.prediction}`}
-                                                    key={tag}
-                                                >
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </article>
-                            );
-                        })}
-                    </section>
-
-                    <div className={`${panelWidthClass} flex min-h-[68px] items-center justify-between gap-[18px] px-[22px] py-4 text-[0.82rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch`}>
-                        <span>Showing {firstShown} - {lastShown} of {filteredNotifications.length} entries</span>
-
-                        <div className="flex items-center gap-2 max-[820px]:flex-wrap">
-                            <button aria-label="Previous page" className={paginationButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">&lt;</button>
-                            {getCompactPaginationItems(totalPages, page).map((pageItem) => (
-                                typeof pageItem === 'number' ? (
-                                    <button
-                                        className={`${paginationButtonClass} ${pageItem === page ? 'border-[var(--admin-primary)] bg-[#e8f7ef] text-[#064e3b] hover:bg-[#d1fae5]' : ''}`}
-                                        key={pageItem}
-                                        onClick={() => setPage(pageItem)}
-                                        type="button"
-                                    >
-                                        {pageItem}
-                                    </button>
-                                ) : (
-                                    <span className={`${paginationButtonClass} cursor-default text-[var(--admin-muted)] hover:bg-[#fffdfc]`} key={pageItem}>...</span>
-                                )
-                            ))}
-                            <button aria-label="Next page" className={paginationButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">&gt;</button>
-                        </div>
-                    </div>
-
-                    {selectedNotification && (
-                        <div className="fixed inset-0 z-40 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={() => setSelectedNotification(null)} role="presentation">
-                            <section
-                                aria-label={`Notification detail for ${selectedNotification.title}`}
-                                className="grid max-h-[calc(100vh-48px)] w-[min(760px,100%)] gap-5 overflow-y-auto rounded-[var(--admin-radius)] border border-[var(--notifications-line)] bg-[var(--admin-surface)] p-6 shadow-[0_20px_48px_rgba(45,32,32,0.22)]"
-                                onClick={(event) => event.stopPropagation()}
-                                role="dialog"
-                            >
-                                <div className="flex items-start justify-between gap-4">
-                                    <div className="flex min-w-0 items-start gap-4">
-                                        {(() => {
-                                            const Icon = iconByTone[selectedNotification.tone] || FaBell;
-
-                                            return (
-                                                <span className={`grid h-[46px] w-[46px] flex-none place-items-center rounded-full ${notificationIconClass[selectedNotification.tone] || notificationIconClass.registration}`}>
-                                                    <Icon aria-hidden="true" className="h-4 w-4" />
-                                                </span>
-                                            );
-                                        })()}
-                                        <div className="min-w-0">
-                                            <h2 className="m-0 text-[1.3rem] leading-[1.2] text-[var(--admin-primary-dark)]">
-                                                {selectedNotification.title}
-                                            </h2>
-                                            <time className="mt-2 inline-flex items-center gap-[6px] text-[0.78rem] font-bold text-[#6f5a56]">
-                                                <FaClock aria-hidden="true" className="h-[11px] w-[11px]" />
-                                                <span>{detailValue(selectedNotification.time)}</span>
-                                            </time>
-                                        </div>
-                                    </div>
-                                    <button aria-label="Close notification detail" className="grid h-9 w-9 cursor-pointer place-items-center rounded-md border border-[var(--notifications-line)] bg-[#fffdfc] text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]" onClick={() => setSelectedNotification(null)} type="button">
-                                        <FaTimes aria-hidden="true" />
-                                    </button>
-                                </div>
-
-                                <div className="rounded-md border border-[var(--notifications-line)] bg-[var(--notifications-soft)] px-4 py-4 text-[0.92rem] font-semibold leading-relaxed text-[#334155]">
-                                    {selectedNotification.message}
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-3 max-[680px]:grid-cols-1">
-                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Notification ID</span>
-                                        <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{detailValue(selectedNotification.id)}</strong>
-                                    </div>
-                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Created At</span>
-                                        <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{formatDateTime(selectedNotification.createdAt)}</strong>
-                                    </div>
-                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Type</span>
-                                        <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{detailValue(selectedNotification.type)}</strong>
-                                    </div>
-                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Priority</span>
-                                        <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{detailValue(selectedNotification.priority)}</strong>
-                                    </div>
-                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Related Type</span>
-                                        <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{detailValue(selectedNotification.relatedType)}</strong>
-                                    </div>
-                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Related ID</span>
-                                        <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{detailValue(selectedNotification.relatedId)}</strong>
-                                    </div>
-                                </div>
-
-                                {selectedNotification.actionUrl && (
-                                    <div className="flex justify-end border-t border-[var(--notifications-line)] pt-4">
-                                        <button
-                                            className="primary-button min-w-[190px] justify-center"
-                                            onClick={handleNotificationAction}
-                                            type="button"
-                                        >
-                                            {selectedNotification.type === 'registration' ? 'Review Registration' : 'Open Related Page'}
-                                        </button>
-                                    </div>
-                                )}
-                            </section>
-                        </div>
-                    )}
-                </section>
             <Toast
                 message={toast.message}
                 type={toast.type}
@@ -541,6 +236,224 @@ function Notifications() {
                 onClose={hideToast}
                 duration={3500}
             />
+
+            <div className="min-h-screen bg-[#faf8f8] p-8">
+                <div className="mb-8">
+                    <h1 className="page-title">Notifications</h1>
+                    <p className="page-subtitle">
+                        Monitor system updates, approvals, reports, and important activities.
+                    </p>
+                </div>
+
+                <div className="mb-8 flex flex-wrap gap-5">
+                    <div className="flex w-56 justify-between rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
+                        <div>
+                            <p className="text-sm uppercase text-[var(--admin-muted)]">Total Notifications</p>
+                            <h3 className="mt-2 text-2xl font-bold">{notifications.length}</h3>
+                        </div>
+                        <FaBell className="text-[var(--admin-primary)]" size={22} />
+                    </div>
+
+                    <div className="flex w-56 justify-between rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
+                        <div>
+                            <p className="text-sm uppercase text-[var(--admin-muted)]">Unread Notifications</p>
+                            <h3 className="mt-2 text-2xl font-bold text-[#a4392f]">{unreadCount}</h3>
+                        </div>
+                        <FaExclamationTriangle className="text-[#a4392f]" size={22} />
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 rounded-[8px] border border-[var(--admin-border)] bg-white p-4">
+                        <select
+                            value={typeFilter}
+                            onChange={handleFilterChange(setTypeFilter)}
+                            className="rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-4 py-2 font-semibold outline-none focus:border-[var(--admin-primary)]"
+                        >
+                            <option value="all-types">All Types</option>
+                            <option value="registration">Registration</option>
+                            <option value="race-result">Race Result</option>
+                            <option value="report">Report</option>
+                            <option value="prediction">Prediction</option>
+                        </select>
+
+                        <select
+                            value={priorityFilter}
+                            onChange={handleFilterChange(setPriorityFilter)}
+                            className="rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-4 py-2 font-semibold outline-none focus:border-[var(--admin-primary)]"
+                        >
+                            <option value="all-priority">All Priority</option>
+                            <option value="critical">Critical</option>
+                            <option value="high-priority">High Priority</option>
+                            <option value="medium-priority">Medium Priority</option>
+                            <option value="low-priority">Low Priority</option>
+                        </select>
+
+                        <button
+                            type="button"
+                            onClick={handleMarkAllRead}
+                            disabled={saving || unreadCount === 0}
+                            className="inline-flex items-center gap-2 rounded-full border border-[var(--admin-primary)] px-4 py-2 font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            <FaCheck aria-hidden="true" />
+                            {saving ? 'Updating...' : 'Mark All Read'}
+                        </button>
+                    </div>
+                </div>
+
+                <div className="grid gap-8 xl:grid-cols-[360px_1fr]">
+                    <div className="space-y-2">
+                        {loading ? (
+                            <div className="rounded-[8px] border border-[var(--admin-border)] bg-white p-5 text-[var(--admin-muted)]">
+                                Loading notifications...
+                            </div>
+                        ) : filteredNotifications.length === 0 ? (
+                            <div className="rounded-[8px] border border-[var(--admin-border)] bg-white p-5 text-[var(--admin-muted)]">
+                                No notifications for this filter.
+                            </div>
+                        ) : (
+                            filteredNotifications.map((notification) => (
+                                <button
+                                    type="button"
+                                    key={notification.id}
+                                    onClick={() => handleSelect(notification)}
+                                    className={`w-full cursor-pointer rounded-[8px] border border-[var(--admin-border)] bg-white p-4 text-left hover:bg-[#faf5f4] ${selectedNotification?.id === notification.id ? 'ring-2 ring-[var(--admin-primary)]' : ''}`}
+                                >
+                                    <div className="flex justify-between gap-3">
+                                        <h3 className="font-medium">{notification.title}</h3>
+                                        <span className="whitespace-nowrap text-sm text-[var(--admin-muted)]">
+                                            {notification.time}
+                                        </span>
+                                    </div>
+
+                                    <p className="mt-2 line-clamp-2 text-sm text-[var(--admin-muted)]">
+                                        {notification.message}
+                                    </p>
+
+                                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                                        {[notification.type, notification.priority].filter(Boolean).map((tag) => (
+                                            <span
+                                                className={`inline-flex min-h-5 items-center rounded-full px-2 text-[0.58rem] font-black uppercase ${tagClass[formatClass(tag)] || tagClass.prediction}`}
+                                                key={tag}
+                                            >
+                                                {tag}
+                                            </span>
+                                        ))}
+                                        {!notification.isRead && (
+                                            <span className="inline-block rounded-full bg-[#f3e1df] px-2.5 py-1 text-xs font-semibold text-[#a4392f]">
+                                                NEW
+                                            </span>
+                                        )}
+                                    </div>
+                                </button>
+                            ))
+                        )}
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="overflow-hidden rounded-[8px] border border-[var(--admin-border)] bg-white">
+                            {selectedNotification ? (
+                                <>
+                                    <div className="flex items-center justify-between border-b p-4">
+                                        <div className="flex items-center gap-2 rounded-full bg-[var(--admin-primary)] px-4 py-1 text-sm text-white">
+                                            <FaEnvelopeOpenText />
+                                            Admin Alert
+                                        </div>
+
+                                        <div className="text-right">
+                                            <p className="text-xs uppercase text-[var(--admin-muted)]">Time Received</p>
+                                            <p className="font-medium">{detailValue(selectedNotification.time)}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 leading-8 text-[var(--admin-ink)]">
+                                        <h2 className="mb-4 text-2xl font-bold text-[#2b1b1b]">
+                                            {selectedNotification.title}
+                                        </h2>
+
+                                        <p>{selectedNotification.message}</p>
+
+                                        <div className="mt-5 grid grid-cols-2 gap-3 max-[680px]:grid-cols-1">
+                                            <div className="grid gap-1 rounded-md bg-[var(--admin-surface-strong)] p-3">
+                                                <span className="text-[0.66rem] font-black uppercase text-[var(--admin-muted)]">Notification ID</span>
+                                                <strong className="break-words text-[0.88rem]">{detailValue(selectedNotification.id)}</strong>
+                                            </div>
+                                            <div className="grid gap-1 rounded-md bg-[var(--admin-surface-strong)] p-3">
+                                                <span className="text-[0.66rem] font-black uppercase text-[var(--admin-muted)]">Created At</span>
+                                                <strong className="break-words text-[0.88rem]">{formatDateTime(selectedNotification.createdAt)}</strong>
+                                            </div>
+                                            <div className="grid gap-1 rounded-md bg-[var(--admin-surface-strong)] p-3">
+                                                <span className="text-[0.66rem] font-black uppercase text-[var(--admin-muted)]">Type</span>
+                                                <strong className="break-words text-[0.88rem]">{detailValue(selectedNotification.type)}</strong>
+                                            </div>
+                                            <div className="grid gap-1 rounded-md bg-[var(--admin-surface-strong)] p-3">
+                                                <span className="text-[0.66rem] font-black uppercase text-[var(--admin-muted)]">Priority</span>
+                                                <strong className="break-words text-[0.88rem]">{detailValue(selectedNotification.priority)}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="border-t p-4">
+                                        <div className="flex flex-wrap gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => handleSelect(selectedNotification)}
+                                                disabled={selectedNotification.isRead}
+                                                className="rounded-full bg-[var(--admin-primary)] px-5 py-2 text-white disabled:cursor-not-allowed disabled:opacity-60"
+                                            >
+                                                Mark as Read
+                                            </button>
+                                            {selectedNotification.actionUrl && (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleOpenAction}
+                                                    className="rounded-full border border-[var(--admin-primary)] bg-white px-5 py-2 font-bold text-[var(--admin-primary)]"
+                                                >
+                                                    {selectedNotification.type === 'registration' ? 'Review Registration' : 'Open Related Page'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="p-6 text-[var(--admin-muted)]">
+                                    Select a notification to view details.
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
+                            <h3 className="mb-5 flex items-center gap-2 font-semibold">
+                                <FaInfoCircle className="text-[var(--admin-primary)]" />
+                                Recent Activity
+                            </h3>
+
+                            <div className="space-y-4">
+                                {notifications.slice(0, 3).map((item) => {
+                                    const Icon = iconByTone[item.tone] || FaBell;
+
+                                    return (
+                                        <div key={item.id} className="flex gap-3">
+                                            <div className={`mt-2 h-3 w-3 rounded-full ${item.isRead ? 'bg-[var(--admin-border)]' : 'bg-[#a4392f]'}`} />
+                                            <div>
+                                                <p className="flex items-center gap-2">
+                                                    <Icon aria-hidden="true" className="text-[var(--admin-muted)]" />
+                                                    {item.title}
+                                                </p>
+                                                <p className="text-sm text-[var(--admin-muted)]">{item.time}</p>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+
+                                {notifications.length === 0 && (
+                                    <p className="text-sm text-[var(--admin-muted)]">
+                                        No recent notification activity.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </AdminLayout>
     );
 }

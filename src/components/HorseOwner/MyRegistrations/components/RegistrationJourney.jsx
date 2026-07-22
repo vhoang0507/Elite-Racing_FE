@@ -31,7 +31,10 @@ export default function RegistrationJourney({ registrationId }) {
                 ]);
                 const all = [...pending, ...approved];
                 if (all.length === 0) { setData(null); return; }
-                const journey = await ownerApi.getRegistrationJourney(all[0].registrationId);
+                const mostRecent = all.reduce((latest, current) => (
+                    current.registrationId > latest.registrationId ? current : latest
+                ));
+                const journey = await ownerApi.getRegistrationJourney(mostRecent.registrationId);
                 setData(journey);
             } catch (err) {
                 if (!handleOwnerAccessError(err, navigate)) setData(null);

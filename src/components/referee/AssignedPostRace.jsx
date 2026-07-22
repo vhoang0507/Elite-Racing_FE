@@ -847,7 +847,7 @@ function AssignedPostRace() {
                 </div>
 
                 {/* Alerts */}
-                {selectedRaceBlockingReason && (
+                {selectedRaceBlockingReason && selectedRace?.raceStatus !== 'ResultPending' && (
                     <div className="rounded-[8px] border border-[#e3bcb7] bg-[#f3e1df] px-5 py-4 font-semibold text-[#a4392f]">
                         {selectedRaceBlockingReason}
                     </div>
