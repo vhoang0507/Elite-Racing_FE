@@ -245,14 +245,20 @@ function JockeyDashboard() {
                     </div>
 
                     {/* Calendar */}
-                    <div className={panelClass}>
+                    <div
+                        className={`${panelClass} cursor-pointer transition-colors hover:border-[var(--admin-primary)]`}
+                        onClick={() => navigate('/jockey/schedule')}
+                        onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); navigate('/jockey/schedule'); } }}
+                        role="button"
+                        tabIndex={0}
+                    >
                         <div className="flex min-h-[50px] items-center justify-between px-[18px] py-3">
                             <h3 className="m-0 text-[0.95rem] font-bold text-[var(--admin-ink)]">Calendar</h3>
                             <div className="flex items-center gap-1">
-                                <button className="grid h-7 w-7 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-[var(--admin-muted)] hover:bg-[var(--admin-surface-strong)]" onClick={handlePrevMonth} type="button">
+                                <button className="grid h-7 w-7 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-[var(--admin-muted)] hover:bg-[var(--admin-surface-strong)]" onClick={(event) => { event.stopPropagation(); handlePrevMonth(); }} type="button">
                                     <FaChevronLeft className="text-[0.65rem]" />
                                 </button>
-                                <button className="grid h-7 w-7 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-[var(--admin-muted)] hover:bg-[var(--admin-surface-strong)]" onClick={handleNextMonth} type="button">
+                                <button className="grid h-7 w-7 cursor-pointer place-items-center rounded-full border-0 bg-transparent text-[var(--admin-muted)] hover:bg-[var(--admin-surface-strong)]" onClick={(event) => { event.stopPropagation(); handleNextMonth(); }} type="button">
                                     <FaChevronRight className="text-[0.65rem]" />
                                 </button>
                             </div>

@@ -10,6 +10,7 @@ import {
     FaEdit,
     FaEye,
     FaPlus,
+    FaStar,
     FaSyncAlt,
     FaTimes,
     FaTrashAlt,
@@ -171,6 +172,18 @@ function getDateDiffDays(startDate, endDate) {
     const end = new Date(`${endDate}T00:00:00`);
 
     return Math.round((end.getTime() - start.getTime()) / 86400000);
+}
+
+function getDaysRemaining(endDate) {
+    const date = toDateOnly(endDate);
+
+    if (!date) {
+        return 0;
+    }
+
+    const diff = getDateDiffDays(getTodayDateValue(), date);
+
+    return diff > 0 ? diff : 0;
 }
 
 function formatStatus(status) {
@@ -862,40 +875,134 @@ function AdminSeasonManagement() {
                 </section>
 
                 {activeSeason ? (
-                    <section className={`${panelClass} overflow-hidden border-[2px] border-[#d9c58c] bg-[linear-gradient(135deg,#fffdf6_0%,#fff7db_100%)]`}>
-                        <div className="grid gap-4 px-5 py-5 lg:grid-cols-[minmax(0,1.4fr)_repeat(4,minmax(0,1fr))]">
-                            <div>
-                                <p className="m-0 text-[0.72rem] font-black uppercase tracking-[0.14em] text-[#8a6209]">Current live season</p>
-                                <h2 className="m-0 mt-2 text-[1.45rem] font-black text-[var(--admin-primary-dark)]">{readSeasonField(activeSeason, 'seasonName')}</h2>
-                                <p className="m-0 mt-2 text-[0.84rem] font-semibold text-[#6f5711]">This season is active right now and is being used for live spectator scoring, rankings, and reward tracking.</p>
+                    <section className="relative overflow-hidden rounded-[var(--admin-radius)] border-2 border-[var(--admin-gold)] bg-[var(--racing-gold-soft)] px-6 py-5 shadow-[0_14px_32px_rgba(81,31,22,0.07)]">
+                        <span className="absolute right-5 top-5 inline-flex min-h-7 items-center rounded-full bg-[var(--admin-primary)] px-3.5 text-[0.66rem] font-black uppercase tracking-wide text-[var(--racing-gold-bright)]">
+                            Active Season
+                        </span>
+
+                        <div className="flex items-center gap-4 pr-32 max-[560px]:pr-0">
+                            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-[var(--admin-primary)] text-[var(--admin-gold)]">
+                                <FaStar aria-hidden="true" className="text-[1.25rem]" />
+                            </span>
+                            <div className="min-w-0">
+                                <h2 className="m-0 text-[1.3rem] font-black text-[var(--admin-primary-dark)]">{readSeasonField(activeSeason, 'seasonName')}</h2>
+                                <p className="m-0 mt-1 text-[0.84rem] font-bold text-[#8a6209]">
+                                    {formatDate(readSeasonField(activeSeason, 'startDate'))} - {formatDate(readSeasonField(activeSeason, 'endDate'))} · {readSeasonField(activeSeason, 'pointsPerCorrectPrediction')} pts / correct pick
+                                </p>
                             </div>
-                            <div className="rounded-[14px] border border-[#ead8a4] bg-white/85 px-4 py-4">
-                                <p className="m-0 text-[0.68rem] font-black uppercase text-[#64748b]">Status</p>
-                                <p className="m-0 mt-2 text-[1rem] font-black text-[#16864f]">🟢 Active now</p>
+                        </div>
+
+                        <div className="mt-5 grid grid-cols-3 gap-3 max-[620px]:grid-cols-1">
+                            <div className="rounded-lg border border-[#ead8a4] bg-white px-4 py-3">
+                                <p className="m-0 text-[0.66rem] font-black uppercase text-[#a48a4f]">Tournaments</p>
+                                <p className="m-0 mt-1 text-[1.05rem] font-black text-[var(--admin-primary-dark)]">{readSeasonField(activeSeason, 'tournamentCount') ?? 0}</p>
                             </div>
-                            <div className="rounded-[14px] border border-[#ead8a4] bg-white/85 px-4 py-4">
-                                <p className="m-0 text-[0.68rem] font-black uppercase text-[#64748b]">Date range</p>
-                                <p className="m-0 mt-2 text-[0.95rem] font-black text-[var(--admin-ink)]">{formatDate(readSeasonField(activeSeason, 'startDate'))}</p>
-                                <p className="m-0 mt-1 text-[0.8rem] font-semibold text-[var(--admin-muted)]">to {formatDate(readSeasonField(activeSeason, 'endDate'))}</p>
+                            <div className="rounded-lg border border-[#ead8a4] bg-white px-4 py-3">
+                                <p className="m-0 text-[0.66rem] font-black uppercase text-[#a48a4f]">Reward Rules</p>
+                                <p className="m-0 mt-1 text-[1.05rem] font-black text-[var(--admin-primary-dark)]">{readSeasonField(activeSeason, 'rewardRuleCount') ?? 0}</p>
                             </div>
-                            <div className="rounded-[14px] border border-[#ead8a4] bg-white/85 px-4 py-4">
-                                <p className="m-0 text-[0.68rem] font-black uppercase text-[#64748b]">Base score reward</p>
-                                <p className="m-0 mt-2 text-[1rem] font-black text-[var(--admin-primary-dark)]">{readSeasonField(activeSeason, 'pointsPerCorrectPrediction')} pts</p>
-                                <p className="m-0 mt-1 text-[0.8rem] font-semibold text-[var(--admin-muted)]">per correct prediction</p>
-                            </div>
-                            <div className="rounded-[14px] border border-[#ead8a4] bg-white/85 px-4 py-4">
-                                <p className="m-0 text-[0.68rem] font-black uppercase text-[#64748b]">Tournaments</p>
-                                <p className="m-0 mt-2 text-[1rem] font-black text-[var(--admin-primary-dark)]">{readSeasonField(activeSeason, 'tournamentCount') ?? 0}</p>
-                                <p className="m-0 mt-1 text-[0.8rem] font-semibold text-[var(--admin-muted)]">linked to this season</p>
-                            </div>
-                            <div className="rounded-[14px] border border-[#ead8a4] bg-white/85 px-4 py-4">
-                                <p className="m-0 text-[0.68rem] font-black uppercase text-[#64748b]">Reward rules</p>
-                                <p className="m-0 mt-2 text-[1rem] font-black text-[var(--admin-primary-dark)]">{readSeasonField(activeSeason, 'rewardRuleCount') ?? 0}</p>
-                                <p className="m-0 mt-1 text-[0.8rem] font-semibold text-[var(--admin-muted)]">configured ranks</p>
+                            <div className="rounded-lg border border-[#ead8a4] bg-white px-4 py-3">
+                                <p className="m-0 text-[0.66rem] font-black uppercase text-[#a48a4f]">Days Remaining</p>
+                                <p className="m-0 mt-1 text-[1.05rem] font-black text-[var(--admin-primary-dark)]">{getDaysRemaining(readSeasonField(activeSeason, 'endDate'))}</p>
                             </div>
                         </div>
                     </section>
                 ) : null}
+
+                <section className={panelClass}>
+                    <div className={panelHeaderClass}>
+                        <h2 className="m-0 text-[1.05rem] text-[var(--admin-ink)]">All Seasons</h2>
+                    </div>
+
+                    <div className="w-full overflow-x-auto">
+                        <table className="w-full border-collapse max-[900px]:min-w-[980px]">
+                            <thead>
+                                <tr>
+                                    {['Season', 'Date Range', 'Points', 'Tournaments', 'Rewards', 'Status', 'Actions'].map((heading) => (
+                                        <th className="border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-5 py-4 text-left text-[0.68rem] font-black uppercase text-[#64748b]" key={heading}>
+                                            {heading}
+                                        </th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loading ? (
+                                    <tr>
+                                        <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="7">Loading seasons...</td>
+                                    </tr>
+                                ) : seasons.length === 0 ? (
+                                    <tr>
+                                        <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="7">No seasons found.</td>
+                                    </tr>
+                                ) : seasons.map((season) => {
+                                    const id = getSeasonId(season);
+                                    const status = readSeasonField(season, 'status');
+                                    const isDraft = status === 'Draft';
+                                    const isActive = status === 'Active';
+
+                                    return (
+                                        <tr key={id} className={isActive ? 'bg-[#fffaf0]' : ''}>
+                                            <td className={`border-b border-[var(--admin-border)] px-5 py-4 text-[0.88rem] font-black text-[var(--admin-ink)] ${isActive ? 'border-l-4 border-l-[#d9c58c]' : ''}`}>
+                                                <div className="flex items-center gap-3">
+                                                    {isActive ? <span className="inline-flex h-3 w-3 rounded-full bg-[#16864f] shadow-[0_0_0_4px_rgba(22,134,79,0.14)]" /> : null}
+                                                    <div>
+                                                        <span className="block">{readSeasonField(season, 'seasonName')}</span>
+                                                        {isActive ? <span className="mt-1 block text-[0.72rem] font-bold text-[#16864f]">Currently used for live scoring</span> : null}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-muted)]">
+                                                {formatDate(readSeasonField(season, 'startDate'))} - {formatDate(readSeasonField(season, 'endDate'))}
+                                            </td>
+                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-ink)]">
+                                                {readSeasonField(season, 'pointsPerCorrectPrediction')}
+                                            </td>
+                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-ink)]">
+                                                {readSeasonField(season, 'tournamentCount') ?? 0}
+                                            </td>
+                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-ink)]">
+                                                {readSeasonField(season, 'rewardRuleCount') ?? 0}
+                                            </td>
+                                            <td className="border-b border-[var(--admin-border)] px-5 py-4">
+                                                <span className={`inline-flex min-h-7 items-center rounded-full px-3 text-[0.68rem] font-black ${statusClass[status] || 'bg-[#f3f4f6] text-[#374151]'} ${isActive ? 'ring-2 ring-[#d9c58c]' : ''}`}>
+                                                    {isActive ? 'Active • Live' : formatStatus(status)}
+                                                </span>
+                                            </td>
+                                            <td className="border-b border-[var(--admin-border)] px-5 py-4">
+                                                <div className="flex flex-wrap gap-2">
+                                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} onClick={() => openSeasonDetail(season)} type="button">
+                                                        <FaEye aria-hidden="true" />
+                                                        View
+                                                    </button>
+                                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} disabled={!isDraft} onClick={() => startEditSeason(season)} type="button">
+                                                        <FaEdit aria-hidden="true" />
+                                                        Edit
+                                                    </button>
+                                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} disabled={!isDraft} onClick={() => configureRewardRules(season)} type="button">
+                                                        <FaTrophy aria-hidden="true" />
+                                                        Edit Reward
+                                                    </button>
+                                                    <button className={`${actionButtonClass} bg-[#e8f7ef] text-[var(--admin-primary)] hover:bg-[#d7f2e4]`} disabled={!isDraft || actionLoading === `activate-${id}`} onClick={() => handleSeasonAction(season, 'activate')} type="button">
+                                                        <FaCheck aria-hidden="true" />
+                                                        Activate
+                                                    </button>
+                                                    <button className={`${actionButtonClass} bg-[var(--admin-surface-strong)] text-[var(--admin-primary)] hover:bg-[#d8e0ea]`} disabled={!isActive || actionLoading === `close-${id}`} onClick={() => handleSeasonAction(season, 'close')} type="button">
+                                                        <FaTrophy aria-hidden="true" />
+                                                        Close
+                                                    </button>
+                                                    <button className={`${actionButtonClass} border border-[#f0b4b4] bg-white text-[#b91c1c] hover:bg-[#fff3f3]`} disabled={!isDraft || actionLoading === `cancel-${id}`} onClick={() => handleSeasonAction(season, 'cancel')} type="button">
+                                                        <FaTimes aria-hidden="true" />
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
 
                 <form className={`${panelClass} overflow-hidden`} onSubmit={handleSeasonSubmit}>
                     <div className={panelHeaderClass}>
@@ -1046,101 +1153,6 @@ function AdminSeasonManagement() {
                         </section>
                     </div>
                 </form>
-
-                <section className={panelClass}>
-                    <div className={panelHeaderClass}>
-                        <h2 className="m-0 text-[1.05rem] text-[var(--admin-ink)]">All Seasons</h2>
-                    </div>
-
-                    <div className="w-full overflow-x-auto">
-                        <table className="w-full border-collapse max-[900px]:min-w-[980px]">
-                            <thead>
-                                <tr>
-                                    {['Season', 'Date Range', 'Points', 'Tournaments', 'Rewards', 'Status', 'Actions'].map((heading) => (
-                                        <th className="border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-5 py-4 text-left text-[0.68rem] font-black uppercase text-[#64748b]" key={heading}>
-                                            {heading}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
-                                    <tr>
-                                        <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="7">Loading seasons...</td>
-                                    </tr>
-                                ) : seasons.length === 0 ? (
-                                    <tr>
-                                        <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="7">No seasons found.</td>
-                                    </tr>
-                                ) : seasons.map((season) => {
-                                    const id = getSeasonId(season);
-                                    const status = readSeasonField(season, 'status');
-                                    const isDraft = status === 'Draft';
-                                    const isActive = status === 'Active';
-
-                                    return (
-                                        <tr key={id} className={isActive ? 'bg-[#fffaf0]' : ''}>
-                                            <td className={`border-b border-[var(--admin-border)] px-5 py-4 text-[0.88rem] font-black text-[var(--admin-ink)] ${isActive ? 'border-l-4 border-l-[#d9c58c]' : ''}`}>
-                                                <div className="flex items-center gap-3">
-                                                    {isActive ? <span className="inline-flex h-3 w-3 rounded-full bg-[#16864f] shadow-[0_0_0_4px_rgba(22,134,79,0.14)]" /> : null}
-                                                    <div>
-                                                        <span className="block">{readSeasonField(season, 'seasonName')}</span>
-                                                        {isActive ? <span className="mt-1 block text-[0.72rem] font-bold text-[#16864f]">Currently used for live scoring</span> : null}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-muted)]">
-                                                {formatDate(readSeasonField(season, 'startDate'))} - {formatDate(readSeasonField(season, 'endDate'))}
-                                            </td>
-                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-ink)]">
-                                                {readSeasonField(season, 'pointsPerCorrectPrediction')}
-                                            </td>
-                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-ink)]">
-                                                {readSeasonField(season, 'tournamentCount') ?? 0}
-                                            </td>
-                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-ink)]">
-                                                {readSeasonField(season, 'rewardRuleCount') ?? 0}
-                                            </td>
-                                            <td className="border-b border-[var(--admin-border)] px-5 py-4">
-                                                <span className={`inline-flex min-h-7 items-center rounded-full px-3 text-[0.68rem] font-black ${statusClass[status] || 'bg-[#f3f4f6] text-[#374151]'} ${isActive ? 'ring-2 ring-[#d9c58c]' : ''}`}>
-                                                    {isActive ? 'Active • Live' : formatStatus(status)}
-                                                </span>
-                                            </td>
-                                            <td className="border-b border-[var(--admin-border)] px-5 py-4">
-                                                <div className="flex flex-wrap gap-2">
-                                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} onClick={() => openSeasonDetail(season)} type="button">
-                                                        <FaEye aria-hidden="true" />
-                                                        View
-                                                    </button>
-                                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} disabled={!isDraft} onClick={() => startEditSeason(season)} type="button">
-                                                        <FaEdit aria-hidden="true" />
-                                                        Edit
-                                                    </button>
-                                                    <button className={`${actionButtonClass} border border-[var(--admin-border)] bg-white text-[var(--admin-primary-dark)] hover:bg-[#e8f7ef]`} disabled={!isDraft} onClick={() => configureRewardRules(season)} type="button">
-                                                        <FaTrophy aria-hidden="true" />
-                                                        Edit Reward
-                                                    </button>
-                                                    <button className={`${actionButtonClass} bg-[#e8f7ef] text-[var(--admin-primary)] hover:bg-[#d7f2e4]`} disabled={!isDraft || actionLoading === `activate-${id}`} onClick={() => handleSeasonAction(season, 'activate')} type="button">
-                                                        <FaCheck aria-hidden="true" />
-                                                        Activate
-                                                    </button>
-                                                    <button className={`${actionButtonClass} bg-[var(--admin-surface-strong)] text-[var(--admin-primary)] hover:bg-[#d8e0ea]`} disabled={!isActive || actionLoading === `close-${id}`} onClick={() => handleSeasonAction(season, 'close')} type="button">
-                                                        <FaTrophy aria-hidden="true" />
-                                                        Close
-                                                    </button>
-                                                    <button className={`${actionButtonClass} border border-[#f0b4b4] bg-white text-[#b91c1c] hover:bg-[#fff3f3]`} disabled={!isDraft || actionLoading === `cancel-${id}`} onClick={() => handleSeasonAction(season, 'cancel')} type="button">
-                                                        <FaTimes aria-hidden="true" />
-                                                        Cancel
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                </section>
 
                 {rewardEditorOpen && ruleSeason && (
                     <div className="fixed inset-0 z-40 grid place-items-center bg-[rgba(45,32,32,0.38)] px-5 py-8" onClick={closeRewardEditor} role="presentation">
