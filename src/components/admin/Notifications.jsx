@@ -517,14 +517,6 @@ function Notifications() {
                                         <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Related ID</span>
                                         <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{detailValue(selectedNotification.relatedId)}</strong>
                                     </div>
-                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Action Type</span>
-                                        <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{detailValue(selectedNotification.actionType)}</strong>
-                                    </div>
-                                    <div className="grid gap-1 rounded-md bg-[#fff8f6] p-3">
-                                        <span className="text-[0.66rem] font-black uppercase text-[#64748b]">Action Link</span>
-                                        <strong className="break-words text-[0.88rem] text-[var(--admin-ink)]">{detailValue(selectedNotification.actionUrl)}</strong>
-                                    </div>
                                 </div>
 
                                 {selectedNotification.actionUrl && (
