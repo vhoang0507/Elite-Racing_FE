@@ -14,7 +14,7 @@ const STATUS_CFG = {
 };
 const humanizeLabel = (value) => String(value || "").replace(/([a-z0-9])([A-Z])/g, "$1 $2").trim();
 
-export default function ApprovedRegistrations({ onViewStatus }) {
+export default function ApprovedRegistrations({ onViewStatus, refreshKey = 0 }) {
     const navigate = useNavigate();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -49,7 +49,7 @@ export default function ApprovedRegistrations({ onViewStatus }) {
 
     useEffect(() => {
         loadData();
-    }, [loadData]);
+    }, [loadData, refreshKey]);
 
     const canWithdraw = (status) => !["Rejected", "Cancelled", "Withdrawn", "Completed"].includes(status);
 
@@ -163,7 +163,7 @@ export default function ApprovedRegistrations({ onViewStatus }) {
                                             <td style={styles.td}>
                                                 <div style={{ display: "flex", gap: 6 }}>
                                                     <button
-                                                        onClick={() => onViewStatus && onViewStatus(row.registrationId)}
+                                                        onClick={() => onViewStatus?.(row.registrationId)}
                                                         style={{ ...styles.actionBtn, ...styles.ghostBtn }}
                                                         type="button"
                                                     >

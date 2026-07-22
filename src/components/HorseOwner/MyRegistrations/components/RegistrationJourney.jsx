@@ -4,7 +4,7 @@ import { FaCheck, FaRoute } from "react-icons/fa";
 import { ownerApi } from "../../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../../api/handleOwnerAccessError";
 
-export default function RegistrationJourney({ registrationId }) {
+export default function RegistrationJourney({ registrationId, refreshKey = 0 }) {
     const navigate = useNavigate();
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -48,7 +48,7 @@ export default function RegistrationJourney({ registrationId }) {
         } else {
             fetchLatest();
         }
-    }, [registrationId]);
+    }, [registrationId, refreshKey]);
 
     if (loading) return <p style={{ textAlign: "center", color: "#999" }}>Loading...</p>;
 

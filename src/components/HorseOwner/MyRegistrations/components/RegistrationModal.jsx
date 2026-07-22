@@ -144,14 +144,14 @@ export default function RegistrationModal({ tournament, onClose, onSuccess }) {
         }
         setSubmitting(true);
         try {
-            await ownerApi.createRegistration({
+            const registration = await ownerApi.createRegistration({
                 raceId: tournament.raceId,
                 horseId: selectedHorse.horseId,
                 notes,
             });
             showToast("Registration submitted! Pending admin approval.", 'success');
             setTimeout(() => {
-                onSuccess?.();
+                onSuccess?.(registration);
             }, 1500);
         } catch (err) {
             if (!handleOwnerAccessError(err, navigate)) {
