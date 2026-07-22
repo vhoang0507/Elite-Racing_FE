@@ -7,7 +7,7 @@ import { resolveFileUrl } from "../../../../api/uploadApi";
 import { formatCurrency } from "../../../../utils/currency";
 import RegistrationModal from "./RegistrationModal";
 
-export default function OpenTournaments() {
+export default function OpenTournaments({ onRegistrationCreated }) {
     const navigate = useNavigate();
     const [tournaments, setTournaments] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -72,9 +72,10 @@ export default function OpenTournaments() {
                 <RegistrationModal
                     tournament={selected}
                     onClose={() => setSelected(null)}
-                    onSuccess={() => {
+                    onSuccess={(registration) => {
                         setSelected(null);
                         ownerApi.getOpenTournaments(6).then(setTournaments).catch(() => { });
+                        onRegistrationCreated?.(registration);
                     }}
                 />
             )}

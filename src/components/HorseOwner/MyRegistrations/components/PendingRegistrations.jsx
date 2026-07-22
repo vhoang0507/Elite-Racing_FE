@@ -15,7 +15,7 @@ const STATUS_CFG = {
     Cancelled: { bg: '#f3e1df', color: '#a4392f', border: '#e3bcb7' },
 };
 
-export default function PendingRegistrations({ onViewStatus }) {
+export default function PendingRegistrations({ onViewStatus, refreshKey = 0 }) {
     const navigate = useNavigate();
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -36,7 +36,7 @@ export default function PendingRegistrations({ onViewStatus }) {
 
     useEffect(() => {
         loadData();
-    }, [loadData]);
+    }, [loadData, refreshKey]);
 
     const confirmWithdraw = async (row, reason) => {
         setActionId(row.registrationId);

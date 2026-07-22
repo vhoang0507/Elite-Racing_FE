@@ -373,9 +373,9 @@ function AssignedPostRace() {
         setConfirmRequest(null);
     };
 
-    const validateFinishTimeOrder = (candidate) => {
-        const candidateRegistrationId = String(candidate.registrationId || '');
-        const candidateResultId = String(candidate.resultId || '');
+    const validateFinishTimeOrder = (candidate = null) => {
+        const candidateRegistrationId = String(candidate?.registrationId || '');
+        const candidateResultId = String(candidate?.resultId || '');
         const finishedRows = results
             .filter((result) => {
                 const resultId = result.resultId ?? result.ResultId;
@@ -384,7 +384,7 @@ function AssignedPostRace() {
                 const sameRegistration = candidateRegistrationId && String(registrationId) === candidateRegistrationId;
                 return !sameResult && !sameRegistration;
             })
-            .concat(candidate)
+            .concat(candidate || [])
             .map((result) => {
                 const position = nullableNumber(result.finishPosition ?? result.FinishPosition);
                 const time = nullableNumber(result.finishTimeSeconds ?? result.FinishTimeSeconds);
@@ -399,22 +399,22 @@ function AssignedPostRace() {
             )
             .sort((a, b) => a.position - b.position);
 
-        let slowestHigherRank = null;
+        let slowestBetterPosition = null;
         for (const row of finishedRows) {
-            if (slowestHigherRank && row.position > slowestHigherRank.position && row.time <= slowestHigherRank.time) {
-                return `Position #${row.position} time (${formatSeconds(row.time)}) must be greater than position #${slowestHigherRank.position} time (${formatSeconds(slowestHigherRank.time)}).`;
+            if (slowestBetterPosition && row.position > slowestBetterPosition.position && slowestBetterPosition.time >= row.time) {
+                return `Position #${slowestBetterPosition.position} time (${formatSeconds(slowestBetterPosition.time)}) must be less than position #${row.position} time (${formatSeconds(row.time)}).`;
             }
-            if (!slowestHigherRank || row.time > slowestHigherRank.time) {
-                slowestHigherRank = row;
+            if (!slowestBetterPosition || row.time > slowestBetterPosition.time) {
+                slowestBetterPosition = row;
             }
         }
 
         return '';
     };
 
-    const validateScoreOrder = (candidate) => {
-        const candidateRegistrationId = String(candidate.registrationId || '');
-        const candidateResultId = String(candidate.resultId || '');
+    const validateScoreOrder = (candidate = null) => {
+        const candidateRegistrationId = String(candidate?.registrationId || '');
+        const candidateResultId = String(candidate?.resultId || '');
         const finishedRows = results
             .filter((result) => {
                 const resultId = result.resultId ?? result.ResultId;
@@ -423,7 +423,7 @@ function AssignedPostRace() {
                 const sameRegistration = candidateRegistrationId && String(registrationId) === candidateRegistrationId;
                 return !sameResult && !sameRegistration;
             })
-            .concat(candidate)
+            .concat(candidate || [])
             .map((result) => {
                 const position = nullableNumber(result.finishPosition ?? result.FinishPosition);
                 const score = nullableNumber(result.score ?? result.Score);
@@ -438,13 +438,13 @@ function AssignedPostRace() {
             )
             .sort((a, b) => a.position - b.position);
 
-        let highestHigherRankScore = null;
+        let lowestHigherRankScore = null;
         for (const row of finishedRows) {
-            if (highestHigherRankScore && row.position > highestHigherRankScore.position && row.score <= highestHigherRankScore.score) {
-                return `Position #${row.position} score (${row.score}) must be greater than position #${highestHigherRankScore.position} score (${highestHigherRankScore.score}).`;
+            if (lowestHigherRankScore && row.position > lowestHigherRankScore.position && row.score >= lowestHigherRankScore.score) {
+                return `Position #${row.position} score (${row.score}) must be less than position #${lowestHigherRankScore.position} score (${lowestHigherRankScore.score}).`;
             }
-            if (!highestHigherRankScore || row.score > highestHigherRankScore.score) {
-                highestHigherRankScore = row;
+            if (!lowestHigherRankScore || row.score < lowestHigherRankScore.score) {
+                lowestHigherRankScore = row;
             }
         }
 
@@ -779,6 +779,18 @@ function AssignedPostRace() {
 
         if (finalReportIsLocked) {
             showToast(`The final report is already ${postRaceReportStatus}.`, 'error');
+            return;
+        }
+
+        const finishTimeOrderMessage = validateFinishTimeOrder(null);
+        if (finishTimeOrderMessage) {
+            showToast(finishTimeOrderMessage, 'error');
+            return;
+        }
+
+        const scoreOrderMessage = validateScoreOrder(null);
+        if (scoreOrderMessage) {
+            showToast(scoreOrderMessage, 'error');
             return;
         }
 
