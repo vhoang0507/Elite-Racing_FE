@@ -689,7 +689,7 @@ function AdminRewardPayments() {
                         <table className="w-full border-collapse max-[980px]:min-w-[980px]">
                             <thead>
                                 <tr>
-                                    {['Item', 'SKU', 'Stock', 'Reserved', 'Delivered', 'Available', 'Status', 'Actions'].map((heading) => (
+                                    {['Item', 'SKU', 'Stock', 'Available', 'Status', 'Actions'].map((heading) => (
                                         <th className="border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-5 py-4 text-left text-[0.68rem] font-black uppercase text-[#64748b]" key={heading}>
                                             {heading}
                                         </th>
@@ -699,11 +699,11 @@ function AdminRewardPayments() {
                             <tbody>
                                 {inventoryLoading ? (
                                     <tr>
-                                        <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="8">Loading inventory...</td>
+                                        <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="6">Loading inventory...</td>
                                     </tr>
                                 ) : inventory.length === 0 ? (
                                     <tr>
-                                        <td className="px-5 py-10 text-center" colSpan="8">
+                                        <td className="px-5 py-10 text-center" colSpan="6">
                                             <div className="grid place-items-center gap-2">
                                                 <span className="grid h-12 w-12 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
                                                     <FaGift aria-hidden="true" className="text-lg" />
@@ -741,8 +741,6 @@ function AdminRewardPayments() {
                                             </td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-muted)]">{readRewardField(item, 'sku') || '-'}</td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-ink)]">{readRewardField(item, 'stockQuantity') ?? 0}</td>
-                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-muted)]">{readRewardField(item, 'reservedQuantity') ?? 0}</td>
-                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-muted)]">{readRewardField(item, 'deliveredQuantity') ?? 0}</td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4">
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-[0.9rem] font-black text-[var(--admin-primary-dark)]">{available}</span>

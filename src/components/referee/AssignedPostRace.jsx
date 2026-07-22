@@ -226,11 +226,25 @@ function AssignedPostRace() {
         finalReportIsReturned &&
         ['Finished', 'ResultPending'].includes(selectedRace?.raceStatus);
 
+    // The final report must cover every horse that passed pre-race inspection -
+    // otherwise a referee could submit a report while some horses never got a
+    // result at all. Registrations without a matching result row are "missing".
+    const resultRegistrationIds = useMemo(
+        () => new Set(results.map((result) => String(result.registrationId))),
+        [results]
+    );
+    const missingResultRegistrations = useMemo(
+        () => registrations.filter((r) => !resultRegistrationIds.has(String(r.registrationId))),
+        [registrations, resultRegistrationIds]
+    );
+    const hasResultForEveryHorse = missingResultRegistrations.length === 0;
+
     const submitReportDisabled =
         saving === 'submit-report' ||
         loadingRaceData ||
         !selectedRaceId ||
         results.length === 0 ||
+        !hasResultForEveryHorse ||
         !trimmedReportContent ||
         finalReportIsLocked ||
         !(canSubmitFromFinished || canSubmitFromPending || canResubmitReturnedReport);
@@ -249,9 +263,11 @@ function AssignedPostRace() {
                             ? `Race must be Finished before submission. Current status: ${selectedRace?.raceStatus || 'N/A'}.`
                             : results.length === 0
                                 ? 'Save race results before submitting.'
-                                : !trimmedReportContent
-                                    ? 'Write the post-race report content before submitting.'
-                                    : `${draftResultCount + returnedResultCount} result${draftResultCount + returnedResultCount === 1 ? '' : 's'} ready to submit.`;
+                                : !hasResultForEveryHorse
+                                    ? `Enter a result for every horse before submitting: ${missingResultRegistrations.length} still missing (${missingResultRegistrations.map((r) => r.horseName || `#${r.registrationId}`).join(', ')}).`
+                                    : !trimmedReportContent
+                                        ? 'Write the post-race report content before submitting.'
+                                        : `${draftResultCount + returnedResultCount} result${draftResultCount + returnedResultCount === 1 ? '' : 's'} ready to submit.`;
 
     const loadAssignedRaces = useCallback(async (ignoreRef = { current: false }) => {
         setLoadingRaces(true);
@@ -745,6 +761,14 @@ function AssignedPostRace() {
 
         if (results.length === 0) {
             showToast('Save race results before submitting.', 'error');
+            return;
+        }
+
+        if (!hasResultForEveryHorse) {
+            showToast(
+                `Enter a result for every horse first. Missing: ${missingResultRegistrations.map((r) => r.horseName || `#${r.registrationId}`).join(', ')}.`,
+                'error'
+            );
             return;
         }
 
@@ -1355,6 +1379,11 @@ function AssignedPostRace() {
                                 <span className="rounded-full border border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-3 py-2 text-xs font-black text-[var(--admin-primary)]">
                                     Violations: {violations.length}
                                 </span>
+                                {!hasResultForEveryHorse && (
+                                    <span className="rounded-full border border-[#e3bcb7] bg-[#f3e1df] px-3 py-2 text-xs font-black text-[#a4392f]">
+                                        Missing: {missingResultRegistrations.length}
+                                    </span>
+                                )}
                             </div>
                         </div>
 

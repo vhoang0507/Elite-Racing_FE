@@ -51,8 +51,11 @@ function getHorseImageUrl(horse) {
 }
 
 function canWatchReplay(tournament) {
-    return tournament?.status === 'Completed'
-        && tournament.race?.status === 'Published'
+    // Replay only needs this specific race's results to be published - it must not
+    // depend on the whole tournament being marked "Completed", since that only
+    // happens via a separate manual admin "finalize standings" action and can lag
+    // far behind (or never happen for) a tournament with multiple races.
+    return tournament.race?.status === 'Published'
         && !!tournament.race?.raceId;
 }
 
