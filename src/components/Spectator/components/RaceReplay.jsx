@@ -207,6 +207,36 @@ function runnerIsMoving(elapsed, runner, phase) {
     return true;
 }
 
+function sortOfficialRunners(a, b) {
+    const aFinished = isNormalFinisher(a);
+    const bFinished = isNormalFinisher(b);
+    if (aFinished !== bFinished) return aFinished ? -1 : 1;
+    if (aFinished && bFinished) return (a.officialRank || 999) - (b.officialRank || 999);
+    return a.lane - b.lane;
+}
+
+function runnerResultIsVisible(runner, phase) {
+    if (phase === 'done') return true;
+
+    const outcome = normalizeOutcome(runner.outcomeStatus);
+    if (outcome === 'Finished' || outcome === 'DSQ') {
+        return Number(runner.progress || 0) >= FINISH_PROGRESS;
+    }
+
+    if (outcome === 'DNF') {
+        const stopProgress = Number(runner.dnfStopProgress || 0);
+        return stopProgress > 0 && Number(runner.progress || 0) >= stopProgress - 0.001;
+    }
+
+    return false;
+}
+
+function getVisibleOfficialRunners(runners, phase) {
+    return [...runners]
+        .filter((runner) => runnerResultIsVisible(runner, phase))
+        .sort(sortOfficialRunners);
+}
+
 function HorseSprite({ runner, running }) {
     const horseTone = runner.bodyTone > 0.72
         ? '#3d3d3d'
@@ -283,6 +313,7 @@ function RaceStage({
         });
     const offTrackRunners = runners.filter((runner) => !canRunOnTrack(runner));
     const orderPanelItems = [...trackOrder, ...offTrackRunners];
+    const visibleOfficialRunners = getVisibleOfficialRunners(runners, phase);
 
     return (
         <div className="race-game-shell">
@@ -327,7 +358,6 @@ function RaceStage({
                 .race-dust::before { width:64px; height:21px; left:0; bottom:0; } .race-dust::after { width:38px; height:17px; left:31px; bottom:8px; }
                 .race-horse-wrap.is-running .race-dust { opacity:1; animation:dust-puff 500ms ease-out infinite; }
                 @keyframes dust-puff { 0%{transform:translateX(23px) scale(.55);opacity:.18} 55%{opacity:.65} 100%{transform:translateX(-42px) scale(1.3);opacity:0} }
-                .runner-lead-tag { position:absolute; left:50%; top:-10px; transform:translateX(-50%); white-space:nowrap; border:1px solid rgba(255,255,255,.8); border-radius:999px; background:#c8862a; padding:3px 9px; color:#12263d; font-size:.6rem; font-weight:950; text-transform:uppercase; letter-spacing:.08em; box-shadow:0 5px 12px rgba(0,0,0,.25); z-index:6; }
                 .race-order-panel { position:absolute; right:14px; top:64px; z-index:38; width:min(180px,32vw); border-radius:10px; border:2px solid #d8a23a; background:rgba(74,16,16,.92); box-shadow:0 6px 0 rgba(0,0,0,.25); overflow:hidden; }
                 .race-order-panel h4 { margin:0; padding:7px 10px; background:#7a1f1f; color:#f7d45c; font-size:.62rem; font-weight:950; text-transform:uppercase; letter-spacing:.1em; text-align:center; }
                 .race-order-row { display:flex; align-items:center; gap:7px; padding:5px 9px; border-top:1px solid rgba(255,255,255,.08); }
@@ -346,6 +376,7 @@ function RaceStage({
                 .race-rank-strip { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:stretch; border-top:4px solid #d8a23a; background:linear-gradient(180deg,#7a1f1f,#3d0e0e); padding:14px 16px; }
                 .race-rank-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(92px,1fr)); gap:9px; }
                 .race-rank-card { min-width:0; text-align:center; }
+                .race-rank-empty { display:grid; min-height:88px; place-items:center; color:rgba(255,255,255,.72); font-size:.72rem; font-weight:950; text-transform:uppercase; letter-spacing:.12em; }
                 .race-rank-title { color:#f7d45c; font-size:.95rem; font-weight:950; text-shadow:0 2px 0 rgba(0,0,0,.3); }
                 .race-rank-number { display:grid; width:54px; height:48px; margin:5px auto; place-items:center; border:3px solid rgba(255,255,255,.7); border-radius:5px; color:#fff; font-size:1.75rem; font-weight:950; text-shadow:0 2px 0 rgba(0,0,0,.45); box-shadow:0 5px 0 rgba(0,0,0,.25); }
                 .race-rank-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:rgba(255,255,255,.88); font-size:.68rem; font-weight:850; text-transform:uppercase; }
@@ -434,7 +465,6 @@ function RaceStage({
                                     <div className="speed-lines"><span /><span /><span /></div>
                                     <div className="race-dust" />
                                     <HorseSprite runner={runner} running={moving} />
-                                    {liveRank === 1 && phase === 'running' ? <div className="runner-lead-tag">Leader</div> : null}
                                     <OutcomeBadge runner={runner} />
                                 </div>
                             </div>
@@ -481,21 +511,17 @@ function RaceStage({
 
             <div className="race-rank-strip">
                 <div className="race-rank-list">
-                    {[...runners]
-                        .sort((a, b) => {
-                            const aFinished = isNormalFinisher(a);
-                            const bFinished = isNormalFinisher(b);
-                            if (aFinished !== bFinished) return aFinished ? -1 : 1;
-                            if (aFinished && bFinished) return (a.officialRank || 999) - (b.officialRank || 999);
-                            return a.lane - b.lane;
-                        })
-                        .map((runner) => (
+                    {visibleOfficialRunners.length === 0 ? (
+                        <div className="race-rank-empty">Awaiting finishers</div>
+                    ) : (
+                        visibleOfficialRunners.map((runner) => (
                             <div className="race-rank-card" key={`rank-${runner.registrationId || runner.resultId}`}>
                                 <div className="race-rank-title">{isNormalFinisher(runner) ? ordinal(runner.officialRank) : normalizeOutcome(runner.outcomeStatus)}</div>
                                 <div className="race-rank-number" style={{ backgroundColor: runner.color }}>{runner.lane}</div>
                                 <div className="race-rank-name">{runner.horseName}</div>
                             </div>
-                        ))}
+                        ))
+                    )}
                 </div>
                 <div className="race-winner-seal"><FaFlagCheckered /><strong className="mt-1 text-[.72rem] uppercase tracking-[.12em]">Finish</strong></div>
             </div>
@@ -503,14 +529,8 @@ function RaceStage({
     );
 }
 
-function OfficialResults({ runners }) {
-    const ordered = [...runners].sort((a, b) => {
-        const aFinished = isNormalFinisher(a);
-        const bFinished = isNormalFinisher(b);
-        if (aFinished !== bFinished) return aFinished ? -1 : 1;
-        if (aFinished && bFinished) return (a.officialRank || 999) - (b.officialRank || 999);
-        return a.lane - b.lane;
-    });
+function OfficialResults({ runners, phase }) {
+    const ordered = getVisibleOfficialRunners(runners, phase);
 
     return (
         <section className="surface-card overflow-hidden">
@@ -520,7 +540,10 @@ function OfficialResults({ runners }) {
                     <p className="m-0 mt-1 text-[.76rem] font-semibold text-[var(--admin-muted)]">Official positions, outcome status, finish time, and referee note from the database.</p>
                 </div>
             </div>
-            <div className="grid gap-2 p-4 md:grid-cols-2 xl:grid-cols-4">
+            {ordered.length === 0 ? (
+                <div className="p-6 text-center text-[.84rem] font-bold text-[var(--admin-muted)]">Awaiting finishers.</div>
+            ) : (
+                <div className="grid gap-2 p-4 md:grid-cols-2 xl:grid-cols-4">
                 {ordered.map((runner) => {
                     const outcome = normalizeOutcome(runner.outcomeStatus);
                     const finished = outcome === 'Finished';
@@ -543,7 +566,8 @@ function OfficialResults({ runners }) {
                         </article>
                     );
                 })}
-            </div>
+                </div>
+            )}
         </section>
     );
 }
@@ -702,7 +726,7 @@ export default function RaceReplay() {
                 visualRaceMs={visualRaceMs}
             />
 
-            <OfficialResults runners={preparedRunners} />
+            <OfficialResults phase={phase} runners={currentRunners} />
         </div>
     );
 }
