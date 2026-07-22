@@ -6,12 +6,14 @@ import {
     FaExclamationTriangle,
     FaEnvelopeOpenText,
     FaInfoCircle,
+    FaTrashAlt,
 } from 'react-icons/fa';
 
 import { refereeApi } from '../../api/refereeApi';
 import RefereeLayout from './RefereeLayout';
 import Toast from '../shared/Toast';
 import { useToast } from '../shared/useToast';
+import { confirmAdminAction } from '../../utils/adminFeedback';
 
 function formatDateTime(value) {
     if (!value) return 'N/A';
@@ -24,26 +26,60 @@ function formatDateTime(value) {
     }).format(new Date(value));
 }
 
+const DISMISSED_NOTIFICATIONS_KEY = 'referee-dismissed-notification-ids';
+
+const readDismissedNotificationIds = () => {
+    try {
+        const parsed = JSON.parse(window.localStorage.getItem(DISMISSED_NOTIFICATIONS_KEY) || '[]');
+        return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch {
+        return [];
+    }
+};
+
+const saveDismissedNotificationIds = (ids) => {
+    try {
+        window.localStorage.setItem(DISMISSED_NOTIFICATIONS_KEY, JSON.stringify(ids));
+    } catch {
+        // Ignore storage errors; the notification still disappears for this session.
+    }
+};
+
 function RefereeNotification() {
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
+    const [dismissedIds, setDismissedIds] = useState(readDismissedNotificationIds);
     const [unreadCount, setUnreadCount] = useState(0);
     const [selectedId, setSelectedId] = useState(null);
     const [filter, setFilter] = useState('all');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [selectedNotificationIds, setSelectedNotificationIds] = useState([]);
+    const [bulkDeleting, setBulkDeleting] = useState(false);
     const { toast, showToast, hideToast } = useToast();
 
+    const dismissedIdSet = useMemo(() => new Set(dismissedIds), [dismissedIds]);
+    const selectedNotificationIdSet = useMemo(() => new Set(selectedNotificationIds), [selectedNotificationIds]);
+
+    const visibleNotifications = useMemo(
+        () => notifications.filter((item) => !dismissedIdSet.has(String(item.notificationId))),
+        [dismissedIdSet, notifications]
+    );
+
     const selectedNotification = useMemo(
-        () => notifications.find((item) => item.notificationId === selectedId) ?? notifications[0] ?? null,
-        [notifications, selectedId]
+        () => visibleNotifications.find((item) => item.notificationId === selectedId) ?? visibleNotifications[0] ?? null,
+        [selectedId, visibleNotifications]
     );
 
     const filteredNotifications = useMemo(() => {
-        if (filter === 'unread') return notifications.filter((item) => !item.isRead);
-        if (filter === 'read') return notifications.filter((item) => item.isRead);
-        return notifications;
-    }, [notifications, filter]);
+        if (filter === 'unread') return visibleNotifications.filter((item) => !item.isRead);
+        if (filter === 'read') return visibleNotifications.filter((item) => item.isRead);
+        return visibleNotifications;
+    }, [filter, visibleNotifications]);
+
+    const visibleUnreadCount = visibleNotifications.filter((item) => !item.isRead).length;
 
     const loadNotifications = async () => {
         try {
@@ -114,6 +150,129 @@ function RefereeNotification() {
         }
     };
 
+    const toggleNotificationSelection = (notificationId) => {
+        const id = String(notificationId);
+        setSelectedNotificationIds((previous) => (
+            previous.includes(id)
+                ? previous.filter((item) => item !== id)
+                : [...previous, id]
+        ));
+    };
+
+    const handleToggleNotificationSelection = (event, notificationId) => {
+        event.stopPropagation();
+        toggleNotificationSelection(notificationId);
+    };
+
+    const handleToggleSelectionMode = () => {
+        if (selectionMode) {
+            setSelectedNotificationIds([]);
+        }
+        setSelectionMode(!selectionMode);
+    };
+
+    const handleNotificationKeyDown = (event, notification) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault();
+        if (selectionMode) {
+            toggleNotificationSelection(notification.notificationId);
+            return;
+        }
+        handleSelect(notification);
+    };
+
+    const handleDeleteNotification = async (event, notification) => {
+        event.stopPropagation();
+        if (deletingId) return;
+
+        const confirmed = await confirmAdminAction({
+            title: 'Delete notification',
+            message: 'Remove this notification from your list?',
+            confirmLabel: 'Delete',
+        });
+
+        if (!confirmed) return;
+
+        const previousDismissedIds = dismissedIds;
+        const nextDismissedIds = Array.from(new Set([...dismissedIds, String(notification.notificationId)]));
+        const nextSelectedId = filteredNotifications.find((item) => item.notificationId !== notification.notificationId)?.notificationId ?? null;
+
+        setDeletingId(notification.notificationId);
+        setDismissedIds(nextDismissedIds);
+        saveDismissedNotificationIds(nextDismissedIds);
+        if (selectedNotification?.notificationId === notification.notificationId) {
+            setSelectedId(nextSelectedId);
+        }
+
+        try {
+            if (!notification.isRead) {
+                await refereeApi.markNotificationAsRead(notification.notificationId);
+                setUnreadCount((previous) => Math.max(0, previous - 1));
+            }
+            showToast('Notification deleted.', 'success', 'Deleted');
+        } catch (err) {
+            setDismissedIds(previousDismissedIds);
+            saveDismissedNotificationIds(previousDismissedIds);
+            if (selectedNotification?.notificationId === notification.notificationId) {
+                setSelectedId(notification.notificationId);
+            }
+            showToast(err.message || 'Failed to delete notification.', 'error', 'Error');
+        } finally {
+            setDeletingId(null);
+        }
+    };
+
+    const handleBulkDeleteNotifications = async () => {
+        if (bulkDeleting || selectedNotificationIds.length === 0) return;
+
+        const targetIdSet = new Set(selectedNotificationIds);
+        const targetNotifications = visibleNotifications.filter((item) => targetIdSet.has(String(item.notificationId)));
+        if (targetNotifications.length === 0) return;
+
+        const confirmed = await confirmAdminAction({
+            title: 'Delete selected notifications',
+            message: `Remove ${targetNotifications.length} selected notification${targetNotifications.length === 1 ? '' : 's'} from your list?`,
+            confirmLabel: 'Delete Selected',
+        });
+
+        if (!confirmed) return;
+
+        const previousDismissedIds = dismissedIds;
+        const previousUnreadCount = unreadCount;
+        const nextDismissedIds = Array.from(new Set([...dismissedIds, ...targetNotifications.map((item) => String(item.notificationId))]));
+        const nextSelectedId = filteredNotifications.find((item) => !targetIdSet.has(String(item.notificationId)))?.notificationId ?? null;
+        const unreadDeleted = targetNotifications.filter((item) => !item.isRead).length;
+
+        setBulkDeleting(true);
+        setDismissedIds(nextDismissedIds);
+        saveDismissedNotificationIds(nextDismissedIds);
+        setUnreadCount((previous) => Math.max(0, previous - unreadDeleted));
+        if (selectedNotification && targetIdSet.has(String(selectedNotification.notificationId))) {
+            setSelectedId(nextSelectedId);
+        }
+
+        try {
+            await Promise.all(
+                targetNotifications
+                    .filter((item) => !item.isRead)
+                    .map((item) => refereeApi.markNotificationAsRead(item.notificationId))
+            );
+            setSelectedNotificationIds([]);
+            setSelectionMode(false);
+            showToast('Selected notifications deleted.', 'success', 'Deleted');
+        } catch (err) {
+            setDismissedIds(previousDismissedIds);
+            saveDismissedNotificationIds(previousDismissedIds);
+            setUnreadCount(previousUnreadCount);
+            if (selectedNotification && targetIdSet.has(String(selectedNotification.notificationId))) {
+                setSelectedId(selectedNotification.notificationId);
+            }
+            showToast(err.message || 'Failed to delete selected notifications.', 'error', 'Error');
+        } finally {
+            setBulkDeleting(false);
+        }
+    };
+
     const handleOpenAction = async () => {
         if (!selectedNotification?.actionUrl) return;
 
@@ -168,7 +327,7 @@ function RefereeNotification() {
                             </p>
 
                             <h3 className="mt-2 text-2xl font-bold">
-                                {notifications.length}
+                                {visibleNotifications.length}
                             </h3>
                         </div>
 
@@ -182,7 +341,7 @@ function RefereeNotification() {
                             </p>
 
                             <h3 className="mt-2 text-2xl font-bold text-[#a4392f]">
-                                {unreadCount}
+                                {visibleUnreadCount}
                             </h3>
                         </div>
 
@@ -203,12 +362,33 @@ function RefereeNotification() {
                         <button
                             type="button"
                             onClick={handleMarkAllRead}
-                            disabled={saving || unreadCount === 0}
+                            disabled={saving || visibleUnreadCount === 0}
                             className="inline-flex items-center gap-2 rounded-full border border-[var(--admin-primary)] px-4 py-2 font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             <FaCheck aria-hidden="true" />
                             {saving ? 'Updating...' : 'Mark All Read'}
                         </button>
+
+                        <button
+                            type="button"
+                            onClick={handleToggleSelectionMode}
+                            disabled={bulkDeleting}
+                            className="inline-flex items-center gap-2 rounded-full border border-[var(--admin-primary)] px-4 py-2 font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {selectionMode ? 'Cancel Selection' : 'Select Notifications'}
+                        </button>
+
+                        {selectionMode && (
+                            <button
+                                type="button"
+                                onClick={handleBulkDeleteNotifications}
+                                disabled={bulkDeleting || selectedNotificationIds.length === 0}
+                                className="inline-flex items-center gap-2 rounded-full border border-[#a4392f] bg-[#a4392f] px-4 py-2 font-bold text-white transition-colors hover:bg-[#8f3129] disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                <FaTrashAlt aria-hidden="true" />
+                                {bulkDeleting ? 'Deleting...' : `Delete Selected (${selectedNotificationIds.length})`}
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -223,12 +403,14 @@ function RefereeNotification() {
                                 No notifications for this filter.
                             </div>
                         ) : (
-                            filteredNotifications.map((item) => (
-                                <button
-                                    type="button"
+                        filteredNotifications.map((item) => (
+                                <article
                                     key={item.notificationId}
-                                    onClick={() => handleSelect(item)}
-                                    className={`w-full cursor-pointer rounded-[8px] border border-[var(--admin-border)] bg-white p-4 text-left hover:bg-[#faf5f4] ${selectedNotification?.notificationId === item.notificationId ? 'ring-2 ring-[var(--admin-primary)]' : ''
+                                    onClick={() => (selectionMode ? toggleNotificationSelection(item.notificationId) : handleSelect(item))}
+                                    onKeyDown={(event) => handleNotificationKeyDown(event, item)}
+                                    role="button"
+                                    tabIndex={0}
+                                    className={`w-full cursor-pointer rounded-[8px] border border-[var(--admin-border)] bg-white p-4 text-left hover:bg-[#faf5f4] ${selectionMode && selectedNotificationIdSet.has(String(item.notificationId)) ? 'ring-2 ring-[var(--admin-primary)]' : selectedNotification?.notificationId === item.notificationId ? 'ring-2 ring-[var(--admin-primary)]' : ''
                                         }`}
                                 >
                                     <div className="flex justify-between gap-3">
@@ -245,12 +427,43 @@ function RefereeNotification() {
                                         {item.message}
                                     </p>
 
-                                    {!item.isRead && (
-                                        <span className="mt-3 inline-block rounded-full bg-[#f3e1df] px-2.5 py-1 text-xs font-semibold text-[#a4392f]">
-                                            NEW
-                                        </span>
-                                    )}
-                                </button>
+                                    <div className="mt-3 flex items-end justify-between gap-3">
+                                        <div>
+                                            {!item.isRead && (
+                                                <span className="inline-block rounded-full bg-[#f3e1df] px-2.5 py-1 text-xs font-semibold text-[#a4392f]">
+                                                    NEW
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {selectionMode ? (
+                                            <label
+                                                aria-label={`Select notification ${item.title}`}
+                                                title="Select notification"
+                                                onClick={(event) => event.stopPropagation()}
+                                                className="grid h-8 w-8 flex-none cursor-pointer place-items-center rounded-full border border-[var(--admin-primary)] bg-white"
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedNotificationIdSet.has(String(item.notificationId))}
+                                                    onChange={(event) => handleToggleNotificationSelection(event, item.notificationId)}
+                                                    className="h-4 w-4 accent-[var(--admin-primary)]"
+                                                />
+                                            </label>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                aria-label={`Delete notification ${item.title}`}
+                                                title="Delete notification"
+                                                disabled={deletingId === item.notificationId}
+                                                onClick={(event) => handleDeleteNotification(event, item)}
+                                                className="grid h-8 w-8 flex-none place-items-center rounded-full border border-[#e3bcb7] bg-white text-[#a4392f] transition-colors hover:bg-[#f3e1df] disabled:cursor-not-allowed disabled:opacity-60"
+                                            >
+                                                <FaTrashAlt aria-hidden="true" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </article>
                             ))
                         )}
                     </div>
@@ -322,7 +535,7 @@ function RefereeNotification() {
                             </h3>
 
                             <div className="space-y-4">
-                                {notifications.slice(0, 3).map((item) => (
+                                {visibleNotifications.slice(0, 3).map((item) => (
                                     <div key={item.notificationId} className="flex gap-3">
                                         <div className={`mt-2 h-3 w-3 rounded-full ${item.isRead ? 'bg-[var(--admin-border)]' : 'bg-[#a4392f]'}`} />
                                         <div>
@@ -334,7 +547,7 @@ function RefereeNotification() {
                                     </div>
                                 ))}
 
-                                {notifications.length === 0 && (
+                                {visibleNotifications.length === 0 && (
                                     <p className="text-sm text-[var(--admin-muted)]">
                                         No recent notification activity.
                                     </p>

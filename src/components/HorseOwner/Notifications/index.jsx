@@ -7,6 +7,7 @@ import {
     FaCheckCircle,
     FaEnvelopeOpenText,
     FaInfoCircle,
+    FaTrashAlt,
     FaUserTie,
 } from "react-icons/fa";
 
@@ -14,6 +15,7 @@ import { ownerApi } from "../../../api/ownerApi";
 import HorseOwnerLayout from "../HorseOwnerLayout";
 import Toast from "../../shared/Toast";
 import { useToast } from "../../shared/useToast";
+import { confirmAdminAction } from "../../../utils/adminFeedback";
 
 const tabs = ["All", "Registrations", "Jockeys", "Tournaments"];
 const emptySummary = {
@@ -51,21 +53,55 @@ function normalizeSummary(summary) {
     };
 }
 
+const DISMISSED_NOTIFICATIONS_KEY = "owner-dismissed-notification-ids";
+
+const readDismissedNotificationIds = () => {
+    try {
+        const parsed = JSON.parse(window.localStorage.getItem(DISMISSED_NOTIFICATIONS_KEY) || "[]");
+        return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch {
+        return [];
+    }
+};
+
+const saveDismissedNotificationIds = (ids) => {
+    try {
+        window.localStorage.setItem(DISMISSED_NOTIFICATIONS_KEY, JSON.stringify(ids));
+    } catch {
+        // Ignore storage errors; the notification still disappears for this session.
+    }
+};
+
 export default function Notifications() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState("All");
     const [summary, setSummary] = useState(emptySummary);
     const [notifications, setNotifications] = useState([]);
+    const [dismissedIds, setDismissedIds] = useState(readDismissedNotificationIds);
     const [isLoading, setIsLoading] = useState(true);
     const [reloadKey, setReloadKey] = useState(0);
     const [markingAll, setMarkingAll] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [selectedNotificationIds, setSelectedNotificationIds] = useState([]);
+    const [bulkDeleting, setBulkDeleting] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
     const { toast, showToast, hideToast } = useToast();
 
-    const selectedNotification = useMemo(
-        () => notifications.find((item) => item.notificationId === selectedId) ?? notifications[0] ?? null,
-        [notifications, selectedId]
+    const dismissedIdSet = useMemo(() => new Set(dismissedIds), [dismissedIds]);
+
+    const visibleNotifications = useMemo(
+        () => notifications.filter((item) => !dismissedIdSet.has(String(item.notificationId))),
+        [dismissedIdSet, notifications]
     );
+
+    const selectedNotification = useMemo(
+        () => visibleNotifications.find((item) => item.notificationId === selectedId) ?? visibleNotifications[0] ?? null,
+        [selectedId, visibleNotifications]
+    );
+
+    const visibleUnread = visibleNotifications.filter((item) => !item.isRead).length;
+    const selectedNotificationIdSet = useMemo(() => new Set(selectedNotificationIds), [selectedNotificationIds]);
 
     useEffect(() => {
         let isMounted = true;
@@ -134,6 +170,127 @@ export default function Notifications() {
         }
     };
 
+    const toggleNotificationSelection = (notificationId) => {
+        const key = String(notificationId);
+        setSelectedNotificationIds((current) => (
+            current.includes(key)
+                ? current.filter((id) => id !== key)
+                : [...current, key]
+        ));
+    };
+
+    const handleToggleNotificationSelection = (event, notificationId) => {
+        event.stopPropagation();
+        toggleNotificationSelection(notificationId);
+    };
+
+    const handleToggleSelectionMode = () => {
+        if (selectionMode) {
+            setSelectedNotificationIds([]);
+        }
+        setSelectionMode((current) => !current);
+    };
+
+    const handleNotificationKeyDown = (event, notification) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        event.preventDefault();
+        if (selectionMode) {
+            toggleNotificationSelection(notification.notificationId);
+            return;
+        }
+        handleSelect(notification);
+    };
+
+    const handleDeleteNotification = async (event, notification) => {
+        event.stopPropagation();
+        if (deletingId) return;
+
+        const confirmed = await confirmAdminAction({
+            title: "Delete notification",
+            message: "Remove this notification from your list?",
+            confirmLabel: "Delete",
+        });
+
+        if (!confirmed) return;
+
+        const previousDismissedIds = dismissedIds;
+        const nextDismissedIds = Array.from(new Set([...dismissedIds, String(notification.notificationId)]));
+        const nextSelectedId = visibleNotifications.find((item) => item.notificationId !== notification.notificationId)?.notificationId ?? null;
+
+        setDeletingId(notification.notificationId);
+        setDismissedIds(nextDismissedIds);
+        saveDismissedNotificationIds(nextDismissedIds);
+        if (selectedNotification?.notificationId === notification.notificationId) {
+            setSelectedId(nextSelectedId);
+        }
+
+        try {
+            if (!notification.isRead) {
+                await ownerApi.markNotificationAsRead(notification.notificationId);
+                setSummary((current) => ({
+                    ...current,
+                    unread: Math.max(0, current.unread - 1),
+                }));
+            }
+            showToast("Notification deleted.", "success", "Deleted");
+        } catch (err) {
+            setDismissedIds(previousDismissedIds);
+            saveDismissedNotificationIds(previousDismissedIds);
+            if (selectedNotification?.notificationId === notification.notificationId) {
+                setSelectedId(notification.notificationId);
+            }
+            showToast(err.message || "Failed to delete notification.", "error", "Error");
+        } finally {
+            setDeletingId(null);
+        }
+    };
+
+    const handleBulkDeleteNotifications = async () => {
+        if (bulkDeleting || selectedNotificationIds.length === 0) return;
+
+        const selectedIds = new Set(selectedNotificationIds);
+        const targets = visibleNotifications.filter((item) => selectedIds.has(String(item.notificationId)));
+        if (targets.length === 0) return;
+
+        const confirmed = await confirmAdminAction({
+            title: "Delete selected notifications",
+            message: `Remove ${targets.length} selected notification${targets.length === 1 ? "" : "s"} from your list?`,
+            confirmLabel: "Delete Selected",
+        });
+
+        if (!confirmed) return;
+
+        const previousDismissedIds = dismissedIds;
+        const nextDismissedIds = Array.from(new Set([...dismissedIds, ...selectedNotificationIds]));
+        const nextSelectedId = visibleNotifications.find((item) => !selectedIds.has(String(item.notificationId)))?.notificationId ?? null;
+
+        setBulkDeleting(true);
+        setDismissedIds(nextDismissedIds);
+        saveDismissedNotificationIds(nextDismissedIds);
+        if (selectedNotification && selectedIds.has(String(selectedNotification.notificationId))) {
+            setSelectedId(nextSelectedId);
+        }
+
+        try {
+            await Promise.all(targets
+                .filter((item) => !item.isRead)
+                .map((item) => ownerApi.markNotificationAsRead(item.notificationId)));
+            setSummary((current) => ({
+                ...current,
+                unread: Math.max(0, current.unread - targets.filter((item) => !item.isRead).length),
+            }));
+            setSelectedNotificationIds([]);
+            setSelectionMode(false);
+            showToast("Selected notifications deleted.", "success", "Deleted");
+        } catch (err) {
+            setDismissedIds(previousDismissedIds);
+            saveDismissedNotificationIds(previousDismissedIds);
+            showToast(err.message || "Failed to delete selected notifications.", "error", "Error");
+        } finally {
+            setBulkDeleting(false);
+        }
+    };
+
     const handleOpenAction = async () => {
         if (!selectedNotification?.actionUrl) return;
 
@@ -181,7 +338,7 @@ export default function Notifications() {
                     <div className="flex w-56 justify-between rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
                         <div>
                             <p className="text-sm uppercase text-[var(--admin-muted)]">Unread</p>
-                            <h3 className="mt-2 text-2xl font-bold text-[#a4392f]">{summary.unread}</h3>
+                            <h3 className="mt-2 text-2xl font-bold text-[#a4392f]">{visibleUnread}</h3>
                         </div>
                         <FaBell className="text-[#a4392f]" size={22} />
                     </div>
@@ -216,12 +373,30 @@ export default function Notifications() {
                         <button
                             type="button"
                             onClick={handleMarkAllRead}
-                            disabled={markingAll || summary.unread === 0}
+                            disabled={markingAll || visibleUnread === 0}
                             className="inline-flex items-center gap-2 rounded-full border border-[var(--admin-primary)] px-4 py-2 font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)] disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             <FaCheck aria-hidden="true" />
                             {markingAll ? 'Updating...' : 'Mark All Read'}
                         </button>
+                        <button
+                            type="button"
+                            onClick={handleToggleSelectionMode}
+                            className="inline-flex items-center gap-2 rounded-full border border-[var(--admin-primary)] bg-white px-4 py-2 font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)]"
+                        >
+                            {selectionMode ? "Cancel Selection" : "Select Notifications"}
+                        </button>
+                        {selectionMode && (
+                            <button
+                                type="button"
+                                onClick={handleBulkDeleteNotifications}
+                                disabled={bulkDeleting || selectedNotificationIds.length === 0}
+                                className="inline-flex items-center gap-2 rounded-full border border-[#e3bcb7] bg-white px-4 py-2 font-bold text-[#a4392f] transition-colors hover:bg-[#f3e1df] disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                <FaTrashAlt aria-hidden="true" />
+                                {bulkDeleting ? "Deleting..." : `Delete Selected (${selectedNotificationIds.length})`}
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -231,20 +406,22 @@ export default function Notifications() {
                             <div className="rounded-[8px] border border-[var(--admin-border)] bg-white p-5 text-[var(--admin-muted)]">
                                 Loading notifications...
                             </div>
-                        ) : notifications.length === 0 ? (
+                        ) : visibleNotifications.length === 0 ? (
                             <div className="rounded-[8px] border border-[var(--admin-border)] bg-white p-5 text-[var(--admin-muted)]">
                                 No notifications for this filter.
                             </div>
                         ) : (
-                            notifications.map((item) => {
+                            visibleNotifications.map((item) => {
                                 const tag = item.statusLabel || item.category;
                                 const statusStyle = getStatusStyle(item.statusLabel);
 
                                 return (
-                                    <button
-                                        type="button"
+                                    <article
                                         key={item.notificationId}
-                                        onClick={() => handleSelect(item)}
+                                        onClick={() => selectionMode ? toggleNotificationSelection(item.notificationId) : handleSelect(item)}
+                                        onKeyDown={(event) => handleNotificationKeyDown(event, item)}
+                                        role="button"
+                                        tabIndex={0}
                                         className={`w-full cursor-pointer rounded-[8px] border border-[var(--admin-border)] bg-white p-4 text-left hover:bg-[#faf5f4] ${selectedNotification?.notificationId === item.notificationId ? 'ring-2 ring-[var(--admin-primary)]' : ''}`}
                                     >
                                         <div className="flex justify-between gap-3">
@@ -258,19 +435,47 @@ export default function Notifications() {
                                             {item.message}
                                         </p>
 
-                                        <div className="mt-3 flex flex-wrap items-center gap-2">
-                                            {tag && (
-                                                <span className="inline-block rounded-full px-2.5 py-1 text-xs font-semibold" style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}>
-                                                    {tag}
-                                                </span>
-                                            )}
-                                            {!item.isRead && (
-                                                <span className="inline-block rounded-full bg-[#f3e1df] px-2.5 py-1 text-xs font-semibold text-[#a4392f]">
-                                                    NEW
-                                                </span>
+                                        <div className="mt-3 flex items-end justify-between gap-3">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                {tag && (
+                                                    <span className="inline-block rounded-full px-2.5 py-1 text-xs font-semibold" style={{ backgroundColor: statusStyle.bg, color: statusStyle.color }}>
+                                                        {tag}
+                                                    </span>
+                                                )}
+                                                {!item.isRead && (
+                                                    <span className="inline-block rounded-full bg-[#f3e1df] px-2.5 py-1 text-xs font-semibold text-[#a4392f]">
+                                                        NEW
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {selectionMode ? (
+                                                <label
+                                                    className="grid h-8 w-8 flex-none place-items-center rounded-full border border-[var(--admin-border)] bg-white"
+                                                    onClick={(event) => event.stopPropagation()}
+                                                    title="Select notification"
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedNotificationIdSet.has(String(item.notificationId))}
+                                                        onChange={(event) => handleToggleNotificationSelection(event, item.notificationId)}
+                                                        className="h-4 w-4 accent-[#a4392f]"
+                                                    />
+                                                </label>
+                                            ) : (
+                                                <button
+                                                    type="button"
+                                                    aria-label={`Delete notification ${item.title}`}
+                                                    title="Delete notification"
+                                                    disabled={deletingId === item.notificationId}
+                                                    onClick={(event) => handleDeleteNotification(event, item)}
+                                                    className="grid h-8 w-8 flex-none place-items-center rounded-full border border-[#e3bcb7] bg-white text-[#a4392f] transition-colors hover:bg-[#f3e1df] disabled:cursor-not-allowed disabled:opacity-60"
+                                                >
+                                                    <FaTrashAlt aria-hidden="true" />
+                                                </button>
                                             )}
                                         </div>
-                                    </button>
+                                    </article>
                                 );
                             })
                         )}
@@ -335,7 +540,7 @@ export default function Notifications() {
                             </h3>
 
                             <div className="space-y-4">
-                                {notifications.slice(0, 3).map((item) => (
+                                {visibleNotifications.slice(0, 3).map((item) => (
                                     <div key={item.notificationId} className="flex gap-3">
                                         <div className={`mt-2 h-3 w-3 rounded-full ${item.isRead ? 'bg-[var(--admin-border)]' : 'bg-[#a4392f]'}`} />
                                         <div>
@@ -345,7 +550,7 @@ export default function Notifications() {
                                     </div>
                                 ))}
 
-                                {notifications.length === 0 && (
+                                {visibleNotifications.length === 0 && (
                                     <p className="text-sm text-[var(--admin-muted)]">
                                         No recent notification activity.
                                     </p>
