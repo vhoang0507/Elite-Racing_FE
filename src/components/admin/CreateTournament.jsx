@@ -33,6 +33,7 @@ import AdminLayout from './AdminLayout';
 const pageShellClass = 'grid min-h-[calc(100vh-64px)] w-full max-w-full content-start gap-[22px] overflow-x-hidden px-11 py-[34px] max-[760px]:px-5 max-[760px]:py-7';
 const wrapClass = 'grid w-full max-w-[960px] min-w-0 mx-auto gap-[18px]';
 const formClass = 'grid min-w-0 gap-5';
+const topSectionGridClass = 'grid min-w-0 grid-cols-[repeat(2,minmax(0,1fr))] gap-5 max-[900px]:grid-cols-1';
 const cardClass = 'grid w-full min-w-0 max-w-full gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] p-[22px] max-[760px]:p-[18px]';
 const cardTitleClass = 'm-0 flex items-center gap-2 border-b border-[var(--admin-border)] pb-2.5 text-[0.9rem] font-black text-[var(--admin-ink)]';
 const fieldClass = 'grid min-w-0 gap-[7px]';
@@ -42,7 +43,6 @@ const inputClass = `${controlBaseClass} h-10 px-3`;
 const selectClass = `${controlBaseClass} h-10 px-3`;
 const textareaClass = `${controlBaseClass} min-h-[88px] resize-y px-3 py-3 leading-[1.45]`;
 const fileControlClass = `${controlBaseClass} flex min-h-10 cursor-pointer items-center gap-3 px-3 py-2`;
-const twoColumnClass = 'grid min-w-0 grid-cols-[repeat(2,minmax(0,1fr))] gap-3.5 max-[760px]:grid-cols-1';
 const iconClass = 'pointer-events-none absolute top-1/2 h-[15px] w-[15px] -translate-y-1/2 text-[#9b7771]';
 const actionButtonClass = 'inline-flex min-h-[38px] cursor-pointer items-center justify-center gap-2 rounded-full px-[18px] text-[0.78rem] font-[850] no-underline transition-colors max-[760px]:w-full';
 const locationOptions = [
@@ -444,17 +444,18 @@ function CreateTournament() {
 
                         <form className={formClass} onSubmit={handleSubmit}>
                             <section className={cardClass}>
-                                <h2 className={cardTitleClass}>
-                                    <FaInfoCircle aria-hidden="true" className="flex-none text-[var(--admin-primary)]" />
-                                    <span>SECTION 1: TOURNAMENT INFORMATION</span>
-                                </h2>
+                                <div className={topSectionGridClass}>
+                                    <div className="grid min-w-0 content-start gap-4">
+                                    <h2 className={cardTitleClass}>
+                                        <FaInfoCircle aria-hidden="true" className="flex-none text-[var(--admin-primary)]" />
+                                        <span>SECTION 1: TOURNAMENT INFORMATION</span>
+                                    </h2>
 
-                                <label className={fieldClass}>
-                                    <span className={labelClass}>Tournament Name</span>
-                                    <input className={inputClass} maxLength={200} minLength={3} name="name" placeholder="e.g. The Prestige Cup 2024" required type="text" />
-                                </label>
+                                    <label className={fieldClass}>
+                                        <span className={labelClass}>Tournament Name</span>
+                                        <input className={inputClass} maxLength={200} minLength={3} name="name" placeholder="e.g. The Prestige Cup 2024" required type="text" />
+                                    </label>
 
-                                <div className={twoColumnClass}>
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Location</span>
                                         <div className="relative flex min-h-10 items-center">
@@ -472,9 +473,7 @@ function CreateTournament() {
                                         <span className={labelClass}>Description</span>
                                         <textarea className={textareaClass} maxLength={1000} name="description" placeholder="Provide a detailed overview of the race history and significance..." rows="4" />
                                     </label>
-                                </div>
 
-                                <div className={twoColumnClass}>
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Race Date</span>
                                         <input className={inputClass} lang="en-US" max={`${maxDate}T23:59`} min={currentDateTime} name="raceDate" onChange={(event) => setRaceDateValue(event.target.value)} type="datetime-local" value={raceDateValue} />
@@ -484,33 +483,31 @@ function CreateTournament() {
                                         <span className={labelClass}>Registration Deadline</span>
                                         <input className={inputClass} max={maxDate} min={todayDate} name="registrationDeadline" type="date" />
                                     </label>
-                                </div>
 
-                                <div className="rounded-md border border-[var(--admin-border)] bg-[#f8fbff] px-4 py-3">
-                                    <div className="mb-2 flex items-center gap-2 text-[0.76rem] font-[850] uppercase text-[#5b403c]">
-                                        <FaCalendarAlt aria-hidden="true" className="text-[var(--admin-primary)]" />
-                                        <span>Matched Season</span>
-                                    </div>
-                                    {isLoadingSeasons ? (
-                                        <p className="m-0 text-[0.82rem] font-semibold text-[var(--admin-muted)]">Loading seasons...</p>
-                                    ) : seasonError ? (
-                                        <p className="m-0 text-[0.82rem] font-semibold text-[var(--admin-primary)]">{seasonError}</p>
-                                    ) : !raceDateValue ? (
-                                        <p className="m-0 text-[0.82rem] font-semibold text-[var(--admin-muted)]">Select a race date to match a season.</p>
-                                    ) : matchedSeason ? (
-                                        <div className="flex flex-wrap items-center gap-2 text-[0.82rem] font-bold text-[var(--admin-ink)]">
-                                            <span>{readSeasonField(matchedSeason, 'seasonName')}</span>
-                                            <span className="rounded-full bg-[#e8f7ef] px-2.5 py-1 text-[0.68rem] font-black text-[var(--admin-primary)]">{matchedSeasonStatus}</span>
-                                            <span className="text-[var(--admin-muted)]">
-                                                {formatDateOnly(readSeasonField(matchedSeason, 'startDate'))} - {formatDateOnly(readSeasonField(matchedSeason, 'endDate'))}
-                                            </span>
+                                    <div className="rounded-md border border-[var(--admin-border)] bg-[#f8fbff] px-4 py-3">
+                                        <div className="mb-2 flex items-center gap-2 text-[0.76rem] font-[850] uppercase text-[#5b403c]">
+                                            <FaCalendarAlt aria-hidden="true" className="text-[var(--admin-primary)]" />
+                                            <span>Matched Season</span>
                                         </div>
-                                    ) : (
-                                        <p className="m-0 text-[0.82rem] font-semibold text-[var(--admin-primary)]">No season covers this race date.</p>
-                                    )}
-                                </div>
+                                        {isLoadingSeasons ? (
+                                            <p className="m-0 text-[0.82rem] font-semibold text-[var(--admin-muted)]">Loading seasons...</p>
+                                        ) : seasonError ? (
+                                            <p className="m-0 text-[0.82rem] font-semibold text-[var(--admin-primary)]">{seasonError}</p>
+                                        ) : !raceDateValue ? (
+                                            <p className="m-0 text-[0.82rem] font-semibold text-[var(--admin-muted)]">Select a race date to match a season.</p>
+                                        ) : matchedSeason ? (
+                                            <div className="flex flex-wrap items-center gap-2 text-[0.82rem] font-bold text-[var(--admin-ink)]">
+                                                <span>{readSeasonField(matchedSeason, 'seasonName')}</span>
+                                                <span className="rounded-full bg-[#e8f7ef] px-2.5 py-1 text-[0.68rem] font-black text-[var(--admin-primary)]">{matchedSeasonStatus}</span>
+                                                <span className="text-[var(--admin-muted)]">
+                                                    {formatDateOnly(readSeasonField(matchedSeason, 'startDate'))} - {formatDateOnly(readSeasonField(matchedSeason, 'endDate'))}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <p className="m-0 text-[0.82rem] font-semibold text-[var(--admin-primary)]">No season covers this race date.</p>
+                                        )}
+                                    </div>
 
-                                <div className={twoColumnClass}>
                                     <label className={fieldClass}>
                                         <span className={labelClass}>Distance</span>
                                         <select className={selectClass} defaultValue="" name="distanceMeters" required>
@@ -525,37 +522,35 @@ function CreateTournament() {
                                         <span className={labelClass}>Max Horses</span>
                                         <input className={inputClass} defaultValue="10" max="20" min="2" name="maxHorses" required step="1" type="number" />
                                     </label>
-                                </div>
 
-                                <label className={fieldClass}>
-                                    <span className={labelClass}>Tournament Image</span>
-                                    <span className={fileControlClass}>
-                                        <span className="inline-flex min-h-7 flex-none items-center rounded-full bg-[var(--admin-primary)] px-3 text-[0.76rem] font-[850] text-white">
-                                            Choose File
+                                    <label className={fieldClass}>
+                                        <span className={labelClass}>Tournament Image</span>
+                                        <span className={fileControlClass}>
+                                            <span className="inline-flex min-h-7 flex-none items-center rounded-full bg-[var(--admin-primary)] px-3 text-[0.76rem] font-[850] text-white">
+                                                Choose File
+                                            </span>
+                                            <span className="min-w-0 truncate text-[0.86rem] font-semibold text-[#7d6661]">
+                                                {tournamentImageName || 'No file chosen'}
+                                            </span>
                                         </span>
-                                        <span className="min-w-0 truncate text-[0.86rem] font-semibold text-[#7d6661]">
-                                            {tournamentImageName || 'No file chosen'}
-                                        </span>
-                                    </span>
-                                    <input accept={tournamentImageAccept} className="sr-only" name="tournamentImage" onChange={handleTournamentImageChange} type="file" />
-                                </label>
+                                        <input accept={tournamentImageAccept} className="sr-only" name="tournamentImage" onChange={handleTournamentImageChange} type="file" />
+                                    </label>
 
-                                {tournamentImagePreview && (
-                                    <img
-                                        alt="Tournament preview"
-                                        className="h-44 w-full rounded-md object-cover"
-                                        src={tournamentImagePreview}
-                                    />
-                                )}
-                            </section>
+                                    {tournamentImagePreview && (
+                                        <img
+                                            alt="Tournament preview"
+                                            className="h-44 w-full rounded-md object-cover"
+                                            src={tournamentImagePreview}
+                                        />
+                                    )}
+                                    </div>
 
-                            <section className={cardClass}>
-                                <h2 className={cardTitleClass}>
-                                    <FaTrophy aria-hidden="true" className="flex-none text-[var(--admin-primary)]" />
-                                    <span>SECTION 2: PRIZE &amp; RULES</span>
-                                </h2>
+                                    <div className="grid min-w-0 content-start gap-4">
+                                        <h2 className={cardTitleClass}>
+                                            <FaTrophy aria-hidden="true" className="flex-none text-[var(--admin-primary)]" />
+                                            <span>SECTION 2: PRIZE &amp; RULES</span>
+                                        </h2>
 
-                                <div className={`${twoColumnClass} items-start`}>
                                     <div className="grid gap-2">
                                         <span className={labelClass}>Prize Pool ($)</span>
 
@@ -578,13 +573,12 @@ function CreateTournament() {
                                         </label>
                                     </div>
 
-                                    
+                                    <label className={fieldClass}>
+                                        <span className={labelClass}>Rules</span>
+                                        <textarea className={textareaClass} maxLength={10000} name="rules" placeholder="Detail all eligibility, track rules, and disciplinary procedures..." rows="6" />
+                                    </label>
+                                    </div>
                                 </div>
-
-                                <label className={fieldClass}>
-                                    <span className={labelClass}>Rules</span>
-                                    <textarea className={textareaClass} maxLength={10000} name="rules" placeholder="Detail all eligibility, track rules, and disciplinary procedures..." rows="6" />
-                                </label>
                             </section>
 
                             <section className={cardClass}>
