@@ -14,6 +14,7 @@ import {
     FaFlagCheckered,
     FaInfoCircle,
     FaTh,
+    FaTrashAlt,
     FaTrophy,
 } from 'react-icons/fa';
 
@@ -87,27 +88,58 @@ const matchesQuery = (notification, query) => {
     ].some((value) => String(value).toLowerCase().includes(normalizedQuery));
 };
 
+const DISMISSED_NOTIFICATIONS_KEY = 'admin-dismissed-notification-ids';
+
+const readDismissedNotificationIds = () => {
+    try {
+        const parsed = JSON.parse(window.localStorage.getItem(DISMISSED_NOTIFICATIONS_KEY) || '[]');
+        return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch {
+        return [];
+    }
+};
+
+const saveDismissedNotificationIds = (ids) => {
+    try {
+        window.localStorage.setItem(DISMISSED_NOTIFICATIONS_KEY, JSON.stringify(ids));
+    } catch {
+        // Ignore storage errors; the notification still disappears for this session.
+    }
+};
+
 function Notifications() {
     const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
+    const [dismissedIds, setDismissedIds] = useState(readDismissedNotificationIds);
     const [selectedId, setSelectedId] = useState(null);
     const [query, setQuery] = useState('');
     const [typeFilter, setTypeFilter] = useState('all-types');
     const [priorityFilter, setPriorityFilter] = useState('all-priority');
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [selectedNotificationIds, setSelectedNotificationIds] = useState([]);
+    const [bulkDeleting, setBulkDeleting] = useState(false);
     const { toast, showToast, hideToast } = useToast();
 
-    const selectedNotification = useMemo(
-        () => notifications.find((item) => item.id === selectedId) ?? notifications[0] ?? null,
-        [notifications, selectedId]
+    const dismissedIdSet = useMemo(() => new Set(dismissedIds), [dismissedIds]);
+
+    const visibleNotifications = useMemo(
+        () => notifications.filter((item) => !dismissedIdSet.has(String(item.id))),
+        [dismissedIdSet, notifications]
     );
 
-    const filteredNotifications = useMemo(() => notifications.filter((notification) => (
+    const selectedNotification = useMemo(
+        () => visibleNotifications.find((item) => item.id === selectedId) ?? visibleNotifications[0] ?? null,
+        [selectedId, visibleNotifications]
+    );
+
+    const filteredNotifications = useMemo(() => visibleNotifications.filter((notification) => (
         matchesQuery(notification, query)
         && (typeFilter === 'all-types' || formatClass(notification.type) === typeFilter)
         && (priorityFilter === 'all-priority' || formatClass(notification.priority) === priorityFilter)
-    )), [notifications, priorityFilter, query, typeFilter]);
+    )), [priorityFilter, query, typeFilter, visibleNotifications]);
 
     useEffect(() => {
         let isMounted = true;
@@ -153,7 +185,8 @@ function Notifications() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const unreadCount = notifications.filter((notification) => !notification.isRead).length;
+    const unreadCount = visibleNotifications.filter((notification) => !notification.isRead).length;
+    const selectedNotificationIdSet = useMemo(() => new Set(selectedNotificationIds), [selectedNotificationIds]);
 
     const handleQueryChange = (value) => {
         setQuery(value);
@@ -181,6 +214,123 @@ function Notifications() {
         } catch (err) {
             setNotifications(prev);
             showToast(err.message || 'Failed to mark as read.', 'error', 'Error');
+        }
+    };
+
+    const toggleNotificationSelection = (notificationId) => {
+        const key = String(notificationId);
+        setSelectedNotificationIds((current) => (
+            current.includes(key)
+                ? current.filter((id) => id !== key)
+                : [...current, key]
+        ));
+    };
+
+    const handleToggleNotificationSelection = (event, notificationId) => {
+        event.stopPropagation();
+        toggleNotificationSelection(notificationId);
+    };
+
+    const handleToggleSelectionMode = () => {
+        if (selectionMode) {
+            setSelectedNotificationIds([]);
+        }
+        setSelectionMode((current) => !current);
+    };
+
+    const handleNotificationKeyDown = (event, notification) => {
+        if (event.key !== 'Enter' && event.key !== ' ') {
+            return;
+        }
+
+        event.preventDefault();
+        if (selectionMode) {
+            toggleNotificationSelection(notification.id);
+            return;
+        }
+
+        handleSelect(notification);
+    };
+
+    const handleDeleteNotification = async (event, notification) => {
+        event.stopPropagation();
+        if (deletingId) return;
+
+        const confirmed = await confirmAdminAction({
+            title: 'Delete notification',
+            message: 'Remove this notification from your list?',
+            confirmLabel: 'Delete',
+        });
+
+        if (!confirmed) return;
+
+        const previousDismissedIds = dismissedIds;
+        const nextDismissedIds = Array.from(new Set([...dismissedIds, String(notification.id)]));
+        const nextSelectedId = visibleNotifications.find((item) => item.id !== notification.id)?.id ?? null;
+
+        setDeletingId(notification.id);
+        setDismissedIds(nextDismissedIds);
+        saveDismissedNotificationIds(nextDismissedIds);
+        if (selectedNotification?.id === notification.id) {
+            setSelectedId(nextSelectedId);
+        }
+
+        try {
+            if (!notification.isRead) {
+                await adminApi.markNotificationRead(notification.id);
+            }
+            window.dispatchEvent(new Event('admin-notifications-changed'));
+            showToast('Notification deleted.', 'success', 'Deleted');
+        } catch (err) {
+            setDismissedIds(previousDismissedIds);
+            saveDismissedNotificationIds(previousDismissedIds);
+            if (selectedNotification?.id === notification.id) {
+                setSelectedId(notification.id);
+            }
+            showToast(err.message || 'Failed to delete notification.', 'error', 'Error');
+        } finally {
+            setDeletingId(null);
+        }
+    };
+
+    const handleBulkDeleteNotifications = async () => {
+        if (bulkDeleting || selectedNotificationIds.length === 0) return;
+
+        const confirmed = await confirmAdminAction({
+            title: 'Delete selected notifications',
+            message: `Remove ${selectedNotificationIds.length} selected notification${selectedNotificationIds.length === 1 ? '' : 's'} from your list?`,
+            confirmLabel: 'Delete Selected',
+        });
+
+        if (!confirmed) return;
+
+        const selectedIds = new Set(selectedNotificationIds);
+        const targets = visibleNotifications.filter((item) => selectedIds.has(String(item.id)));
+        const previousDismissedIds = dismissedIds;
+        const nextDismissedIds = Array.from(new Set([...dismissedIds, ...selectedNotificationIds]));
+        const nextSelectedId = visibleNotifications.find((item) => !selectedIds.has(String(item.id)))?.id ?? null;
+
+        setBulkDeleting(true);
+        setDismissedIds(nextDismissedIds);
+        saveDismissedNotificationIds(nextDismissedIds);
+        if (selectedNotification && selectedIds.has(String(selectedNotification.id))) {
+            setSelectedId(nextSelectedId);
+        }
+
+        try {
+            await Promise.all(targets
+                .filter((item) => !item.isRead)
+                .map((item) => adminApi.markNotificationRead(item.id)));
+            setSelectedNotificationIds([]);
+            setSelectionMode(false);
+            window.dispatchEvent(new Event('admin-notifications-changed'));
+            showToast('Selected notifications deleted.', 'success', 'Deleted');
+        } catch (err) {
+            setDismissedIds(previousDismissedIds);
+            saveDismissedNotificationIds(previousDismissedIds);
+            showToast(err.message || 'Failed to delete selected notifications.', 'error', 'Error');
+        } finally {
+            setBulkDeleting(false);
         }
     };
 
@@ -249,7 +399,7 @@ function Notifications() {
                     <div className="flex w-56 justify-between rounded-[8px] border border-[var(--admin-border)] bg-white p-5">
                         <div>
                             <p className="text-sm uppercase text-[var(--admin-muted)]">Total Notifications</p>
-                            <h3 className="mt-2 text-2xl font-bold">{notifications.length}</h3>
+                            <h3 className="mt-2 text-2xl font-bold">{visibleNotifications.length}</h3>
                         </div>
                         <FaBell className="text-[var(--admin-primary)]" size={22} />
                     </div>
@@ -296,6 +446,24 @@ function Notifications() {
                             <FaCheck aria-hidden="true" />
                             {saving ? 'Updating...' : 'Mark All Read'}
                         </button>
+                        <button
+                            type="button"
+                            onClick={handleToggleSelectionMode}
+                            className="inline-flex items-center gap-2 rounded-full border border-[var(--admin-primary)] bg-white px-4 py-2 font-bold text-[var(--admin-primary)] transition-colors hover:bg-[var(--admin-surface-strong)]"
+                        >
+                            {selectionMode ? 'Cancel Selection' : 'Select Notifications'}
+                        </button>
+                        {selectionMode && (
+                            <button
+                                type="button"
+                                onClick={handleBulkDeleteNotifications}
+                                disabled={bulkDeleting || selectedNotificationIds.length === 0}
+                                className="inline-flex items-center gap-2 rounded-full border border-[#e3bcb7] bg-white px-4 py-2 font-bold text-[#a4392f] transition-colors hover:bg-[#f3e1df] disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                <FaTrashAlt aria-hidden="true" />
+                                {bulkDeleting ? 'Deleting...' : `Delete Selected (${selectedNotificationIds.length})`}
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -311,10 +479,12 @@ function Notifications() {
                             </div>
                         ) : (
                             filteredNotifications.map((notification) => (
-                                <button
-                                    type="button"
+                                <article
                                     key={notification.id}
-                                    onClick={() => handleSelect(notification)}
+                                    onClick={() => selectionMode ? toggleNotificationSelection(notification.id) : handleSelect(notification)}
+                                    onKeyDown={(event) => handleNotificationKeyDown(event, notification)}
+                                    role="button"
+                                    tabIndex={0}
                                     className={`w-full cursor-pointer rounded-[8px] border border-[var(--admin-border)] bg-white p-4 text-left hover:bg-[#faf5f4] ${selectedNotification?.id === notification.id ? 'ring-2 ring-[var(--admin-primary)]' : ''}`}
                                 >
                                     <div className="flex justify-between gap-3">
@@ -328,22 +498,50 @@ function Notifications() {
                                         {notification.message}
                                     </p>
 
-                                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                                        {[notification.type, notification.priority].filter(Boolean).map((tag) => (
-                                            <span
-                                                className={`inline-flex min-h-5 items-center rounded-full px-2 text-[0.58rem] font-black uppercase ${tagClass[formatClass(tag)] || tagClass.prediction}`}
-                                                key={tag}
+                                    <div className="mt-3 flex items-end justify-between gap-3">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            {[notification.type, notification.priority].filter(Boolean).map((tag) => (
+                                                <span
+                                                    className={`inline-flex min-h-5 items-center rounded-full px-2 text-[0.58rem] font-black uppercase ${tagClass[formatClass(tag)] || tagClass.prediction}`}
+                                                    key={tag}
+                                                >
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                            {!notification.isRead && (
+                                                <span className="inline-block rounded-full bg-[#f3e1df] px-2.5 py-1 text-xs font-semibold text-[#a4392f]">
+                                                    NEW
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {selectionMode ? (
+                                            <label
+                                                className="grid h-8 w-8 flex-none place-items-center rounded-full border border-[var(--admin-border)] bg-white"
+                                                onClick={(event) => event.stopPropagation()}
+                                                title="Select notification"
                                             >
-                                                {tag}
-                                            </span>
-                                        ))}
-                                        {!notification.isRead && (
-                                            <span className="inline-block rounded-full bg-[#f3e1df] px-2.5 py-1 text-xs font-semibold text-[#a4392f]">
-                                                NEW
-                                            </span>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedNotificationIdSet.has(String(notification.id))}
+                                                    onChange={(event) => handleToggleNotificationSelection(event, notification.id)}
+                                                    className="h-4 w-4 accent-[#a4392f]"
+                                                />
+                                            </label>
+                                        ) : (
+                                            <button
+                                                type="button"
+                                                aria-label={`Delete notification ${notification.title}`}
+                                                title="Delete notification"
+                                                disabled={deletingId === notification.id}
+                                                onClick={(event) => handleDeleteNotification(event, notification)}
+                                                className="grid h-8 w-8 flex-none place-items-center rounded-full border border-[#e3bcb7] bg-white text-[#a4392f] transition-colors hover:bg-[#f3e1df] disabled:cursor-not-allowed disabled:opacity-60"
+                                            >
+                                                <FaTrashAlt aria-hidden="true" />
+                                            </button>
                                         )}
                                     </div>
-                                </button>
+                                </article>
                             ))
                         )}
                     </div>
@@ -427,7 +625,7 @@ function Notifications() {
                             </h3>
 
                             <div className="space-y-4">
-                                {notifications.slice(0, 3).map((item) => {
+                                {visibleNotifications.slice(0, 3).map((item) => {
                                     const Icon = iconByTone[item.tone] || FaBell;
 
                                     return (
@@ -444,7 +642,7 @@ function Notifications() {
                                     );
                                 })}
 
-                                {notifications.length === 0 && (
+                                {visibleNotifications.length === 0 && (
                                     <p className="text-sm text-[var(--admin-muted)]">
                                         No recent notification activity.
                                     </p>
