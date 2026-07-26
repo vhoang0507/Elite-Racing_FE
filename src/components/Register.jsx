@@ -6,7 +6,6 @@ import {
 
 import { register } from '../api/authApi';
 import horseRacing from '../assets/horse-racing.jpg';
-import icon from '../assets/icon.png';
 import Toast from './shared/Toast';
 import { useToast } from './shared/useToast';
 
@@ -78,16 +77,12 @@ const Register = () => {
             <Toast message={toast.message} type={toast.type} title={toast.title} onClose={hideToast} />
             <div className="flex h-screen w-[58%] items-start justify-center overflow-y-auto bg-[rgba(255,254,253,0.92)] px-[50px] py-[60px] max-[1024px]:min-h-screen max-[1024px]:w-full max-[1024px]:px-6 max-[1024px]:py-[30px] [&::-webkit-scrollbar-thumb]:rounded-[8px] [&::-webkit-scrollbar-thumb]:bg-[#a7b7ca] [&::-webkit-scrollbar]:w-2">
                 <div className="w-full max-w-[520px]">
-                    <div className="mb-8 flex items-center gap-3">
+                    <div className="mb-8 flex justify-center">
                         <img
-                            src={icon}
-                            alt="Elite Racing League Logo"
-                            className="h-12 w-12 object-contain"
+                            src="/elite-racing-league-logo.png"
+                            alt="Elite Racing League"
+                            className="h-28 w-auto object-contain"
                         />
-
-                        <h2 className="text-[2.2rem] font-extrabold italic text-[#0b7f5a]">
-                            Elite Racing League
-                        </h2>
                     </div>
 
                     <h1 className="mb-4 text-[3.25rem] leading-[1.05] text-[#1f3b57] max-[1024px]:text-[2.5rem]">

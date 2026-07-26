@@ -59,6 +59,7 @@ export default function HomePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [loadError, setLoadError] = useState('');
     const [requestVersion, setRequestVersion] = useState(0);
+    const [activeTournamentIndex, setActiveTournamentIndex] = useState(0);
 
     useEffect(() => {
         let isMounted = true;
@@ -97,8 +98,31 @@ export default function HomePage() {
         const items = Array.isArray(payload) ? payload : [];
         return items.map(normalizeTournament);
     }, [homeData]);
-    const featured = tournaments[0];
-    const sideEvents = tournaments.slice(1, 3);
+
+    useEffect(() => {
+        setActiveTournamentIndex(0);
+    }, [tournaments]);
+
+    useEffect(() => {
+        if (tournaments.length <= 1) {
+            return undefined;
+        }
+
+        const intervalId = window.setInterval(() => {
+            setActiveTournamentIndex((currentIndex) => (
+                (currentIndex + 1) % tournaments.length
+            ));
+        }, 3000);
+
+        return () => {
+            window.clearInterval(intervalId);
+        };
+    }, [tournaments.length]);
+
+    const safeTournamentIndex = tournaments.length > 0
+        ? activeTournamentIndex % tournaments.length
+        : 0;
+    const featured = tournaments[safeTournamentIndex];
     const currentSeason = readField(homeData, 'currentSeason');
     const latestResult = readField(homeData, 'latestResult');
     const standings = readField(latestResult, 'standings');
@@ -163,8 +187,11 @@ export default function HomePage() {
                         </button>
                     </div>
                 ) : featured ? (
-                    <div className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-                        <article className="relative min-h-[345px] overflow-hidden rounded-[8px] shadow-[0_18px_45px_rgba(70,32,26,0.13)]">
+                    <div
+                        key={`${featured.id || featured.title}-${safeTournamentIndex}`}
+                        className="upcoming-tournament-slide"
+                    >
+                        <article className="relative min-h-[345px] w-full overflow-hidden rounded-[8px] shadow-[0_18px_45px_rgba(70,32,26,0.13)] md:min-h-[500px]">
                             <img src={featured.image} alt={featured.title} className="absolute inset-0 h-full w-full object-cover" />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
                             <div className="absolute inset-x-0 bottom-0 p-7 text-white">
@@ -187,31 +214,35 @@ export default function HomePage() {
                             </div>
                         </article>
 
-                        <div className="grid gap-5">
-                            {sideEvents.map((event) => (
-                                <article key={event.id || event.title} className="rounded-[10px] border border-[var(--racing-border)] bg-[#fffaf8] p-5 shadow-[0_10px_28px_rgba(70,32,26,0.06)]">
-                                    <div>
-                                        <span className="rounded bg-[#f5d8d3] px-2 py-1 text-xs font-black text-[#9b3a32]">{event.status}</span>
-                                        <h3 className="mt-3 text-xl font-black">{event.title}</h3>
-                                        <p className="mt-1 text-sm text-[var(--racing-muted)]">
-                                            <FaMapMarkerAlt className="mr-1 inline" />
-                                            {event.location}
-                                        </p>
-                                        <p className="mt-2 text-xs font-bold text-[var(--racing-muted)]">{event.distance} · {event.registered}</p>
-                                    </div>
-                                    <div className="mt-5 flex items-center justify-between border-t border-[var(--racing-border)] pt-4 text-sm font-bold">
-                                        <span>{event.date}</span>
-                                        <Link to={event.link} className="text-[var(--racing-primary)] no-underline">Detail</Link>
-                                    </div>
-                                </article>
-                            ))}
-                        </div>
                     </div>
                 ) : (
                     <div className="rounded-[10px] border border-[var(--racing-border)] bg-[#fffaf8] px-6 py-14 text-center text-sm font-bold text-[var(--racing-muted)]">
                         No upcoming tournaments are currently available.
                     </div>
                 )}
+
+                <style>{`
+                    @keyframes upcomingTournamentSlideIn {
+                        from {
+                            opacity: 0;
+                            transform: translateX(32px);
+                        }
+                        to {
+                            opacity: 1;
+                            transform: translateX(0);
+                        }
+                    }
+
+                    .upcoming-tournament-slide {
+                        animation: upcomingTournamentSlideIn 450ms ease-out;
+                    }
+
+                    @media (prefers-reduced-motion: reduce) {
+                        .upcoming-tournament-slide {
+                            animation: none;
+                        }
+                    }
+                `}</style>
             </section>
 
             <section className="border-y border-[var(--racing-border)] bg-[#eef4ff] px-6 py-16 md:px-11">

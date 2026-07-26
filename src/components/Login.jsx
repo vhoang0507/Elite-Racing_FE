@@ -7,7 +7,6 @@ import {
 
 import { login } from '../api/authApi';
 import horseRacing from '../assets/horse-racing.jpg';
-import icon from '../assets/icon.png';
 import { saveAuthSession } from '../utils/tokenStorage';
 import Toast from './shared/Toast';
 import { useToast } from './shared/useToast';
@@ -136,16 +135,12 @@ const Login = () => {
             <div className="flex h-screen w-[560px] min-w-[560px] items-center justify-center overflow-y-auto p-10 [scrollbar-width:none] max-[1024px]:min-h-screen max-[1024px]:w-full max-[1024px]:min-w-full max-[1024px]:p-6 [&::-webkit-scrollbar]:w-0">
                 <div className="auth-panel w-full max-w-[520px] rounded-[8px] p-10 max-[1024px]:max-w-full max-[1024px]:px-6 max-[1024px]:py-9">
                     <div className="mb-[34px] text-center">
-                        <div className="mb-2.5 flex items-center justify-center gap-3.5">
+                        <div className="mb-2.5 flex justify-center">
                             <img
-                                src={icon}
-                                alt="Elite Racing League Logo"
-                                className="h-[50px] w-[50px] object-contain"
+                                src="/elite-racing-league-logo.png"
+                                alt="Elite Racing League"
+                                className="h-32 w-auto object-contain"
                             />
-
-                            <h2 className="m-0 text-[2rem] font-extrabold italic text-[#0b7f5a] max-[1024px]:text-[1.7rem]">
-                                Elite Racing League
-                            </h2>
                         </div>
 
                         <p className="mt-1.5 text-base leading-normal text-[#666]">

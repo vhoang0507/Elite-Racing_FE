@@ -209,10 +209,11 @@ function RefereeLayout({
         <div className={shellClasses}>
             <aside className="role-sidebar">
                 <div className="role-brand">
-                    <span className="role-brand-mark">
-                        ER
-                    </span>
-                    <span>Elite Racing League</span>
+                    <img
+                        src="/elite-racing-league-logo.png"
+                        alt="Elite Racing League"
+                        className="h-16 w-auto object-contain"
+                    />
                 </div>
 
                 <div className="role-profile-summary">
@@ -394,7 +395,11 @@ function RefereeLayout({
                 </div>
 
                 <footer className="role-footer">
-                    <strong className="text-[var(--admin-primary)]">Elite Racing League</strong>
+                    <img
+                        src="/elite-racing-league-logo.png"
+                        alt="Elite Racing League"
+                        className="h-14 w-auto object-contain"
+                    />
                     <div className="role-footer-links">
                         <a href="#" className="text-[var(--admin-muted)] no-underline hover:text-[var(--admin-primary)]">Terms of Service</a>
                         <a href="#" className="text-[var(--admin-muted)] no-underline hover:text-[var(--admin-primary)]">Privacy Policy</a>

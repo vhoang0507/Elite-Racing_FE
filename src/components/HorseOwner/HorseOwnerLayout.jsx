@@ -48,8 +48,11 @@ function HorseOwnerLayout({ activeKey, children }) {
             {/* Sidebar */}
             <aside className="role-sidebar">
                 <div className="role-brand">
-                    <span className="role-brand-mark">ER</span>
-                    <span>Elite Racing League</span>
+                    <img
+                        src="/elite-racing-league-logo.png"
+                        alt="Elite Racing League"
+                        className="h-16 w-auto object-contain"
+                    />
                 </div>
 
                 <div className="role-profile-summary">
@@ -151,7 +154,11 @@ function HorseOwnerLayout({ activeKey, children }) {
                 <div className="flex-1">{children}</div>
 
                 <footer className="role-footer">
-                    <strong className="text-[var(--admin-primary)]">Elite Racing League</strong>
+                    <img
+                        src="/elite-racing-league-logo.png"
+                        alt="Elite Racing League"
+                        className="h-14 w-auto object-contain"
+                    />
                     <div className="role-footer-links">
                         <span className="text-[var(--admin-muted)]">Terms of Service</span>
                         <span className="text-[var(--admin-muted)]">Privacy Policy</span>
