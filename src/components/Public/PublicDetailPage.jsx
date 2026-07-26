@@ -77,6 +77,22 @@ export default function PublicDetailPage() {
         setLoading(true);
         setError('');
         loaders[type](id)
+            .then(async (payload) => {
+                if (type !== 'race') return payload;
+
+                const tournamentId = readField(payload, 'tournamentId');
+                if (!tournamentId) return payload;
+
+                try {
+                    const tournament = await publicApi.getPublicTournamentDetail(tournamentId);
+                    return {
+                        ...payload,
+                        tournamentImageUrl: readField(tournament, 'imageUrl'),
+                    };
+                } catch {
+                    return payload;
+                }
+            })
             .then((payload) => {
                 if (isMounted) setDetail(payload);
             })
@@ -100,7 +116,10 @@ export default function PublicDetailPage() {
         || readField(detail, 'horseName')
         || readField(detail, 'fullName')
         || 'Public Detail';
-    const imageUrl = readField(detail, 'imageUrl') || readField(detail, 'horseImageUrl') || readField(detail, 'profileImageUrl');
+    const imageUrl = readField(detail, 'imageUrl')
+        || readField(detail, 'tournamentImageUrl')
+        || readField(detail, 'horseImageUrl')
+        || readField(detail, 'profileImageUrl');
     const races = readField(detail, 'races') || [];
     const standings = readField(detail, 'standings') || [];
     const participants = readField(detail, 'participants') || [];
@@ -209,7 +228,7 @@ export default function PublicDetailPage() {
 
                         {(participants.length > 0 || results.length > 0) && (
                             <section className="grid gap-7 lg:grid-cols-2">
-                                <PublicTable title="Participants" icon={FaFlagCheckered} rows={participants} columns={['Horse', 'Owner', 'Jockey', 'Status']} />
+                                <PublicTable title="Participants" icon={FaFlagCheckered} rows={participants} columns={['Horse', 'Owner', 'Jockey']} />
                                 <PublicTable title="Results" icon={FaTrophy} rows={results} columns={['Rank', 'Horse', 'Jockey', 'Time', 'Outcome']} />
                             </section>
                         )}

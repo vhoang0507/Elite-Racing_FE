@@ -70,10 +70,11 @@ function SpectatorLayout({ activeKey, children }) {
             <aside className="role-sidebar">
                 <div className="role-brand">
                     <img
-                        src="/elite-racing-league-logo.png"
+                        src="/admin-sidebar-logo.png"
                         alt="Elite Racing League"
-                        className="h-16 w-auto object-contain"
+                        className="h-10 w-10 flex-none object-contain"
                     />
+                    <span>Elite Racing League</span>
                 </div>
 
                 <div className="role-profile-summary">
@@ -184,9 +185,9 @@ function SpectatorLayout({ activeKey, children }) {
 
                 <footer className="role-footer">
                     <img
-                        src="/elite-racing-league-logo.png"
+                        src="/admin-sidebar-logo.png"
                         alt="Elite Racing League"
-                        className="h-14 w-auto object-contain"
+                        className="h-16 w-auto object-contain"
                     />
                     <div className="role-footer-links">
                         <a href="#" className="text-[var(--admin-muted)] no-underline hover:text-[var(--admin-primary)]">Terms of Service</a>

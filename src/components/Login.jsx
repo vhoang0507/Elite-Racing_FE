@@ -137,9 +137,9 @@ const Login = () => {
                     <div className="mb-[34px] text-center">
                         <div className="mb-2.5 flex justify-center">
                             <img
-                                src="/elite-racing-league-logo.png"
+                                src="/admin-sidebar-logo.png"
                                 alt="Elite Racing League"
-                                className="h-32 w-auto object-contain"
+                                className="h-36 w-auto object-contain"
                             />
                         </div>
 
