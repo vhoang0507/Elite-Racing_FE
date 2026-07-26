@@ -4,12 +4,15 @@ import { FaSearch } from 'react-icons/fa';
 export function PublicHeader({ showSearch = true }) {
     return (
         <header className="sticky top-0 z-50 flex h-[76px] items-center justify-between border-b border-[var(--racing-border)] bg-[#fffaf8]/95 px-6 backdrop-blur md:px-11">
-            <Link to="/" aria-label="Elite Racing League home" className="inline-flex h-full items-center no-underline">
+            <Link to="/" aria-label="Elite Racing League home" className="inline-flex h-full items-center gap-3 no-underline">
                 <img
-                    src="/elite-racing-league-logo.png"
+                    src="/admin-sidebar-logo.png"
                     alt="Elite Racing League"
-                    className="h-[68px] w-auto object-contain"
+                    className="h-[70px] w-auto object-contain"
                 />
+                <span className="text-xl font-black text-[var(--racing-primary)]">
+                    Elite Racing League
+                </span>
             </Link>
 
             <nav className="flex items-center gap-4 text-sm font-bold text-[var(--racing-ink)]">
@@ -41,12 +44,15 @@ export function PublicHeader({ showSearch = true }) {
 export function PublicFooter() {
     return (
         <footer className="flex flex-col gap-4 border-t border-[var(--racing-border)] bg-[#e8f7ef] px-6 py-8 md:flex-row md:items-center md:justify-between md:px-11">
-            <Link to="/" aria-label="Elite Racing League home" className="inline-flex no-underline">
+            <Link to="/" aria-label="Elite Racing League home" className="inline-flex items-center gap-3 no-underline">
                 <img
-                    src="/elite-racing-league-logo.png"
+                    src="/admin-sidebar-logo.png"
                     alt="Elite Racing League"
-                    className="h-20 w-auto object-contain"
+                    className="h-24 w-auto object-contain"
                 />
+                <span className="text-xl font-black text-[var(--racing-primary)]">
+                    Elite Racing League
+                </span>
             </Link>
 
             <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-[var(--racing-muted)]">

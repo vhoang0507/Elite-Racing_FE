@@ -89,9 +89,9 @@ const VerifyEmail = () => {
                 <div className="w-full max-w-[520px]">
                     <div className="mb-8 flex justify-center">
                         <img
-                            src="/elite-racing-league-logo.png"
+                            src="/admin-sidebar-logo.png"
                             alt="Elite Racing League"
-                            className="h-28 w-auto object-contain"
+                            className="h-32 w-auto object-contain"
                         />
                     </div>
 

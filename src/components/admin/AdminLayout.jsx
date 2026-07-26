@@ -251,10 +251,11 @@ function AdminLayout({
             >
                 <div className="role-brand">
                     <img
-                        src="/elite-racing-league-logo.png"
+                        src="/admin-sidebar-logo.png"
                         alt="Elite Racing League"
-                        className="h-16 w-auto object-contain"
+                        className="h-10 w-10 flex-none object-contain"
                     />
+                    <span>Elite Racing League</span>
                 </div>
 
                 <div className="role-profile-summary">
@@ -364,9 +365,9 @@ function AdminLayout({
 
                 <footer className="role-footer">
                     <img
-                        src="/elite-racing-league-logo.png"
+                        src="/admin-sidebar-logo.png"
                         alt="Elite Racing League"
-                        className="h-14 w-auto object-contain"
+                        className="h-16 w-auto object-contain"
                     />
                     <div className="role-footer-links">
                         <span className="text-[var(--admin-muted)]">Terms of Service</span>
