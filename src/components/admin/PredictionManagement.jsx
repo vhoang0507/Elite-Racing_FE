@@ -16,6 +16,7 @@ import {
 } from 'react-icons/fa';
 
 import { adminApi } from '../../api/adminApi';
+import { resolveFileUrl } from '../../api/uploadApi';
 import horseRacing from '../../assets/horse-racing.jpg';
 import {
     confirmAdminAction,
@@ -47,6 +48,18 @@ const summaryIconTone = {
     top: { bg: 'bg-[#e8f7ee]', ink: 'text-[#16864f]' },
 };
 const getPredictionCount = (prediction) => Number(prediction.count ?? 1);
+const getHorseImageSrc = (prediction) => {
+    const imageUrl = prediction?.horseImageUrl
+        ?? prediction?.HorseImageUrl
+        ?? prediction?.imageUrl
+        ?? prediction?.ImageUrl;
+
+    return imageUrl ? resolveFileUrl(imageUrl) : horseRacing;
+};
+const handleHorseImageError = (event) => {
+    event.currentTarget.onerror = null;
+    event.currentTarget.src = horseRacing;
+};
 const getPredictionStatusOptions = (prediction) => {
     const status = formatClass(prediction.status);
 
@@ -284,223 +297,223 @@ function PredictionManagement() {
             searchPlaceholder="Search predictions, horses, tournaments..."
             searchValue={query}
         >
-                <section className={pageShellClass}>
-                    <div>
-                        <h1 className="page-title">
-                            Prediction Management
-                        </h1>
+            <section className={pageShellClass}>
+                <div>
+                    <h1 className="page-title">
+                        Prediction Management
+                    </h1>
+                </div>
+
+                <section aria-label="Prediction summary" className="grid grid-cols-3 gap-7 max-[1180px]:grid-cols-1">
+                    {summaryCards.map((card) => {
+                        const Icon = card.icon;
+
+                        return (
+                            <article className="flex min-h-[132px] items-start justify-between gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-6 py-6 shadow-[0_14px_30px_rgba(15,23,42,0.05)]" key={card.label}>
+                                <div>
+                                    <span className="block text-[0.76rem] font-black uppercase text-[#64748b]">{card.label}</span>
+                                    <strong className="mt-3 block text-[2rem] leading-none text-[var(--admin-primary-dark)]">{card.value}</strong>
+                                </div>
+                                <span className={`grid h-10 w-10 flex-none place-items-center rounded-xl ${summaryIconTone[card.tone].bg} ${summaryIconTone[card.tone].ink}`}>
+                                    <Icon aria-hidden="true" className="h-4 w-4" />
+                                </span>
+                            </article>
+                        );
+                    })}
+                </section>
+
+                <section className="grid grid-cols-[minmax(220px,1fr)_190px_170px_170px_96px] gap-3 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[#f8fbff] p-4 max-[1180px]:grid-cols-2 max-[820px]:grid-cols-1">
+                    <label className="flex h-[42px] items-center gap-2 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[#64748b]">
+                        <FaSearch aria-hidden="true" />
+                        <input className="h-full w-full min-w-0 border-0 bg-transparent p-0 text-[0.8rem] text-[var(--admin-ink)] outline-0" onChange={(event) => handleQueryChange(event.target.value)} placeholder="Search horse or tournament..." type="search" value={query} />
+                    </label>
+
+                    <label className={selectFieldClass}>
+                        <select className={selectClass} onChange={handleFilterChange(setTournamentFilter)} value={tournamentFilter}>
+                            <option value="all-tournaments">All Tournaments</option>
+                            {tournaments.map((tournament) => (
+                                <option key={tournament} value={tournament}>{tournament}</option>
+                            ))}
+                        </select>
+                        <FaChevronDown aria-hidden="true" />
+                    </label>
+
+                    <label className={selectFieldClass}>
+                        <select className={selectClass} onChange={handleFilterChange(setStatusFilter)} value={statusFilter}>
+                            <option value="all-status">Status: All</option>
+                            <option value="pending">Pending</option>
+                            <option value="locked">Locked</option>
+                            <option value="evaluated">Evaluated</option>
+                            <option value="cancelled">Cancelled</option>
+                        </select>
+                        <FaChevronDown aria-hidden="true" />
+                    </label>
+
+                    <label className={selectFieldClass}>
+                        <select className={selectClass} onChange={handleFilterChange(setAccuracyFilter)} value={accuracyFilter}>
+                            <option value="all-accuracy">Accuracy: Any</option>
+                            <option value="high">High Accuracy</option>
+                            <option value="low">Low Accuracy</option>
+                        </select>
+                        <FaChevronDown aria-hidden="true" />
+                    </label>
+
+                    <button className="inline-flex h-[42px] cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--admin-primary)] px-3 font-black text-white hover:bg-[var(--admin-primary-dark)]" onClick={handleSortToggle} type="button">
+                        <FaSortAmountDown aria-hidden="true" />
+                        <span>Sort</span>
+                    </button>
+                </section>
+
+                <section className={panelClass}>
+                    <div className={panelTitleClass}>
+                        <h2 className="m-0 text-[1.05rem] text-[var(--admin-ink)]">Active &amp; Recent Predictions</h2>
                     </div>
 
-                    <section aria-label="Prediction summary" className="grid grid-cols-3 gap-7 max-[1180px]:grid-cols-1">
-                        {summaryCards.map((card) => {
-                            const Icon = card.icon;
-
-                            return (
-                                <article className="flex min-h-[132px] items-start justify-between gap-4 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[var(--admin-surface)] px-6 py-6 shadow-[0_14px_30px_rgba(15,23,42,0.05)]" key={card.label}>
-                                    <div>
-                                        <span className="block text-[0.76rem] font-black uppercase text-[#64748b]">{card.label}</span>
-                                        <strong className="mt-3 block text-[2rem] leading-none text-[var(--admin-primary-dark)]">{card.value}</strong>
-                                    </div>
-                                    <span className={`grid h-10 w-10 flex-none place-items-center rounded-xl ${summaryIconTone[card.tone].bg} ${summaryIconTone[card.tone].ink}`}>
-                                        <Icon aria-hidden="true" className="h-4 w-4" />
-                                    </span>
-                                </article>
-                            );
-                        })}
-                    </section>
-
-                    <section className="grid grid-cols-[minmax(220px,1fr)_190px_170px_170px_96px] gap-3 rounded-[var(--admin-radius)] border border-[var(--admin-border)] bg-[#f8fbff] p-4 max-[1180px]:grid-cols-2 max-[820px]:grid-cols-1">
-                        <label className="flex h-[42px] items-center gap-2 rounded-md border border-[var(--admin-border)] bg-[#fffdfc] px-3 text-[#64748b]">
-                            <FaSearch aria-hidden="true" />
-                            <input className="h-full w-full min-w-0 border-0 bg-transparent p-0 text-[0.8rem] text-[var(--admin-ink)] outline-0" onChange={(event) => handleQueryChange(event.target.value)} placeholder="Search horse or tournament..." type="search" value={query} />
-                        </label>
-
-                        <label className={selectFieldClass}>
-                            <select className={selectClass} onChange={handleFilterChange(setTournamentFilter)} value={tournamentFilter}>
-                                <option value="all-tournaments">All Tournaments</option>
-                                {tournaments.map((tournament) => (
-                                    <option key={tournament} value={tournament}>{tournament}</option>
-                                ))}
-                            </select>
-                            <FaChevronDown aria-hidden="true" />
-                        </label>
-
-                        <label className={selectFieldClass}>
-                            <select className={selectClass} onChange={handleFilterChange(setStatusFilter)} value={statusFilter}>
-                                <option value="all-status">Status: All</option>
-                                <option value="pending">Pending</option>
-                                <option value="locked">Locked</option>
-                                <option value="evaluated">Evaluated</option>
-                                <option value="cancelled">Cancelled</option>
-                            </select>
-                            <FaChevronDown aria-hidden="true" />
-                        </label>
-
-                        <label className={selectFieldClass}>
-                            <select className={selectClass} onChange={handleFilterChange(setAccuracyFilter)} value={accuracyFilter}>
-                                <option value="all-accuracy">Accuracy: Any</option>
-                                <option value="high">High Accuracy</option>
-                                <option value="low">Low Accuracy</option>
-                            </select>
-                            <FaChevronDown aria-hidden="true" />
-                        </label>
-
-                        <button className="inline-flex h-[42px] cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--admin-primary)] px-3 font-black text-white hover:bg-[var(--admin-primary-dark)]" onClick={handleSortToggle} type="button">
-                            <FaSortAmountDown aria-hidden="true" />
-                            <span>Sort</span>
-                        </button>
-                    </section>
-
-                    <section className={panelClass}>
-                        <div className={panelTitleClass}>
-                            <h2 className="m-0 text-[1.05rem] text-[var(--admin-ink)]">Active &amp; Recent Predictions</h2>
-                        </div>
-
-                        <div className="w-full overflow-x-auto">
-                            <table className="w-full border-collapse max-[820px]:min-w-[760px]">
-                                <thead>
-                                    <tr>
-                                        {['Tournament', 'Spectator', 'Predictions', 'Status', 'Actions'].map((heading) => (
-                                            <th className="border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] py-[18px] text-left text-[0.7rem] uppercase text-[#64748b]" key={heading}>
-                                                {heading}
-                                            </th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {visiblePredictions.length === 0 && (
-                                        <tr>
-                                            <td className="px-[22px] py-12 text-center" colSpan={5}>
-                                                <div className="grid justify-items-center gap-3">
-                                                    <span className="grid h-12 w-12 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
-                                                        <FaRegChartBar aria-hidden="true" className="h-5 w-5" />
-                                                    </span>
-                                                    <span className="font-bold text-[var(--admin-muted)]">No predictions found.</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )}
-                                    {visiblePredictions.map((prediction) => (
-                                        <tr key={prediction.id}>
-                                            <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">{prediction.tournament}</td>
-                                            <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">{prediction.spectator}</td>
-                                            <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">
-                                                <div className="flex items-center gap-3">
-                                                    <img
-                                                        alt=""
-                                                        className="h-10 w-10 rounded-md object-cover"
-                                                        src={horseRacing}
-                                                        style={{ objectPosition: prediction.imagePosition }}
-                                                    />
-                                                    <span>{prediction.horse}</span>
-                                                </div>
-                                            </td>
-                                            <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">
-                                                <span className={`relative inline-flex min-h-6 items-center rounded-full px-2.5 pl-5 text-[0.68rem] font-black uppercase before:absolute before:left-2 before:h-1.5 before:w-1.5 before:rounded-full before:content-[''] ${statusClass[formatClass(prediction.status)]}`}>
-                                                    {prediction.status}
-                                                </span>
-                                            </td>
-                                            <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">
-                                                <div className="relative inline-flex items-center gap-3">
-                                                    <button aria-expanded={actionMenu?.id === prediction.id} aria-haspopup="menu" aria-label={`Actions for ${prediction.horse}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-transparent text-[#64748b] transition-colors hover:bg-[var(--admin-surface-strong)] hover:text-[var(--admin-primary)]" onClick={(event) => handleActionToggle(event, prediction.id)} type="button">
-                                                        <FaEllipsisH aria-hidden="true" />
-                                                    </button>
-                                                    {actionMenu?.id === prediction.id && (
-                                                        <div className="fixed z-50 min-w-[150px] overflow-hidden rounded-md border border-[var(--admin-border)] bg-[#fffdfc] py-1 shadow-[0_14px_32px_rgba(15,23,42,0.14)]" role="menu" style={{ left: actionMenu.left, top: actionMenu.top }}>
-                                                            {getPredictionStatusOptions(prediction).map((status) => {
-                                                                const isCurrentStatus = formatClass(prediction.status) === formatClass(status);
-
-                                                                return (
-                                                                    <button
-                                                                        className={`flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-2 text-left text-[0.78rem] font-bold ${isCurrentStatus ? 'bg-[#e8f7ef] text-[var(--admin-primary)]' : 'text-[#475569] hover:bg-[#f8fbff] hover:text-[var(--admin-primary)]'}`}
-                                                                        disabled={isCurrentStatus}
-                                                                        key={status}
-                                                                        onClick={() => handleStatusChange(prediction, status)}
-                                                                        role="menuitem"
-                                                                        type="button"
-                                                                    >
-                                                                        <span>{status}</span>
-                                                                    </button>
-                                                                );
-                                                            })}
-                                                            {getPredictionStatusOptions(prediction).length === 0 && (
-                                                                <span className="block px-3 py-2 text-[0.76rem] font-bold text-[var(--admin-muted)]">No manual status actions</span>
-                                                            )}
-                                                            {prediction.raceId && (
-                                                                <>
-                                                                    <span className="my-1 block h-px bg-[var(--admin-border)]" />
-                                                                    <button
-                                                                        className="flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-2 text-left text-[0.78rem] font-bold text-[var(--admin-primary)] hover:bg-[#e8f7ef] disabled:cursor-not-allowed disabled:opacity-60"
-                                                                        disabled={evaluatingRaceId === prediction.raceId}
-                                                                        onClick={() => handleEvaluateRace(prediction)}
-                                                                        role="menuitem"
-                                                                        type="button"
-                                                                    >
-                                                                        <span>{evaluatingRaceId === prediction.raceId ? 'Evaluating...' : 'Retry Evaluation'}</span>
-                                                                    </button>
-                                                                </>
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
+                    <div className="w-full overflow-x-auto">
+                        <table className="w-full border-collapse max-[820px]:min-w-[760px]">
+                            <thead>
+                                <tr>
+                                    {['Tournament', 'Spectator', 'Predictions', 'Status', 'Actions'].map((heading) => (
+                                        <th className="border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-[22px] py-[18px] text-left text-[0.7rem] uppercase text-[#64748b]" key={heading}>
+                                            {heading}
+                                        </th>
                                     ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {visiblePredictions.length === 0 && (
+                                    <tr>
+                                        <td className="px-[22px] py-12 text-center" colSpan={5}>
+                                            <div className="grid justify-items-center gap-3">
+                                                <span className="grid h-12 w-12 place-items-center rounded-full bg-[var(--admin-surface-strong)] text-[var(--admin-primary)]">
+                                                    <FaRegChartBar aria-hidden="true" className="h-5 w-5" />
+                                                </span>
+                                                <span className="font-bold text-[var(--admin-muted)]">No predictions found.</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                                {visiblePredictions.map((prediction) => (
+                                    <tr key={prediction.id}>
+                                        <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">{prediction.tournament}</td>
+                                        <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">{prediction.spectator}</td>
+                                        <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">
+                                            <div className="flex items-center gap-3">
+                                                <img
+                                                    alt=""
+                                                    className="h-10 w-10 rounded-md object-cover"
+                                                    onError={handleHorseImageError}
+                                                    src={getHorseImageSrc(prediction)}
+                                                />
+                                                <span>{prediction.horse}</span>
+                                            </div>
+                                        </td>
+                                        <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">
+                                            <span className={`relative inline-flex min-h-6 items-center rounded-full px-2.5 pl-5 text-[0.68rem] font-black uppercase before:absolute before:left-2 before:h-1.5 before:w-1.5 before:rounded-full before:content-[''] ${statusClass[formatClass(prediction.status)]}`}>
+                                                {prediction.status}
+                                            </span>
+                                        </td>
+                                        <td className="border-b border-[var(--admin-border)] px-[22px] py-[18px] text-[0.9rem] font-bold text-[var(--admin-ink)]">
+                                            <div className="relative inline-flex items-center gap-3">
+                                                <button aria-expanded={actionMenu?.id === prediction.id} aria-haspopup="menu" aria-label={`Actions for ${prediction.horse}`} className="grid h-8 w-8 cursor-pointer place-items-center rounded-full bg-transparent text-[#64748b] transition-colors hover:bg-[var(--admin-surface-strong)] hover:text-[var(--admin-primary)]" onClick={(event) => handleActionToggle(event, prediction.id)} type="button">
+                                                    <FaEllipsisH aria-hidden="true" />
+                                                </button>
+                                                {actionMenu?.id === prediction.id && (
+                                                    <div className="fixed z-50 min-w-[150px] overflow-hidden rounded-md border border-[var(--admin-border)] bg-[#fffdfc] py-1 shadow-[0_14px_32px_rgba(15,23,42,0.14)]" role="menu" style={{ left: actionMenu.left, top: actionMenu.top }}>
+                                                        {getPredictionStatusOptions(prediction).map((status) => {
+                                                            const isCurrentStatus = formatClass(prediction.status) === formatClass(status);
 
-                        <div className="flex min-h-[68px] items-center justify-between gap-[18px] px-[22px] py-4 text-[0.82rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch">
-                            <span>Showing {firstShown} - {lastShown} of {filteredPredictions.length} predictions</span>
-
-                            <div className="flex items-center gap-2 max-[820px]:flex-wrap">
-                                <button aria-label="Previous page" className={paginationButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">&lt;</button>
-                                {getCompactPaginationItems(totalPages, page).map((pageItem) => (
-                                    typeof pageItem === 'number' ? (
-                                        <button
-                                            className={`${paginationButtonClass} ${pageItem === page ? 'border-[var(--admin-primary)] bg-[#e8f7ef] text-[#064e3b] hover:bg-[#d1fae5]' : ''}`}
-                                            key={pageItem}
-                                            onClick={() => setPage(pageItem)}
-                                            type="button"
-                                        >
-                                            {pageItem}
-                                        </button>
-                                    ) : (
-                                        <span className={`${paginationButtonClass} cursor-default text-[var(--admin-muted)] hover:bg-[#fffdfc]`} key={pageItem}>...</span>
-                                    )
+                                                            return (
+                                                                <button
+                                                                    className={`flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-2 text-left text-[0.78rem] font-bold ${isCurrentStatus ? 'bg-[#e8f7ef] text-[var(--admin-primary)]' : 'text-[#475569] hover:bg-[#f8fbff] hover:text-[var(--admin-primary)]'}`}
+                                                                    disabled={isCurrentStatus}
+                                                                    key={status}
+                                                                    onClick={() => handleStatusChange(prediction, status)}
+                                                                    role="menuitem"
+                                                                    type="button"
+                                                                >
+                                                                    <span>{status}</span>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                        {getPredictionStatusOptions(prediction).length === 0 && (
+                                                            <span className="block px-3 py-2 text-[0.76rem] font-bold text-[var(--admin-muted)]">No manual status actions</span>
+                                                        )}
+                                                        {prediction.raceId && (
+                                                            <>
+                                                                <span className="my-1 block h-px bg-[var(--admin-border)]" />
+                                                                <button
+                                                                    className="flex w-full cursor-pointer items-center justify-between gap-3 px-3 py-2 text-left text-[0.78rem] font-bold text-[var(--admin-primary)] hover:bg-[#e8f7ef] disabled:cursor-not-allowed disabled:opacity-60"
+                                                                    disabled={evaluatingRaceId === prediction.raceId}
+                                                                    onClick={() => handleEvaluateRace(prediction)}
+                                                                    role="menuitem"
+                                                                    type="button"
+                                                                >
+                                                                    <span>{evaluatingRaceId === prediction.raceId ? 'Evaluating...' : 'Retry Evaluation'}</span>
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
                                 ))}
-                                <button aria-label="Next page" className={paginationButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">&gt;</button>
-                            </div>
-                        </div>
-                    </section>
+                            </tbody>
+                        </table>
+                    </div>
 
-                    <section className={panelClass}>
-                        <div className={panelTitleClass}>
-                            <h2 className="m-0 text-[1.05rem] text-[var(--admin-ink)]">Top Predicted</h2>
-                        </div>
+                    <div className="flex min-h-[68px] items-center justify-between gap-[18px] px-[22px] py-4 text-[0.82rem] font-bold text-[var(--admin-muted)] max-[820px]:flex-col max-[820px]:items-stretch">
+                        <span>Showing {firstShown} - {lastShown} of {filteredPredictions.length} predictions</span>
 
-                        <div className="grid grid-cols-3 gap-5 p-5 max-[820px]:grid-cols-1">
-                            {topPredicted.map((item) => (
-                                <article className="relative grid justify-items-center gap-2 rounded-lg border border-[var(--admin-border)] bg-[#fffdfc] p-5 text-center" key={item.id}>
-                                    <img
-                                        alt=""
-                                        className="h-20 w-20 rounded-full object-cover"
-                                        src={horseRacing}
-                                        style={{ objectPosition: item.imagePosition }}
-                                    />
-                                    <strong className="text-[var(--admin-ink)]">{item.horse}</strong>
-                                    <span className="text-[0.78rem] font-bold text-[var(--admin-muted)]">{getPredictionCount(item).toLocaleString('en-US')} predictions</span>
-                                    <small className={`absolute right-4 top-4 grid h-7 w-7 place-items-center rounded-full text-[0.72rem] font-black ${rankClass[item.tone]}`}>{item.rank}</small>
-                                </article>
+                        <div className="flex items-center gap-2 max-[820px]:flex-wrap">
+                            <button aria-label="Previous page" className={paginationButtonClass} disabled={page === 1} onClick={() => setPage((current) => Math.max(1, current - 1))} type="button">&lt;</button>
+                            {getCompactPaginationItems(totalPages, page).map((pageItem) => (
+                                typeof pageItem === 'number' ? (
+                                    <button
+                                        className={`${paginationButtonClass} ${pageItem === page ? 'border-[var(--admin-primary)] bg-[#e8f7ef] text-[#064e3b] hover:bg-[#d1fae5]' : ''}`}
+                                        key={pageItem}
+                                        onClick={() => setPage(pageItem)}
+                                        type="button"
+                                    >
+                                        {pageItem}
+                                    </button>
+                                ) : (
+                                    <span className={`${paginationButtonClass} cursor-default text-[var(--admin-muted)] hover:bg-[#fffdfc]`} key={pageItem}>...</span>
+                                )
                             ))}
+                            <button aria-label="Next page" className={paginationButtonClass} disabled={page === totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))} type="button">&gt;</button>
                         </div>
-
-                        <button className="mx-auto mb-5 inline-flex min-h-[38px] cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--admin-surface-strong)] px-4 font-black text-[var(--admin-primary)] hover:bg-[#e8f7ef]" type="button">
-                            <FaTrophy aria-hidden="true" />
-                            <span>View All Participants</span>
-                        </button>
-                    </section>
+                    </div>
                 </section>
+
+                <section className={panelClass}>
+                    <div className={panelTitleClass}>
+                        <h2 className="m-0 text-[1.05rem] text-[var(--admin-ink)]">Top Predicted</h2>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-5 p-5 max-[820px]:grid-cols-1">
+                        {topPredicted.map((item) => (
+                            <article className="relative grid justify-items-center gap-2 rounded-lg border border-[var(--admin-border)] bg-[#fffdfc] p-5 text-center" key={item.id}>
+                                <img
+                                    alt=""
+                                    className="h-20 w-20 rounded-full object-cover"
+                                    onError={handleHorseImageError}
+                                    src={getHorseImageSrc(item)}
+                                />
+                                <strong className="text-[var(--admin-ink)]">{item.horse}</strong>
+                                <span className="text-[0.78rem] font-bold text-[var(--admin-muted)]">{getPredictionCount(item).toLocaleString('en-US')} predictions</span>
+                                <small className={`absolute right-4 top-4 grid h-7 w-7 place-items-center rounded-full text-[0.72rem] font-black ${rankClass[item.tone]}`}>{item.rank}</small>
+                            </article>
+                        ))}
+                    </div>
+
+                    <button className="mx-auto mb-5 inline-flex min-h-[38px] cursor-pointer items-center justify-center gap-2 rounded-full bg-[var(--admin-surface-strong)] px-4 font-black text-[var(--admin-primary)] hover:bg-[#e8f7ef]" type="button">
+                        <FaTrophy aria-hidden="true" />
+                        <span>View All Participants</span>
+                    </button>
+                </section>
+            </section>
         </AdminLayout>
     );
 }
