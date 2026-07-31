@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FaEdit, FaMedal, FaRulerCombined } from "react-icons/fa";
+import { FaEdit, FaMedal, FaNotesMedical, FaRulerCombined } from "react-icons/fa";
 import HorseOwnerLayout from "../HorseOwnerLayout";
 import { ownerApi } from "../../../api/ownerApi";
 import { handleOwnerAccessError } from "../../../api/handleOwnerAccessError";
@@ -112,6 +112,31 @@ export default function HorseDetail() {
                                     {horse.achievementSummary || "No achievement summary provided."}
                                 </p>
                             </div>
+
+                            {/* Health Certificate */}
+                            <div style={{ ...styles.card, ...styles.certificateCard }}>
+                                <p style={{ ...styles.cardTitle, display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <FaNotesMedical aria-hidden="true" style={{ color: "var(--admin-primary)" }} />
+                                    Health Certificate
+                                </p>
+                                {horse.healthCertificateImageUrl ? (
+                                    <a
+                                        href={resolveFileUrl(horse.healthCertificateImageUrl)}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        style={styles.certificateLink}
+                                    >
+                                        <img
+                                            src={resolveFileUrl(horse.healthCertificateImageUrl)}
+                                            alt={`${horse.horseName} health certificate`}
+                                            style={styles.certificateImage}
+                                        />
+                                        <span style={styles.certificateLinkText}>Open health certificate</span>
+                                    </a>
+                                ) : (
+                                    <p style={styles.summaryText}>No health certificate uploaded.</p>
+                                )}
+                            </div>
                         </div>
                     </>
                 )}
@@ -205,6 +230,29 @@ const styles = {
         border: "1px solid #ded2ad",
         padding: "24px 28px",
         boxShadow: "0 8px 22px rgba(15,23,42,0.06)",
+    },
+    certificateCard: {
+        gridColumn: "1 / -1",
+    },
+    certificateLink: {
+        display: "block",
+        color: "#16305c",
+        textDecoration: "none",
+    },
+    certificateImage: {
+        display: "block",
+        width: "100%",
+        maxHeight: "360px",
+        objectFit: "contain",
+        borderRadius: "8px",
+        border: "1px solid #ded2ad",
+        backgroundColor: "#fff8f6",
+    },
+    certificateLinkText: {
+        display: "block",
+        marginTop: "10px",
+        textAlign: "center",
+        fontWeight: 700,
     },
     cardTitle: {
         margin: "0 0 18px",

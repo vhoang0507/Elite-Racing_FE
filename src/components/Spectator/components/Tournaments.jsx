@@ -14,6 +14,7 @@ import {
 import { spectatorApi } from '../../../api/spectatorApi';
 import { resolveFileUrl } from '../../../api/uploadApi';
 import { formatCurrency } from '../../../utils/currency';
+import ImageLightbox from '../../shared/ImageLightbox';
 import Toast from '../../shared/Toast';
 import { useToast } from '../../shared/useToast';
 
@@ -62,10 +63,20 @@ function canWatchReplay(tournament) {
 // ─── Horse detail modal ───────────────────────────────────────────────────────
 
 function HorseDetailModal({ horse, onClose, onSelect }) {
+    const [healthCertificatePreview, setHealthCertificatePreview] = useState(null);
+
     if (!horse) return null;
 
     const horseImageUrl = getHorseImageUrl(horse);
     const jockeyImageUrl = horse?.jockeyProfileImageUrl ? resolveFileUrl(horse.jockeyProfileImageUrl) : '';
+    const healthStatus = horse.healthStatus || horse.horseHealthStatus || '—';
+    const healthCertificateSource = horse.healthCertificateImageUrl
+        || horse.healthCertificateUrl
+        || horse.healthCertificate
+        || horse?.horse?.healthCertificateImageUrl
+        || horse?.horse?.healthCertificateUrl
+        || horse?.horse?.healthCertificate;
+    const healthCertificateUrl = healthCertificateSource ? resolveFileUrl(healthCertificateSource) : '';
 
     return (
         <div
@@ -103,13 +114,34 @@ function HorseDetailModal({ horse, onClose, onSelect }) {
                             ['Age', horse.age ?? horse.horseAge ?? '—'],
                             ['Height', horse.heightCm ? `${horse.heightCm} cm` : '—'],
                             ['Weight', horse.weightKg || horse.horseWeightKg ? `${horse.weightKg || horse.horseWeightKg} kg` : '—'],
-                            ['Health', horse.healthStatus || horse.horseHealthStatus || '—'],
                         ].map(([label, value]) => (
                             <div key={label} style={{ border: '1px solid #e7edf5', borderRadius: 12, background: '#f8fbff', padding: '12px 14px' }}>
                                 <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: '#64748b' }}>{label}</p>
                                 <p style={{ margin: '8px 0 0', fontSize: '0.95rem', fontWeight: 800, color: '#2b1b1b' }}>{value}</p>
                             </div>
                         ))}
+                        <div style={{ border: '1px solid #e7edf5', borderRadius: 12, background: '#f8fbff', padding: '12px 14px' }}>
+                            <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: '#64748b' }}>Health</p>
+                            <button
+                                type="button"
+                                onClick={() => setHealthCertificatePreview(healthCertificateUrl)}
+                                disabled={!healthCertificateUrl}
+                                title={healthCertificateUrl ? 'View health certificate' : 'Health certificate not available'}
+                                style={{
+                                    margin: '8px 0 0',
+                                    padding: 0,
+                                    border: 'none',
+                                    background: 'transparent',
+                                    fontSize: '0.95rem',
+                                    fontWeight: 800,
+                                    color: healthCertificateUrl ? '#16305c' : '#2b1b1b',
+                                    cursor: healthCertificateUrl ? 'pointer' : 'default',
+                                    textDecoration: healthCertificateUrl ? 'underline' : 'none',
+                                }}
+                            >
+                                {healthStatus}
+                            </button>
+                        </div>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
@@ -148,6 +180,7 @@ function HorseDetailModal({ horse, onClose, onSelect }) {
                     <button type="button" onClick={onSelect} style={{ padding: '11px 18px', borderRadius: 10, border: 'none', background: '#16305c', color: '#fff', fontWeight: 800, cursor: 'pointer' }}>Select this horse</button>
                 </div>
             </div>
+            <ImageLightbox src={healthCertificatePreview} onClose={() => setHealthCertificatePreview(null)} />
         </div>
     );
 }
