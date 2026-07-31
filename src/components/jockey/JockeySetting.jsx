@@ -460,7 +460,7 @@ function JockeySetting() {
                                 <div key={item.distanceMeters} className="flex items-center justify-between border-b border-[var(--admin-border)] pb-6 max-[720px]:flex-col max-[720px]:items-start max-[720px]:gap-4">
                                     <strong>{item.label}</strong>
                                     <div className="flex flex-wrap gap-2">
-                                        {options?.skillLevels?.map((level) => (
+                                        {options?.skillLevels?.filter((level) => level !== 'NoExperience').map((level) => (
                                             <button
                                                 key={level}
                                                 type="button"
