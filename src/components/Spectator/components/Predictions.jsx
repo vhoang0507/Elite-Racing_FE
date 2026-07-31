@@ -29,8 +29,9 @@ function getOutcome(prediction) {
 }
 
 function PredictionCard({ prediction }) {
-    const { pointsAwarded, stakePoints, netPoints, seasonName, tournamentName, predictedHorseName, tournamentStatus } = prediction;
+    const { pointsAwarded, grossPayoutPoints, stakePoints, netPoints, seasonName, tournamentName, predictedHorseName, tournamentStatus } = prediction;
     const outcome = getOutcome(prediction);
+    const grossPayout = grossPayoutPoints ?? pointsAwarded ?? 0;
 
     const accentColor = {
         correct:   '#16864f',
@@ -49,7 +50,7 @@ function PredictionCard({ prediction }) {
     }[outcome];
 
     const badgeLabel = {
-        correct:   `Correct  +${pointsAwarded ?? 0} pts`,
+        correct:   `Correct · Net +${netPoints ?? 0} pts`,
         wrong:     `Wrong  -${stakePoints ?? 0} pts`,
         locked:    'Locked – Awaiting Evaluation',
         cancelled: 'Cancelled · Stake Refunded',
@@ -73,6 +74,11 @@ function PredictionCard({ prediction }) {
                     {stakePoints != null && (
                         <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: 'var(--admin-muted)' }}>
                             Stake: {stakePoints} pts
+                            {outcome === 'correct' && (
+                                <span style={{ marginLeft: 8, fontWeight: 700, color: '#16305c' }}>
+                                    Gross payout: {grossPayout} pts
+                                </span>
+                            )}
                             {netPoints != null && outcome !== 'pending' && outcome !== 'locked' && (
                                 <span style={{ marginLeft: 8, fontWeight: 700, color: netPoints >= 0 ? '#16864f' : '#a4392f' }}>
                                     Net: {netPoints >= 0 ? '+' : ''}{netPoints} pts
@@ -195,7 +201,7 @@ export default function Predictions() {
                             <FaTrophy aria-hidden="true" />
                         </div>
                         <p className="m-0 text-[0.85rem] text-[var(--admin-muted)]">
-                            Stakes change your wallet balance. Evaluated prediction payouts also build your season score. Cancelled tournaments refund the stake and count as net 0.
+                            A correct prediction returns 3× stake as gross payout and adds 2× stake to Season Score. A wrong prediction receives no payout and subtracts the stake from Season Score. Cancellations reverse settlement and refund the stake.
                         </p>
                     </div>
 

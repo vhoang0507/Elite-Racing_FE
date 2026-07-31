@@ -784,13 +784,6 @@ function AdminSeasonManagement() {
     const handleSeasonRewardStatus = async (reward, status) => {
         const rewardId = readSeasonField(reward, 'seasonRewardId');
         const rewardName = readSeasonField(reward, 'rewardName') || 'this reward';
-        const note = window.prompt(`Admin note for ${status.toLowerCase()} "${rewardName}"?`, '');
-        const adminNote = String(note || '').trim();
-
-        if (note === null) {
-            return;
-        }
-
         const confirmed = await confirmAdminAction({
             title: 'Update reward status',
             message: `Move "${rewardName}" to ${status}?`,
@@ -807,11 +800,11 @@ function AdminSeasonManagement() {
         try {
             const response = status === 'Shipped'
                 ? await adminApi.shipSeasonReward(rewardId, {
-                    adminNote: adminNote || null,
+                    adminNote: null,
                 })
                 : await adminApi.updateSeasonRewardStatus(rewardId, {
                     status,
-                    adminNote: adminNote || null,
+                    adminNote: null,
                 });
             showAdminSuccess(response?.message || response?.Message || 'Season reward status updated.', 'Updated');
             if (detailSeason) {
@@ -887,7 +880,7 @@ function AdminSeasonManagement() {
                             <div className="min-w-0">
                                 <h2 className="m-0 text-[1.3rem] font-black text-[var(--admin-primary-dark)]">{readSeasonField(activeSeason, 'seasonName')}</h2>
                                 <p className="m-0 mt-1 text-[0.84rem] font-bold text-[#8a6209]">
-                                    {formatDate(readSeasonField(activeSeason, 'startDate'))} - {formatDate(readSeasonField(activeSeason, 'endDate'))} · {readSeasonField(activeSeason, 'pointsPerCorrectPrediction')} pts / correct pick
+                                    {formatDate(readSeasonField(activeSeason, 'startDate'))} - {formatDate(readSeasonField(activeSeason, 'endDate'))}
                                 </p>
                             </div>
                         </div>
@@ -918,7 +911,7 @@ function AdminSeasonManagement() {
                         <table className="w-full border-collapse max-[900px]:min-w-[980px]">
                             <thead>
                                 <tr>
-                                    {['Season', 'Date Range', 'Points', 'Tournaments', 'Rewards', 'Status', 'Actions'].map((heading) => (
+                                    {['Season', 'Date Range', 'Tournaments', 'Rewards', 'Status', 'Actions'].map((heading) => (
                                         <th className="border-b border-[var(--admin-border)] bg-[var(--admin-surface-strong)] px-5 py-4 text-left text-[0.68rem] font-black uppercase text-[#64748b]" key={heading}>
                                             {heading}
                                         </th>
@@ -928,11 +921,11 @@ function AdminSeasonManagement() {
                             <tbody>
                                 {loading ? (
                                     <tr>
-                                        <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="7">Loading seasons...</td>
+                                        <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="6">Loading seasons...</td>
                                     </tr>
                                 ) : seasons.length === 0 ? (
                                     <tr>
-                                        <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="7">No seasons found.</td>
+                                        <td className="px-5 py-8 text-center text-[0.9rem] font-bold text-[var(--admin-muted)]" colSpan="6">No seasons found.</td>
                                     </tr>
                                 ) : seasons.map((season) => {
                                     const id = getSeasonId(season);
@@ -953,9 +946,6 @@ function AdminSeasonManagement() {
                                             </td>
                                             <td className="whitespace-nowrap border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-muted)]">
                                                 {formatDate(readSeasonField(season, 'startDate'))} - {formatDate(readSeasonField(season, 'endDate'))}
-                                            </td>
-                                            <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-ink)]">
-                                                {readSeasonField(season, 'pointsPerCorrectPrediction')}
                                             </td>
                                             <td className="border-b border-[var(--admin-border)] px-5 py-4 text-[0.84rem] font-bold text-[var(--admin-ink)]">
                                                 {readSeasonField(season, 'tournamentCount') ?? 0}
@@ -1042,11 +1032,6 @@ function AdminSeasonManagement() {
                                         <input className={`${controlClass} h-12 rounded-lg px-4 text-[0.92rem]`} lang="en-US" max={maxDate} min={createSeasonMinDate} onChange={handleSeasonFieldChange('endDate')} required type="date" value={seasonForm.endDate} />
                                     </label>
                                 </div>
-
-                                <label className={fieldClass}>
-                                    <span className={labelClass}>Points Per Correct Prediction</span>
-                                    <input className={`${controlClass} h-12 rounded-lg px-4 text-[0.92rem]`} max={maxPredictionPoints} min="1" onChange={handleSeasonFieldChange('pointsPerCorrectPrediction')} required step="1" type="number" value={seasonForm.pointsPerCorrectPrediction} />
-                                </label>
 
                                 <div className="mt-1 flex items-center justify-between gap-4 border-t border-[var(--admin-border)] pt-5 max-[720px]:flex-col max-[720px]:items-stretch">
                                     <p className="m-0 text-[0.78rem] font-bold text-[var(--admin-muted)]">
@@ -1288,10 +1273,6 @@ function AdminSeasonManagement() {
                                     <input className={controlClass} lang="en-US" max={maxDate} min={minDate} onChange={handleEditSeasonFieldChange('endDate')} required type="date" value={editSeasonForm.endDate} />
                                 </label>
 
-                                <label className={`${fieldClass} col-span-2 max-[720px]:col-span-1`}>
-                                    <span className={labelClass}>Points Per Correct Prediction</span>
-                                    <input className={controlClass} max={maxPredictionPoints} min="1" onChange={handleEditSeasonFieldChange('pointsPerCorrectPrediction')} required step="1" type="number" value={editSeasonForm.pointsPerCorrectPrediction} />
-                                </label>
                             </div>
 
                             <div className="flex justify-end gap-3 max-[720px]:flex-col">
@@ -1354,7 +1335,7 @@ function AdminSeasonManagement() {
                                         {[
                                             ['Status', readSeasonField(detailSource, 'status')],
                                             ['Date Range', `${formatDate(readSeasonField(detailSource, 'startDate'))} - ${formatDate(readSeasonField(detailSource, 'endDate'))}`],
-                                            ['Points', readSeasonField(detailSource, 'pointsPerCorrectPrediction')],
+                                            ['Prediction Rule', '3× gross · +2×/−1× score'],
                                             ['Tournaments', detailTournaments.length || readSeasonField(detailSource, 'tournamentCount') || 0],
                                         ].map(([label, value]) => (
                                             <div className="grid gap-1 rounded-md border border-[var(--admin-border)] bg-[#fff8f6] p-3" key={label}>
