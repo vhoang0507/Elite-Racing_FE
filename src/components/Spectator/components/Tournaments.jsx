@@ -220,22 +220,31 @@ function PredictModal({ tournament, prediction, onClose, onSuccess }) {
     }, [isEditing, prediction?.predictedHorseId, prediction?.stakePoints, tournament.tournamentId]);
 
     const minStake = wallet?.minimumStakePoints ?? 10;
-    const availableForPrediction = (wallet?.bettingPoints ?? 9999) + originalStakePoints;
-    const maxStake = Math.max(minStake, availableForPrediction);
-    const remaining = wallet
-        ? Math.max(0, wallet.bettingPoints + originalStakePoints - stakePoints)
-        : null;
-    const stakeValid = stakePoints >= minStake && stakePoints <= maxStake;
-
+    const availableForPrediction = wallet
+        ? Number(wallet.bettingPoints ?? 0) + originalStakePoints
+        : 0;
+    const maxStake = availableForPrediction;
+    const hasSufficientBalance = maxStake >= minStake;
+    const remaining = wallet ? availableForPrediction - stakePoints : null;
+    const stakeValid = Boolean(wallet?.hasActiveSeason)
+        && hasSufficientBalance
+        && Number.isInteger(stakePoints)
+        && stakePoints >= minStake
+        && stakePoints <= maxStake;
     const handleStakeChange = (e) => {
-        const val = parseInt(e.target.value) || minStake;
-        setStakePoints(Math.min(Math.max(minStake, val), maxStake));
+        const val = Number.parseInt(e.target.value, 10);
+        setStakePoints(Number.isNaN(val) ? 0 : val);
     };
 
     const handleSubmit = async () => {
         if (!selected) return;
         if (!stakeValid) {
-            showToast(`Stake must be between ${minStake} and ${maxStake} points.`, 'error');
+            showToast(
+                hasSufficientBalance
+                    ? `Stake must be between ${minStake} and ${maxStake} points.`
+                    : `Insufficient balance. You need at least ${minStake} points to place a prediction.`,
+                'error',
+            );
             return;
         }
 
@@ -352,7 +361,7 @@ function PredictModal({ tournament, prediction, onClose, onSuccess }) {
                         <span>
                             {isEditing
                                 ? <>You may change the horse or stake before the prediction deadline. Your previous stake is reused automatically.</>
-                                : <>Select a horse and set your stake. You can edit it before the prediction deadline.</>}
+                                : <>Select a horse and set your stake. A win returns 3× stake in gross payout (2× net profit); a loss receives no payout.</>}
                         </span>
                     </p>
                 </div>
@@ -452,23 +461,28 @@ function PredictModal({ tournament, prediction, onClose, onSuccess }) {
                         <div style={{ flex: 1 }}>
                             <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#555', marginBottom: 5 }}>
                                 Stake Points
-                                {wallet && <span style={{ fontWeight: 400, color: '#aaa', marginLeft: 5 }}>({minStake}–{maxStake.toLocaleString()})</span>}
+                                {wallet && hasSufficientBalance && <span style={{ fontWeight: 400, color: '#aaa', marginLeft: 5 }}>({minStake}–{maxStake.toLocaleString()})</span>}
                             </label>
                             <input
                                 type="number"
                                 min={minStake}
-                                max={maxStake}
+                                max={hasSufficientBalance ? maxStake : undefined}
                                 value={stakePoints}
                                 onChange={handleStakeChange}
                                 style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: `1.5px solid ${!stakeValid && wallet ? '#dc3545' : '#dce5ef'}`, fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box' }}
                             />
+                            {wallet && !hasSufficientBalance && (
+                                <p style={{ margin: '5px 0 0', color: '#a4392f', fontSize: '0.75rem', fontWeight: 700 }}>
+                                    Insufficient balance: at least {minStake} points are required.
+                                </p>
+                            )}
                         </div>
                         {/* Quick-pick buttons */}
                         {wallet && (
                             <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
                                 {[25, 50, 100].map(pct => {
-                                    const val = Math.max(minStake, Math.floor(wallet.bettingPoints * pct / 100));
-                                    if (val > wallet.bettingPoints) return null;
+                                    const val = Math.max(minStake, Math.floor(availableForPrediction * pct / 100));
+                                    if (val > availableForPrediction) return null;
                                     return (
                                         <button key={pct} type="button" onClick={() => setStakePoints(val)}
                                             style={{ padding: '9px 10px', borderRadius: 8, border: '1.5px solid #dce5ef', background: '#fff', fontSize: '0.73rem', fontWeight: 700, color: '#16305c', cursor: 'pointer' }}>
@@ -482,7 +496,8 @@ function PredictModal({ tournament, prediction, onClose, onSuccess }) {
 
                     {/* Summary box when horse selected */}
                     {selected && (
-                        <div style={{ marginBottom: 10, padding: '10px 14px', background: '#f0fdf7', border: '1.5px solid #c3e6cb', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                        <div style={{ marginBottom: 10, padding: '10px 14px', background: '#f0fdf7', border: '1.5px solid #c3e6cb', borderRadius: 9, display: 'grid', gap: 10 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
                             <div>
                                 <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 700, color: '#16305c', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Bet</p>
                                 <p style={{ margin: '1px 0 0', fontSize: '0.88rem', fontWeight: 800, color: '#2b1b1b' }}>🐴 {selected.horseName}</p>
@@ -495,6 +510,7 @@ function PredictModal({ tournament, prediction, onClose, onSuccess }) {
                             <div style={{ textAlign: 'right' }}>
                                 <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 700, color: '#555', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Staking</p>
                                 <p style={{ margin: '1px 0 0', fontSize: '0.88rem', fontWeight: 800, color: '#16305c' }}>{stakePoints.toLocaleString()} pts</p>
+                            </div>
                             </div>
                         </div>
                     )}

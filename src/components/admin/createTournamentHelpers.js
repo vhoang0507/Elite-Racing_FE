@@ -5,6 +5,8 @@
 // Do not change thresholds/messages here without checking the backend DTO validation
 // in AdminTournamentsController first.
 
+import { parseCurrency } from '../../utils/currency';
+
 export const locationOptions = [
     'Churchill Downs, Louisville, Kentucky',
     'Pimlico Race Course, Baltimore, Maryland',
@@ -200,9 +202,9 @@ export function validateTournamentForm(state, { seasons, seasonError, isLoadingS
     const registrationDeadline = state.registrationDeadlineValue;
     const distanceMeters = Number(state.distanceMeters || 0);
     const maxHorses = Number(state.maxHorses || 0);
-    const goldPrize = Number(state.goldPrize || 0);
-    const silverPrize = Number(state.silverPrize || 0);
-    const bronzePrize = Number(state.bronzePrize || 0);
+    const goldPrize = parseCurrency(state.goldPrize);
+    const silverPrize = parseCurrency(state.silverPrize);
+    const bronzePrize = parseCurrency(state.bronzePrize);
     const prizePool = goldPrize + silverPrize + bronzePrize;
     const rules = (state.rules || '').trim();
 

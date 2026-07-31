@@ -73,6 +73,7 @@ export default function ResultReward() {
 
     const hasActiveSeason = rewards?.hasActiveSeason ?? false;
     const bettingPoints = rewards?.bettingPoints ?? 0;
+    const pendingRecoveryPoints = rewards?.pendingRecoveryPoints ?? 0;
     const seasonScore = rewards?.seasonScore ?? rewards?.rewardPoints ?? 0;
     const netPoints = rewards?.netPoints ?? 0;
     const baseOpeningPoints = rewards?.baseOpeningPoints ?? 0;
@@ -211,7 +212,7 @@ export default function ResultReward() {
                                 New-season opening wallet: <strong>{baseOpeningPoints.toLocaleString()} base</strong>
                                 {' + '}<strong>{carriedBonusPoints.toLocaleString()} carry bonus</strong>
                                 {' = '}<strong>{openingTotalPoints.toLocaleString()} points</strong>.
-                                Season score starts from 0 and only increases from evaluated prediction results.
+                                Season score starts from 0: wins add 2× stake, losses subtract the stake, so the score may be negative.
                             </>
                         ) : (
                             <>
@@ -220,6 +221,12 @@ export default function ResultReward() {
                             </>
                         )}
                     </div>
+
+                    {pendingRecoveryPoints > 0 && (
+                        <div className="rounded-[8px] border border-[#ecd28b] bg-[#fff8e6] px-5 py-4 text-sm font-semibold text-[#8a6209]">
+                            Pending recovery debt: <strong>{pendingRecoveryPoints.toLocaleString()} points</strong>. Future wallet credits will repay this debt first, and the season cannot close until it is cleared.
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-4 gap-4 max-[1000px]:grid-cols-2 max-[500px]:grid-cols-1">
                         {stats.map((stat) => {
@@ -399,9 +406,20 @@ export default function ResultReward() {
                                         {' · '}Balance {readField(item, 'balanceBefore')} → {readField(item, 'balanceAfter')}
                                     </p>
                                 </div>
-                                <span className="font-black" style={{ color: Number(readField(item, 'amount')) >= 0 ? '#16864f' : '#a4392f' }}>
-                                    {Number(readField(item, 'amount')) >= 0 ? '+' : ''}{readField(item, 'amount')} pts
-                                </span>
+                                <div className="text-right text-xs font-bold">
+                                    <p className="m-0" style={{ color: Number(readField(item, 'amount')) >= 0 ? '#16864f' : '#a4392f' }}>
+                                        Wallet: {Number(readField(item, 'amount')) >= 0 ? '+' : ''}{readField(item, 'amount')} pts
+                                    </p>
+                                    <p className="m-0 mt-1" style={{ color: Number(readField(item, 'scoreDelta')) >= 0 ? '#16864f' : '#a4392f' }}>
+                                        Score: {Number(readField(item, 'scoreDelta')) >= 0 ? '+' : ''}{readField(item, 'scoreDelta')} pts
+                                    </p>
+                                    {Number(readField(item, 'requestedAmount')) !== Number(readField(item, 'amount')) && (
+                                        <p className="m-0 mt-1 text-[var(--admin-muted)]">Requested wallet: {readField(item, 'requestedAmount')} pts</p>
+                                    )}
+                                    {Number(readField(item, 'recoveryDebtDelta')) !== 0 && (
+                                        <p className="m-0 mt-1 text-[#8a6209]">Recovery debt: {Number(readField(item, 'recoveryDebtDelta')) > 0 ? '+' : ''}{readField(item, 'recoveryDebtDelta')} pts</p>
+                                    )}
+                                </div>
                             </div>
                         ))}
                     </section>
@@ -430,6 +448,7 @@ export default function ResultReward() {
                                             Pick: {item.predictedHorseName ?? '-'}
                                             {item.actualWinnerHorseName && ` | Winner: ${item.actualWinnerHorseName}`}
                                             {item.stakePoints > 0 && ` | Stake: ${item.stakePoints} pts`}
+                                            {won && ` | Gross payout: ${item.grossPayoutPoints ?? item.payoutPoints ?? 0} pts`}
                                         </p>
                                     </div>
                                     <span className="font-black" style={{ color: pending ? '#8a6209' : net >= 0 ? '#16864f' : '#a4392f' }}>

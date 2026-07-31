@@ -230,7 +230,7 @@ export default function SpectatorDashboard() {
                                                 {p.status === 'Cancelled'
                                                     ? 'Cancelled · refunded'
                                                     : p.isCorrect === true
-                                                        ? `+${p.pointsAwarded} pts`
+                                                        ? `Net +${p.netPoints ?? 0} pts`
                                                         : p.isCorrect === false
                                                             ? 'Wrong'
                                                             : 'Pending'}
@@ -271,7 +271,7 @@ export default function SpectatorDashboard() {
                                 {[
                                     { step: '1', icon: FaTrophy, title: 'Browse Tournaments', desc: 'Explore upcoming tournaments and view the registered horses.' },
                                     { step: '2', icon: FaBullseye, title: 'Make Your Prediction', desc: 'Pick the horse you think will win. One prediction per tournament.' },
-                                    { step: '3', icon: FaCoins, title: 'Earn Points & Win', desc: 'Correct predictions earn points. Top predictors at season end win prizes.' },
+                                    { step: '3', icon: FaCoins, title: 'Settle & Rank', desc: 'Wins pay 3× stake gross and score +2× stake; losses score −stake. Season Score determines ranking.' },
                                 ].map((item) => (
                                     <div key={item.step} className="flex gap-3">
                                         <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#16305c', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 14, flexShrink: 0 }}>

@@ -67,7 +67,7 @@ const getPredictionStatusOptions = (prediction) => {
         return ['Locked', 'Cancelled'];
     }
 
-    if (status === 'locked') {
+    if (status === 'locked' || status === 'evaluated') {
         return ['Cancelled'];
     }
 

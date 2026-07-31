@@ -154,13 +154,9 @@ function AdminRewardPayments() {
                 title: 'Approve reward payment',
                 message: `Mark the ${recipientType.toLowerCase()} payout for ${recipientName} as paid?`,
                 confirmLabel: 'Approve Payment',
-                run: async () => {
-                    const paymentReference = window.prompt('Enter the bank transfer or payment gateway reference:');
-                    if (!paymentReference?.trim()) {
-                        throw new Error('Payment reference is required before marking a payout as paid.');
-                    }
-                    return adminApi.approveRewardPayment(id, { paymentReference: paymentReference.trim() });
-                },
+                run: async () => adminApi.approveRewardPayment(id, {
+                    paymentReference: `AUTO-PAYOUT-${id}-${Date.now()}`,
+                }),
                 fallback: 'Reward payment approved successfully.',
             }
             : {
