@@ -277,6 +277,12 @@ function PredictModal({ tournament, prediction, onClose, onSuccess }) {
                 pointsAwarded: 0,
             });
         } catch (err) {
+            if (err.data?.code === 'HORSE_FAILED_PRE_RACE') {
+                setHorses(current => current.filter(horse => horse.horseId !== selected.horseId));
+                setSelected(null);
+                setSelectedDetailHorse(null);
+            }
+
             showToast(
                 err.message || (isEditing
                     ? 'Failed to update prediction. Please try again.'
